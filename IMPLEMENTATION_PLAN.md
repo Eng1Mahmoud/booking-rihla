@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: ESLint implemented locally, awaiting owner review. Lint, type checks, all 12 tests, and compilation pass. No commit or push for this step. Logging remains deferred. Next learning step: Prettier formatting.
+Status: ESLint and Prettier implemented locally, awaiting owner review. Formatting, lint, type checks, all 12 tests, and compilation pass. No commit or push for these steps. Logging remains deferred. Next learning step: API security headers.
 
 ## How we will build
 
@@ -20,6 +20,7 @@ Security, validation, and meaningful tests are added with each relevant feature.
 ## Phase 0 — Project agreement and Git foundation
 
 Small steps:
+
 - [x] Keep the original product requirements as a reference in the repository.
 - [ ] Confirm the learning MVP boundaries and document assumptions.
 - [x] Add a concise project README, this roadmap, and `.gitignore`.
@@ -31,6 +32,7 @@ Working result: an understandable project starting point with no generated appli
 ## Phase 1 — Small backend foundation
 
 Small steps:
+
 - [x] Set up workspaces and `apps/api` only; add other apps and packages when needed.
 - [x] Add Node.js, Express, TypeScript strict mode, and development scripts.
 - [x] Add `GET /api/v1/health`.
@@ -38,7 +40,7 @@ Small steps:
 - [x] Add a consistent error response and centralized error handler.
 - [ ] Add request IDs and structured logging — deferred until a later learning milestone.
 - [x] Add ESLint for API source and tests.
-- [ ] Add Prettier formatting.
+- [x] Add Prettier formatting.
 - [x] Add a minimal automated health check.
 - [ ] Add API hardening appropriate to the available endpoints: headers, body limits, and explicit CORS configuration.
 
@@ -47,6 +49,7 @@ Working result: start the API locally and receive a healthy response; configurat
 ## Phase 2 — Database and sample trips
 
 Small steps:
+
 - [ ] Run PostgreSQL locally with Docker Compose and a persistent volume.
 - [ ] Connect Prisma and learn the migration workflow; use migrations rather than `db push`.
 - [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
@@ -61,6 +64,7 @@ Working result: a fresh database can be recreated using committed migrations and
 ## Phase 3 — Trip browsing demo
 
 Small steps:
+
 - [ ] Add city and station listing endpoints.
 - [ ] Add trip search by origin city/station, destination city/station, and travel date.
 - [ ] Add trip details and basic seat information.
@@ -75,6 +79,7 @@ Working result: search seeded trips and open their details from a browser.
 ## Phase 4 — Accounts and email verification
 
 Small steps:
+
 - [ ] Add users and hashed, expiring, single-use verification codes.
 - [ ] Add registration with name, email, phone, and an Argon2id password hash.
 - [ ] Add Mailpit and SMTP delivery for local email testing.
@@ -90,6 +95,7 @@ Working result: register, receive a code in Mailpit, and activate the account.
 ## Phase 5 — Secure sign-in and account recovery
 
 Small steps:
+
 - [ ] Add login, a short-lived access token, and a rotating refresh token in an httpOnly cookie.
 - [ ] Store refresh-token hashes; detect reuse and revoke the affected token family.
 - [ ] Add current-user lookup, protected routes, current-device logout, and logout-all.
@@ -104,6 +110,7 @@ Working result: complete account lifecycle with tested session rotation and acce
 ## Phase 6 — Reservation MVP
 
 Small steps:
+
 - [ ] Add bookings and booking seats with an explicit status transition model.
 - [ ] Add an accessible seat picker showing current availability.
 - [ ] Add passenger details and server-calculated totals.
@@ -121,6 +128,7 @@ Working result: verified users reserve available seats and view or cancel their 
 ## Phase 7 — Operator dashboard and management
 
 Small steps:
+
 - [ ] Create `apps/admin`, with protected admin access and reusable shared schemas.
 - [ ] Add city and station management.
 - [ ] Add bus type, amenities, seat layout, bus, and plate-number management.
@@ -137,6 +145,7 @@ Working result: authorized operators manage the data previously supplied by seed
 ## Phase 8 — Seat holds and sandbox payments
 
 Small steps:
+
 - [ ] Agree on the exact hold duration, cancellation windows, and refund rules before implementing paid bookings.
 - [ ] Replace immediate reservation confirmation with pending payment and a default ten-minute hold.
 - [ ] Add hold countdown, expiry handling, and a worker that releases expired holds.
@@ -155,6 +164,7 @@ Working result: complete a sandbox payment and obtain exactly one confirmed book
 ## Phase 9 — Tickets, notifications, cancellations, and refunds
 
 Small steps:
+
 - [ ] Add in-app and emailed tickets with booking references and QR codes.
 - [ ] Add booking confirmation and payment receipt emails.
 - [ ] Apply the agreed cancellation/refund policy to passenger and admin actions.
@@ -171,6 +181,7 @@ Working result: a paid sandbox booking supports the full ticket, notification, c
 ## Phase 10 — Complete passenger and admin experience
 
 Small steps:
+
 - [ ] Complete Arabic and English UI and email coverage and check full RTL behavior.
 - [ ] Add light/dark themes, design tokens, and consistent shadcn/ui components.
 - [ ] Add persistent booking summaries and clear validation and recovery messages.
@@ -184,6 +195,7 @@ Working result: both applications are complete and usable across languages, them
 ## Phase 11 — Release verification and reliability
 
 Small steps:
+
 - [ ] Complete service tests for pricing, code verification, session rotation, and booking transitions.
 - [ ] Complete real-PostgreSQL integration tests for constraints, concurrency, and payment/refund idempotency.
 - [ ] Add Playwright coverage for registration, verification, search, seats, payment, and tickets.
@@ -197,6 +209,7 @@ Working result: the critical user flows and failure cases pass repeatable checks
 ## Phase 12 — Production payments and deployment
 
 Small steps:
+
 - [ ] Verify current provider availability and merchant requirements; select an Egyptian payment provider.
 - [ ] Implement the chosen provider through PaymentProvider and verify its supported methods, webhooks, and refunds.
 - [ ] Keep PayPal sandbox as a development/test option where useful.
@@ -213,6 +226,7 @@ Working result: the application is ready for a controlled commercial launch.
 ## Later product expansions
 
 These follow the complete initial release; each receives its own scope and implementation plan:
+
 - [ ] Promo codes and discounts.
 - [ ] WhatsApp and SMS notifications.
 - [ ] Driver/conductor QR check-in application.
@@ -225,14 +239,14 @@ These follow the complete initial release; each receives its own scope and imple
 
 ## Decisions to settle before their dependent work
 
-| Decision | Proposed starting point | Decide before |
-|---|---|---|
-| Operator model | One operator; multi-tenant later | Phase 2 |
-| Guest checkout | Accounts required | Phase 4 |
-| Seat layout | Simple numbered seats first | Phase 2; extend in phase 7 |
-| Hold duration | Ten minutes | Phase 8 |
-| Cancellation/refund policy | No assumed percentages | Phase 8 |
-| Production provider | Evaluate actual merchant eligibility and supported methods | Phase 12 |
+| Decision                   | Proposed starting point                                    | Decide before              |
+| -------------------------- | ---------------------------------------------------------- | -------------------------- |
+| Operator model             | One operator; multi-tenant later                           | Phase 2                    |
+| Guest checkout             | Accounts required                                          | Phase 4                    |
+| Seat layout                | Simple numbered seats first                                | Phase 2; extend in phase 7 |
+| Hold duration              | Ten minutes                                                | Phase 8                    |
+| Cancellation/refund policy | No assumed percentages                                     | Phase 8                    |
+| Production provider        | Evaluate actual merchant eligibility and supported methods | Phase 12                   |
 
 ## Learning and Git workflow for every small step
 
@@ -255,4 +269,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. ESLint is ready for local review; the next small step is Prettier formatting.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. ESLint and Prettier are ready for local review; the next small step is API security headers.

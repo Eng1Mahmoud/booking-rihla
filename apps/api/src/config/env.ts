@@ -2,11 +2,15 @@ import { z } from 'zod';
 
 // Define a schema for the environment variables using Zod. This schema validates the expected environment variables and their types, providing default values where necessary.
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.string()
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
+  PORT: z
+    .string()
     .regex(/^\d+$/, 'Must contain only digits')
     .default('4000')
-    .transform(Number).pipe(z.number().int().min(1).max(65535)),
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(65535)),
 });
 
 export function parseEnv(environment: NodeJS.ProcessEnv) {

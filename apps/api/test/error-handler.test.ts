@@ -64,7 +64,10 @@ for (const path of ['/unexpected', '/async', '/server-error', '/untrusted']) {
   test(`${path} returns generic JSON without leaking internal details`, async () => {
     const response = await fetch(`${baseUrl}${path}`);
     assert.equal(response.status, 500);
-    assert.match(response.headers.get('content-type') ?? '', /application\/json/);
+    assert.match(
+      response.headers.get('content-type') ?? '',
+      /application\/json/,
+    );
     assert.deepEqual(await response.json(), {
       error: {
         code: 'INTERNAL_SERVER_ERROR',

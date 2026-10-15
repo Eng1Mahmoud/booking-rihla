@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier/flat';
 
 export default defineConfig(
   {
@@ -8,7 +9,11 @@ export default defineConfig(
   },
   {
     files: ['apps/api/src/**/*.ts', 'apps/api/test/**/*.ts'],
-    extends: [js.configs.recommended, tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      prettierConfig,
+    ],
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',

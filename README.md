@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: ESLint (local review)
+## Current step: ESLint and Prettier (local review)
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, and validated startup settings. The health endpoint checks that the API responds; there is no database yet.
 
@@ -44,16 +44,17 @@ Run `npm run dev` and open http://127.0.0.1:4500/api/v1/health. Restart the serv
 
 The API workspace commands load its own optional `.env` file using Node's built-in environment-file support. Existing terminal environment variables take precedence. The supported settings are:
 
-| Setting | Default | Accepted values |
-|---|---|---|
-| `NODE_ENV` | `development` | `development`, `test`, `production` |
-| `PORT` | `4000` | Digits representing an integer from 1 to 65535 |
+| Setting    | Default       | Accepted values                                |
+| ---------- | ------------- | ---------------------------------------------- |
+| `NODE_ENV` | `development` | `development`, `test`, `production`            |
+| `PORT`     | `4000`        | Digits representing an integer from 1 to 65535 |
 
 Blank values are invalid. Invalid settings stop startup and identify the affected field without dumping environment values.
 
 ## Verify and build
 
 ```sh
+npm run format:check
 npm run lint
 npm run typecheck
 npm test
@@ -86,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint is now configured; read [the Arabic walkthrough](docs/steps/04-eslint.md). Prettier formatting is the next separate learning step, followed by the remaining foundation items before database work.
+Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint is now configured; read [the Arabic walkthrough](docs/steps/04-eslint.md). Prettier is also configured; read [the Arabic formatting walkthrough](docs/steps/05-prettier.md). The next small step is API security headers, followed by the remaining foundation items before database work.
 
 ## Git workflow
 
@@ -97,3 +98,7 @@ Push changes to GitHub only after the owner reviews them and explicitly approves
 ## Linting
 
 Run npm run lint from the repository root. ESLint checks API source and TypeScript tests using recommended JavaScript and TypeScript rules. Intentionally unused function parameters may start with an underscore. The command reports problems without changing files, and fails on any errors or warnings. Generated output, dependencies, and coverage are excluded. The tool configuration is eslint.config.mjs; application code remains TypeScript.
+
+## Formatting
+
+Run npm run format to apply Prettier formatting, or npm run format:check to verify it without editing files. Configuration is in .prettierrc.json; exclusions are in .prettierignore. Generated output, dependencies, local environment files, the npm lockfile, and the original requirements reference are excluded. ESLint and Prettier run separately; eslint-config-prettier disables conflicting lint rules.
