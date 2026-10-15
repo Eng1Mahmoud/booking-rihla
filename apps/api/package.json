@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/server.ts",
+    "dev": "node --env-file-if-exists=.env --watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit",
-    "test": "node --test test/*.test.mjs"
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
+    "test": "node --test test/*.test.ts"
   },
   "dependencies": {
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

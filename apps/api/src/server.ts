@@ -1,7 +1,8 @@
 import { app } from './app.ts';
+import { parseEnv } from './config/env.ts';
 
-const port = 4000;
+const env = parseEnv(process.env);
 
-app.listen(port, '127.0.0.1', () => {
-  console.log(`API running at http://127.0.0.1:${port}`);
+app.listen(env.PORT, '127.0.0.1', () => {
+  console.log(`API running at http://127.0.0.1:${env.PORT}`);
 });

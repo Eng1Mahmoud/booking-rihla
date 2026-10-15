@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: phase 1 API workspace and health endpoint implemented. Type checking, both HTTP tests, and compilation pass. Git author identity is configured for this repository. Next learning step: validated environment configuration.
+Status: phase 1 API workspace and health endpoint implemented. Type checking, all seven tests, and compilation pass. Git author identity is configured for this repository. Validated environment configuration is now implemented with TypeScript tests. Next learning step: consistent API error handling.
 
 ## How we will build
 
@@ -34,7 +34,7 @@ Small steps:
 - [x] Set up workspaces and `apps/api` only; add other apps and packages when needed.
 - [x] Add Node.js, Express, TypeScript strict mode, and development scripts.
 - [x] Add `GET /api/v1/health`.
-- [ ] Add typed environment validation and `.env.example`.
+- [x] Add typed environment validation and `.env.example`.
 - [ ] Add a consistent error response, error handler, request IDs, and structured logging.
 - [ ] Add ESLint, formatting, and a minimal automated health check.
 - [ ] Add API hardening appropriate to the available endpoints: headers, body limits, and explicit CORS configuration.
@@ -252,4 +252,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. After the API health endpoint is verified, the next small step is validated environment configuration.
+The roadmap is being implemented one learning step at a time. Environment validation is complete; the next small step is consistent API error handling.

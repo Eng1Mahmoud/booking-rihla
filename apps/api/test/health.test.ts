@@ -1,21 +1,24 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { once } from 'node:events';
+import type { Server } from 'node:http';
 import { app } from '../src/app.ts';
 
-let server;
-let baseUrl;
+let server: Server;
+let baseUrl: string;
 
 before(async () => {
   // Port 0 chooses an available port, avoiding conflicts with the dev server.
   server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
-  baseUrl = `http://127.0.0.1:${server.address().port}`;
+  const address = server.address();
+  assert.ok(address && typeof address !== 'string');
+  baseUrl = `http://127.0.0.1:${address.port}`;
 });
 
 after(async () => {
   if (server?.listening) {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
   }
@@ -25,7 +28,7 @@ test('health endpoint responds to a real HTTP request with JSON', async () => {
   const response = await fetch(`${baseUrl}/api/v1/health`);
 
   assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /application\/json/);
+  assert.match(response.headers.get('content-type') ?? '', /application\/json/);
   assert.deepEqual(await response.json(), { status: 'ok' });
 });
 
