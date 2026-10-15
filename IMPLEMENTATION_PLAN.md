@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: explicit CORS configuration implemented and reviewed; the owner approved publishing this step. Lint, type checks, all 25 tests, and compilation pass. Logging remains deferred. Next learning step: local PostgreSQL setup in phase 2.
+Status: local PostgreSQL 18 is running and verified healthy. SQL connectivity and persistence across container recreation pass; the owner reviewed and approved publishing this step. No Prisma models or application tables have been added. Logging remains deferred.
 
 ## How we will build
 
@@ -52,7 +52,7 @@ Working result: start the API locally and receive a healthy response; configurat
 
 Small steps:
 
-- [ ] Run PostgreSQL locally with Docker Compose and a persistent volume.
+- [x] Run PostgreSQL locally with Docker Compose and a persistent volume.
 - [ ] Connect Prisma and learn the migration workflow; use migrations rather than `db push`.
 - [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
 - [ ] Add a minimal bus, numbered bus seats, route, and trip model.
@@ -271,4 +271,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; the next small step is local PostgreSQL setup in phase 2.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; the next small step is Prisma connection.

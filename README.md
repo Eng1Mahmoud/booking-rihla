@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: CORS configuration
+## Current step: local PostgreSQL
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds; there is no database yet.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; the API is not connected to it yet.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. The next learning step is local PostgreSQL setup.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma connection is the following learning step.
 
 ## Git workflow
 
@@ -137,3 +137,61 @@ curl.exe -i -H "Origin: https://unlisted.example.com" http://127.0.0.1:4000/api/
 ```
 
 Use the configured port if it differs from 4000. The first response includes Access-Control-Allow-Origin; the second does not.
+
+## Local PostgreSQL
+
+Docker Desktop must be running with Linux containers. The API still runs directly with npm; this step runs only PostgreSQL in Docker. Prisma and application tables have not been added, and the API health endpoint does not check the database yet.
+
+The root .env supplies Compose settings. It is separate from apps/api/.env, which supplies Node API settings. A local root .env with a generated password was created on this machine; do not overwrite it. On a fresh checkout, copy the root .env.example to .env and replace POSTGRES_PASSWORD before starting.
+
+```powershell
+# Fresh checkout only, when the root .env does not exist:
+Copy-Item .env.example .env
+# Edit .env and choose POSTGRES_PASSWORD, then:
+docker compose config --quiet
+docker compose up -d --wait postgres
+docker compose ps
+```
+
+The default connection settings are:
+
+| Setting   | Value                                      |
+| --------- | ------------------------------------------ |
+| Host      | 127.0.0.1                                  |
+| Host port | 5432                                       |
+| Database  | bus_platform                               |
+| User      | bus                                        |
+| Password  | POSTGRES_PASSWORD in the ignored root .env |
+
+The published port is bound to the local machine. If port 5432 is occupied, choose another POSTGRES_PORT in the root .env. The port inside the container remains 5432.
+
+Open a SQL session with the default user and database:
+
+```powershell
+docker compose exec postgres psql -U bus -d bus_platform
+```
+
+Then run:
+
+```sql
+SELECT current_database(), current_user;
+```
+
+Exit psql with \q. If you changed the database or user in .env, use those names in the command.
+
+Stop and start the database:
+
+```powershell
+docker compose stop postgres
+docker compose up -d --wait postgres
+```
+
+docker compose down removes this Compose project's container and network while retaining its named volume. The separate project name bus-booking-platform-dev prevents reuse of an older similarly named project volume found on this machine.
+
+The postgres_data named volume stores PostgreSQL data outside the container's writable layer. The PostgreSQL 18 image mounts it at /var/lib/postgresql, as required by the official image. The pg_isready health check indicates server readiness; it is not an application-level query or an authentication test.
+
+POSTGRES_DB, POSTGRES_USER, and POSTGRES_PASSWORD initialize a new empty database volume. Editing these settings later does not automatically change an existing database or password.
+
+This configuration is for local development. See the [official PostgreSQL image documentation](https://hub.docker.com/_/postgres) for initialization and version-specific storage behavior.
+
+Verification on this machine: PostgreSQL reports healthy; a real SQL query returns bus_platform and bus; the host port is reachable; a forced recreation produced a new container with the same database cluster identifier. No application tables were created. The previous similarly named volume was left untouched.
