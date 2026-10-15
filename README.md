@@ -2,11 +2,11 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: ESLint and Prettier (local review)
+## Current step: ESLint and Prettier
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, and validated startup settings. The health endpoint checks that the API responds; there is no database yet.
 
-See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for all planned phases and [the original requirements](docs/PRODUCT_REQUIREMENTS.md) for the long-term product vision. Requirements describe future work, not features already available.
+See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
 ## Run locally
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint is now configured; read [the Arabic walkthrough](docs/steps/04-eslint.md). Prettier is also configured; read [the Arabic formatting walkthrough](docs/steps/05-prettier.md). The next small step is API security headers, followed by the remaining foundation items before database work.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. The next small step is API security headers, followed by request body limits and CORS configuration before database work.
 
 ## Git workflow
 
@@ -101,4 +101,4 @@ Run npm run lint from the repository root. ESLint checks API source and TypeScri
 
 ## Formatting
 
-Run npm run format to apply Prettier formatting, or npm run format:check to verify it without editing files. Configuration is in .prettierrc.json; exclusions are in .prettierignore. Generated output, dependencies, local environment files, the npm lockfile, and the original requirements reference are excluded. ESLint and Prettier run separately; eslint-config-prettier disables conflicting lint rules.
+Run npm run format to apply Prettier formatting, or npm run format:check to verify it without editing files. Configuration is in .prettierrc.json; exclusions are in .prettierignore. Generated output, dependencies, local environment files, and the npm lockfile are excluded. ESLint and Prettier run separately; eslint-config-prettier disables conflicting lint rules.

@@ -5,5 +5,3 @@
 .env.*
 !.env.example
 package-lock.json
-# Preserve the original product requirements as supplied.
-docs/PRODUCT_REQUIREMENTS.md

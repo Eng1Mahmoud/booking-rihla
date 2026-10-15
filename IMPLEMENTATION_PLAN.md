@@ -6,7 +6,7 @@ Status: ESLint and Prettier implemented locally, awaiting owner review. Formatti
 
 Build one small feature at a time, explain it, run it, verify it, and commit it before moving on. Each phase contains several small commits. A phase is complete only when its working result can be demonstrated.
 
-The downloaded README describes the full product vision. This roadmap defines the implementation order. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions.
+This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions.
 
 ### Milestones
 
@@ -21,7 +21,7 @@ Security, validation, and meaningful tests are added with each relevant feature.
 
 Small steps:
 
-- [x] Keep the original product requirements as a reference in the repository.
+- [x] Keep the project phases and feature plan in this root roadmap.
 - [ ] Confirm the learning MVP boundaries and document assumptions.
 - [x] Add a concise project README, this roadmap, and `.gitignore`.
 - [x] Check the repository's existing history and default branch before making Git changes.
