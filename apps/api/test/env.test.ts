@@ -4,13 +4,18 @@ import { spawnSync } from 'node:child_process';
 import { parseEnv } from '../src/config/env.ts';
 
 test('missing settings use development defaults', () => {
-  assert.deepEqual(parseEnv({}), { NODE_ENV: 'development', PORT: 4000 });
+  assert.deepEqual(parseEnv({}), {
+    NODE_ENV: 'development',
+    PORT: 4000,
+    CORS_ORIGINS: ['http://localhost:3000', 'http://localhost:3001'],
+  });
 });
 
 test('valid settings produce a numeric port', () => {
   assert.deepEqual(parseEnv({ NODE_ENV: 'production', PORT: '4500' }), {
     NODE_ENV: 'production',
     PORT: 4500,
+    CORS_ORIGINS: ['http://localhost:3000', 'http://localhost:3001'],
   });
 });
 
@@ -44,4 +49,37 @@ test('server exits before listening when configuration is invalid', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Invalid environment configuration: PORT:/);
   assert.doesNotMatch(result.stdout, /API running/);
+});
+
+test('CORS origins are split and trimmed into an explicit allowlist', () => {
+  const env = parseEnv({
+    CORS_ORIGINS: 'https://web.example.com, https://admin.example.com',
+  });
+  assert.deepEqual(env.CORS_ORIGINS, [
+    'https://web.example.com',
+    'https://admin.example.com',
+  ]);
+});
+
+test('invalid CORS configuration is rejected without exposing its values', () => {
+  for (const CORS_ORIGINS of [
+    '',
+    '*',
+    'null',
+    'not-a-url',
+    'ftp://example.com',
+    'https://example.com/path',
+    'https://example.com/',
+    'https://example.com?token=private',
+    'https://user:private@example.com',
+    'https://example.com,',
+  ]) {
+    assert.throws(
+      () => parseEnv({ CORS_ORIGINS }),
+      (error: unknown) =>
+        error instanceof Error &&
+        /Invalid environment configuration: CORS_ORIGINS/.test(error.message) &&
+        !error.message.includes('private'),
+    );
+  }
 });

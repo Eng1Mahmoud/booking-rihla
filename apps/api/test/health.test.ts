@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { once } from 'node:events';
 import type { Server } from 'node:http';
-import { app } from '../src/app.ts';
+import { createApp } from '../src/app.ts';
+
+const app = createApp(['http://localhost:3000', 'http://localhost:3001']);
 
 let server: Server;
 let baseUrl: string;

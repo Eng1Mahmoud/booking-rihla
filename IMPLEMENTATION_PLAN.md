@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: JSON body parsing and a 100kb limit implemented and reviewed; the owner approved publishing this step. Lint, type checks, all 16 tests, and compilation pass. Logging remains deferred. Next learning step: explicit CORS configuration.
+Status: explicit CORS configuration implemented and reviewed; the owner approved publishing this step. Lint, type checks, all 25 tests, and compilation pass. Logging remains deferred. Next learning step: local PostgreSQL setup in phase 2.
 
 ## How we will build
 
@@ -44,7 +44,7 @@ Small steps:
 - [x] Add a minimal automated health check.
 - [x] Add API security headers with Helmet.
 - [x] Add JSON request parsing and a 100kb body limit with safe 400/413 errors.
-- [ ] Add explicit CORS configuration.
+- [x] Add explicit CORS configuration with validated origins and preflight handling.
 
 Working result: start the API locally and receive a healthy response; configuration errors are understandable.
 
@@ -271,4 +271,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. JSON body parsing and limits are approved for publication; the next small step is explicit CORS configuration.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; the next small step is local PostgreSQL setup in phase 2.

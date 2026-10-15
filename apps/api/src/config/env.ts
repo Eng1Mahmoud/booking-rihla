@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
-// Define a schema for the environment variables using Zod. This schema validates the expected environment variables and their types, providing default values where necessary.
+const originSchema = z
+  .url({ protocol: /^https?$/ })
+  .refine(
+    (value) => URL.canParse(value) && new URL(value).origin === value,
+    'Must be an HTTP(S) origin without a path, credentials, query, or fragment',
+  );
+
+// Define the environment settings and validate them before starting the server.
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
@@ -11,6 +18,11 @@ const envSchema = z.object({
     .default('4000')
     .transform(Number)
     .pipe(z.number().int().min(1).max(65535)),
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:3000,http://localhost:3001')
+    .transform((value) => value.split(',').map((origin) => origin.trim()))
+    .pipe(z.array(originSchema).min(1)),
 });
 
 export function parseEnv(environment: NodeJS.ProcessEnv) {
