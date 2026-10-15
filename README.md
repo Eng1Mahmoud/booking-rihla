@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: validated environment configuration
+## Current step: consistent API error handling
 
-Implemented: an Express + TypeScript API with a health endpoint, JSON 404 responses, and validated startup settings. The health endpoint checks that the API responds; there is no database yet.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, and validated startup settings. The health endpoint checks that the API responds; there is no database yet.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for all planned phases and [the original requirements](docs/PRODUCT_REQUIREMENTS.md) for the long-term product vision. Requirements describe future work, not features already available.
 
@@ -75,7 +75,7 @@ Read these files in order:
 5. `apps/api/src/app.ts`: creates Express and defines HTTP responses. A GET request to `/api/v1/health` returns JSON with status 200. Unknown paths receive JSON with status 404.
 6. `apps/api/test/env.test.ts`: checks defaults, valid values, invalid values, safe errors, and failed startup.
 7. `apps/api/test/health.test.ts`: starts a real HTTP server and checks its public responses with Node's built-in test runner.
-8. `apps/api/tsconfig.json` and `tsconfig.test.json`: strict compilation for app code and an additional type check for tests.
+8. `apps/api/tsconfig.json`: Node types and strict checking for both source and tests, automatically discovered by the editor. `tsconfig.build.json`: compiles only source files to `dist`.
 
 Startup flow: optional environment file → process.env → parseEnv → app.listen.
 
@@ -85,8 +85,10 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-Add consistent API error handling. Request IDs, structured logging, linting, and the remaining phase 1 items follow in separate changes before database work.
+Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging come next, followed by linting and the remaining phase 1 items before database work.
 
 ## Git workflow
 
 Keep each commit focused, verify it, and explain it before the next learning step. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
+
+Push changes to GitHub only after the owner reviews them and explicitly approves the push.
