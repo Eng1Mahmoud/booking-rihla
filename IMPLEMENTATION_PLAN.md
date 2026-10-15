@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Helmet security headers implemented and reviewed; the owner approved publishing this step. Formatting, lint, type checks, the 12 strengthened tests, and compilation pass. Logging remains deferred. Next learning step: request body limits.
+Status: JSON body parsing and a 100kb limit implemented and reviewed; the owner approved publishing this step. Lint, type checks, all 16 tests, and compilation pass. Logging remains deferred. Next learning step: explicit CORS configuration.
 
 ## How we will build
 
@@ -43,7 +43,7 @@ Small steps:
 - [x] Add Prettier formatting.
 - [x] Add a minimal automated health check.
 - [x] Add API security headers with Helmet.
-- [ ] Add request body limits.
+- [x] Add JSON request parsing and a 100kb body limit with safe 400/413 errors.
 - [ ] Add explicit CORS configuration.
 
 Working result: start the API locally and receive a healthy response; configuration errors are understandable.
@@ -271,4 +271,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. Helmet is approved for publication; the next small step is request body limits.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. JSON body parsing and limits are approved for publication; the next small step is explicit CORS configuration.

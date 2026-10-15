@@ -13,6 +13,23 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
+  // Convert known JSON parser errors without exposing the submitted body.
+  if (error instanceof Error && 'type' in error && 'status' in error) {
+    if (error.type === 'entity.parse.failed' && error.status === 400) {
+      error = new AppError(
+        400,
+        'INVALID_JSON',
+        'Request body must be valid JSON',
+      );
+    } else if (error.type === 'entity.too.large' && error.status === 413) {
+      error = new AppError(
+        413,
+        'PAYLOAD_TOO_LARGE',
+        'JSON request body must not exceed 100kb',
+      );
+    }
+  }
+
   if (
     error instanceof AppError &&
     Number.isInteger(error.statusCode) &&

@@ -7,6 +7,7 @@ export const app = express();
 
 app.disable('x-powered-by');
 app.use(helmet());
+app.use(express.json({ limit: '100kb' }));
 
 app.get('/api/v1/health', (_request, response) => {
   response.json({ status: 'ok' });

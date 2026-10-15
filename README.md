@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: Helmet security headers
+## Current step: JSON body parsing and limits
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, and Helmet security headers. The health endpoint checks that the API responds; there is no database yet.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, and JSON body parsing with a 100kb limit. The health endpoint checks that the API responds; there is no database yet.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. Request body limits and CORS configuration are the next separate steps before database work.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS configuration is the next separate step before database work.
 
 ## Git workflow
 
@@ -106,3 +106,13 @@ Run npm run format to apply Prettier formatting, or npm run format:check to veri
 ## Security headers
 
 Helmet runs before the routes, so its headers apply to successful responses and 404 errors. The existing x-powered-by setting remains disabled. Default Helmet headers include X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer, Content-Security-Policy, and Strict-Transport-Security. Helmet does not configure HTTPS, authentication, request body limits, or CORS. The current API uses the documented default configuration.
+
+## JSON request bodies
+
+The API parses application/json bodies before routes, with an explicit 100kb (102400-byte) limit. This makes parsed data available as request.body; it does not validate business fields. The default parser accepts JSON objects and arrays.
+
+Malformed JSON returns HTTP 400 with INVALID_JSON. Bodies exceeding the limit return HTTP 413 with PAYLOAD_TOO_LARGE. Responses use the existing JSON error format and do not echo the submitted content.
+
+This limit applies to the JSON parser, not every possible request content type or file upload. There are no POST business endpoints yet: a valid POST to an unknown route still returns the normal 404, while malformed or oversized JSON is rejected before routing.
+
+The HTTP tests cover a small valid body, a body exactly at the limit, malformed JSON, and one byte over the limit. No new package was installed.
