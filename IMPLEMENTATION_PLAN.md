@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: ESLint and Prettier implemented locally, awaiting owner review. Formatting, lint, type checks, all 12 tests, and compilation pass. No commit or push for these steps. Logging remains deferred. Next learning step: API security headers.
+Status: Helmet security headers implemented and reviewed; the owner approved publishing this step. Formatting, lint, type checks, the 12 strengthened tests, and compilation pass. Logging remains deferred. Next learning step: request body limits.
 
 ## How we will build
 
@@ -42,7 +42,9 @@ Small steps:
 - [x] Add ESLint for API source and tests.
 - [x] Add Prettier formatting.
 - [x] Add a minimal automated health check.
-- [ ] Add API hardening appropriate to the available endpoints: headers, body limits, and explicit CORS configuration.
+- [x] Add API security headers with Helmet.
+- [ ] Add request body limits.
+- [ ] Add explicit CORS configuration.
 
 Working result: start the API locally and receive a healthy response; configuration errors are understandable.
 
@@ -269,4 +271,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. ESLint and Prettier are ready for local review; the next small step is API security headers.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. Helmet is approved for publication; the next small step is request body limits.

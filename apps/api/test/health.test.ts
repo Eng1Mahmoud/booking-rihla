@@ -28,6 +28,9 @@ test('health endpoint responds to a real HTTP request with JSON', async () => {
   const response = await fetch(`${baseUrl}/api/v1/health`);
 
   assert.equal(response.status, 200);
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+  assert.equal(response.headers.get('x-powered-by'), null);
   assert.match(response.headers.get('content-type') ?? '', /application\/json/);
   assert.deepEqual(await response.json(), { status: 'ok' });
 });
@@ -36,6 +39,9 @@ test('unknown routes return a consistent JSON error', async () => {
   const response = await fetch(`${baseUrl}/missing`);
 
   assert.equal(response.status, 404);
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+  assert.equal(response.headers.get('x-powered-by'), null);
   assert.deepEqual(await response.json(), {
     error: { code: 'NOT_FOUND', message: 'Route not found' },
   });

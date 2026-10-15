@@ -1,10 +1,12 @@
 import express from 'express';
+import helmet from 'helmet';
 import { AppError } from './common/errors/app-error.ts';
 import { errorHandler } from './common/middleware/error-handler.ts';
 
 export const app = express();
 
 app.disable('x-powered-by');
+app.use(helmet());
 
 app.get('/api/v1/health', (_request, response) => {
   response.json({ status: 'ok' });
