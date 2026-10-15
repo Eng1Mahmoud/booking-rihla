@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "module": "NodeNext",
+    "module": "preserve",
     "strict": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
     "rewriteRelativeImportExtensions": true,
     "types": ["node"],
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "prisma.config.ts"]
 }

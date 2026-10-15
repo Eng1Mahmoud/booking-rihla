@@ -18,6 +18,7 @@ const envSchema = z.object({
     .default('4000')
     .transform(Number)
     .pipe(z.number().int().min(1).max(65535)),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:3000,http://localhost:3001')

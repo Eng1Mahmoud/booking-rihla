@@ -83,3 +83,24 @@ test('invalid CORS configuration is rejected without exposing its values', () =>
     );
   }
 });
+
+test('PostgreSQL URLs are optional for HTTP startup and validated when provided', () => {
+  assert.equal(parseEnv({}).DATABASE_URL, undefined);
+  for (const protocol of ['postgres', 'postgresql']) {
+    const DATABASE_URL =
+      protocol + '://bus:private@127.0.0.1:5432/bus_platform';
+    assert.equal(parseEnv({ DATABASE_URL }).DATABASE_URL, DATABASE_URL);
+  }
+});
+
+test('invalid database URLs are rejected without exposing their values', () => {
+  for (const DATABASE_URL of ['', 'private', 'https://private.example.com']) {
+    assert.throws(
+      () => parseEnv({ DATABASE_URL }),
+      (error: unknown) =>
+        error instanceof Error &&
+        /Invalid environment configuration: DATABASE_URL/.test(error.message) &&
+        !error.message.includes('private'),
+    );
+  }
+});

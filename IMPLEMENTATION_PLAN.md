@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: local PostgreSQL 18 is running and verified healthy. SQL connectivity and persistence across container recreation pass; the owner reviewed and approved publishing this step. No Prisma models or application tables have been added. Logging remains deferred.
+Status: Prisma 8 initialization is configured and approved for publication, with PostgreSQL credentials and project tooling integrated. The starter User/Post contract is still an example; no application tables or migrations have been created. The owner approved committing and pushing this setup step. Logging remains deferred.
 
 ## How we will build
 
@@ -53,7 +53,8 @@ Working result: start the API locally and receive a healthy response; configurat
 Small steps:
 
 - [x] Run PostgreSQL locally with Docker Compose and a persistent volume.
-- [ ] Connect Prisma and learn the migration workflow; use migrations rather than `db push`.
+- [x] Initialize Prisma 8 and adapt local connection settings and tooling.
+- [ ] Replace the starter contract with the first project model and learn the Prisma 8 migration workflow.
 - [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
 - [ ] Add a minimal bus, numbered bus seats, route, and trip model.
 - [ ] Add bus types, layout metadata, and amenities when extending the basic fleet model.
@@ -271,4 +272,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; the next small step is Prisma connection.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; Prisma 8 setup is approved for publication; the next small step is the first project model and table.

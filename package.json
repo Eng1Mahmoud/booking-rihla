@@ -5,7 +5,7 @@
     "apps/*"
   ],
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.11.0"
   },
   "scripts": {
     "dev": "npm run dev --workspace @booking-bus/api",
@@ -13,9 +13,10 @@
     "start": "npm run start --workspace @booking-bus/api",
     "typecheck": "npm run typecheck --workspace @booking-bus/api",
     "test": "npm run test --workspace @booking-bus/api",
-    "lint": "eslint apps/api/src apps/api/test --max-warnings=0",
+    "lint": "eslint apps/api/src apps/api/test apps/api/prisma.config.ts --max-warnings=0",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "contract:emit": "npm run contract:emit --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

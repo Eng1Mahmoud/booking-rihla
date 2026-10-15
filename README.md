@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: local PostgreSQL
+## Current step: Prisma 8 setup
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; the API is not connected to it yet.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 setup is available for local review; API routes do not use the database yet.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma connection is the following learning step.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; the next learning step is a project model and its first table.
 
 ## Git workflow
 
@@ -140,7 +140,7 @@ Use the configured port if it differs from 4000. The first response includes Acc
 
 ## Local PostgreSQL
 
-Docker Desktop must be running with Linux containers. The API still runs directly with npm; this step runs only PostgreSQL in Docker. Prisma and application tables have not been added, and the API health endpoint does not check the database yet.
+Docker Desktop must be running with Linux containers. The API still runs directly with npm; this step runs only PostgreSQL in Docker. Prisma is configured, but application tables have not been added, and the API health endpoint does not check the database yet.
 
 The root .env supplies Compose settings. It is separate from apps/api/.env, which supplies Node API settings. A local root .env with a generated password was created on this machine; do not overwrite it. On a fresh checkout, copy the root .env.example to .env and replace POSTGRES_PASSWORD before starting.
 
@@ -195,3 +195,24 @@ POSTGRES_DB, POSTGRES_USER, and POSTGRES_PASSWORD initialize a new empty databas
 This configuration is for local development. See the [official PostgreSQL image documentation](https://hub.docker.com/_/postgres) for initialization and version-specific storage behavior.
 
 Verification on this machine: PostgreSQL reports healthy; a real SQL query returns bus_platform and bus; the host port is reachable; a forced recreation produced a new container with the same database cluster identifier. No application tables were created. The previous similarly named volume was left untouched.
+
+## Prisma 8 setup
+
+The official [existing-app PostgreSQL guide](https://www.prisma.io/docs/prisma-orm/quickstart/existing-app/postgresql) is the setup reference. Prisma 8 is currently a release candidate. Run Prisma commands from apps/api, or use the workspace script below from the repository root.
+
+- apps/api/prisma.config.ts configures the CLI and loads the API .env through dotenv.
+- apps/api/src/prisma/contract.prisma still contains the initializer's User/Post examples; these are not the platform's final data model. No application tables or migrations have been created.
+- apps/api/src/prisma/db.ts loads the API .env, validates settings through parseEnv, and requires DATABASE_URL when the database module is imported. HTTP routes do not import it yet, so their liveness and tests remain independent of PostgreSQL.
+- apps/api/.env.example includes the API settings and a placeholder database URL. The local API .env uses the credentials from the root Docker .env. Replace the URL with your own credentials on another machine; URL-encode passwords. Both .env files stay ignored by Git.
+- contract.json and contract.d.ts are generated artifacts and must be committed with contract.prisma, as required by the Prisma 8 guide. ESLint and Prettier skip these two artifacts; TypeScript still checks imported types. .gitattributes marks them as generated in GitHub diffs.
+- prisma-8.md is the reference written by the initializer. It is not another project plan.
+
+After changing the contract, regenerate its artifacts from the repository root:
+
+```sh
+npm run contract:emit
+```
+
+The initializer's module: preserve, moduleResolution: bundler, and resolveJsonModule settings are retained. tsx is installed for the guide's scripts; the existing Node development server and tsc build commands remain available. Node 24.11 or newer is required by this project's Prisma setup.
+
+Setup verification does not create tables. Creating a project model and applying its first database change are the next separate learning step.
