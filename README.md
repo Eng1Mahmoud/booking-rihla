@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in small, explained steps.
 
-## Current step: consistent API error handling
+## Current step: ESLint (local review)
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, and validated startup settings. The health endpoint checks that the API responds; there is no database yet.
 
@@ -54,6 +54,7 @@ Blank values are invalid. Invalid settings stop startup and identify the affecte
 ## Verify and build
 
 ```sh
+npm run lint
 npm run typecheck
 npm test
 npm run build
@@ -85,10 +86,14 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint and formatting are the next small step, followed by the remaining foundation items before database work.
+Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint is now configured; read [the Arabic walkthrough](docs/steps/04-eslint.md). Prettier formatting is the next separate learning step, followed by the remaining foundation items before database work.
 
 ## Git workflow
 
 Keep each commit focused, verify it, and explain it before the next learning step. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
 
 Push changes to GitHub only after the owner reviews them and explicitly approves the push.
+
+## Linting
+
+Run npm run lint from the repository root. ESLint checks API source and TypeScript tests using recommended JavaScript and TypeScript rules. Intentionally unused function parameters may start with an underscore. The command reports problems without changing files, and fails on any errors or warnings. Generated output, dependencies, and coverage are excluded. The tool configuration is eslint.config.mjs; application code remains TypeScript.

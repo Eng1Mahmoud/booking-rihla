@@ -1,13 +1,23 @@
 {
   "name": "booking-bus",
   "private": true,
-  "workspaces": ["apps/*"],
-  "engines": { "node": ">=24.0.0" },
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "npm run dev --workspace @booking-bus/api",
     "build": "npm run build --workspace @booking-bus/api",
     "start": "npm run start --workspace @booking-bus/api",
     "typecheck": "npm run typecheck --workspace @booking-bus/api",
-    "test": "npm run test --workspace @booking-bus/api"
+    "test": "npm run test --workspace @booking-bus/api",
+    "lint": "eslint apps/api/src apps/api/test --max-warnings=0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "typescript-eslint": "^8.71.2"
   }
 }
