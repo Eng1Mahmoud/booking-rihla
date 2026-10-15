@@ -6,10 +6,9 @@
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
     "rewriteRelativeImportExtensions": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "sourceMap": true,
+    "types": ["node"],
+    "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

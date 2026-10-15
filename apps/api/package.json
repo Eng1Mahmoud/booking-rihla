@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
+    "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.ts"
   },
   "dependencies": {
