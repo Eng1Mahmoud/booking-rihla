@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Define a schema for the environment variables using Zod. This schema validates the expected environment variables and their types, providing default values where necessary.
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.string()

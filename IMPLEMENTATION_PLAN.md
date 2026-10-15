@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: API startup configuration and centralized request error handling implemented. All 12 tests, type checking, and compilation pass. The owner reviewed the changes and approved publishing error handling and the TypeScript configuration fix. Next learning step: request IDs and structured logging.
+Status: API startup configuration, error handling, and the TypeScript configuration fix are complete. Request IDs and structured logging are deferred at the owner's request to keep learning steps manageable. Their uncommitted implementation has been removed. Next learning step: ESLint and formatting in small steps.
 
 ## How we will build
 
@@ -36,7 +36,7 @@ Small steps:
 - [x] Add `GET /api/v1/health`.
 - [x] Add typed environment validation and `.env.example`.
 - [x] Add a consistent error response and centralized error handler.
-- [ ] Add request IDs and structured logging.
+- [ ] Add request IDs and structured logging — deferred until a later learning milestone.
 - [ ] Add ESLint, formatting, and a minimal automated health check.
 - [ ] Add API hardening appropriate to the available endpoints: headers, body limits, and explicit CORS configuration.
 
@@ -253,4 +253,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. The next small step is request IDs and structured logging.
+The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred; the next small step is ESLint and formatting.

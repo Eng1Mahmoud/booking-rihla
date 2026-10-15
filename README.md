@@ -85,7 +85,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging come next, followed by linting and the remaining phase 1 items before database work.
+Read [the Arabic error-handling walkthrough](docs/steps/03-error-handling.md). Request IDs and structured logging are deferred to keep the learning pace manageable. ESLint and formatting are the next small step, followed by the remaining foundation items before database work.
 
 ## Git workflow
 
