@@ -22,7 +22,8 @@
     "db:migrate": "npm run db:migrate --workspace @booking-bus/api",
     "db:seed": "npm run db:seed --workspace @booking-bus/api",
     "email:worker": "npm run email:worker --workspace @booking-bus/api",
-    "email:flush": "npm run email:flush --workspace @booking-bus/api"
+    "email:flush": "npm run email:flush --workspace @booking-bus/api",
+    "admin:bootstrap": "npm run admin:bootstrap --workspace @booking-bus/api --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

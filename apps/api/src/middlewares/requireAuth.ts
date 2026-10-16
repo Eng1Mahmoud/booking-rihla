@@ -8,6 +8,7 @@ export function requireAuth(
   service: SessionService = sessionService,
 ): RequestHandler {
   return async (request, response, next) => {
+    response.set('Cache-Control', 'no-store');
     const header = request.headers.authorization;
     const token =
       typeof header === 'string'

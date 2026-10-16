@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { test, type TestContext } from 'node:test';
-import { createApp } from '../src/app.ts';
+import {
+  createCatalogApp as createApp,
+  adminFetch as fetch,
+} from './helpers/catalogAuth.ts';
 import { AppError } from '../src/errors/AppError.ts';
 import type { BusService, Bus } from '../src/services/busService.ts';
 

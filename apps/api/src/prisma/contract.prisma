@@ -81,11 +81,18 @@ model Trip {
   @@check(expression: sql`"pricePiastres" BETWEEN 0 AND 2147483647`, name: "trip_price_range")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
 model User {
   id String @id @default(uuid())
   name String
   email String @unique
   phone String
+  role UserRole @default(USER)
   passwordHash String
   language String @default("ar")
   emailVerifiedAt TimestamptzString?

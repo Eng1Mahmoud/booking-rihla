@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Password recovery
+## Current feature: Roles and catalog authorization
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-Trip browsing, client-bound email verification, sign-in and rotating sessions are complete. Password recovery is complete. Next add role-based protection for management APIs before public deployment. Reservations follow the account lifecycle.
+Trip browsing, email verification, sign-in, recovery and role-based catalog protection are complete. Next implement the reservation MVP: transactional seat allocation, passenger ownership, server-calculated totals and cancellation without payment.
 
 ## Git workflow
 
@@ -248,13 +248,13 @@ The migration command applies pending changes and updates the development db ref
 | PATCH  | /api/v1/cities/:id               | Update one or both names and return the updated city |
 | DELETE | /api/v1/cities/:id               | Delete a city and return an empty 204 response       |
 
-Example PowerShell request:
+Example PowerShell request after signing in as ADMIN or SUPER_ADMIN (set $accessToken from data.accessToken in the login response):
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4000/api/v1/cities -ContentType application/json -Body (@{ nameAr = 'القاهرة'; nameEn = 'Cairo' } | ConvertTo-Json)
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4000/api/v1/cities -Headers @{ Authorization = "Bearer $accessToken" } -ContentType application/json -Body (@{ nameAr = 'القاهرة'; nameEn = 'Cairo' } | ConvertTo-Json)
 ```
 
-POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters for each. The server generates the UUID; caller-supplied ids and unknown fields are rejected. City names are not unique yet. These are local development routes; administrator authorization will be added with authentication before public deployment.
+POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters for each. The server generates the UUID; caller-supplied ids and unknown fields are rejected. City names are not unique yet. Writes require an authenticated ADMIN or SUPER_ADMIN; city lookups remain public. See the authorization matrix below.
 
 List responses contain data and pagination (limit and offset). Limits range from 1 to 100, offsets from 0 to 100000. Invalid inputs return 400, non-JSON create requests return 415, and unexpected database failures return the existing generic 500 response without private details.
 
@@ -303,7 +303,7 @@ Example body (replace CITY_UUID with an id returned by the cities API):
 }
 ```
 
-A nonexistent city on create/move returns 404 CITY_NOT_FOUND. A missing station returns 404 STATION_NOT_FOUND. Deleting a city that still has stations returns 409 CITY_HAS_STATIONS; remove or move its stations first. The foreign key enforces these rules atomically, including callers that bypass HTTP validation. Other unexpected failures keep the generic 500 response. These management writes receive role protection during the planned authentication feature; the API remains a local development application.
+A nonexistent city on create/move returns 404 CITY_NOT_FOUND. A missing station returns 404 STATION_NOT_FOUND. Deleting a city that still has stations returns 409 CITY_HAS_STATIONS; remove or move its stations first. The foreign key enforces these rules atomically, including callers that bypass HTTP validation. Other unexpected failures keep the generic 500 response. These management writes require an authenticated ADMIN or SUPER_ADMIN; station lookups remain public.
 
 The feature follows routes/stationRoutes.ts -> controllers/stationController.ts -> services/stationService.ts -> Prisma. schemas/stationSchema.ts validates Station requests, schemas/paginationSchema.ts shares pagination rules, and utils/databaseErrors.ts identifies PostgreSQL constraint codes without exposing raw error messages. No repository layer is added.
 
@@ -334,7 +334,7 @@ Creation uses one Prisma transaction for the bus and all seats. Capacity edits l
 
 The BusSeat foreign key cascades on Bus deletion, so no owned seats are left orphaned. Plate collisions return 409 PLATE_NUMBER_EXISTS. Absent buses return 404 BUS_NOT_FOUND. The write service also maps dependent-record restrictions to 409 BUS_IN_USE as other modules add references. Trip references now protect bus capacity and deletion; reservation-specific safeguards will accompany bookings. Seat catalog numbers describe the vehicle; availability for a particular departure will belong to Trip/Booking.
 
-Implementation follows routes/busRoutes.ts -> controllers/busController.ts -> services/busService.ts, with schemas/busSchema.ts for validation. No repository layer or extra runtime package is introduced. As with existing management routes, administrator authorization is added with the planned authentication feature before public deployment.
+Implementation follows routes/busRoutes.ts -> controllers/busController.ts -> services/busService.ts, with schemas/busSchema.ts for validation. No repository layer or extra runtime package is introduced. Every Bus endpoint requires an authenticated ADMIN or SUPER_ADMIN, including reads of plates and fleet status.
 
 The real PostgreSQL test covers seat UUIDs, the 100-seat boundary, normalized duplicate plates, growing/shrinking, retained ids, rollback after a conflicting combined edit, concurrent creates/capacity edits, database uniqueness/foreign-key/check constraints, and cascading deletion. Test-created buses and seats are cleaned up. The default HTTP suite still runs without PostgreSQL.
 
@@ -367,7 +367,7 @@ List filters can be combined, with isActive accepting only true/false strings. P
 
 The database enforces directed uniqueness, distinct endpoints, duration bounds, and station foreign keys. Duplicate directions return 409 ROUTE_EXISTS, including concurrent creates and conflicting edits. Missing endpoint stations return 404 STATION_NOT_FOUND. Missing routes return 404 ROUTE_NOT_FOUND. Invalid requests, including a partial update that makes an endpoint equal its stored counterpart, return 400 VALIDATION_ERROR. Failed edits leave the existing row unchanged. Unexpected errors keep the generic safe 500 response.
 
-Deleting either station used by a route returns 409 STATION_HAS_ROUTES; delete its routes first. ON DELETE/UPDATE RESTRICT also protects writes that bypass HTTP. Route deletion maps dependent-record restrictions to 409 ROUTE_IN_USE when later modules add references. Management authorization follows the planned authentication feature before public deployment.
+Deleting either station used by a route returns 409 STATION_HAS_ROUTES; delete its routes first. ON DELETE/UPDATE RESTRICT also protects writes that bypass HTTP. Route deletion maps dependent-record restrictions to 409 ROUTE_IN_USE when later modules add references. Every Route management endpoint requires an authenticated ADMIN or SUPER_ADMIN.
 
 The implementation follows routes/routeRoutes.ts -> controllers/routeController.ts -> services/routeService.ts -> Prisma, with schemas/routeSchema.ts for validation. Single-row writes rely on database constraints atomically rather than a separate read-before-write check. No extra runtime dependencies or architectural layers are introduced.
 
@@ -411,7 +411,7 @@ Trip writes run in a transaction. PATCH locks the trip before reading its curren
 
 Database constraints separately enforce arrival after departure, nonnegative bounded prices, valid statuses and restrictive route/bus foreign keys. Deleting a referenced Bus or Route returns 409 BUS_IN_USE or ROUTE_IN_USE. A bus used by any trip, including a cancelled or past trip, cannot change seatCount (409 BUS_HAS_TRIPS). A route used by any trip cannot change endpoints (409 ROUTE_HAS_TRIPS). Create a different catalog record when needed; unchanged endpoint values, route duration, plates and active flags remain editable. Parent-row locks coordinate these checks with concurrent trip creation. Deleting all dependent trips releases these restrictions.
 
-DELETE currently removes an unreferenced trip, including historical trips. The service maps dependent-record restrictions to 409 TRIP_IN_USE when bookings are introduced. Reservation-specific mutation rules will accompany bookings. These management endpoints remain local development APIs; administrator authorization follows the planned authentication feature before public deployment.
+DELETE currently removes an unreferenced trip, including historical trips. The service maps dependent-record restrictions to 409 TRIP_IN_USE when bookings are introduced. Reservation-specific mutation rules will accompany bookings. These management endpoints require an authenticated ADMIN or SUPER_ADMIN. Passenger search, details and departure seats remain public.
 
 Lists accept combined routeId/busId UUID filters and status=SCHEDULED/CANCELLED, with limit=20 and offset=0 by default (limits 1-100, offsets 0-100000). Results sort by departure instant then UUID. Missing filter matches return an empty list. Invalid requests return 400 VALIDATION_ERROR, non-JSON bodies return 415, missing trips return 404 TRIP_NOT_FOUND, and unexpected failures keep the generic safe 500 response.
 
@@ -507,7 +507,7 @@ Compiled JavaScript verification also read a real seeded trip through both new e
 
 ## Registration and email verification
 
-Registration creates and verifies accounts; sign-in and sessions are implemented below. Catalog management role protection is still upcoming. The current API and Mailpit remain local development services.
+Registration creates and verifies accounts; sign-in and sessions are implemented below. Catalog management is now protected by the roles documented below. The current API and Mailpit remain local development services.
 
 From the repository root:
 
@@ -618,6 +618,7 @@ Login response:
       "name": "Mahmoud",
       "email": "mahmoud@example.test",
       "phone": "+201012345678",
+      "role": "USER",
       "language": "ar",
       "emailVerifiedAt": "2026-10-16T10:00:00.000Z",
       "createdAt": "2026-10-16T09:55:00.000Z"
@@ -636,11 +637,11 @@ The custom CSRF header is mandatory even for non-browser clients. If Origin is p
 
 Invalid credentials, inactive accounts, unverified accounts and locked accounts share 401 INVALID_CREDENTIALS. Unknown users still run Argon2 verification against a fixed public decoy hash. Five wrong passwords lock a known account for fifteen minutes in PostgreSQL; failed attempts commit, successful eligible sign-in resets the counter after the lock expires. Login has a process-local limit of twenty requests per fifteen minutes, refresh/logout sixty, and logout-all twenty. Malformed requests count after JSON parsing. These IP stores are local to one process; shared deployment limiting remains deferred.
 
-Invalid session credentials return 401 UNAUTHENTICATED, CSRF violations return 403 CSRF_REJECTED, and throttling returns 429 RATE_LIMITED with Retry-After. Invalid input and unsupported media types retain the shared 400/415 behavior. Internal errors stay generic. Cookies/tokens/passwords are not logged. Existing catalog write routes remain local and will receive role protection in the upcoming authorization feature; creating an account does not grant administration.
+Invalid session credentials return 401 UNAUTHENTICATED, CSRF violations return 403 CSRF_REJECTED, and throttling returns 429 RATE_LIMITED with Retry-After. Invalid input and unsupported media types retain the shared 400/415 behavior. Internal errors stay generic. Cookies/tokens/passwords are not logged. Existing catalog writes require ADMIN or SUPER_ADMIN; creating an account grants only USER.
 
 Implementation uses services/sessionService.ts for login/rotation/revocation, utils/sessionTokens.ts for opaque tokens and jose JWT validation/signing, middlewares/requireAuth.ts for protected requests, middlewares/sessionCsrf.ts for mutation checks, and controllers/sessionController.ts/routes/sessionRoutes.ts for HTTP/cookies. cookie-parser only parses the refresh cookie. Services do not use Express objects, and there is no repository layer.
 
-Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 104 default tests and ten PostgreSQL integration tests. Roles/admin protection, shared rate-limit storage and browser frontend integration remain later feature batches.
+Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 109 default tests and eleven PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
 
 Session verification also applied all seven migrations to a fresh temporary database, reran them without changes, passed all nine PostgreSQL integration tests there, and exercised compiled SMTP activation, sign-in, current-user lookup, refresh rotation and logout. The temporary database and scoped test accounts were removed; existing demo trips remain unchanged.
 
@@ -664,3 +665,35 @@ Password-reset digests and encrypted outbox payloads use a separate purpose-boun
 Read schemas/passwordResetSchema.ts for input rules, routes/passwordResetRoutes.ts for endpoints/IP limits, controllers/passwordResetController.ts for HTTP handling, services/passwordResetService.ts for transactions and session revocation, and emails/passwordResetEmail.ts for Arabic/English messages. These paths are under apps/api/src. Tests cover generic replies, validation, purpose isolation, cooldown/quota, expiry, failed guesses, simultaneous requests/resets, pending-account recovery, session revocation, suspension and notification delivery. Each integration test cleans only its own records.
 
 Verification: all eight migrations applied to an empty temporary database; a second migration run applied none. All ten PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test used real Nodemailer SMTP delivery to Mailpit for verification, password recovery and the change notice, checked old-session rejection and new-password sign-in, then cleaned its records and dropped only its temporary database. Existing development catalog data remained unchanged.
+
+## Roles and catalog authorization
+
+Apply npm run db:migrate before starting the API. The additive migration adds User.role with a USER default and a PostgreSQL check constraint allowing USER, ADMIN and SUPER_ADMIN. Existing accounts stay USER. Public registration rejects role, isAdmin and other unknown fields. Login, refresh and current-user responses now include role in their safe user object. Access JWTs do not carry authorization roles; requireAuth reads the current user and session from PostgreSQL on every protected request, so demotion takes effect at the next check without waiting for token expiry. Suspension, unverified email and revoked/expired sessions still return 401.
+
+| Endpoints                                                                    | Public access | Required role        |
+| ---------------------------------------------------------------------------- | ------------- | -------------------- |
+| GET /api/v1/health                                                           | Yes           | None                 |
+| GET /api/v1/cities and /cities/:id                                           | Yes           | None                 |
+| GET /api/v1/stations and /stations/:id                                       | Yes           | None                 |
+| GET /api/v1/trips/search, /trips/:id/details, /trips/:id/seats               | Yes           | None                 |
+| POST/PATCH/DELETE catalog endpoints (cities, stations, buses, routes, trips) | No            | ADMIN or SUPER_ADMIN |
+| All /api/v1/buses and /api/v1/routes endpoints                               | No            | ADMIN or SUPER_ADMIN |
+| GET /api/v1/trips and /trips/:id management endpoints                        | No            | ADMIN or SUPER_ADMIN |
+
+Protected requests require Authorization: Bearer ACCESS_TOKEN. A refresh cookie alone grants no catalog access. No additional session-CSRF header is required for these Bearer-authenticated endpoints. Anonymous/invalid authentication receives 401 UNAUTHENTICATED; an authenticated passenger receives 403 FORBIDDEN. Checks run before controller validation and database mutations, with Cache-Control: no-store on protected responses. HEAD receives the same read authorization. Public CORS preflights remain handled before routers. Route management can expose inactive catalog records, so passengers use the existing filtered search/details endpoints.
+
+The reusable middlewares/requireRole.ts accepts explicit allowed roles: management currently permits ADMIN and SUPER_ADMIN. Future super-admin-only administrator management and refunds will explicitly allow only SUPER_ADMIN. This feature does not add those management operations or booking ownership; ownership will accompany reservations.
+
+### Bootstrap the first super admin
+
+First register an account, receive its local email through Mailpit and verify it. Then run from the repository root, replacing the example with that account's email:
+
+```sh
+npm run admin:bootstrap -- --email verified@example.com
+```
+
+This local operator command promotes an existing active, verified account; it never creates a password, bypasses email verification or reactivates an account. It takes a database advisory lock so concurrent first-admin commands cannot promote different accounts. If any SUPER_ADMIN already exists, a different target is rejected, including when the existing super admin is suspended. Rerunning it for the same active, verified super admin is a no-op. The initial promotion revokes existing sessions; sign in again to get a fresh session. There is no HTTP bootstrap route, automatic admin seed, default administrator credential or role-setting field in public registration. Run the command only with access to the intended database; it is a privileged operator action. No permanent administrator was created by our tests.
+
+Read src/middlewares/requireAuth.ts, src/middlewares/requireRole.ts and the catalog routers for request enforcement; src/services/sessionService.ts includes the safe role; src/services/adminBootstrapService.ts and src/scripts/bootstrapAdmin.ts implement the operator command. These paths are under apps/api. Catalog tests use an injected test-only session service to focus on catalog behavior; the authorization integration suite uses actual users, Argon2 hashes, JWTs and database sessions to verify role enforcement, live role changes, suspension, logout and safe bootstrap concurrency. Its cleanup removes only its own fixtures.
+
+Authorization verification: all nine migrations applied to a fresh temporary database; rerunning applied zero. All eleven PostgreSQL integration tests passed there, including bootstrap concurrency. A compiled HTTP smoke test exercised the root npm bootstrap command, repeated it idempotently, checked promotion-time session revocation, privileged catalog creation and immediate denial after demotion. The temporary database and test accounts were removed; no permanent administrator was created.

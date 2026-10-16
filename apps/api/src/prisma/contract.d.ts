@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'03804b46fac041f0e00910206042e2113d173f5cf77e5afc59cc211163701ec2'>;
+  StorageHashBase<'d2d889f19321aa0b39f1d4a8a148b77003a9939dd31e1d0d4a3f014649254025'>;
 export type ExecutionHash =
   ExecutionHashBase<'cae4e5331cc9dea06f420faa103f3361d7c6de3e3d2641a89bc126816379509d'>;
 export type ProfileHash =
@@ -332,6 +332,7 @@ export type FieldOutputTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly phone: CodecTypes['pg/text@1']['output'];
+      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -435,6 +436,7 @@ export type FieldInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly phone: CodecTypes['pg/text@1']['input'];
+      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -538,6 +540,7 @@ export type StorageColumnTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly phone: CodecTypes['pg/text@1']['output'];
+      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -641,6 +644,7 @@ export type StorageColumnInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly phone: CodecTypes['pg/text@1']['input'];
+      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -773,6 +777,7 @@ export namespace Models {
     name: CodecTypes['pg/text@1']['output'];
     passwordHash: CodecTypes['pg/text@1']['output'];
     phone: CodecTypes['pg/text@1']['output'];
+    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     emails: public_EmailOutbox[];
     passwordReset: public_PasswordReset | null;
     sessions: public_Session[];
@@ -1643,6 +1648,16 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly role: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'USER'>;
+                  };
+                  readonly many: false;
+                };
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['email'] }];
@@ -1658,6 +1673,10 @@ type ContractBase = Omit<
             readonly TripStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['SCHEDULED', 'CANCELLED'];
+            };
+            readonly UserRole: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['USER', 'ADMIN', 'SUPER_ADMIN'];
             };
           };
         };
@@ -2448,6 +2467,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly role: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
             };
             readonly relations: {
               readonly emails: {
@@ -2512,6 +2535,7 @@ type ContractBase = Omit<
                 readonly name: { readonly column: 'name' };
                 readonly passwordHash: { readonly column: 'passwordHash' };
                 readonly phone: { readonly column: 'phone' };
+                readonly role: { readonly column: 'role' };
               };
             };
           };
@@ -2532,6 +2556,14 @@ type ContractBase = Omit<
               { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
             ];
           };
+          readonly UserRole: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'USER'; readonly value: 'USER' },
+              { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
+              { readonly name: 'SUPER_ADMIN'; readonly value: 'SUPER_ADMIN' },
+            ];
+          };
         };
         readonly enumMemberTypes?: {
           readonly EmailPurpose: readonly [
@@ -2542,6 +2574,11 @@ type ContractBase = Omit<
           readonly TripStatus: readonly [
             { readonly name: 'SCHEDULED'; readonly value: 'SCHEDULED' },
             { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
+          ];
+          readonly UserRole: readonly [
+            { readonly name: 'USER'; readonly value: 'USER' },
+            { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
+            { readonly name: 'SUPER_ADMIN'; readonly value: 'SUPER_ADMIN' },
           ];
         };
       };

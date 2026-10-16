@@ -15,7 +15,8 @@
     "db:migrate": "prisma db migrate --advance-ref db",
     "db:seed": "node --env-file-if-exists=.env src/scripts/seed.ts",
     "email:worker": "node --env-file-if-exists=.env src/workers/emailWorker.ts",
-    "email:flush": "node --env-file-if-exists=.env src/workers/emailWorker.ts --once"
+    "email:flush": "node --env-file-if-exists=.env src/workers/emailWorker.ts --once",
+    "admin:bootstrap": "node --env-file-if-exists=.env src/scripts/bootstrapAdmin.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",

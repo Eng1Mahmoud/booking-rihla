@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { test } from 'node:test';
-import { createApp } from '../../src/app.ts';
+import {
+  createCatalogApp as createApp,
+  adminFetch as fetch,
+} from '../helpers/catalogAuth.ts';
 import { db } from '../../src/prisma/db.ts';
 
 // Opt-in test: writes one uniquely named row and removes only that row afterward.

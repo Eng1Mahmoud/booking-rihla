@@ -13,6 +13,7 @@ import {
 const user = {
   id: randomUUID(),
   name: 'Mahmoud',
+  role: 'USER' as const,
   email: 'user@example.test',
   phone: '+201012345678',
   language: 'ar',

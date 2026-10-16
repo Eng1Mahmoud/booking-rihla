@@ -1,4 +1,6 @@
 import express from 'express';
+import { requireAuth } from './middlewares/requireAuth.ts';
+import { requireRole } from './middlewares/requireRole.ts';
 import helmet from 'helmet';
 import cors from 'cors';
 import { AppError } from './errors/AppError.ts';
@@ -55,6 +57,11 @@ export function createApp(
 ) {
   const app = express();
 
+  const admin = [
+    requireAuth(services.sessions ?? sessionService),
+    requireRole('ADMIN', 'SUPER_ADMIN'),
+  ];
+
   app.disable('x-powered-by');
   app.use(helmet());
   app.use(cors({ origin: corsOrigins, credentials: true }));
@@ -64,20 +71,30 @@ export function createApp(
     response.json({ status: 'ok' });
   });
 
-  app.use('/api/v1/cities', createCityRouter(services.cities ?? cityService));
+  app.use(
+    '/api/v1/cities',
+    createCityRouter(services.cities ?? cityService, admin),
+  );
   app.use(
     '/api/v1/stations',
-    createStationRouter(services.stations ?? stationService),
+    createStationRouter(services.stations ?? stationService, admin),
   );
 
-  app.use('/api/v1/buses', createBusRouter(services.buses ?? busService));
+  app.use(
+    '/api/v1/buses',
+    createBusRouter(services.buses ?? busService, admin),
+  );
 
-  app.use('/api/v1/routes', createRouteRouter(services.routes ?? routeService));
+  app.use(
+    '/api/v1/routes',
+    createRouteRouter(services.routes ?? routeService, admin),
+  );
 
   app.use(
     '/api/v1/trips',
     createTripRouter(
       services.trips ?? tripService,
+      admin,
       services.tripSearch,
       services.tripDetails,
     ),

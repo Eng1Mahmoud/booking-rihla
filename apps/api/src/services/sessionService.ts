@@ -1,6 +1,6 @@
 import { verify } from 'argon2';
 import { AppError } from '../errors/AppError.ts';
-import type { LoginInput } from '../schemas/authSchema.ts';
+import type { UserRole, LoginInput } from '../schemas/authSchema.ts';
 import { parseSessionEnv } from '../config/env.ts';
 import {
   newRefreshToken,
@@ -19,6 +19,7 @@ function unauthorized() {
 }
 function publicUser(user: {
   id: string;
+  role: UserRole;
   name: string;
   email: string;
   phone: string;
@@ -28,6 +29,7 @@ function publicUser(user: {
 }) {
   return {
     id: user.id,
+    role: user.role,
     name: user.name,
     email: user.email,
     phone: user.phone,

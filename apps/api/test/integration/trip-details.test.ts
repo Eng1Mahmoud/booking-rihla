@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { test } from 'node:test';
-import { createApp } from '../../src/app.ts';
+import {
+  createCatalogApp as createApp,
+  adminFetch,
+} from '../helpers/catalogAuth.ts';
 import { db } from '../../src/prisma/db.ts';
 import { buildDemoData } from '../../src/scripts/demoData.ts';
 import { seedDemo } from '../../src/scripts/demoSeed.ts';
@@ -103,7 +106,7 @@ test('passenger details and seats follow eligible trips and the assigned bus wit
   await db.orm.public.Trip.where({ id: otherTrip.id }).update({
     status: 'CANCELLED',
   });
-  const reassigned = await fetch(base + '/' + trip.id, {
+  const reassigned = await adminFetch(base + '/' + trip.id, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ busId: otherBus.id }),
@@ -140,7 +143,7 @@ test('passenger details and seats follow eligible trips and the assigned bus wit
   });
   await expectHidden(trip.id);
   // The existing management detail still reads cancelled/past trips for operators.
-  const management = await fetch(base + '/' + trip.id);
+  const management = await adminFetch(base + '/' + trip.id);
   assert.equal(management.status, 200);
   assert.equal((await management.json()).data.id, trip.id);
   await expectHidden(randomUUID());

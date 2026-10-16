@@ -86,6 +86,23 @@
                 "value": "CANCELLED"
               }
             ]
+          },
+          "UserRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "USER",
+                "value": "USER"
+              },
+              {
+                "name": "ADMIN",
+                "value": "ADMIN"
+              },
+              {
+                "name": "SUPER_ADMIN",
+                "value": "SUPER_ADMIN"
+              }
+            ]
           }
         },
         "models": {
@@ -1232,6 +1249,19 @@
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "UserRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
               }
             },
             "relations": {
@@ -1332,6 +1362,9 @@
                 },
                 "phone": {
                   "column": "phone"
+                },
+                "role": {
+                  "column": "role"
                 }
               },
               "namespaceId": "public",
@@ -2342,6 +2375,11 @@
             "User": {
               "checks": [
                 {
+                  "expression": "\"role\" IN ('USER', 'ADMIN', 'SUPER_ADMIN')",
+                  "name": "User_role_check_a8bee70d",
+                  "prefix": "User_role_check"
+                },
+                {
                   "expression": "language IN ('ar', 'en')",
                   "name": "user_language_cec39abc",
                   "prefix": "user_language"
@@ -2423,6 +2461,21 @@
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "USER"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "UserRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 }
               },
               "foreignKeys": [],
@@ -2456,6 +2509,14 @@
                 "SCHEDULED",
                 "CANCELLED"
               ]
+            },
+            "UserRole": {
+              "kind": "valueSet",
+              "values": [
+                "USER",
+                "ADMIN",
+                "SUPER_ADMIN"
+              ]
             }
           }
         },
@@ -2463,7 +2524,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "03804b46fac041f0e00910206042e2113d173f5cf77e5afc59cc211163701ec2"
+    "storageHash": "d2d889f19321aa0b39f1d4a8a148b77003a9939dd31e1d0d4a3f014649254025"
   },
   "execution": {
     "executionHash": "cae4e5331cc9dea06f420faa103f3361d7c6de3e3d2641a89bc126816379509d",

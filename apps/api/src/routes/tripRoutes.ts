@@ -1,3 +1,4 @@
+import type { RequestHandler } from 'express';
 import { Router } from 'express';
 import { createTripController } from '../controllers/tripController.ts';
 import type { TripService } from '../services/tripService.ts';
@@ -16,6 +17,7 @@ import {
 
 export function createTripRouter(
   service: TripService,
+  admin: RequestHandler[],
   searchService: TripSearchService = tripSearchService,
   detailsService: TripDetailsService = tripDetailsService,
 ) {
@@ -23,14 +25,14 @@ export function createTripRouter(
   const controller = createTripController(service);
   const detailsController = createTripDetailsController(detailsService);
 
-  router.get('/', controller.list);
+  router.get('/', ...admin, controller.list);
   router.get('/search', createTripSearchController(searchService));
   router.get('/:id/details', detailsController.getById);
   router.get('/:id/seats', detailsController.listSeats);
-  router.get('/:id', controller.getById);
-  router.post('/', controller.create);
-  router.patch('/:id', controller.update);
-  router.delete('/:id', controller.remove);
+  router.get('/:id', ...admin, controller.getById);
+  router.post('/', ...admin, controller.create);
+  router.patch('/:id', ...admin, controller.update);
+  router.delete('/:id', ...admin, controller.remove);
 
   return router;
 }
