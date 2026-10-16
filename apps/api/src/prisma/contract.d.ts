@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'105cd6d1e915bc27ceb6897a4d63f01215f213afc180a7012c2674e709d76985'>;
+  StorageHashBase<'073ef5bb5ade4ddc745ab923833f155e136af0e69f7eeace71771c5661ea2b68'>;
 export type ExecutionHash =
   ExecutionHashBase<'71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865'>;
 export type ProfileHash =
@@ -2248,7 +2248,20 @@ type ContractBase = Omit<
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['email'] }];
-              indexes: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'User_phone_idx_8db23f45';
+                  readonly prefix: 'User_phone_idx';
+                  readonly columns: readonly ['phone'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'User_role_createdAt_id_idx_522b1764';
+                  readonly prefix: 'User_role_createdAt_id_idx';
+                  readonly columns: readonly ['role', 'createdAt', 'id'];
+                  readonly unique: false;
+                },
+              ];
               foreignKeys: readonly [];
             };
           };

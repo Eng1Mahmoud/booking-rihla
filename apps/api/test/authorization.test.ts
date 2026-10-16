@@ -76,6 +76,10 @@ const protectedRoutes: [string, string][] = [
   ['GET', '/api/v1/admin/bookings'],
   ['GET', '/api/v1/admin/bookings/' + id],
   ['HEAD', '/api/v1/admin/bookings'],
+  ['GET', '/api/v1/admin/users'],
+  ['GET', '/api/v1/admin/users/' + id],
+  ['HEAD', '/api/v1/admin/users'],
+  ['PATCH', '/api/v1/admin/users/' + id + '/status'],
 ];
 
 test('every catalog mutation and management read rejects anonymous and passenger requests before validation', async (t) => {
@@ -128,6 +132,17 @@ test('admin and super admin reach catalog controllers and authorized writes keep
         return null;
       },
     },
+    adminUsers: {
+      async list() {
+        return [];
+      },
+      async findById() {
+        return null;
+      },
+      async updateStatus() {
+        return null;
+      },
+    },
     adminBookings: {
       async list() {
         return [];
@@ -158,6 +173,24 @@ test('admin and super admin reach catalog controllers and authorized writes keep
     );
     assert.equal(
       (await fetch(base + '/api/v1/admin/bookings/' + id, { headers })).status,
+      404,
+    );
+    assert.equal(
+      (await fetch(base + '/api/v1/admin/users', { headers })).status,
+      200,
+    );
+    assert.equal(
+      (await fetch(base + '/api/v1/admin/users/' + id, { headers })).status,
+      404,
+    );
+    assert.equal(
+      (
+        await fetch(base + '/api/v1/admin/users/' + id + '/status', {
+          method: 'PATCH',
+          headers,
+          body: '{"isActive":false}',
+        })
+      ).status,
       404,
     );
     for (const suffix of ['/batch', '/batch/preview']) {

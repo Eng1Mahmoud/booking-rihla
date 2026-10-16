@@ -1,0 +1,80 @@
+[
+  {
+    "id": "index.User.User_phone_idx_8db23f45",
+    "label": "Create index \"User_phone_idx_8db23f45\" on \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "User_phone_idx_8db23f45",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"User_phone_idx_8db23f45\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User_phone_idx_8db23f45\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"User_phone_idx_8db23f45\"",
+        "sql": "CREATE INDEX \"User_phone_idx_8db23f45\" ON \"public\".\"User\" (\"phone\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"User_phone_idx_8db23f45\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User_phone_idx_8db23f45\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.User.User_role_createdAt_id_idx_522b1764",
+    "label": "Create index \"User_role_createdAt_id_idx_522b1764\" on \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "User_role_createdAt_id_idx_522b1764",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"User_role_createdAt_id_idx_522b1764\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User_role_createdAt_id_idx_522b1764\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"User_role_createdAt_id_idx_522b1764\"",
+        "sql": "CREATE INDEX \"User_role_createdAt_id_idx_522b1764\" ON \"public\".\"User\" (\"role\", \"createdAt\", \"id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"User_role_createdAt_id_idx_522b1764\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User_role_createdAt_id_idx_522b1764\""
+        ]
+      }
+    ]
+  }
+]

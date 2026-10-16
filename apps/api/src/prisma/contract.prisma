@@ -111,6 +111,8 @@ model User {
   passwordReset PasswordReset?
   verification EmailVerification?
   emails EmailOutbox[]
+  @@index([role, createdAt, id])
+  @@index([phone])
   @@check(expression: sql`"loginFailures" BETWEEN 0 AND 5`, name: "user_login_failures")
   @@check(expression: sql`language IN ('ar', 'en')`, name: "user_language")
 }

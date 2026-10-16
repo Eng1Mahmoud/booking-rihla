@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Administrator booking reads
+## Current feature: Passenger account management
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Next add user lists and suspension/activation, followed by super-admin management and audit logging.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Passenger account listing and suspension/activation are now implemented. Next add super-admin-only administrator management, followed by audit logging.
 
 ## Git workflow
 
@@ -920,6 +920,48 @@ Passenger GET /api/v1/bookings and GET /api/v1/bookings/:id keep their original 
 
 Read apps/api/src/schemas/adminBookingSchema.ts for exact filters, controllers/adminBookingController.ts for validation and HTTP responses, routes/adminBookingRoutes.ts for protected read routes, and services/adminBookingService.ts for queries and safe account projections. bookingService.ts now shares its base booking query and price/trip summary serializer with the operator service, preserving the passenger response. No repository layer is introduced.
 
-Backend work remaining after this feature: user listing and suspension/activation; super-admin administrator management; administrator audit records; seat holds/expiry and sandbox payment states/provider/webhooks; QR tickets, confirmations and reminders; agreed operator cancellation/refunds; dashboard metrics; then readiness/logging, expired-data cleanup, shared rate limits when needed, CI and backend integration verification. Hold duration and operator cancellation/refund policy must be settled before dependent payment work. Passenger cancellation stays disabled. Production provider onboarding/deployment follow in the release phase; the passenger site and dashboard follow backend completion.
+Passenger account listing and suspension/activation are now implemented below. Remaining backend work: super-admin administrator management; administrator audit records; seat holds/expiry and sandbox payment states/provider/webhooks; QR tickets, confirmations and reminders; agreed operator cancellation/refunds; dashboard metrics; then readiness/logging, expired-data cleanup, shared rate limits when needed, CI and backend integration verification. Hold duration and operator cancellation/refund policy must be settled before dependent payment work. Passenger cancellation stays disabled. Production provider onboarding/deployment follow in the release phase; the passenger site and dashboard follow backend completion.
 
 Administrator booking verification: all 138 default tests and all 16 PostgreSQL integration tests passed, along with strict types, lint, formatting and build. All fourteen migrations applied to an empty temporary database; a second run applied zero. Compiled JavaScript passed real login, reservation, administrator list/detail and passenger-ownership HTTP checks. Applying the new index to development left all compared business rows unchanged. Scoped fixtures and the temporary database were removed.
+
+## Passenger account management
+
+Apply npm run db:migrate. This feature adds only User(role, createdAt, id) and User(phone) indexes for ordered passenger lookup and exact phone searches. No new model, dependency or environment variable is introduced. Existing accounts, reservations and allocations stay in place.
+
+| Method | Path                           | Result                                       |
+| ------ | ------------------------------ | -------------------------------------------- |
+| GET    | /api/v1/admin/users            | Paginated passenger accounts                 |
+| GET    | /api/v1/admin/users/:id        | One passenger account                        |
+| PATCH  | /api/v1/admin/users/:id/status | Set the passenger account's isActive boolean |
+
+All routes require a verified active ADMIN or SUPER_ADMIN using a Bearer access token. Role/authentication checks precede validation, and responses use Cache-Control: no-store. The routes only manage role USER: staff accounts never appear in the list, and staff ids return the same 404 USER_NOT_FOUND as missing accounts on detail/status requests, including when called by a super admin. Separate super-admin administrator management will follow. These routes cannot modify roles, profile fields, email, passwords or delete accounts.
+
+### Read passenger accounts
+
+List filters are optional and combined with AND: email (trimmed/lowercased exact account email), phone (exact international account phone), isActive (query string true/false), limit (1-100, default 20) and offset (0-100000, default 0). No partial/wildcard name search or role filter is supported. Phone numbers are not unique: matching passenger accounts are all eligible results. URL-encode phone values, especially the plus sign: /api/v1/admin/users?phone=%2B201012345678&isActive=false.
+
+List responses are { data: [...], pagination: { limit, offset } }; empty matches return 200 with an empty data array. Order is createdAt descending then id descending for deterministic ties. Detail returns { data: account }. The selected fields are id, name, email, phone, role USER, language, isActive, emailVerifiedAt (nullable ISO string) and createdAt (ISO string). Password hashes, activation/reset codes, sessions, refresh tokens and login-failure/lockout fields are not loaded for the public account projection. Detail/status routes reject all query parameters; unsupported, repeated, nested or malformed filters/ids return 400 VALIDATION_ERROR.
+
+Use /api/v1/admin/bookings?userId=USER_UUID for a customer's reservation history; the user list does not fetch or expose reservation/passenger arrays.
+
+### Suspend or reactivate
+
+Send application/json to PATCH /api/v1/admin/users/USER_UUID/status with exactly:
+
+```json
+{ "isActive": false }
+```
+
+false suspends the account; true reactivates it. Strings such as "false", missing fields, null, extra fields and role changes are rejected. Success returns 200 with the safe updated account. Unknown/staff ids return 404; unsupported content type returns 415.
+
+Suspension updates User.isActive and revokes all of the account's unrevoked sessions inside one transaction. Existing access tokens then fail the normal database-backed session check; refresh cookies fail too. Sign-in while suspended keeps the existing generic 401 INVALID_CREDENTIALS response. Revocation is permanent for those sessions: reactivation requires a fresh sign-in, and old access/refresh tokens stay unusable. Repeating suspension does not rewrite existing revocation timestamps; repeating activation does not log out a currently active session.
+
+Reactivation is separate from email verification, password recovery and timed login lockout. It does not mark an unverified email verified, change a password, reset login failures or clear lockedUntil. Existing verification/reset flows do not reactivate a suspended account. Suspension does not delete bookings, release occupied seats, change prices or enable passenger cancellation. Operators can continue reading the suspended passenger's existing bookings through protected booking management.
+
+Status writes take the same email advisory lock as login/reset/logout-all, then lock the target User row and revoke Session rows in User -> Session order. They recheck role USER under the row lock so promotion/deletion cannot turn a passenger operation into a staff edit. Login either completes before suspension and its session is revoked, or sees the inactive account and fails. A concurrent refresh cannot leave a session usable after suspension commits. Booking transactions already lock the user before its session: a reservation completes before suspension or fails after it; completed reservations are retained.
+
+Read apps/api/src/schemas/adminUserSchema.ts for strict request rules, controllers/adminUserController.ts and routes/adminUserRoutes.ts for the protected HTTP API, and services/adminUserService.ts for safe projections, filtering, locks and atomic revocation. Existing sessionService.ts enforces active/verified accounts and revoked sessions on login, refresh and authenticated requests. Tests cover multiple devices, reactivation without token revival, protected staff accounts, exact filters, pagination, pending email verification, booking preservation and concurrent login/refresh/reservation requests.
+
+PostgreSQL test files run sequentially via npm run test:db (--test-concurrency=1), because first-super-admin bootstrap examines global staff state and must not overlap another file creating staff fixtures. Concurrent login, refresh, reservation and scheduling requests remain explicitly tested inside individual files. This changes test-file execution only, not application request concurrency.
+
+Passenger management verification: all 144 default tests and all 17 PostgreSQL integration tests pass, together with strict types, lint, formatting and build. All fifteen migrations applied to an empty temporary database; repeating migration applied zero. Compiled JavaScript HTTP checks verified account lookup, protected staff targets, suspension, permanent access/refresh-token revocation and successful fresh sign-in after reactivation. Applying the two indexes to development preserved all compared business rows. Scoped fixtures and the temporary database were removed.

@@ -3638,7 +3638,26 @@
                 }
               },
               "foreignKeys": [],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "phone"
+                  ],
+                  "name": "User_phone_idx_8db23f45",
+                  "prefix": "User_phone_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "role",
+                    "createdAt",
+                    "id"
+                  ],
+                  "name": "User_role_createdAt_id_idx_522b1764",
+                  "prefix": "User_role_createdAt_id_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -3695,7 +3714,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "105cd6d1e915bc27ceb6897a4d63f01215f213afc180a7012c2674e709d76985"
+    "storageHash": "073ef5bb5ade4ddc745ab923833f155e136af0e69f7eeace71771c5661ea2b68"
   },
   "execution": {
     "executionHash": "71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865",

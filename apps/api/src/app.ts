@@ -1,4 +1,9 @@
 import {
+  adminUserService,
+  type AdminUserService,
+} from './services/adminUserService.ts';
+import { createAdminUserRouter } from './routes/adminUserRoutes.ts';
+import {
   adminBookingService,
   type AdminBookingService,
 } from './services/adminBookingService.ts';
@@ -77,6 +82,7 @@ export function createApp(
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
     adminBookings?: AdminBookingService;
+    adminUsers?: AdminUserService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
   } = {},
@@ -161,6 +167,11 @@ export function createApp(
       services.adminBookings ?? adminBookingService,
       admin,
     ),
+  );
+
+  app.use(
+    '/api/v1/admin/users',
+    createAdminUserRouter(services.adminUsers ?? adminUserService, admin),
   );
 
   // This runs only if none of the routes above handled the request.
