@@ -62,7 +62,7 @@ export function createBusController(service: BusService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), optional isActive, busTypeId (UUID/null), and amenityIds (up to 30 distinct UUIDs)',
+          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), optional seatLayout (STANDARD_2_2/null), isActive, busTypeId (UUID/null), and amenityIds (up to 30 distinct UUIDs)',
         );
       }
       const bus = await service.create(input.data);
@@ -92,7 +92,7 @@ export function createBusController(service: BusService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), isActive (boolean), busTypeId (UUID/null), or amenityIds (up to 30 distinct UUIDs); no other fields are allowed',
+          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), isActive (boolean), seatLayout (STANDARD_2_2/null), busTypeId (UUID/null), or amenityIds (up to 30 distinct UUIDs); no other fields are allowed',
         );
       }
       const bus = await service.update(id.data, input.data);

@@ -17,6 +17,7 @@ export interface Bus {
   id: string;
   plateNumber: string;
   seatCount: number;
+  seatLayout: 'STANDARD_2_2' | null;
   isActive: boolean;
   busTypeId: string | null;
   busType: FleetMetadata | null;
@@ -37,6 +38,7 @@ function serializeBus(bus: BusRecord): Bus {
     id: bus.id,
     plateNumber: bus.plateNumber,
     seatCount: bus.seatCount,
+    seatLayout: bus.seatLayout,
     isActive: bus.isActive,
     busTypeId: bus.busTypeId,
     ...busMetadata(bus),
@@ -142,7 +144,7 @@ export const busService = {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
-        // Serialize capacity edits for this bus so its count and numbered seats agree.
+        // Serialize capacity/template edits with trip creation for this bus.
         await tx.execute(
           db.raw
             .sql`SELECT "id" FROM "public"."Bus" WHERE "id" = ${id} FOR UPDATE`
@@ -172,23 +174,16 @@ export const busService = {
           );
         await lockMetadata(tx, db, fields.busTypeId, amenityIds);
         const count = input.seatCount ?? bus.seatCount;
+        const changedLayout =
+          input.seatLayout !== undefined && input.seatLayout !== bus.seatLayout;
         if (
-          count !== bus.seatCount &&
+          (count !== bus.seatCount || changedLayout) &&
           (await tx.orm.public.Trip.where({ busId: id }).first())
         )
           throw new AppError(
             409,
             'BUS_HAS_TRIPS',
-            'A bus used by trips cannot change its seat count',
-          );
-        if (
-          count !== bus.seatCount &&
-          (await tx.orm.public.BusLayout.where({ busId: id }).first())
-        )
-          throw new AppError(
-            409,
-            'BUS_HAS_LAYOUT',
-            'Remove the unreserved layout before resizing its seats',
+            'A bus used by trips cannot change its seat count or seat layout',
           );
         if (count > bus.seatCount) {
           await tx.orm.public.BusSeat.createAll(
@@ -240,8 +235,6 @@ export const busService = {
             .affectedCount()
             .build(),
         );
-        // Delete map cells first; a blocked bus deletion rolls this back as well.
-        await tx.orm.public.BusLayout.where({ busId: id }).deleteAll();
         return await tx.orm.public.Bus.where({ id }).delete();
       });
     } catch (error) {

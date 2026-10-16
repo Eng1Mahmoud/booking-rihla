@@ -84,6 +84,7 @@ test('repeatable scoped seeds and passenger search enforce endpoints, Cairo boun
   assert.deepEqual(result[0].bus, {
     id: bus.id,
     seatCount: 20,
+    seatLayout: null,
     busType: null,
     amenities: [],
   });

@@ -34,7 +34,13 @@ const route = {
   originStation,
   destinationStation,
 };
-const bus = { id: randomUUID(), seatCount: 2, busType: null, amenities: [] };
+const bus = {
+  id: randomUUID(),
+  seatCount: 2,
+  seatLayout: null,
+  busType: null,
+  amenities: [],
+};
 const details: NonNullable<
   Awaited<ReturnType<TripDetailsService['findById']>>
 > = {
@@ -49,7 +55,7 @@ const details: NonNullable<
   bus,
 };
 const seats = {
-  layout: null,
+  seatLayout: null,
   tripId: details.id,
   busId: bus.id,
   totalSeats: 2,

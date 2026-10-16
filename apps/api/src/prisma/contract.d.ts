@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'e7dfcf920bc82ad298d3cc354c816a83a4330720f12877f91552a64ed7328799'>;
+  StorageHashBase<'52ff3f3214f6c17ce5390a088b20d25f9c2f3e411157d69b2306c9268b47fbfa'>;
 export type ExecutionHash =
-  ExecutionHashBase<'423e8dd9c929b0295a588564f2782a4853406bb3204238bf0876f1604b58e747'>;
+  ExecutionHashBase<'71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -266,25 +266,12 @@ export type FieldOutputTypes = {
       readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly plateNumber: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
+      readonly seatLayout: 'STANDARD_2_2' | null;
     };
     readonly BusAmenity: {
       readonly amenityId: CodecTypes['pg/text@1']['output'];
       readonly busId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
-    };
-    readonly BusLayout: {
-      readonly busId: CodecTypes['pg/text@1']['output'];
-      readonly columnCount: CodecTypes['pg/int4@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly rowCount: CodecTypes['pg/int4@1']['output'];
-    };
-    readonly BusLayoutCell: {
-      readonly column: CodecTypes['pg/int4@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly kind: 'SEAT' | 'AISLE' | 'DRIVER' | 'DOOR' | 'EMPTY';
-      readonly layoutId: CodecTypes['pg/text@1']['output'];
-      readonly row: CodecTypes['pg/int4@1']['output'];
-      readonly seatId: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['output'];
@@ -422,25 +409,12 @@ export type FieldInputTypes = {
       readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly plateNumber: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
+      readonly seatLayout: 'STANDARD_2_2' | null;
     };
     readonly BusAmenity: {
       readonly amenityId: CodecTypes['pg/text@1']['input'];
       readonly busId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
-    };
-    readonly BusLayout: {
-      readonly busId: CodecTypes['pg/text@1']['input'];
-      readonly columnCount: CodecTypes['pg/int4@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly rowCount: CodecTypes['pg/int4@1']['input'];
-    };
-    readonly BusLayoutCell: {
-      readonly column: CodecTypes['pg/int4@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly kind: 'SEAT' | 'AISLE' | 'DRIVER' | 'DOOR' | 'EMPTY';
-      readonly layoutId: CodecTypes['pg/text@1']['input'];
-      readonly row: CodecTypes['pg/int4@1']['input'];
-      readonly seatId: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['input'];
@@ -578,25 +552,12 @@ export type StorageColumnTypes = {
       readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly plateNumber: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
+      readonly seatLayout: 'STANDARD_2_2' | null;
     };
     readonly BusAmenity: {
       readonly amenityId: CodecTypes['pg/text@1']['output'];
       readonly busId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
-    };
-    readonly BusLayout: {
-      readonly busId: CodecTypes['pg/text@1']['output'];
-      readonly columnCount: CodecTypes['pg/int4@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly rowCount: CodecTypes['pg/int4@1']['output'];
-    };
-    readonly BusLayoutCell: {
-      readonly column: CodecTypes['pg/int4@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly kind: 'SEAT' | 'AISLE' | 'DRIVER' | 'DOOR' | 'EMPTY';
-      readonly layoutId: CodecTypes['pg/text@1']['output'];
-      readonly row: CodecTypes['pg/int4@1']['output'];
-      readonly seatId: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['output'];
@@ -734,25 +695,12 @@ export type StorageColumnInputTypes = {
       readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly plateNumber: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
+      readonly seatLayout: 'STANDARD_2_2' | null;
     };
     readonly BusAmenity: {
       readonly amenityId: CodecTypes['pg/text@1']['input'];
       readonly busId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
-    };
-    readonly BusLayout: {
-      readonly busId: CodecTypes['pg/text@1']['input'];
-      readonly columnCount: CodecTypes['pg/int4@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly rowCount: CodecTypes['pg/int4@1']['input'];
-    };
-    readonly BusLayoutCell: {
-      readonly column: CodecTypes['pg/int4@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly kind: 'SEAT' | 'AISLE' | 'DRIVER' | 'DOOR' | 'EMPTY';
-      readonly layoutId: CodecTypes['pg/text@1']['input'];
-      readonly row: CodecTypes['pg/int4@1']['input'];
-      readonly seatId: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['input'];
@@ -899,12 +847,12 @@ export namespace Models {
     isActive: CodecTypes['pg/bool@1']['output'];
     plateNumber: CodecTypes['pg/text@1']['output'];
     seatCount: CodecTypes['pg/int4@1']['output'];
+    seatLayout: 'STANDARD_2_2' | null;
     amenityLinks: public_BusAmenity[];
     busType: public_BusType | null;
-    layout: public_BusLayout | null;
     seats: public_BusSeat[];
     trips: public_Trip[];
-    readonly [RelationKeys]?: 'amenityLinks' | 'busType' | 'layout' | 'seats' | 'trips';
+    readonly [RelationKeys]?: 'amenityLinks' | 'busType' | 'seats' | 'trips';
   };
   export type public_BusAmenity = {
     amenityId: CodecTypes['pg/text@1']['output'];
@@ -914,34 +862,13 @@ export namespace Models {
     bus: public_Bus;
     readonly [RelationKeys]?: 'amenity' | 'bus';
   };
-  export type public_BusLayout = {
-    busId: CodecTypes['pg/text@1']['output'];
-    columnCount: CodecTypes['pg/int4@1']['output'];
-    id: CodecTypes['pg/text@1']['output'];
-    rowCount: CodecTypes['pg/int4@1']['output'];
-    bus: public_Bus;
-    cells: public_BusLayoutCell[];
-    readonly [RelationKeys]?: 'bus' | 'cells';
-  };
-  export type public_BusLayoutCell = {
-    column: CodecTypes['pg/int4@1']['output'];
-    id: CodecTypes['pg/text@1']['output'];
-    kind: 'SEAT' | 'AISLE' | 'DRIVER' | 'DOOR' | 'EMPTY';
-    layoutId: CodecTypes['pg/text@1']['output'];
-    row: CodecTypes['pg/int4@1']['output'];
-    seatId: CodecTypes['pg/text@1']['output'] | null;
-    layout: public_BusLayout;
-    seat: public_BusSeat | null;
-    readonly [RelationKeys]?: 'layout' | 'seat';
-  };
   export type public_BusSeat = {
     busId: CodecTypes['pg/text@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     number: CodecTypes['pg/int4@1']['output'];
     bookings: public_BookingSeat[];
     bus: public_Bus;
-    layoutCell: public_BusLayoutCell | null;
-    readonly [RelationKeys]?: 'bookings' | 'bus' | 'layoutCell';
+    readonly [RelationKeys]?: 'bookings' | 'bus';
   };
   export type public_BusType = {
     code: CodecTypes['pg/text@1']['output'];
@@ -1080,8 +1007,6 @@ export declare const models: {
     BookingSeat: Models.public_BookingSeat;
     Bus: Models.public_Bus;
     BusAmenity: Models.public_BusAmenity;
-    BusLayout: Models.public_BusLayout;
-    BusLayoutCell: Models.public_BusLayoutCell;
     BusSeat: Models.public_BusSeat;
     BusType: Models.public_BusType;
     City: Models.public_City;
@@ -1385,6 +1310,12 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly seatLayout: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['plateNumber'] }];
@@ -1470,130 +1401,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'Amenity';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly BusLayout: {
-              columns: {
-                readonly busId: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly columnCount: {
-                  readonly dataType: 'pg/int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly id: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly rowCount: {
-                  readonly dataType: 'pg/int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['busId'] }];
-              indexes: readonly [];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'BusLayout';
-                    readonly columns: readonly ['busId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'Bus';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly BusLayoutCell: {
-              columns: {
-                readonly column: {
-                  readonly dataType: 'pg/int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly id: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly kind: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly layoutId: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly row: {
-                  readonly dataType: 'pg/int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly seatId: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                  readonly many: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [
-                { readonly columns: readonly ['seatId'] },
-                { readonly columns: readonly ['layoutId', 'row', 'column'] },
-              ];
-              indexes: readonly [
-                {
-                  readonly name: 'BusLayoutCell_layoutId_idx_dc26ea26';
-                  readonly prefix: 'BusLayoutCell_layoutId_idx';
-                  readonly columns: readonly ['layoutId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'BusLayoutCell';
-                    readonly columns: readonly ['layoutId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'BusLayout';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'BusLayoutCell';
-                    readonly columns: readonly ['seatId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'BusSeat';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -2448,9 +2255,9 @@ type ContractBase = Omit<
               readonly kind: 'valueSet';
               readonly values: readonly ['VERIFY_EMAIL', 'PASSWORD_RESET', 'PASSWORD_CHANGED'];
             };
-            readonly LayoutCellKind: {
+            readonly SeatLayout: {
               readonly kind: 'valueSet';
-              readonly values: readonly ['SEAT', 'AISLE', 'DRIVER', 'DOOR', 'EMPTY'];
+              readonly values: readonly ['STANDARD_2_2'];
             };
             readonly TripStatus: {
               readonly kind: 'valueSet';
@@ -2481,11 +2288,6 @@ type ContractBase = Omit<
     readonly BusAmenity: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'BusAmenity';
-    };
-    readonly BusLayout: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusLayout' };
-    readonly BusLayoutCell: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'BusLayoutCell';
     };
     readonly BusSeat: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusSeat' };
     readonly BusType: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusType' };
@@ -2741,6 +2543,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly seatLayout: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
             };
             readonly relations: {
               readonly amenityLinks: {
@@ -2764,18 +2570,6 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['busTypeId'];
                   readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly layout: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BusLayout';
-                };
-                readonly cardinality: '1:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['busId'];
                 };
               };
               readonly seats: {
@@ -2807,6 +2601,7 @@ type ContractBase = Omit<
                 readonly isActive: { readonly column: 'isActive' };
                 readonly plateNumber: { readonly column: 'plateNumber' };
                 readonly seatCount: { readonly column: 'seatCount' };
+                readonly seatLayout: { readonly column: 'seatLayout' };
               };
             };
           };
@@ -2858,124 +2653,6 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly BusLayout: {
-            readonly fields: {
-              readonly busId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly columnCount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly rowCount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-            };
-            readonly relations: {
-              readonly bus: {
-                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['busId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly cells: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BusLayoutCell';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['layoutId'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'BusLayout';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly busId: { readonly column: 'busId' };
-                readonly columnCount: { readonly column: 'columnCount' };
-                readonly id: { readonly column: 'id' };
-                readonly rowCount: { readonly column: 'rowCount' };
-              };
-            };
-          };
-          readonly BusLayoutCell: {
-            readonly fields: {
-              readonly column: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly kind: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly layoutId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly row: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly seatId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-            };
-            readonly relations: {
-              readonly layout: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BusLayout';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['layoutId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly seat: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BusSeat';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['seatId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'BusLayoutCell';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly column: { readonly column: 'column' };
-                readonly id: { readonly column: 'id' };
-                readonly kind: { readonly column: 'kind' };
-                readonly layoutId: { readonly column: 'layoutId' };
-                readonly row: { readonly column: 'row' };
-                readonly seatId: { readonly column: 'seatId' };
-              };
-            };
-          };
           readonly BusSeat: {
             readonly fields: {
               readonly busId: {
@@ -3010,18 +2687,6 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['busId'];
                   readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly layoutCell: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BusLayoutCell';
-                };
-                readonly cardinality: '1:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['seatId'];
                 };
               };
             };
@@ -3845,14 +3510,10 @@ type ContractBase = Omit<
               { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
             ];
           };
-          readonly LayoutCellKind: {
+          readonly SeatLayout: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
-              { readonly name: 'SEAT'; readonly value: 'SEAT' },
-              { readonly name: 'AISLE'; readonly value: 'AISLE' },
-              { readonly name: 'DRIVER'; readonly value: 'DRIVER' },
-              { readonly name: 'DOOR'; readonly value: 'DOOR' },
-              { readonly name: 'EMPTY'; readonly value: 'EMPTY' },
+              { readonly name: 'STANDARD_2_2'; readonly value: 'STANDARD_2_2' },
             ];
           };
           readonly TripStatus: {
@@ -3880,12 +3541,8 @@ type ContractBase = Omit<
             { readonly name: 'PASSWORD_RESET'; readonly value: 'PASSWORD_RESET' },
             { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
           ];
-          readonly LayoutCellKind: readonly [
-            { readonly name: 'SEAT'; readonly value: 'SEAT' },
-            { readonly name: 'AISLE'; readonly value: 'AISLE' },
-            { readonly name: 'DRIVER'; readonly value: 'DRIVER' },
-            { readonly name: 'DOOR'; readonly value: 'DOOR' },
-            { readonly name: 'EMPTY'; readonly value: 'EMPTY' },
+          readonly SeatLayout: readonly [
+            { readonly name: 'STANDARD_2_2'; readonly value: 'STANDARD_2_2' },
           ];
           readonly TripStatus: readonly [
             { readonly name: 'SCHEDULED'; readonly value: 'SCHEDULED' },
@@ -3968,22 +3625,6 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'BusAmenity';
-            readonly field: 'id';
-            readonly namespace: 'public';
-          };
-        },
-        {
-          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
-          readonly ref: {
-            readonly entry: 'BusLayout';
-            readonly field: 'id';
-            readonly namespace: 'public';
-          };
-        },
-        {
-          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
-          readonly ref: {
-            readonly entry: 'BusLayoutCell';
             readonly field: 'id';
             readonly namespace: 'public';
           };

@@ -272,6 +272,7 @@ test('bus requests forward optional type and amenity assignments and type filter
   const bus = {
     id: randomUUID(),
     plateNumber: 'VIP 1',
+    seatLayout: null,
     seatCount: 20,
     isActive: true,
     busTypeId: type.id,

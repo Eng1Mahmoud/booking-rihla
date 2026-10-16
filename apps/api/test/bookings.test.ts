@@ -361,26 +361,18 @@ test('reservation creation IP limit returns safe 429 and Retry-After', async (t)
   assert.equal((await response.json()).error.code, 'RATE_LIMITED');
 });
 
-test('booking passes the displayed layout id to the service and rejects malformed layout identities', async (t) => {
+test('booking rejects obsolete layout identities instead of accepting extra fields', async (t) => {
   const service = fakeService();
-  let received: unknown;
-  service.create = async (_auth, input) => {
-    received = input;
-    return booking;
+  service.create = async () => {
+    throw new Error('Invalid input reached service');
   };
-  const base = await start(t, service),
-    layoutId = randomUUID();
-  const response = await fetch(base, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ ...valid, layoutId }),
-  });
-  assert.equal(response.status, 201);
-  assert.equal((received as { layoutId: string }).layoutId, layoutId);
-  const invalid = await fetch(base, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ ...valid, layoutId: 'invalid' }),
-  });
-  assert.equal(invalid.status, 400);
+  const base = await start(t, service);
+  for (const layoutId of [randomUUID(), null, 'invalid']) {
+    const response = await fetch(base, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ ...valid, layoutId }),
+    });
+    assert.equal(response.status, 400);
+  }
 });

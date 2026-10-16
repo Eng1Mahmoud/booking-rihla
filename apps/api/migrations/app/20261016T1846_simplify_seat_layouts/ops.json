@@ -1,0 +1,160 @@
+[
+  {
+    "id": "dropTable.BusLayoutCell",
+    "label": "Drop table \"BusLayoutCell\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusLayoutCell\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"BusLayoutCell\"",
+        "sql": "DROP TABLE \"public\".\"BusLayoutCell\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusLayoutCell\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropTable.BusLayout",
+    "label": "Drop table \"BusLayout\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusLayout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusLayout\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"BusLayout\"",
+        "sql": "DROP TABLE \"public\".\"BusLayout\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusLayout\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Bus.seatLayout",
+    "label": "Add column \"seatLayout\" to \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "seatLayout",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"seatLayout\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Bus",
+          "seatLayout"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"seatLayout\"",
+        "sql": "ALTER TABLE \"public\".\"Bus\" ADD COLUMN \"seatLayout\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"seatLayout\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Bus",
+          "seatLayout"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Bus.Bus_seatLayout_check_04946dd7",
+    "label": "Add check constraint \"Bus_seatLayout_check_04946dd7\" on \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Bus_seatLayout_check_04946dd7",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Bus_seatLayout_check_04946dd7\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_seatLayout_check_04946dd7",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Bus_seatLayout_check_04946dd7\"",
+        "sql": "ALTER TABLE \"public\".\"Bus\" ADD CONSTRAINT \"Bus_seatLayout_check_04946dd7\" CHECK (\"seatLayout\" IN ('STANDARD_2_2'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Bus_seatLayout_check_04946dd7\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_seatLayout_check_04946dd7",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ]
+  }
+]

@@ -50,6 +50,11 @@ test('reservations enforce ownership, atomic seat uniqueness, price snapshots, t
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
   const base = 'http://127.0.0.1:' + address.port + '/api/v1';
+  const configuredBus = data.buses[0]!;
+  await db.orm.public.Bus.create({
+    ...configuredBus,
+    seatLayout: 'STANDARD_2_2',
+  });
   await seedDemo('2099-01-01', namespace);
   const trip = data.trips[0]!,
     later = data.trips[3]!,
@@ -126,7 +131,11 @@ test('reservations enforce ownership, atomic seat uniqueness, price snapshots, t
     assert.equal(response.status, 200);
     return (await response.json()).data;
   };
-  assert.equal((await readSeats()).availableSeats, 20);
+  const displayed = await readSeats();
+  assert.equal(displayed.availableSeats, 20);
+  assert.equal(displayed.seatLayout, 'STANDARD_2_2');
+  assert.equal('layout' in displayed, false);
+  assert.equal('cells' in displayed, false);
   const created = await reserve(
     first.token,
     input(trip.id, [seats[1]!.id, seats[0]!.id]),

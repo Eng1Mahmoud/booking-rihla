@@ -24,6 +24,7 @@ function fakeService(): BusService {
       return {
         id: randomUUID(),
         ...input,
+        seatLayout: input.seatLayout ?? null,
         busTypeId: input.busTypeId ?? null,
         busType: null,
         amenities: [],
@@ -66,6 +67,7 @@ test('bus creation normalizes plates, defaults active, and returns 201 with Loca
     plateNumber: 'ABC 123',
     seatCount: 100,
     isActive: true,
+    seatLayout: null,
     busTypeId: null,
     busType: null,
     amenities: [],
@@ -106,6 +108,7 @@ test('bus list filters parse true and false explicitly with bounded pagination',
 
 test('bus details and seat list use the supplied service and validate ids', async (t) => {
   const bus: Bus = {
+    seatLayout: null,
     busTypeId: null,
     busType: null,
     amenities: [],
@@ -135,6 +138,7 @@ test('bus details and seat list use the supplied service and validate ids', asyn
 
 test('bus PATCH forwards only provided fields without defaulting active', async (t) => {
   const bus: Bus = {
+    seatLayout: null,
     busTypeId: null,
     busType: null,
     amenities: [],
@@ -182,6 +186,8 @@ test('invalid bus bodies and empty patches never reach the service', async (t) =
     { ...valid, seatCount: 1.5 },
     { ...valid, seatCount: '2' },
     { ...valid, isActive: 'true' },
+    { ...valid, seatLayout: 'UNKNOWN' },
+    { ...valid, seatLayout: {} },
     { ...valid, id: randomUUID() },
   ]) {
     const response = await fetch(url, {
@@ -197,6 +203,7 @@ test('invalid bus bodies and empty patches never reach the service', async (t) =
     { isActive: null },
     { id: randomUUID() },
     { seats: [] },
+    { seatLayout: 'UNKNOWN' },
   ]) {
     const response = await fetch(url + '/' + randomUUID(), {
       method: 'PATCH',
@@ -292,5 +299,36 @@ test('bus database failures never expose private details on any endpoint', async
         message: 'An unexpected error occurred',
       },
     });
+  }
+});
+
+test('bus creation accepts a fixed template and PATCH preserves omitted values', async (t) => {
+  const service = fakeService();
+  let received: unknown;
+  service.update = async (_id, input) => {
+    received = input;
+    return null;
+  };
+  const base = await startServer(t, service);
+  for (const seatLayout of ['STANDARD_2_2', null]) {
+    const response = await fetch(base, {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ plateNumber: 'ABC', seatCount: 44, seatLayout }),
+    });
+    assert.equal(response.status, 201);
+    assert.equal((await response.json()).data.seatLayout, seatLayout);
+  }
+  for (const input of [
+    { seatLayout: null },
+    { seatLayout: 'STANDARD_2_2' },
+    { isActive: false },
+  ]) {
+    await fetch(base + '/' + randomUUID(), {
+      method: 'PATCH',
+      headers: json,
+      body: JSON.stringify(input),
+    });
+    assert.deepEqual(received, input);
   }
 });

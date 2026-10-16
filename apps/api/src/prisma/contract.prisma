@@ -28,7 +28,7 @@ model Bus {
   busTypeId String?
   busType BusType? @relation(fields: [busTypeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   amenityLinks BusAmenity[]
-  layout BusLayout?
+  seatLayout SeatLayout?
   seats       BusSeat[]
   trips       Trip[]
 
@@ -40,7 +40,6 @@ model BusSeat {
   busId  String
   number Int
   bookings BookingSeat[]
-  layoutCell BusLayoutCell?
   bus    Bus    @relation(fields: [busId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@unique([busId, number])
@@ -254,32 +253,6 @@ model BusAmenity {
   @@index([amenityId])
 }
 
-enum LayoutCellKind {
-  SEAT
-  AISLE
-  DRIVER
-  DOOR
-  EMPTY
-}
-model BusLayout {
-  id String @id @default(uuid())
-  busId String @unique
-  rowCount Int
-  columnCount Int
-  bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  cells BusLayoutCell[]
-  @@check(expression: sql`"rowCount" BETWEEN 2 AND 51 AND "columnCount" BETWEEN 3 AND 8`, name: "bus_layout_dimensions")
-}
-model BusLayoutCell {
-  id String @id @default(uuid())
-  layoutId String
-  row Int
-  column Int
-  kind LayoutCellKind
-  seatId String? @unique
-  layout BusLayout @relation(fields: [layoutId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  seat BusSeat? @relation(fields: [seatId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  @@unique([layoutId, row, column])
-  @@check(expression: sql`row BETWEEN 0 AND 50 AND "column" BETWEEN 0 AND 7`, name: "bus_layout_cell_coordinates")
-  @@check(expression: sql`(kind = 'SEAT' AND "seatId" IS NOT NULL) OR (kind <> 'SEAT' AND "seatId" IS NULL)`, name: "bus_layout_cell_seat")
+enum SeatLayout {
+  STANDARD_2_2
 }

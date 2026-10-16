@@ -84,7 +84,7 @@ Feature batches:
 - [x] Complete Station CRUD, its City relation, validation, constraints, and tests.
 - [x] Complete basic Bus CRUD, numbered seats, active filtering, plate uniqueness, and concurrency/rollback tests.
 - [x] Extend fleet metadata with bus types and amenities in management and passenger trip responses.
-- [x] Expose physical layouts and departure-specific availability to the later frontend.
+- [x] Expose a fixed seat template code and departure-specific availability to the later frontend.
 - [x] Complete Route management APIs.
 - [x] Complete Trip management, scheduled/cancelled status, overlap prevention, catalog safeguards, and tests.
 - [x] Add repeatable demo seed data for realistic searches.
@@ -92,7 +92,7 @@ Feature batches:
 - [x] Add passenger trip details and ordered departure seat availability endpoints; availability now excludes per-trip BookingSeat allocations.
 - [x] Add pagination for lists, strict request validation, relevant indexes, and empty/error cases for the implemented browsing endpoints.
 
-Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Bus types and amenities are implemented; physical layout APIs and selection safeguards are implemented; reservation allocations and passenger ownership are now implemented.
+Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Bus types and amenities are implemented; simple fixed seat templates and trip guards are implemented; reservation allocations and passenger ownership are now implemented.
 
 ## Phase 4 — Accounts and email verification
 
@@ -153,10 +153,10 @@ Small steps:
 - [x] Protect current catalog management endpoints with administrator roles and test access restrictions.
 - [x] Add city and station management.
 - [x] Add bus type, amenity, bus and plate-number management with reservation safeguards.
-- [x] Add protected complete-layout read/replace/remove with stable physical seat ids.
+- [x] Choose a fixed seat template through existing bus management; preserve physical seat ids.
 - [x] Add route and single-trip management, including prices and times.
 - [x] Preserve bus seat capacity/identities and reject changes or deletion of trips with reservations.
-- [x] Freeze reserved layouts, preserve seat identities and reject stale layout selections during booking.
+- [x] Prevent changing the bus seat template or capacity once any trip uses it.
 - [ ] Add recurring/bulk trip creation with validation and a review of generated departures.
 - [ ] Add filtered booking lists and booking details.
 - [ ] Add user lists and suspend/activate controls; enforce suspension in the API/session flow.
@@ -220,7 +220,7 @@ Feature batches, each completed and pushed before the next:
 
 - [ ] Create apps/web with Next.js, an API client, and shared Zod schemas where needed.
 - [ ] Add mobile layouts, Arabic default, English coverage, RTL logical spacing, light/dark themes, and consistent shadcn/ui components.
-- [ ] Add search, results, trip details and accessible physical seat selection using the completed layout API; preserve the physical LTR grid in Arabic, send layoutId and handle stale maps, with loading/empty/error states.
+- [ ] Add search, results, trip details and accessible physical seat selection using code-defined templates and numbered seats; preserve the physical LTR grid in Arabic and submit seatId, with loading/empty/error states.
 - [ ] Add registration, verification/resend, login, session restoration, account, and password recovery using react-hook-form and Zod.
 - [ ] Add passenger details, server-priced summaries, reservations, booking references, and confirmation.
 - [ ] Add checkout, hold countdown/expiry, and payment success/failure/cancellation handling.
@@ -236,7 +236,7 @@ Feature batches:
 
 - [ ] Create apps/admin with protected administrator access and shared schemas/components where useful.
 - [ ] Add complete city/station management screens.
-- [ ] Add bus types, amenities, layouts, buses, plates, routes, and trip management screens.
+- [ ] Add bus types, amenities, fixed template selection, buses, plates, routes, and trip management screens.
 - [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
 - [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
 - [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
@@ -323,4 +323,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; physical seat layouts and stale-selection safeguards are complete; recurring/bulk trips and remaining operator management are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; simple fixed seat templates and trip guards are complete; recurring/bulk trips and remaining operator management are next.

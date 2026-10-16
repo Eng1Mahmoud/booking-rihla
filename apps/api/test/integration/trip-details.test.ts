@@ -71,6 +71,7 @@ test('passenger details and seats follow eligible trips and the assigned bus wit
   assert.deepEqual(details.bus, {
     id: bus.id,
     seatCount: 20,
+    seatLayout: null,
     busType: null,
     amenities: [],
   });

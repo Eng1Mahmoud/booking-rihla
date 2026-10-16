@@ -19,6 +19,7 @@ const seatCount = z.number().int().min(1).max(100);
 export const createBusSchema = z.strictObject({
   plateNumber,
   seatCount,
+  seatLayout: z.enum(['STANDARD_2_2']).nullable().optional(),
   isActive: z.boolean().default(true),
   busTypeId: busTypeId.optional(),
   amenityIds: amenityIds.optional(),
@@ -28,6 +29,7 @@ export const updateBusSchema = z
   .strictObject({
     plateNumber: plateNumber.optional(),
     seatCount: seatCount.optional(),
+    seatLayout: z.enum(['STANDARD_2_2']).nullable().optional(),
     isActive: z.boolean().optional(),
     busTypeId: busTypeId.optional(),
     amenityIds: amenityIds.optional(),

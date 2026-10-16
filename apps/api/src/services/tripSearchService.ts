@@ -42,7 +42,7 @@ export const tripSearchService = {
       .offset(offset)
       .include('bus', (bus) =>
         bus
-          .select('id', 'seatCount')
+          .select('id', 'seatCount', 'seatLayout')
           .include('busType')
           .include('amenityLinks', (links) => links.include('amenity')),
       )
@@ -58,6 +58,7 @@ export const tripSearchService = {
         ? {
             id: trip.bus.id,
             seatCount: trip.bus.seatCount,
+            seatLayout: trip.bus.seatLayout,
             ...busMetadata(trip.bus),
           }
         : null,

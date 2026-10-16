@@ -1,4 +1,3 @@
-import { seatLayout } from '../utils/seatLayout.ts';
 import { busMetadata } from '../utils/busMetadata.ts';
 import type { db as database } from '../prisma/db.ts';
 
@@ -15,7 +14,7 @@ export const tripDetailsService = {
     const trip = await passengerTrips(db, id)
       .include('bus', (bus) =>
         bus
-          .select('id', 'seatCount')
+          .select('id', 'seatCount', 'seatLayout')
           .include('busType')
           .include('amenityLinks', (links) => links.include('amenity')),
       )
@@ -31,6 +30,7 @@ export const tripDetailsService = {
       bus: {
         id: trip.bus.id,
         seatCount: trip.bus.seatCount,
+        seatLayout: trip.bus.seatLayout,
         ...busMetadata(trip.bus),
       },
       departureAt: new Date(trip.departureAt).toISOString(),
@@ -49,12 +49,7 @@ export const tripDetailsService = {
       )
       .include('bus', (bus) =>
         bus
-          .select('id')
-          .include('layout', (layout) =>
-            layout.include('cells', (cells) =>
-              cells.include('seat', (seat) => seat.select('id', 'number')),
-            ),
-          )
+          .select('id', 'seatLayout')
           .include('seats', (seats) =>
             seats.select('id', 'number').orderBy((seat) => seat.number.asc()),
           ),
@@ -70,19 +65,8 @@ export const tripDetailsService = {
       ...seat,
       isAvailable: !reserved.has(seat.id),
     }));
-    const layout = seatLayout(trip.bus.layout);
     return {
-      layout: layout
-        ? {
-            ...layout,
-            cells: layout.cells.map((cell) => ({
-              ...cell,
-              seat: cell.seat
-                ? { ...cell.seat, isAvailable: !reserved.has(cell.seat.id) }
-                : null,
-            })),
-          }
-        : null,
+      seatLayout: trip.bus.seatLayout,
       tripId: trip.id,
       busId: trip.busId,
       totalSeats: seats.length,

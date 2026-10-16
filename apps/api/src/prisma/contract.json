@@ -24,14 +24,6 @@
       "model": "BusAmenity",
       "namespace": "public"
     },
-    "BusLayout": {
-      "model": "BusLayout",
-      "namespace": "public"
-    },
-    "BusLayoutCell": {
-      "model": "BusLayoutCell",
-      "namespace": "public"
-    },
     "BusSeat": {
       "model": "BusSeat",
       "namespace": "public"
@@ -111,28 +103,12 @@
               }
             ]
           },
-          "LayoutCellKind": {
+          "SeatLayout": {
             "codecId": "pg/text@1",
             "members": [
               {
-                "name": "SEAT",
-                "value": "SEAT"
-              },
-              {
-                "name": "AISLE",
-                "value": "AISLE"
-              },
-              {
-                "name": "DRIVER",
-                "value": "DRIVER"
-              },
-              {
-                "name": "DOOR",
-                "value": "DOOR"
-              },
-              {
-                "name": "EMPTY",
-                "value": "EMPTY"
+                "name": "STANDARD_2_2",
+                "value": "STANDARD_2_2"
               }
             ]
           },
@@ -544,6 +520,19 @@
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
+              },
+              "seatLayout": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "SeatLayout",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
               }
             },
             "relations": {
@@ -575,22 +564,6 @@
                 },
                 "to": {
                   "model": "BusType",
-                  "namespace": "public"
-                }
-              },
-              "layout": {
-                "cardinality": "1:1",
-                "nullable": true,
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "busId"
-                  ]
-                },
-                "to": {
-                  "model": "BusLayout",
                   "namespace": "public"
                 }
               },
@@ -641,6 +614,9 @@
                 },
                 "seatCount": {
                   "column": "seatCount"
+                },
+                "seatLayout": {
+                  "column": "seatLayout"
                 }
               },
               "namespaceId": "public",
@@ -721,199 +697,6 @@
               "table": "BusAmenity"
             }
           },
-          "BusLayout": {
-            "fields": {
-              "busId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "columnCount": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "rowCount": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              }
-            },
-            "relations": {
-              "bus": {
-                "cardinality": "N:1",
-                "nullable": false,
-                "on": {
-                  "localFields": [
-                    "busId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Bus",
-                  "namespace": "public"
-                }
-              },
-              "cells": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "layoutId"
-                  ]
-                },
-                "to": {
-                  "model": "BusLayoutCell",
-                  "namespace": "public"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "busId": {
-                  "column": "busId"
-                },
-                "columnCount": {
-                  "column": "columnCount"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "rowCount": {
-                  "column": "rowCount"
-                }
-              },
-              "namespaceId": "public",
-              "table": "BusLayout"
-            }
-          },
-          "BusLayoutCell": {
-            "fields": {
-              "column": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "kind": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                },
-                "valueSet": {
-                  "entityKind": "enum",
-                  "entityName": "LayoutCellKind",
-                  "namespaceId": "public",
-                  "plane": "domain"
-                }
-              },
-              "layoutId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "row": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              },
-              "seatId": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              }
-            },
-            "relations": {
-              "layout": {
-                "cardinality": "N:1",
-                "nullable": false,
-                "on": {
-                  "localFields": [
-                    "layoutId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "BusLayout",
-                  "namespace": "public"
-                }
-              },
-              "seat": {
-                "cardinality": "N:1",
-                "nullable": true,
-                "on": {
-                  "localFields": [
-                    "seatId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "BusSeat",
-                  "namespace": "public"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "column": {
-                  "column": "column"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "kind": {
-                  "column": "kind"
-                },
-                "layoutId": {
-                  "column": "layoutId"
-                },
-                "row": {
-                  "column": "row"
-                },
-                "seatId": {
-                  "column": "seatId"
-                }
-              },
-              "namespaceId": "public",
-              "table": "BusLayoutCell"
-            }
-          },
           "BusSeat": {
             "fields": {
               "busId": {
@@ -967,22 +750,6 @@
                 },
                 "to": {
                   "model": "Bus",
-                  "namespace": "public"
-                }
-              },
-              "layoutCell": {
-                "cardinality": "1:1",
-                "nullable": true,
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "seatId"
-                  ]
-                },
-                "to": {
-                  "model": "BusLayoutCell",
                   "namespace": "public"
                 }
               }
@@ -2575,6 +2342,11 @@
             "Bus": {
               "checks": [
                 {
+                  "expression": "\"seatLayout\" IN ('STANDARD_2_2')",
+                  "name": "Bus_seatLayout_check_04946dd7",
+                  "prefix": "Bus_seatLayout_check"
+                },
+                {
                   "expression": "\"seatCount\" BETWEEN 1 AND 100",
                   "name": "bus_seat_count_range_2c34aaa7",
                   "prefix": "bus_seat_count_range"
@@ -2609,6 +2381,17 @@
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
+                },
+                "seatLayout": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "SeatLayout",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 }
               },
               "foreignKeys": [
@@ -2747,207 +2530,6 @@
                   "columns": [
                     "busId",
                     "amenityId"
-                  ]
-                }
-              ]
-            },
-            "BusLayout": {
-              "checks": [
-                {
-                  "expression": "\"rowCount\" BETWEEN 2 AND 51 AND \"columnCount\" BETWEEN 3 AND 8",
-                  "name": "bus_layout_dimensions_e07be16e",
-                  "prefix": "bus_layout_dimensions"
-                }
-              ],
-              "columns": {
-                "busId": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false
-                },
-                "columnCount": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "nullable": false
-                },
-                "id": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false
-                },
-                "rowCount": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "nullable": false
-                }
-              },
-              "foreignKeys": [
-                {
-                  "index": {
-                    "unique": [
-                      "busId"
-                    ]
-                  },
-                  "onDelete": "cascade",
-                  "onUpdate": "restrict",
-                  "source": {
-                    "columns": [
-                      "busId"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "BusLayout"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "Bus"
-                  }
-                }
-              ],
-              "indexes": [],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": [
-                {
-                  "columns": [
-                    "busId"
-                  ]
-                }
-              ]
-            },
-            "BusLayoutCell": {
-              "checks": [
-                {
-                  "expression": "\"kind\" IN ('SEAT', 'AISLE', 'DRIVER', 'DOOR', 'EMPTY')",
-                  "name": "BusLayoutCell_kind_check_2cef50ca",
-                  "prefix": "BusLayoutCell_kind_check"
-                },
-                {
-                  "expression": "row BETWEEN 0 AND 50 AND \"column\" BETWEEN 0 AND 7",
-                  "name": "bus_layout_cell_coordinates_163905df",
-                  "prefix": "bus_layout_cell_coordinates"
-                },
-                {
-                  "expression": "(kind = 'SEAT' AND \"seatId\" IS NOT NULL) OR (kind <> 'SEAT' AND \"seatId\" IS NULL)",
-                  "name": "bus_layout_cell_seat_5946a95f",
-                  "prefix": "bus_layout_cell_seat"
-                }
-              ],
-              "columns": {
-                "column": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "nullable": false
-                },
-                "id": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false
-                },
-                "kind": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false,
-                  "valueSet": {
-                    "entityKind": "valueSet",
-                    "entityName": "LayoutCellKind",
-                    "namespaceId": "public",
-                    "plane": "storage"
-                  }
-                },
-                "layoutId": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false
-                },
-                "row": {
-                  "codecId": "pg/int4@1",
-                  "dataType": "pg/int4",
-                  "nullable": false
-                },
-                "seatId": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": true
-                }
-              },
-              "foreignKeys": [
-                {
-                  "index": {
-                    "name": "BusLayoutCell_layoutId_idx_dc26ea26"
-                  },
-                  "onDelete": "cascade",
-                  "onUpdate": "restrict",
-                  "source": {
-                    "columns": [
-                      "layoutId"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "BusLayoutCell"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "BusLayout"
-                  }
-                },
-                {
-                  "index": {
-                    "unique": [
-                      "seatId"
-                    ]
-                  },
-                  "onDelete": "restrict",
-                  "onUpdate": "restrict",
-                  "source": {
-                    "columns": [
-                      "seatId"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "BusLayoutCell"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "BusSeat"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "layoutId"
-                  ],
-                  "name": "BusLayoutCell_layoutId_idx_dc26ea26",
-                  "prefix": "BusLayoutCell_layoutId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": [
-                {
-                  "columns": [
-                    "seatId"
-                  ]
-                },
-                {
-                  "columns": [
-                    "layoutId",
-                    "row",
-                    "column"
                   ]
                 }
               ]
@@ -4077,14 +3659,10 @@
                 "PASSWORD_CHANGED"
               ]
             },
-            "LayoutCellKind": {
+            "SeatLayout": {
               "kind": "valueSet",
               "values": [
-                "SEAT",
-                "AISLE",
-                "DRIVER",
-                "DOOR",
-                "EMPTY"
+                "STANDARD_2_2"
               ]
             },
             "TripStatus": {
@@ -4108,10 +3686,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e7dfcf920bc82ad298d3cc354c816a83a4330720f12877f91552a64ed7328799"
+    "storageHash": "52ff3f3214f6c17ce5390a088b20d25f9c2f3e411157d69b2306c9268b47fbfa"
   },
   "execution": {
-    "executionHash": "423e8dd9c929b0295a588564f2782a4853406bb3204238bf0876f1604b58e747",
+    "executionHash": "71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865",
     "mutations": {
       "defaults": [
         {
@@ -4165,28 +3743,6 @@
           },
           "ref": {
             "entry": "BusAmenity",
-            "field": "id",
-            "namespace": "public"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv4",
-            "kind": "generator"
-          },
-          "ref": {
-            "entry": "BusLayout",
-            "field": "id",
-            "namespace": "public"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv4",
-            "kind": "generator"
-          },
-          "ref": {
-            "entry": "BusLayoutCell",
             "field": "id",
             "namespace": "public"
           }
