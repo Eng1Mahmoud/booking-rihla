@@ -48,7 +48,10 @@ test('registration, single-use verification, resend limits and retrying encrypte
     if (user) users.push(user.id);
     assert.equal(response.status, 202);
     assert.ok(user);
-    return user;
+    return {
+      ...user,
+      verificationId: (await response.json()).verificationId as string,
+    };
   }
   async function codeFor(userId: string) {
     const message = await db.orm.public.EmailOutbox.where({ userId }).first();
@@ -110,8 +113,16 @@ test('registration, single-use verification, resend limits and retrying encrypte
   assert.ok(delivered?.sentAt);
   assert.equal(delivered.encryptedCode, null);
   const confirmations = await Promise.all([
-    post('/verify-email', { email: user.email, code }),
-    post('/verify-email', { email: user.email, code }),
+    post('/verify-email', {
+      verificationId: user.verificationId,
+      email: user.email,
+      code,
+    }),
+    post('/verify-email', {
+      verificationId: user.verificationId,
+      email: user.email,
+      code,
+    }),
   ]);
   assert.deepEqual(confirmations.map((r) => r.status).sort(), [200, 400]);
   assert.ok(
@@ -127,17 +138,27 @@ test('registration, single-use verification, resend limits and retrying encrypte
   );
   await invalid(
     await post('/verify-email', {
+      verificationId: randomUUID(),
       email: 'missing-' + randomUUID() + '@example.test',
       code: '000000',
     }),
   );
   assert.equal(
-    (await post('/resend-verification', { email: user.email })).status,
+    (
+      await post('/resend-verification', {
+        verificationId: user.verificationId,
+        email: user.email,
+      })
+    ).status,
     202,
   );
   assert.equal(
-    (await post('/resend-verification', { email: 'missing@example.test' }))
-      .status,
+    (
+      await post('/resend-verification', {
+        verificationId: randomUUID(),
+        email: 'missing@example.test',
+      })
+    ).status,
     202,
   );
   const brute = await account('brute');
@@ -145,7 +166,11 @@ test('registration, single-use verification, resend limits and retrying encrypte
     wrong = correct === '000000' ? '000001' : '000000';
   const failures = await Promise.all(
     Array.from({ length: 7 }, () =>
-      post('/verify-email', { email: brute.email, code: wrong }),
+      post('/verify-email', {
+        verificationId: brute.verificationId,
+        email: brute.email,
+        code: wrong,
+      }),
     ),
   );
   assert.ok(failures.every((r) => r.status === 400));
@@ -155,7 +180,11 @@ test('registration, single-use verification, resend limits and retrying encrypte
     5,
   );
   await invalid(
-    await post('/verify-email', { email: brute.email, code: correct }),
+    await post('/verify-email', {
+      verificationId: brute.verificationId,
+      email: brute.email,
+      code: correct,
+    }),
   );
   let sentLockedCode = false;
   assert.equal(
@@ -174,7 +203,12 @@ test('registration, single-use verification, resend limits and retrying encrypte
   }).first();
   assert.ok(oldMessage);
   assert.equal(
-    (await post('/resend-verification', { email: resend.email })).status,
+    (
+      await post('/resend-verification', {
+        verificationId: resend.verificationId,
+        email: resend.email,
+      })
+    ).status,
     202,
   );
   assert.equal(
@@ -185,8 +219,14 @@ test('registration, single-use verification, resend limits and retrying encrypte
     resendAfter: '2000-01-01T00:00:00Z',
   });
   await Promise.all([
-    post('/resend-verification', { email: resend.email }),
-    post('/resend-verification', { email: resend.email }),
+    post('/resend-verification', {
+      verificationId: resend.verificationId,
+      email: resend.email,
+    }),
+    post('/resend-verification', {
+      verificationId: resend.verificationId,
+      email: resend.email,
+    }),
   ]);
   const newCode = await codeFor(resend.id);
   assert.notEqual(newCode, oldCode);
@@ -200,18 +240,28 @@ test('registration, single-use verification, resend limits and retrying encrypte
     1,
   );
   await invalid(
-    await post('/verify-email', { email: resend.email, code: oldCode }),
+    await post('/verify-email', {
+      verificationId: resend.verificationId,
+      email: resend.email,
+      code: oldCode,
+    }),
   );
   await db.orm.public.EmailVerification.where({ userId: resend.id }).update({
     sendCount: 5,
     resendAfter: '2000-01-01T00:00:00Z',
   });
-  await post('/resend-verification', { email: resend.email });
+  await post('/resend-verification', {
+    verificationId: resend.verificationId,
+    email: resend.email,
+  });
   assert.equal(await codeFor(resend.id), newCode);
   await db.orm.public.EmailVerification.where({ userId: resend.id }).update({
     windowStartedAt: '2000-01-01T00:00:00Z',
   });
-  await post('/resend-verification', { email: resend.email });
+  await post('/resend-verification', {
+    verificationId: resend.verificationId,
+    email: resend.email,
+  });
   assert.equal(
     (await db.orm.public.EmailVerification.where({ userId: resend.id }).first())
       ?.sendCount,
@@ -223,7 +273,11 @@ test('registration, single-use verification, resend limits and retrying encrypte
     expiresAt: '2000-01-01T00:00:00Z',
   });
   await invalid(
-    await post('/verify-email', { email: expired.email, code: expiredCode }),
+    await post('/verify-email', {
+      verificationId: expired.verificationId,
+      email: expired.email,
+      code: expiredCode,
+    }),
   );
   let sentExpired = false;
   assert.equal(

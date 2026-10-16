@@ -26,6 +26,12 @@ import type { TripDetailsService } from './services/tripDetailsService.ts';
 import { authService, type AuthService } from './services/authService.ts';
 import { createAuthRouter } from './routes/authRoutes.ts';
 
+import {
+  sessionService,
+  type SessionService,
+} from './services/sessionService.ts';
+import { createSessionRouter } from './routes/sessionRoutes.ts';
+
 export function createApp(
   corsOrigins: string[],
   services: {
@@ -37,13 +43,14 @@ export function createApp(
     tripSearch?: TripSearchService;
     tripDetails?: TripDetailsService;
     auth?: AuthService;
+    sessions?: SessionService;
   } = {},
 ) {
   const app = express();
 
   app.disable('x-powered-by');
   app.use(helmet());
-  app.use(cors({ origin: corsOrigins }));
+  app.use(cors({ origin: corsOrigins, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
 
   app.get('/api/v1/health', (_request, response) => {
@@ -70,6 +77,10 @@ export function createApp(
   );
 
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
+  app.use(
+    '/api/v1/auth',
+    createSessionRouter(services.sessions ?? sessionService, corsOrigins),
+  );
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {

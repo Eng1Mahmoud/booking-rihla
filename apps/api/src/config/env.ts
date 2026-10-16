@@ -76,3 +76,13 @@ export function parseAuthEnv(environment: NodeJS.ProcessEnv) {
     );
   return result.data;
 }
+
+const sessionEnvSchema = z.object({
+  AUTH_ACCESS_SECRET: z.string().regex(/^[a-fA-F0-9]{64}$/),
+});
+export function parseSessionEnv(environment: NodeJS.ProcessEnv) {
+  const result = sessionEnvSchema.safeParse(environment);
+  if (!result.success)
+    throw new Error('Invalid session configuration: AUTH_ACCESS_SECRET');
+  return result.data;
+}

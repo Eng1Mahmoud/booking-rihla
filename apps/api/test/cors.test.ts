@@ -35,10 +35,10 @@ for (const origin of allowedOrigins) {
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('access-control-allow-origin'), origin);
     assert.match(response.headers.get('vary') ?? '', /Origin/i);
-    // Credentialed browser access is deferred until the authentication step.
+    // Credentialed browser access is restricted to explicit allowed origins.
     assert.equal(
       response.headers.get('access-control-allow-credentials'),
-      null,
+      'true',
     );
     assert.deepEqual(await response.json(), { status: 'ok' });
   });

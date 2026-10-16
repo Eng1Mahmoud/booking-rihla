@@ -1,0 +1,43 @@
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { SignJWT, jwtVerify } from 'jose';
+import { z } from 'zod';
+import { parseSessionEnv } from '../config/env.ts';
+export const accessLifetimeSeconds = 900;
+export const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000;
+function key() {
+  return Buffer.from(parseSessionEnv(process.env).AUTH_ACCESS_SECRET, 'hex');
+}
+export function newRefreshToken() {
+  return randomBytes(32).toString('hex');
+}
+export function hashRefreshToken(token: string) {
+  return createHash('sha256').update(token).digest('hex');
+}
+export async function signAccessToken(userId: string, sessionId: string) {
+  return await new SignJWT({ sid: sessionId, tokenUse: 'access' })
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+    .setSubject(userId)
+    .setIssuer('bus-booking')
+    .setAudience('bus-booking-api')
+    .setJti(randomUUID())
+    .setIssuedAt()
+    .setExpirationTime('15m')
+    .sign(key());
+}
+export async function readAccessToken(token: string) {
+  const { payload } = await jwtVerify(token, key(), {
+    algorithms: ['HS256'],
+    issuer: 'bus-booking',
+    audience: 'bus-booking-api',
+    typ: 'JWT',
+    requiredClaims: ['sub', 'sid', 'iat', 'exp', 'jti'],
+    maxTokenAge: '15m',
+  });
+  if (
+    !z.uuid().safeParse(payload.sub).success ||
+    !z.uuid().safeParse(payload.sid).success ||
+    payload.tokenUse !== 'access'
+  )
+    throw new Error('Invalid access token claims');
+  return { userId: payload.sub!, sessionId: payload.sid as string };
+}

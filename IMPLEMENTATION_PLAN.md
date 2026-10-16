@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Basic trip browsing is complete. Account registration and email verification now include Argon2id password hashes, encrypted transactional email outbox, Arabic/English templates, local Mailpit, bounded retries, expiring single-use codes, per-account resend/attempt limits, and local IP rate limits. Secure sign-in, sessions and password recovery are next; management role protection remains part of that work before public deployment.
+Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery and administrator authorization are next; catalog management remains local until role protection is added.
 
 ## How we will build
 
@@ -100,26 +100,28 @@ Small steps:
 - [x] Add registration with name, normalized email, international phone, language, and an Argon2id password hash.
 - [x] Add loopback-bound Mailpit and SMTP delivery for local email testing.
 - [x] Add email verification using a six-digit code and atomic verified-at state.
-- [ ] Enforce verified email during sign-in when implementing phase 5.
+- [x] Require verified email and an active account for sign-in and authenticated requests.
 - [x] Add resend cooldowns, durable per-account hourly limits, five-attempt code limits, and process-local IP rate limits.
 - [x] Add an encrypted transactional email outbox and a bounded retrying worker with concurrent-worker locks.
 - [x] Add Arabic and English verification templates.
 - [x] Use generic registration/resend responses and safe verification errors.
 
-Working result achieved: register, receive a code in Mailpit through SMTP, and activate the account. Sign-in/session enforcement follows in phase 5.
+Working result achieved: register, receive a code in Mailpit through SMTP, and activate the account. Verified-account sign-in and session enforcement are now implemented in phase 5.
 
 ## Phase 5 — Secure sign-in and account recovery
 
 Small steps:
 
-- [ ] Bind account activation/re-registration to the registering client or otherwise prevent pending-account pre-registration attacks before enabling sign-in.
-- [ ] Add login, a short-lived access token, and a rotating refresh token in an httpOnly cookie.
-- [ ] Store refresh-token hashes; detect reuse and revoke the affected token family.
-- [ ] Add current-user lookup, protected routes, current-device logout, and logout-all.
-- [ ] Add failed-login lockout and complete auth rate limiting, using Redis when needed.
+- [x] Bind activation and resend to the verificationId returned only for the originating registration; duplicate registration returns a decoy id.
+- [x] Add login, a 15-minute JWT access token, and a rotating HttpOnly refresh cookie with a 30-day absolute session limit.
+- [x] Store SHA-256 refresh-token hashes; detect reuse and revoke the affected session/token family.
+- [x] Add current-user lookup, reusable authentication middleware, current-device logout and logout-all with immediate access-token revocation checks.
+- [x] Add durable five-attempt/15-minute login lockout and process-local session endpoint IP limits.
+- [ ] Move IP limits to a shared store when deploying multiple instances.
 - [ ] Add forgot-password and reset-password codes; revoke all sessions after a reset.
 - [ ] Add user, admin, and super-admin authorization and ownership checks.
-- [ ] Verify cookie, CORS, and CSRF behavior for the chosen web/API deployment arrangement.
+- [x] Verify HttpOnly/Secure/SameSite cookies, credentialed exact-origin CORS, custom-header/origin CSRF checks and HTTP failure cases.
+- [ ] Exercise browser cookie/session flows when the actual frontend and deployment hostnames are available.
 
 Working result: complete account lifecycle with tested session rotation and access restrictions.
 

@@ -90,8 +90,13 @@ model User {
   language String @default("ar")
   emailVerifiedAt TimestamptzString?
   createdAt TimestamptzString @default(now())
+  isActive Boolean @default(true)
+  loginFailures Int @default(0)
+  lockedUntil TimestamptzString?
+  sessions Session[]
   verification EmailVerification?
   emails EmailOutbox[]
+  @@check(expression: sql`"loginFailures" BETWEEN 0 AND 5`, name: "user_login_failures")
   @@check(expression: sql`language IN ('ar', 'en')`, name: "user_language")
 }
 
@@ -121,4 +126,26 @@ model EmailOutbox {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   @@index([sentAt, discardedAt, nextAttemptAt])
   @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "outbox_attempts")
+}
+
+model Session {
+  id String @id @default(uuid())
+  userId String
+  createdAt TimestamptzString @default(now())
+  expiresAt TimestamptzString
+  revokedAt TimestamptzString?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  tokens RefreshToken[]
+  @@index([userId, revokedAt])
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+  sessionId String
+  tokenHash String @unique
+  createdAt TimestamptzString @default(now())
+  expiresAt TimestamptzString
+  usedAt TimestamptzString?
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([sessionId])
 }

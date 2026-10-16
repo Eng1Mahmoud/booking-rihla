@@ -35,8 +35,10 @@ export function createAuthController(service: AuthService) {
           'VALIDATION_ERROR',
           'Provide only name (1-100 characters), email, international phone, password (12-128 characters, at most 512 bytes), and optional language ar/en',
         );
-      await service.register(input.data);
-      response.status(202).json({ message: registrationMessage });
+      const verificationId = await service.register(input.data);
+      response
+        .status(202)
+        .json({ message: registrationMessage, verificationId });
     },
     async verifyEmail(request: Request, response: Response) {
       requireJson(request);
@@ -45,7 +47,7 @@ export function createAuthController(service: AuthService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide only email and a six-digit code string',
+          'Provide only email, verificationId (UUID) and a six-digit code string',
         );
       await service.verifyEmail(input.data);
       response.json({ message: 'Email verified successfully' });
@@ -57,9 +59,9 @@ export function createAuthController(service: AuthService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide only a valid email',
+          'Provide only email and verificationId (UUID)',
         );
-      await service.resendVerification(input.data.email);
+      await service.resendVerification(input.data);
       response.status(202).json({ message: resendMessage });
     },
   };

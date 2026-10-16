@@ -15,6 +15,7 @@ import {
   newVerificationCode,
 } from '../src/utils/authCrypto.ts';
 import { verificationEmail } from '../src/emails/verificationEmail.ts';
+const verificationId = randomUUID();
 const json = { 'Content-Type': 'application/json' };
 const valid = {
   name: ' Mahmoud ',
@@ -24,7 +25,9 @@ const valid = {
 };
 function fakeService(): AuthService {
   return {
-    async register() {},
+    async register() {
+      return verificationId;
+    },
     async verifyEmail() {},
     async resendVerification() {},
   };
@@ -47,6 +50,7 @@ test('registration normalizes identity, defaults Arabic and returns generic 202 
   const service = fakeService();
   service.register = async (input) => {
     received = input;
+    return verificationId;
   };
   const base = await startServer(t, service);
   const response = await fetch(base + '/register', {
@@ -72,6 +76,7 @@ test('auth bodies reject weak passwords, invalid identities, extra fields and in
   const service = fakeService();
   service.register = async () => {
     calls++;
+    return verificationId;
   };
   service.verifyEmail = async () => {
     calls++;
@@ -104,7 +109,11 @@ test('auth bodies reject weak passwords, invalid identities, extra fields and in
         await fetch(base + '/verify-email', {
           method: 'POST',
           headers: json,
-          body: JSON.stringify({ email: 'user@example.com', code }),
+          body: JSON.stringify({
+            verificationId,
+            email: 'user@example.com',
+            code,
+          }),
         })
       ).status,
       400,
@@ -131,16 +140,24 @@ test('verification and resend normalize emails and preserve leading zeroes in co
   const verified = await fetch(base + '/verify-email', {
     method: 'POST',
     headers: json,
-    body: JSON.stringify({ email: ' USER@EXAMPLE.COM ', code: '012345' }),
+    body: JSON.stringify({
+      verificationId,
+      email: ' USER@EXAMPLE.COM ',
+      code: '012345',
+    }),
   });
   assert.equal(verified.status, 200);
-  assert.deepEqual(received, { email: 'user@example.com', code: '012345' });
+  assert.deepEqual(received, {
+    verificationId,
+    email: 'user@example.com',
+    code: '012345',
+  });
   assert.equal(
     (
       await fetch(base + '/resend-verification', {
         method: 'POST',
         headers: json,
-        body: JSON.stringify({ email: 'user@example.com' }),
+        body: JSON.stringify({ verificationId, email: 'user@example.com' }),
       })
     ).status,
     202,
@@ -157,8 +174,11 @@ test('auth endpoints require JSON, reject query fields and hide unexpected failu
   });
   for (const [path, body] of [
     ['register', valid],
-    ['verify-email', { email: 'user@example.com', code: '123456' }],
-    ['resend-verification', { email: 'user@example.com' }],
+    [
+      'verify-email',
+      { verificationId, email: 'user@example.com', code: '123456' },
+    ],
+    ['resend-verification', { verificationId, email: 'user@example.com' }],
   ] as const) {
     assert.equal(
       (await fetch(base + '/' + path, { method: 'POST', body: 'text' })).status,
@@ -223,7 +243,11 @@ test('expected verification errors keep the generic safe code', async (t) => {
   const response = await fetch(base + '/verify-email', {
     method: 'POST',
     headers: json,
-    body: JSON.stringify({ email: 'user@example.com', code: '000000' }),
+    body: JSON.stringify({
+      verificationId,
+      email: 'user@example.com',
+      code: '000000',
+    }),
   });
   assert.equal(response.status, 400);
   assert.equal((await response.json()).error.code, 'INVALID_VERIFICATION_CODE');

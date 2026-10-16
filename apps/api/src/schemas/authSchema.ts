@@ -13,10 +13,19 @@ export const registerSchema = z.strictObject({
     .refine((value) => Buffer.byteLength(value, 'utf8') <= 512),
   language: z.enum(['ar', 'en']).default('ar'),
 });
-export const resendVerificationSchema = z.strictObject({ email });
+export const resendVerificationSchema = z.strictObject({
+  email,
+  verificationId: z.uuid(),
+});
 export const verifyEmailSchema = z.strictObject({
   email,
+  verificationId: z.uuid(),
   code: z.string().regex(/^\d{6}$/),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const loginSchema = registerSchema.pick({ email: true, password: true });
+export const emptySessionSchema = z.strictObject({}).default({});
+export type LoginInput = z.infer<typeof loginSchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;

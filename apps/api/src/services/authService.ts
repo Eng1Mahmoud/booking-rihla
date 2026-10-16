@@ -1,6 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { hash, argon2id } from 'argon2';
 import type { db as database } from '../prisma/db.ts';
-import type { RegisterInput, VerifyEmailInput } from '../schemas/authSchema.ts';
+import type {
+  RegisterInput,
+  VerifyEmailInput,
+  ResendVerificationInput,
+} from '../schemas/authSchema.ts';
 import { AppError } from '../errors/AppError.ts';
 import { parseAuthEnv } from '../config/env.ts';
 import {
@@ -39,19 +44,21 @@ async function queueVerification(
   };
   // Replacing the code invalidates every older queued/sent verification email.
   await tx.orm.public.EmailOutbox.where({ userId }).deleteAll();
-  if (previous)
-    await tx.orm.public.EmailVerification.where({ id: previous.id }).update(
-      challenge,
-    );
-  else await tx.orm.public.EmailVerification.create(challenge);
+  const verification = previous
+    ? await tx.orm.public.EmailVerification.where({ id: previous.id }).update(
+        challenge,
+      )
+    : await tx.orm.public.EmailVerification.create(challenge);
+  if (!verification) throw new Error('Verification record missing');
   await tx.orm.public.EmailOutbox.create({
     userId,
     encryptedCode: encryptVerificationCode(userId, code),
     expiresAt: challenge.expiresAt,
   });
+  return verification.id;
 }
 export const authService = {
-  async register(input: RegisterInput): Promise<void> {
+  async register(input: RegisterInput): Promise<string> {
     parseAuthEnv(process.env);
     // Hash duplicate registrations too; never replace an existing account's password.
     const passwordHash = await hash(input.password, {
@@ -61,7 +68,7 @@ export const authService = {
       parallelism: 1,
     });
     const { db } = await import('../prisma/db.ts');
-    await db.transaction(async (tx) => {
+    return await db.transaction(async (tx) => {
       await tx.execute(
         db.raw
           .sql`SELECT pg_advisory_xact_lock(hashtextextended(${input.email}, 0))`
@@ -69,7 +76,7 @@ export const authService = {
           .build(),
       );
       if (await tx.orm.public.User.where({ email: input.email }).first())
-        return;
+        return randomUUID();
       const user = await tx.orm.public.User.create({
         name: input.name,
         email: input.email,
@@ -77,10 +84,13 @@ export const authService = {
         passwordHash,
         language: input.language,
       });
-      await queueVerification(tx, user.id, null);
+      return await queueVerification(tx, user.id, null);
     });
   },
-  async resendVerification(email: string): Promise<void> {
+  async resendVerification({
+    email,
+    verificationId,
+  }: ResendVerificationInput): Promise<void> {
     parseAuthEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     await db.transaction(async (tx) => {
@@ -94,6 +104,7 @@ export const authService = {
       const previous = await tx.orm.public.EmailVerification.where({
         userId: user.id,
       }).first();
+      if (!previous || previous.id !== verificationId) return;
       if (
         previous &&
         (Date.parse(previous.resendAfter) > Date.now() ||
@@ -104,7 +115,11 @@ export const authService = {
       await queueVerification(tx, user.id, previous);
     });
   },
-  async verifyEmail({ email, code }: VerifyEmailInput): Promise<void> {
+  async verifyEmail({
+    email,
+    code,
+    verificationId,
+  }: VerifyEmailInput): Promise<void> {
     parseAuthEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const verified = await db.transaction(async (tx) => {
@@ -120,6 +135,7 @@ export const authService = {
       }).first();
       if (
         !challenge ||
+        challenge.id !== verificationId ||
         challenge.attempts >= 5 ||
         Date.parse(challenge.expiresAt) <= Date.now()
       )
