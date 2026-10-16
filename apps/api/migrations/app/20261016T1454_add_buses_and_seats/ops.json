@@ -1,0 +1,245 @@
+[
+  {
+    "id": "table.Bus",
+    "label": "Create table \"Bus\"",
+    "summary": "Creates table \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Bus\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Bus\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Bus\"",
+        "sql": "CREATE TABLE \"public\".\"Bus\" (\n  \"id\" text NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"plateNumber\" text NOT NULL,\n  \"seatCount\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"bus_seat_count_range_2c34aaa7\" CHECK (\"seatCount\" BETWEEN 1 AND 100)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Bus\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Bus\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.BusSeat",
+    "label": "Create table \"BusSeat\"",
+    "summary": "Creates table \"BusSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusSeat\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BusSeat\"",
+        "sql": "CREATE TABLE \"public\".\"BusSeat\" (\n  \"busId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"number\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"bus_seat_number_range_608febde\" CHECK (number BETWEEN 1 AND 100)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusSeat\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Bus.Bus_plateNumber_key",
+    "label": "Add unique constraint on \"Bus\" (plateNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Bus_plateNumber_key",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Bus_plateNumber_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_plateNumber_key",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Bus_plateNumber_key\"",
+        "sql": "ALTER TABLE \"public\".\"Bus\" ADD CONSTRAINT \"Bus_plateNumber_key\" UNIQUE (\"plateNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Bus_plateNumber_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_plateNumber_key",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusSeat.BusSeat_busId_number_key",
+    "label": "Add unique constraint on \"BusSeat\" (busId, number)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusSeat_busId_number_key",
+        "table": "BusSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusSeat_busId_number_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusSeat_busId_number_key",
+          "public",
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusSeat_busId_number_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusSeat\" ADD CONSTRAINT \"BusSeat_busId_number_key\" UNIQUE (\"busId\", \"number\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusSeat_busId_number_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusSeat_busId_number_key",
+          "public",
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BusSeat.BusSeat_busId_idx_00d1f177",
+    "label": "Create index \"BusSeat_busId_idx_00d1f177\" on \"BusSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BusSeat_busId_idx_00d1f177",
+        "table": "BusSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BusSeat_busId_idx_00d1f177\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusSeat_busId_idx_00d1f177\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BusSeat_busId_idx_00d1f177\"",
+        "sql": "CREATE INDEX \"BusSeat_busId_idx_00d1f177\" ON \"public\".\"BusSeat\" (\"busId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BusSeat_busId_idx_00d1f177\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusSeat_busId_idx_00d1f177\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusSeat.BusSeat_busId_fkey",
+    "label": "Add foreign key \"BusSeat_busId_fkey\" on \"BusSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusSeat_busId_fkey",
+        "table": "BusSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusSeat_busId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusSeat_busId_fkey",
+          "public",
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusSeat_busId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusSeat\"\nADD CONSTRAINT \"BusSeat_busId_fkey\"\nFOREIGN KEY (\"busId\")\nREFERENCES \"public\".\"Bus\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusSeat_busId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusSeat_busId_fkey",
+          "public",
+          "\"public\".\"BusSeat\""
+        ]
+      }
+    ]
+  }
+]

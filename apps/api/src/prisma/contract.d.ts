@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'158331a0573fab018bedb3a95e7f5cbcb6b0a7b114afaf63c549580b2832122b'>;
+  StorageHashBase<'da409af4617854fc8a7bdf6f2004b5568a7d0acde1b097d48cae45dd231cdba4'>;
 export type ExecutionHash =
-  ExecutionHashBase<'10f7569c3e916012b1da32a9b7753ce3a503193e2e4aac7381f0b7b8fb61f2e4'>;
+  ExecutionHashBase<'c5894be3caf2382e3fd503b7574f59025d63647a3f5e9ac5709fc5f8402b0fed'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -234,6 +234,17 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly Bus: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly plateNumber: CodecTypes['pg/text@1']['output'];
+      readonly seatCount: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly BusSeat: {
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly number: CodecTypes['pg/int4@1']['output'];
+    };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nameAr: CodecTypes['pg/text@1']['output'];
@@ -249,6 +260,17 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly Bus: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly plateNumber: CodecTypes['pg/text@1']['input'];
+      readonly seatCount: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly BusSeat: {
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly number: CodecTypes['pg/int4@1']['input'];
+    };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
@@ -264,6 +286,17 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly Bus: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly plateNumber: CodecTypes['pg/text@1']['output'];
+      readonly seatCount: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly BusSeat: {
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly number: CodecTypes['pg/int4@1']['output'];
+    };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nameAr: CodecTypes['pg/text@1']['output'];
@@ -279,6 +312,17 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly Bus: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly plateNumber: CodecTypes['pg/text@1']['input'];
+      readonly seatCount: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly BusSeat: {
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly number: CodecTypes['pg/int4@1']['input'];
+    };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
@@ -294,6 +338,21 @@ export type StorageColumnInputTypes = {
 };
 
 export namespace Models {
+  export type public_Bus = {
+    id: CodecTypes['pg/text@1']['output'];
+    isActive: CodecTypes['pg/bool@1']['output'];
+    plateNumber: CodecTypes['pg/text@1']['output'];
+    seatCount: CodecTypes['pg/int4@1']['output'];
+    seats: public_BusSeat[];
+    readonly [RelationKeys]?: 'seats';
+  };
+  export type public_BusSeat = {
+    busId: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    number: CodecTypes['pg/int4@1']['output'];
+    bus: public_Bus;
+    readonly [RelationKeys]?: 'bus';
+  };
   export type public_City = {
     id: CodecTypes['pg/text@1']['output'];
     nameAr: CodecTypes['pg/text@1']['output'];
@@ -313,6 +372,8 @@ export namespace Models {
 
 export declare const models: {
   public: {
+    Bus: Models.public_Bus;
+    BusSeat: Models.public_BusSeat;
     City: Models.public_City;
     Station: Models.public_Station;
   };
@@ -336,6 +397,88 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly Bus: {
+              columns: {
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly isActive: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                  readonly many: false;
+                };
+                readonly plateNumber: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly seatCount: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['plateNumber'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly BusSeat: {
+              columns: {
+                readonly busId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly number: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['busId', 'number'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'BusSeat_busId_idx_00d1f177';
+                  readonly prefix: 'BusSeat_busId_idx';
+                  readonly columns: readonly ['busId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BusSeat';
+                    readonly columns: readonly ['busId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Bus';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly City: {
               columns: {
                 readonly id: {
@@ -425,6 +568,8 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly Bus: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+    readonly BusSeat: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusSeat' };
     readonly City: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
     readonly Station: { readonly namespace: 'public' & NamespaceId; readonly model: 'Station' };
   };
@@ -432,6 +577,85 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly Bus: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly plateNumber: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly seatCount: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly seats: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BusSeat';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['busId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Bus';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly isActive: { readonly column: 'isActive' };
+                readonly plateNumber: { readonly column: 'plateNumber' };
+                readonly seatCount: { readonly column: 'seatCount' };
+              };
+            };
+          };
+          readonly BusSeat: {
+            readonly fields: {
+              readonly busId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly number: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly bus: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['busId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'BusSeat';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly busId: { readonly column: 'busId' };
+                readonly id: { readonly column: 'id' };
+                readonly number: { readonly column: 'number' };
+              };
+            };
+          };
           readonly City: {
             readonly fields: {
               readonly id: {
@@ -547,6 +771,22 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Bus';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'BusSeat';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {

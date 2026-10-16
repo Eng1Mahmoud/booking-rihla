@@ -14,3 +14,12 @@ export function isForeignKeyViolation(error: unknown): boolean {
 export function isRestrictViolation(error: unknown): boolean {
   return hasSqlState(error, '23001');
 }
+
+export function isUniqueViolation(error: unknown, constraint: string): boolean {
+  return (
+    hasSqlState(error, '23505') &&
+    error instanceof Error &&
+    'constraint' in error &&
+    error.constraint === constraint
+  );
+}

@@ -10,10 +10,16 @@ import {
   type StationService,
 } from './services/stationService.ts';
 import { createStationRouter } from './routes/stationRoutes.ts';
+import { busService, type BusService } from './services/busService.ts';
+import { createBusRouter } from './routes/busRoutes.ts';
 
 export function createApp(
   corsOrigins: string[],
-  services: { cities?: CityService; stations?: StationService } = {},
+  services: {
+    cities?: CityService;
+    stations?: StationService;
+    buses?: BusService;
+  } = {},
 ) {
   const app = express();
 
@@ -31,6 +37,8 @@ export function createApp(
     '/api/v1/stations',
     createStationRouter(services.stations ?? stationService),
   );
+
+  app.use('/api/v1/buses', createBusRouter(services.buses ?? busService));
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {

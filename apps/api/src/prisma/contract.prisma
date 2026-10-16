@@ -16,3 +16,23 @@ model Station {
 
   @@index([cityId])
 }
+
+model Bus {
+  id          String    @id @default(uuid())
+  plateNumber String    @unique
+  seatCount   Int
+  isActive    Boolean   @default(true)
+  seats       BusSeat[]
+
+  @@check(expression: sql`"seatCount" BETWEEN 1 AND 100`, name: "bus_seat_count_range")
+}
+
+model BusSeat {
+  id     String @id @default(uuid())
+  busId  String
+  number Int
+  bus    Bus    @relation(fields: [busId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([busId, number])
+  @@check(expression: sql`number BETWEEN 1 AND 100`, name: "bus_seat_number_range")
+}

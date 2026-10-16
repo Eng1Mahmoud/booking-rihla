@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: City is published and Station backend CRUD is complete with a City foreign key, city-filtered pagination, bilingual names, validation, safe errors, and HTTP/PostgreSQL tests. Both migrations are verified from a fresh database. Authentication will protect management routes before public deployment. Commit and push this complete feature before beginning the next backend feature: buses, numbered seats, and fleet configuration.
+Status: City and Station are published. Bus CRUD and automatic numbered seats are complete with unique normalized plates, active filtering, bounded capacity, atomic creation/resizing, stable seat identities, row-lock serialization, validation, and HTTP/PostgreSQL tests. Finish checks and publish this feature before starting Route management. Bus types, amenities, and visual layout metadata remain a later fleet extension.
 
 ## How we will build
 
@@ -63,7 +63,8 @@ Small steps:
 - [x] Complete City create/list/detail/update/delete endpoints, validation, pagination, and HTTP/PostgreSQL tests.
 - [x] Apply the Prisma 8 change/migration workflow when adding Station.
 - [x] Add cities and stations, including Arabic and English names and multiple stations per city.
-- [ ] Add a minimal bus, numbered bus seats, route, and trip model.
+- [x] Add Bus/BusSeat models, complete Bus CRUD, seat listing, and atomic capacity resizing.
+- [ ] Add route and trip models with their complete management APIs.
 - [ ] Add bus types, layout metadata, and amenities when extending the basic fleet model.
 - [ ] Add seed data for a small set of cities, stations, buses, routes, and trips.
 - [ ] Add constraints for distinct route endpoints, valid trip times, and nonnegative prices.
@@ -77,7 +78,9 @@ Feature batches:
 
 - [x] Complete City CRUD and paginated listing.
 - [x] Complete Station CRUD, its City relation, validation, constraints, and tests.
-- [ ] Complete bus types, amenities, layouts, buses, seats, and route management APIs.
+- [x] Complete basic Bus CRUD, numbered seats, active filtering, plate uniqueness, and concurrency/rollback tests.
+- [ ] Extend fleet metadata with bus types, amenities, and visual layouts when needed.
+- [ ] Complete Route management APIs.
 - [ ] Complete trip management and seed data for realistic searches.
 - [ ] Add trip search by origin city/station, destination city/station, and travel date.
 - [ ] Add trip details and seat availability endpoints.
@@ -307,4 +310,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City and Station CRUD are complete; fleet/bus configuration is the next backend feature.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, and basic Bus/seat management are complete; Route management is next.

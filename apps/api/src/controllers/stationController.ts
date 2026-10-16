@@ -19,8 +19,8 @@ export function createStationController(service: StationService) {
           'Use limit 1-100, offset 0-100000, and an optional cityId UUID; no other query fields are supported',
         );
       }
-      const cities = await service.list(query.data);
-      response.json({ data: cities, pagination: query.data });
+      const stations = await service.list(query.data);
+      response.json({ data: stations, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = stationIdSchema.safeParse(request.params.id);

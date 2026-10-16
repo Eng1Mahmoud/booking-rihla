@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Cities and stations API
+## Current feature: Bus and numbered-seat management
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs complete City and Station CRUD endpoints; the health endpoint remains independent of the database.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs City, Station, and Bus CRUD with automatic numbered seats; the health endpoint remains independent of the database.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -258,7 +258,7 @@ POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters
 
 List responses contain data and pagination (limit and offset). Limits range from 1 to 100, offsets from 0 to 100000. Invalid inputs return 400, non-JSON create requests return 415, and unexpected database failures return the existing generic 500 response without private details.
 
-City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
+City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations/buses service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
 
 ```sh
 npm test
@@ -308,3 +308,32 @@ A nonexistent city on create/move returns 404 CITY_NOT_FOUND. A missing station 
 The feature follows routes/stationRoutes.ts -> controllers/stationController.ts -> services/stationService.ts -> Prisma. schemas/stationSchema.ts validates Station requests, schemas/paginationSchema.ts shares pagination rules, and utils/databaseErrors.ts identifies PostgreSQL constraint codes without exposing raw error messages. No repository layer is added.
 
 npm run test:db exercises both City and Station CRUD, moving/filtering stations, rejecting orphan writes, and blocking City deletion while stations exist. It creates uniquely scoped data and removes only its own rows. Both migrations and these tests also passed in a fresh temporary database; the existing local Cairo record was preserved. No demo station is added automatically.
+
+## Bus and numbered-seat API
+
+Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Names/types/amenities and visual seat layouts remain a later fleet extension.
+
+| Method | Path                                          | Behavior                                                |
+| ------ | --------------------------------------------- | ------------------------------------------------------- |
+| GET    | /api/v1/buses?isActive=true&limit=20&offset=0 | List buses with optional active/inactive filtering      |
+| GET    | /api/v1/buses/:id                             | Read one bus or return BUS_NOT_FOUND                    |
+| GET    | /api/v1/buses/:id/seats                       | Read its numbered seats in ascending order              |
+| POST   | /api/v1/buses                                 | Create the bus and seats 1 through seatCount atomically |
+| PATCH  | /api/v1/buses/:id                             | Edit the plate, capacity, or active status              |
+| DELETE | /api/v1/buses/:id                             | Delete the bus and its owned seats; return 204          |
+
+Example create body:
+
+```json
+{ "plateNumber": "ABC 123", "seatCount": 40, "isActive": true }
+```
+
+POST/PATCH require JSON and reject unknown fields and caller-supplied ids. Plates must contain 1-32 characters after trimming. seatCount must be a number, not a numeric string. PATCH requires at least one supported field; omitted isActive never defaults back to true. List pagination uses the shared limits and sorts by normalized plate and UUID. isActive accepts only the strings true/false in a query.
+
+Creation uses one Prisma transaction for the bus and all seats. Capacity edits lock the bus row, preserve retained seat ids, append new numbers when growing, and remove only numbers above the new capacity when shrinking. The count update and seat changes commit together; a plate conflict rolls back every change. Concurrent capacity updates serialize on that row. Plates and (busId, number) are unique in PostgreSQL. Database checks enforce capacity and seat-number bounds, while the API transaction maintains the exact 1..seatCount set.
+
+The BusSeat foreign key cascades on Bus deletion, so no owned seats are left orphaned. Plate collisions return 409 PLATE_NUMBER_EXISTS. Absent buses return 404 BUS_NOT_FOUND. The write service also maps dependent-record restrictions to 409 BUS_IN_USE as other modules add references. Trip/reservation-specific edit restrictions will accompany those modules. Seat catalog numbers describe the vehicle; availability for a particular departure will belong to Trip/Booking.
+
+Implementation follows routes/busRoutes.ts -> controllers/busController.ts -> services/busService.ts, with schemas/busSchema.ts for validation. No repository layer or extra runtime package is introduced. As with existing management routes, administrator authorization is added with the planned authentication feature before public deployment.
+
+The real PostgreSQL test covers seat UUIDs, the 100-seat boundary, normalized duplicate plates, growing/shrinking, retained ids, rollback after a conflicting combined edit, concurrent creates/capacity edits, database uniqueness/foreign-key/check constraints, and cascading deletion. Test-created buses and seats are cleaned up. The default HTTP suite still runs without PostgreSQL.

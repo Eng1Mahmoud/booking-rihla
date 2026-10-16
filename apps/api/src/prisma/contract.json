@@ -4,6 +4,14 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Bus": {
+      "model": "Bus",
+      "namespace": "public"
+    },
+    "BusSeat": {
+      "model": "BusSeat",
+      "namespace": "public"
+    },
     "City": {
       "model": "City",
       "namespace": "public"
@@ -17,6 +25,131 @@
     "namespaces": {
       "public": {
         "models": {
+          "Bus": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "plateNumber": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "seatCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "seats": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "busId"
+                  ]
+                },
+                "to": {
+                  "model": "BusSeat",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "isActive": {
+                  "column": "isActive"
+                },
+                "plateNumber": {
+                  "column": "plateNumber"
+                },
+                "seatCount": {
+                  "column": "seatCount"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Bus"
+            }
+          },
+          "BusSeat": {
+            "fields": {
+              "busId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "number": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "bus": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "busId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Bus",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "busId": {
+                  "column": "busId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "number": {
+                  "column": "number"
+                }
+              },
+              "namespaceId": "public",
+              "table": "BusSeat"
+            }
+          },
           "City": {
             "fields": {
               "id": {
@@ -151,6 +284,127 @@
       "public": {
         "entries": {
           "table": {
+            "Bus": {
+              "checks": [
+                {
+                  "expression": "\"seatCount\" BETWEEN 1 AND 100",
+                  "name": "bus_seat_count_range_2c34aaa7",
+                  "prefix": "bus_seat_count_range"
+                }
+              ],
+              "columns": {
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "isActive": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nullable": false
+                },
+                "plateNumber": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "seatCount": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "plateNumber"
+                  ]
+                }
+              ]
+            },
+            "BusSeat": {
+              "checks": [
+                {
+                  "expression": "number BETWEEN 1 AND 100",
+                  "name": "bus_seat_number_range_608febde",
+                  "prefix": "bus_seat_number_range"
+                }
+              ],
+              "columns": {
+                "busId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "number": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "BusSeat_busId_idx_00d1f177"
+                  },
+                  "onDelete": "cascade",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "busId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BusSeat"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Bus"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "busId"
+                  ],
+                  "name": "BusSeat_busId_idx_00d1f177",
+                  "prefix": "BusSeat_busId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "busId",
+                    "number"
+                  ]
+                }
+              ]
+            },
             "City": {
               "columns": {
                 "id": {
@@ -247,12 +501,34 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "158331a0573fab018bedb3a95e7f5cbcb6b0a7b114afaf63c549580b2832122b"
+    "storageHash": "da409af4617854fc8a7bdf6f2004b5568a7d0acde1b097d48cae45dd231cdba4"
   },
   "execution": {
-    "executionHash": "10f7569c3e916012b1da32a9b7753ce3a503193e2e4aac7381f0b7b8fb61f2e4",
+    "executionHash": "c5894be3caf2382e3fd503b7574f59025d63647a3f5e9ac5709fc5f8402b0fed",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Bus",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "BusSeat",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
         {
           "onCreate": {
             "id": "uuidv4",
