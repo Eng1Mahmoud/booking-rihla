@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: City backend CRUD is complete with UUID ids, a reproducible baseline, validation, pagination, common errors, a learning script, and isolated/real-PostgreSQL tests. Publish each completed feature after checks, then move to the next. Backend comes first, then the passenger website, then the dashboard. Stations are next. Authentication will add administrator protection to existing management routes before public deployment.
+Status: City is published and Station backend CRUD is complete with a City foreign key, city-filtered pagination, bilingual names, validation, safe errors, and HTTP/PostgreSQL tests. Both migrations are verified from a fresh database. Authentication will protect management routes before public deployment. Commit and push this complete feature before beginning the next backend feature: buses, numbered seats, and fleet configuration.
 
 ## How we will build
 
@@ -61,8 +61,8 @@ Small steps:
 - [x] Add a small TypeScript example that creates or reuses Cairo and reads cities.
 - [x] Add the City baseline migration and verify fresh-database recreation.
 - [x] Complete City create/list/detail/update/delete endpoints, validation, pagination, and HTTP/PostgreSQL tests.
-- [ ] Apply the Prisma 8 change/migration workflow when adding Station.
-- [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
+- [x] Apply the Prisma 8 change/migration workflow when adding Station.
+- [x] Add cities and stations, including Arabic and English names and multiple stations per city.
 - [ ] Add a minimal bus, numbered bus seats, route, and trip model.
 - [ ] Add bus types, layout metadata, and amenities when extending the basic fleet model.
 - [ ] Add seed data for a small set of cities, stations, buses, routes, and trips.
@@ -76,7 +76,7 @@ Working result: a fresh database can be recreated using committed migrations and
 Feature batches:
 
 - [x] Complete City CRUD and paginated listing.
-- [ ] Complete Station CRUD, its City relation, validation, constraints, and tests.
+- [x] Complete Station CRUD, its City relation, validation, constraints, and tests.
 - [ ] Complete bus types, amenities, layouts, buses, seats, and route management APIs.
 - [ ] Complete trip management and seed data for realistic searches.
 - [ ] Add trip search by origin city/station, destination city/station, and travel date.
@@ -307,4 +307,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City CRUD is complete; Station is the next backend feature.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City and Station CRUD are complete; fleet/bus configuration is the next backend feature.

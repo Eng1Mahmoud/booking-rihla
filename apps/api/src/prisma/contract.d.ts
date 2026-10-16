@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'c5aa9215285b1650505b2fd8fa2d24d30afafae2edbb2b58fd9e9116b2ab2a96'>;
+  StorageHashBase<'158331a0573fab018bedb3a95e7f5cbcb6b0a7b114afaf63c549580b2832122b'>;
 export type ExecutionHash =
-  ExecutionHashBase<'a17920572567cb8401ff592a4fc3df8b96f9baa0c7dd3f90e569bf25a5a5486d'>;
+  ExecutionHashBase<'10f7569c3e916012b1da32a9b7753ce3a503193e2e4aac7381f0b7b8fb61f2e4'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -239,11 +239,23 @@ export type FieldOutputTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Station: {
+      readonly cityId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
+    };
   };
 };
 export type FieldInputTypes = {
   readonly public: {
     readonly City: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Station: {
+      readonly cityId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
@@ -257,11 +269,23 @@ export type StorageColumnTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Station: {
+      readonly cityId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
+    };
   };
 };
 export type StorageColumnInputTypes = {
   readonly public: {
     readonly City: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Station: {
+      readonly cityId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
@@ -274,13 +298,23 @@ export namespace Models {
     id: CodecTypes['pg/text@1']['output'];
     nameAr: CodecTypes['pg/text@1']['output'];
     nameEn: CodecTypes['pg/text@1']['output'];
-    readonly [RelationKeys]?: never;
+    stations: public_Station[];
+    readonly [RelationKeys]?: 'stations';
+  };
+  export type public_Station = {
+    cityId: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    nameAr: CodecTypes['pg/text@1']['output'];
+    nameEn: CodecTypes['pg/text@1']['output'];
+    city: public_City;
+    readonly [RelationKeys]?: 'city';
   };
 }
 
 export declare const models: {
   public: {
     City: Models.public_City;
+    Station: Models.public_Station;
   };
 };
 
@@ -328,6 +362,58 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly Station: {
+              columns: {
+                readonly cityId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameAr: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameEn: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'Station_cityId_idx_1ab1b247';
+                  readonly prefix: 'Station_cityId_idx';
+                  readonly columns: readonly ['cityId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Station';
+                    readonly columns: readonly ['cityId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'City';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
         };
       };
@@ -340,6 +426,7 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly City: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
+    readonly Station: { readonly namespace: 'public' & NamespaceId; readonly model: 'Station' };
   };
   readonly domain: {
     readonly namespaces: {
@@ -360,11 +447,64 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly stations: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Station';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['cityId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'City';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly nameAr: { readonly column: 'nameAr' };
+                readonly nameEn: { readonly column: 'nameEn' };
+              };
+            };
+          };
+          readonly Station: {
+            readonly fields: {
+              readonly cityId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameAr: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameEn: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly city: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['cityId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Station';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly cityId: { readonly column: 'cityId' };
                 readonly id: { readonly column: 'id' };
                 readonly nameAr: { readonly column: 'nameAr' };
                 readonly nameEn: { readonly column: 'nameEn' };
@@ -411,6 +551,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'City';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Station';
             readonly field: 'id';
             readonly namespace: 'public';
           };

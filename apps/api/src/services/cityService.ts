@@ -1,3 +1,8 @@
+import { AppError } from '../errors/AppError.ts';
+import {
+  isForeignKeyViolation,
+  isRestrictViolation,
+} from '../utils/databaseErrors.ts';
 import type {
   CreateCityInput,
   CityListQuery,
@@ -32,7 +37,18 @@ export const cityService = {
   },
   async remove(id: string): Promise<City | null> {
     const { db } = await import('../prisma/db.ts');
-    return await db.orm.public.City.where({ id }).delete();
+    try {
+      return await db.orm.public.City.where({ id }).delete();
+    } catch (error) {
+      if (isForeignKeyViolation(error) || isRestrictViolation(error)) {
+        throw new AppError(
+          409,
+          'CITY_HAS_STATIONS',
+          "Remove or move this city's stations before deleting it",
+        );
+      }
+      throw error;
+    }
   },
 };
 

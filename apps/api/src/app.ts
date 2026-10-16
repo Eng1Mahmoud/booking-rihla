@@ -5,10 +5,15 @@ import { AppError } from './errors/AppError.ts';
 import { errorHandler } from './middlewares/errorHandler.ts';
 import { createCityRouter } from './routes/cityRoutes.ts';
 import { cityService, type CityService } from './services/cityService.ts';
+import {
+  stationService,
+  type StationService,
+} from './services/stationService.ts';
+import { createStationRouter } from './routes/stationRoutes.ts';
 
 export function createApp(
   corsOrigins: string[],
-  cities: CityService = cityService,
+  services: { cities?: CityService; stations?: StationService } = {},
 ) {
   const app = express();
 
@@ -21,7 +26,11 @@ export function createApp(
     response.json({ status: 'ok' });
   });
 
-  app.use('/api/v1/cities', createCityRouter(cities));
+  app.use('/api/v1/cities', createCityRouter(services.cities ?? cityService));
+  app.use(
+    '/api/v1/stations',
+    createStationRouter(services.stations ?? stationService),
+  );
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {

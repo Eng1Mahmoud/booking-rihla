@@ -1,0 +1,122 @@
+[
+  {
+    "id": "table.Station",
+    "label": "Create table \"Station\"",
+    "summary": "Creates table \"Station\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Station"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Station\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Station\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Station\"",
+        "sql": "CREATE TABLE \"public\".\"Station\" (\n  \"cityId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"nameAr\" text NOT NULL,\n  \"nameEn\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Station\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Station\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Station.Station_cityId_idx_1ab1b247",
+    "label": "Create index \"Station_cityId_idx_1ab1b247\" on \"Station\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Station_cityId_idx_1ab1b247",
+        "table": "Station"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Station_cityId_idx_1ab1b247\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Station_cityId_idx_1ab1b247\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Station_cityId_idx_1ab1b247\"",
+        "sql": "CREATE INDEX \"Station_cityId_idx_1ab1b247\" ON \"public\".\"Station\" (\"cityId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Station_cityId_idx_1ab1b247\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Station_cityId_idx_1ab1b247\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Station.Station_cityId_fkey",
+    "label": "Add foreign key \"Station_cityId_fkey\" on \"Station\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Station_cityId_fkey",
+        "table": "Station"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Station_cityId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Station_cityId_fkey",
+          "public",
+          "\"public\".\"Station\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Station_cityId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Station\"\nADD CONSTRAINT \"Station_cityId_fkey\"\nFOREIGN KEY (\"cityId\")\nREFERENCES \"public\".\"City\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Station_cityId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Station_cityId_fkey",
+          "public",
+          "\"public\".\"Station\""
+        ]
+      }
+    ]
+  }
+]

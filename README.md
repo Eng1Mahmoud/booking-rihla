@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: City API
+## Current feature: Cities and stations API
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs the complete City CRUD endpoints; the health endpoint remains independent of the database.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs complete City and Station CRUD endpoints; the health endpoint remains independent of the database.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -202,7 +202,7 @@ The official [existing-app PostgreSQL guide](https://www.prisma.io/docs/prisma-o
 
 - apps/api/prisma.config.ts configures the CLI and loads the API .env through dotenv.
 - apps/api/src/prisma/contract.prisma defines City with a UUID string id and required Arabic/English names (nameAr and nameEn). The starter User/Post examples were removed. The owner initialized the City table with prisma db init; the migrations directory contains its db reference and contract snapshot.
-- apps/api/src/prisma/db.ts loads the API .env, validates settings through parseEnv, and requires DATABASE_URL when the database module is imported. The city service loads this module only for city requests. Health requests and the default automated suite remain independent of PostgreSQL.
+- apps/api/src/prisma/db.ts loads the API .env, validates settings through parseEnv, and requires DATABASE_URL when the database module is imported. City and Station services load this module only when a request needs the database. Health requests and the default automated suite remain independent of PostgreSQL.
 - apps/api/.env.example includes the API settings and a placeholder database URL. The local API .env uses the credentials from the root Docker .env. Replace the URL with your own credentials on another machine; URL-encode passwords. Both .env files stay ignored by Git.
 - contract.json and contract.d.ts are generated artifacts and must be committed with contract.prisma, as required by the Prisma 8 guide. ESLint and Prettier skip these two artifacts; TypeScript still checks imported types. .gitattributes marks them as generated in GitHub diffs.
 - prisma-8.md is the reference written by the initializer. It is not another project plan.
@@ -258,14 +258,14 @@ POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters
 
 List responses contain data and pagination (limit and offset). Limits range from 1 to 100, offsets from 0 to 100000. Invalid inputs return 400, non-JSON create requests return 415, and unexpected database failures return the existing generic 500 response without private details.
 
-City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts a city service for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
+City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
 
 ```sh
 npm test
 npm run test:db
 ```
 
-The default suite uses an in-memory city service and needs no database. test:db is an opt-in real PostgreSQL test: it creates a uniquely named temporary city through HTTP, checks persistence/list/detail, and deletes only its own row afterward. Run it against a development database after applying migrations.
+The default suite uses in-memory City/Station services and needs no database. test:db is an opt-in real PostgreSQL test: it creates a uniquely named temporary city through HTTP, checks persistence/list/detail, and deletes only its own row afterward. Run it against a development database after applying migrations.
 
 Verification also recreated City from the baseline in a new temporary database, reran migrations, exercised real HTTP operations there, and removed that temporary database. No existing development data was removed.
 
@@ -278,3 +278,33 @@ Keep the flow Route -> Controller -> Service -> Prisma. Do not add repository, b
 City updates use PATCH with at least one of nameAr/nameEn. The same trimmed 1-100 character rules apply; empty updates, unknown fields, and id changes are rejected. Omitted names stay unchanged. PATCH/DELETE validate UUIDs and return CITY_NOT_FOUND when the record is absent. The real PostgreSQL test exercises create/list/detail/update/delete and cleans up its uniquely named row.
 
 Work order: complete, test, document, commit, and push each backend feature before beginning the next. After all agreed backend features are complete, implement the passenger website, then the administration dashboard. Production publication and real-money operations still need explicit approval.
+
+## Station API
+
+Apply the committed migrations with npm run db:migrate before using these endpoints. Station has a generated UUID id, required bilingual names, and a required cityId. A City can have multiple stations. The database enforces the City foreign key with ON DELETE/UPDATE RESTRICT and indexes cityId. City names and station names are not unique at this stage.
+
+| Method | Path                                                | Behavior                                                         |
+| ------ | --------------------------------------------------- | ---------------------------------------------------------------- |
+| GET    | /api/v1/stations?cityId=CITY_UUID&limit=20&offset=0 | List stations, optionally filtered by city                       |
+| GET    | /api/v1/stations/:id                                | Read a station or return STATION_NOT_FOUND                       |
+| POST   | /api/v1/stations                                    | Create a station using nameAr, nameEn, and cityId                |
+| PATCH  | /api/v1/stations/:id                                | Update one or more names or move the station to an existing city |
+| DELETE | /api/v1/stations/:id                                | Delete a station and return an empty 204 response                |
+
+POST/PATCH require application/json and reject unknown fields. Names are trimmed and must contain 1-100 characters; ids must be UUIDs. PATCH needs at least one field and preserves omitted values. List defaults to limit=20/offset=0, allows limit 1-100/offset 0-100000, and sorts by English name then id. A city filter with no matching stations returns an empty list, including a well-formed but absent city id.
+
+Example body (replace CITY_UUID with an id returned by the cities API):
+
+```json
+{
+  "nameAr": "رمسيس",
+  "nameEn": "Ramses",
+  "cityId": "CITY_UUID"
+}
+```
+
+A nonexistent city on create/move returns 404 CITY_NOT_FOUND. A missing station returns 404 STATION_NOT_FOUND. Deleting a city that still has stations returns 409 CITY_HAS_STATIONS; remove or move its stations first. The foreign key enforces these rules atomically, including callers that bypass HTTP validation. Other unexpected failures keep the generic 500 response. These management writes receive role protection during the planned authentication feature; the API remains a local development application.
+
+The feature follows routes/stationRoutes.ts -> controllers/stationController.ts -> services/stationService.ts -> Prisma. schemas/stationSchema.ts validates Station requests, schemas/paginationSchema.ts shares pagination rules, and utils/databaseErrors.ts identifies PostgreSQL constraint codes without exposing raw error messages. No repository layer is added.
+
+npm run test:db exercises both City and Station CRUD, moving/filtering stations, rejecting orphan writes, and blocking City deletion while stations exist. It creates uniquely scoped data and removes only its own rows. Both migrations and these tests also passed in a fresh temporary database; the existing local Cairo record was preserved. No demo station is added automatically.

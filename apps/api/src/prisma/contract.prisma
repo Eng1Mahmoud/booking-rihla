@@ -1,7 +1,18 @@
 // use prisma-8
 
 model City {
+  id       String    @id @default(uuid())
+  nameAr   String
+  nameEn   String
+  stations Station[]
+}
+
+model Station {
   id     String @id @default(uuid())
   nameAr String
   nameEn String
+  cityId String
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([cityId])
 }

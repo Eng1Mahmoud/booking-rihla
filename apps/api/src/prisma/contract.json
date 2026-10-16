@@ -7,6 +7,10 @@
     "City": {
       "model": "City",
       "namespace": "public"
+    },
+    "Station": {
+      "model": "Station",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -37,7 +41,23 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "stations": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "cityId"
+                  ]
+                },
+                "to": {
+                  "model": "Station",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "id": {
@@ -52,6 +72,74 @@
               },
               "namespaceId": "public",
               "table": "City"
+            }
+          },
+          "Station": {
+            "fields": {
+              "cityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameAr": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameEn": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "city": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "cityId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "City",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "cityId": {
+                  "column": "cityId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "nameAr": {
+                  "column": "nameAr"
+                },
+                "nameEn": {
+                  "column": "nameEn"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Station"
             }
           }
         }
@@ -89,6 +177,69 @@
                 ]
               },
               "uniques": []
+            },
+            "Station": {
+              "columns": {
+                "cityId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameAr": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameEn": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Station_cityId_idx_1ab1b247"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "cityId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Station"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "City"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "cityId"
+                  ],
+                  "name": "Station_cityId_idx_1ab1b247",
+                  "prefix": "Station_cityId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             }
           }
         },
@@ -96,10 +247,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c5aa9215285b1650505b2fd8fa2d24d30afafae2edbb2b58fd9e9116b2ab2a96"
+    "storageHash": "158331a0573fab018bedb3a95e7f5cbcb6b0a7b114afaf63c549580b2832122b"
   },
   "execution": {
-    "executionHash": "a17920572567cb8401ff592a4fc3df8b96f9baa0c7dd3f90e569bf25a5a5486d",
+    "executionHash": "10f7569c3e916012b1da32a9b7753ce3a503193e2e4aac7381f0b7b8fb61f2e4",
     "mutations": {
       "defaults": [
         {
@@ -109,6 +260,17 @@
           },
           "ref": {
             "entry": "City",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Station",
             "field": "id",
             "namespace": "public"
           }

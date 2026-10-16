@@ -34,7 +34,7 @@ function memoryCityService(initial: City[] = []): CityService {
 }
 
 async function startServer(t: TestContext, service = memoryCityService()) {
-  const server = createApp([], service).listen(0, '127.0.0.1');
+  const server = createApp([], { cities: service }).listen(0, '127.0.0.1');
   t.after(
     () =>
       new Promise<void>((resolve, reject) => {
