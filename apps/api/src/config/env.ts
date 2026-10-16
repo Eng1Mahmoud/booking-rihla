@@ -39,3 +39,40 @@ export function parseEnv(environment: NodeJS.ProcessEnv) {
 
   return result.data;
 }
+
+const authEnvSchema = z
+  .object({
+    AUTH_CODE_SECRET: z
+      .string()
+      .regex(/^[a-fA-F0-9]{64}$/, 'Must be a 32-byte hexadecimal secret'),
+    SMTP_HOST: z.string().trim().min(1).default('127.0.0.1'),
+    SMTP_PORT: z
+      .string()
+      .regex(/^\d+$/)
+      .default('1025')
+      .transform(Number)
+      .pipe(z.number().int().min(1).max(65535)),
+    SMTP_SECURE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+    SMTP_FROM: z.email().default('noreply@bus.local'),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASSWORD: z.string().min(1).optional(),
+  })
+  .refine(
+    (value) => Boolean(value.SMTP_USER) === Boolean(value.SMTP_PASSWORD),
+    {
+      message: 'Set SMTP_USER and SMTP_PASSWORD together',
+      path: ['SMTP_USER'],
+    },
+  );
+export function parseAuthEnv(environment: NodeJS.ProcessEnv) {
+  const result = authEnvSchema.safeParse(environment);
+  if (!result.success)
+    throw new Error(
+      'Invalid authentication/mail configuration: ' +
+        result.error.issues.map((issue) => issue.path.join('.')).join(', '),
+    );
+  return result.data;
+}

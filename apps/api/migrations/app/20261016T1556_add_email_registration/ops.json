@@ -1,0 +1,365 @@
+[
+  {
+    "id": "table.EmailOutbox",
+    "label": "Create table \"EmailOutbox\"",
+    "summary": "Creates table \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"EmailOutbox\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"EmailOutbox\"",
+        "sql": "CREATE TABLE \"public\".\"EmailOutbox\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"discardedAt\" timestamptz,\n  \"encryptedCode\" text,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"nextAttemptAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"sentAt\" timestamptz,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"outbox_attempts_4c896e7d\" CHECK (attempts BETWEEN 0 AND 5)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"EmailOutbox\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.EmailVerification",
+    "label": "Create table \"EmailVerification\"",
+    "summary": "Creates table \"EmailVerification\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "EmailVerification"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"EmailVerification\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"EmailVerification\"",
+        "sql": "CREATE TABLE \"public\".\"EmailVerification\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"codeHash\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"resendAfter\" timestamptz NOT NULL,\n  \"sendCount\" int4 DEFAULT 1 NOT NULL,\n  \"userId\" text NOT NULL,\n  \"windowStartedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"verification_limits_97d2a4bd\" CHECK (attempts BETWEEN 0 AND 5 AND \"sendCount\" BETWEEN 1 AND 5)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"EmailVerification\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.User",
+    "label": "Create table \"User\"",
+    "summary": "Creates table \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"User\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"User\"",
+        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"emailVerifiedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"language\" text DEFAULT 'ar' NOT NULL,\n  \"name\" text NOT NULL,\n  \"passwordHash\" text NOT NULL,\n  \"phone\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"user_language_cec39abc\" CHECK (language IN ('ar', 'en'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"User\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.EmailVerification.EmailVerification_userId_key",
+    "label": "Add unique constraint on \"EmailVerification\" (userId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "EmailVerification_userId_key",
+        "table": "EmailVerification"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"EmailVerification_userId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailVerification_userId_key",
+          "public",
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"EmailVerification_userId_key\"",
+        "sql": "ALTER TABLE \"public\".\"EmailVerification\" ADD CONSTRAINT \"EmailVerification_userId_key\" UNIQUE (\"userId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"EmailVerification_userId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailVerification_userId_key",
+          "public",
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.User.User_email_key",
+    "label": "Add unique constraint on \"User\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "User_email_key",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"User_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD CONSTRAINT \"User_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailOutbox.EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab",
+    "label": "Create index \"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\"",
+        "sql": "CREATE INDEX \"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" ON \"public\".\"EmailOutbox\" (\"sentAt\", \"discardedAt\", \"nextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailOutbox.EmailOutbox_userId_idx_a489d58a",
+    "label": "Create index \"EmailOutbox_userId_idx_a489d58a\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "EmailOutbox_userId_idx_a489d58a",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"EmailOutbox_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"EmailOutbox_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"EmailOutbox_userId_idx_a489d58a\" ON \"public\".\"EmailOutbox\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"EmailOutbox_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.EmailOutbox.EmailOutbox_userId_fkey",
+    "label": "Add foreign key \"EmailOutbox_userId_fkey\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "EmailOutbox_userId_fkey",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"EmailOutbox_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_userId_fkey",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"EmailOutbox_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"EmailOutbox\"\nADD CONSTRAINT \"EmailOutbox_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"EmailOutbox_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_userId_fkey",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.EmailVerification.EmailVerification_userId_fkey",
+    "label": "Add foreign key \"EmailVerification_userId_fkey\" on \"EmailVerification\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "EmailVerification_userId_fkey",
+        "table": "EmailVerification"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"EmailVerification_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailVerification_userId_fkey",
+          "public",
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"EmailVerification_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"EmailVerification\"\nADD CONSTRAINT \"EmailVerification_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"EmailVerification_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailVerification_userId_fkey",
+          "public",
+          "\"public\".\"EmailVerification\""
+        ]
+      }
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Basic catalog and Trip management, repeatable demo seeds, passenger search, passenger trip details, and departure seat listing are complete. Passenger reads exclude cancelled/departed/inactive trips and expose bilingual route details without vehicle plates. Seat availability currently reflects the absence of bookings; per-trip allocations will be implemented with reservations. Accounts and email verification are next; advanced fleet metadata remains deferred.
+Status: Basic trip browsing is complete. Account registration and email verification now include Argon2id password hashes, encrypted transactional email outbox, Arabic/English templates, local Mailpit, bounded retries, expiring single-use codes, per-account resend/attempt limits, and local IP rate limits. Secure sign-in, sessions and password recovery are next; management role protection remains part of that work before public deployment.
 
 ## How we will build
 
@@ -96,21 +96,23 @@ Working result achieved for the basic fleet: tested catalog, search, passenger d
 
 Small steps:
 
-- [ ] Add users and hashed, expiring, single-use verification codes.
-- [ ] Add registration with name, email, phone, and an Argon2id password hash.
-- [ ] Add Mailpit and SMTP delivery for local email testing.
-- [ ] Add email verification using a six-digit code; unverified accounts cannot sign in.
-- [ ] Add resend cooldowns, code attempt limits, and auth rate limits.
-- [ ] Add an email outbox and a small retrying worker for reliable delivery.
-- [ ] Add Arabic and English verification templates.
-- [ ] Use generic account responses where needed to avoid exposing registered emails.
+- [x] Add users and HMAC-hashed, expiring, single-use verification codes.
+- [x] Add registration with name, normalized email, international phone, language, and an Argon2id password hash.
+- [x] Add loopback-bound Mailpit and SMTP delivery for local email testing.
+- [x] Add email verification using a six-digit code and atomic verified-at state.
+- [ ] Enforce verified email during sign-in when implementing phase 5.
+- [x] Add resend cooldowns, durable per-account hourly limits, five-attempt code limits, and process-local IP rate limits.
+- [x] Add an encrypted transactional email outbox and a bounded retrying worker with concurrent-worker locks.
+- [x] Add Arabic and English verification templates.
+- [x] Use generic registration/resend responses and safe verification errors.
 
-Working result: register, receive a code in Mailpit, and activate the account.
+Working result achieved: register, receive a code in Mailpit through SMTP, and activate the account. Sign-in/session enforcement follows in phase 5.
 
 ## Phase 5 — Secure sign-in and account recovery
 
 Small steps:
 
+- [ ] Bind account activation/re-registration to the registering client or otherwise prevent pending-account pre-registration attacks before enabling sign-in.
 - [ ] Add login, a short-lived access token, and a rotating refresh token in an httpOnly cookie.
 - [ ] Store refresh-token hashes; detect reuse and revoke the affected token family.
 - [ ] Add current-user lookup, protected routes, current-device logout, and logout-all.
@@ -314,4 +316,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; accounts and email verification are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in and sessions are next.

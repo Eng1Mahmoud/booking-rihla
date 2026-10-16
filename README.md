@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Passenger trip details and seats
+## Current feature: Registration and email verification
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-Basic catalog, Trip management, demo data, passenger search, details, and departure seat listing are complete. Next implement accounts and email verification, then secure sign-in and reservations. Per-trip seat allocations are added with bookings; advanced fleet metadata and request logging remain deferred.
+Trip browsing and registration/email verification are complete. Next add secure sign-in, sessions, verified-account enforcement and account recovery, then reservations. Management role protection must be added before public deployment.
 
 ## Git workflow
 
@@ -504,3 +504,84 @@ Implementation follows routes/tripRoutes.ts -> controllers/tripDetailsController
 Verification covers responses, validation, missing/error behavior and no-store headers in HTTP tests, plus PostgreSQL-backed bilingual details, chronological visibility, cancelled/inactive exclusions, ordered seat ids/counts, repeated reads without mutations, separate departures on the same bus, bus reassignment, preservation of management reads and scoped cleanup. All 82 default tests and 7 PostgreSQL integration tests pass, along with type checking, lint, formatting and build. No migration is required.
 
 Compiled JavaScript verification also read a real seeded trip through both new endpoints, checked bilingual details, absence of vehicle plates, numeric seat ordering and capacity/availability counts, and left existing demo data unchanged.
+
+## Registration and email verification
+
+This feature creates and verifies accounts. It does not yet sign users in, issue tokens, or protect catalog management endpoints; those are the next phase. The current API and Mailpit remain local development services.
+
+From the repository root:
+
+```sh
+docker compose up -d --wait postgres mailpit
+npm run db:migrate
+npm run dev
+```
+
+In another terminal, keep the mail worker running:
+
+```sh
+npm run email:worker
+```
+
+Open http://127.0.0.1:8025 to view captured emails. Mailpit receives local SMTP on 127.0.0.1:1025 and does not deliver these messages to real inboxes. Both ports bind only to loopback. No Mailpit volume is configured; recreating its container can remove captured test messages. The worker polls every two seconds, up to twenty messages per batch. npm run email:flush processes one batch and exits, useful for manual testing. Stop the worker with Ctrl+C.
+
+apps/api/.env needs AUTH_CODE_SECRET: a stable random 32-byte key encoded as 64 hexadecimal characters. A local value was generated without printing it. On a fresh checkout, replace the safe placeholder in .env.example using a locally generated key:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+Never commit the real key. Keep it with the database's development secrets; rotating it invalidates pending verification hashes and encrypted outbox payloads, requiring a resend. parseAuthEnv in config/env.ts validates the key and SMTP settings when authentication or the worker needs them; parseEnv continues validating base API/database settings. Health and isolated HTTP tests do not need authentication secrets or SMTP.
+
+| Setting                   | Local default / requirement         |
+| ------------------------- | ----------------------------------- |
+| AUTH_CODE_SECRET          | Required 64 hex characters          |
+| SMTP_HOST                 | 127.0.0.1                           |
+| SMTP_PORT                 | 1025                                |
+| SMTP_SECURE               | false; accepts true/false           |
+| SMTP_FROM                 | noreply@bus.local                   |
+| SMTP_USER / SMTP_PASSWORD | Optional; must be supplied together |
+
+The SMTP defaults target Mailpit. A future external SMTP deployment requires its own verified configuration; production publication is not part of this step.
+
+| Method | Path                             | Behavior                                               |
+| ------ | -------------------------------- | ------------------------------------------------------ |
+| POST   | /api/v1/auth/register            | Validate registration; return a generic 202            |
+| POST   | /api/v1/auth/verify-email        | Consume a valid six-digit code; return 200             |
+| POST   | /api/v1/auth/resend-verification | Queue a replacement when allowed; return a generic 202 |
+
+Register body:
+
+```json
+{
+  "name": "Mahmoud",
+  "email": "mahmoud@example.test",
+  "phone": "+201012345678",
+  "password": "Use-your-own-long-password",
+  "language": "ar"
+}
+```
+
+Names are trimmed and contain 1-100 characters. Emails are trimmed/lowercased and limited to 254 characters. Phone numbers use international +country-code format with 8-15 digits, without spaces; phone uniqueness is not assumed. Passwords contain 12-128 characters, at most 512 UTF-8 bytes, and are not trimmed. language is ar (default) or en. Unknown fields, including caller ids/roles, are rejected. JSON is required and query parameters are unsupported. Register returns only a generic message, without ids, password hashes or codes. Duplicate emails receive the same response, preserve all existing account credentials, and do not queue a new message; use the resend endpoint for an existing unverified account.
+
+Read the code from Mailpit, then verify:
+
+```json
+{ "email": "mahmoud@example.test", "code": "012345" }
+```
+
+Send that body to POST /api/v1/auth/verify-email. Codes must be strings so leading zeroes are preserved. Successful verification sets User.emailVerifiedAt and deletes the verification/outbox records atomically. A code can succeed only once, including simultaneous submissions. Unknown accounts, already verified accounts, incorrect codes, expired codes and exhausted attempts return the same 400 INVALID_VERIFICATION_CODE. Invalid body shape returns 400 VALIDATION_ERROR; non-JSON returns 415; unexpected failures use the safe generic 500 handler. Auth responses disable caching.
+
+Codes use a cryptographically random six-digit value, expire ten minutes after being queued, and allow five wrong submissions per code. Failed attempts commit before returning an error. POST /resend-verification accepts only email. It waits at least sixty seconds between codes and allows five code issuances (including registration) per account in a one-hour window anchored at the first issuance. Resending invalidates the preceding code and replaces pending email records; it never restores a cancelled/used code. Cooldown, limit, unknown and verified-account cases all return the same 202 without indicating whether email was queued.
+
+Per-IP limits use express-rate-limit: 10 registration requests/hour, 30 verification requests/15 minutes, and 20 resend requests/hour. Limits apply after JSON parsing and count invalid fields and unsuccessful requests too, return safe 429 RATE_LIMITED JSON and Retry-After, and use process-local memory. Durable code/resend limits live in PostgreSQL. A shared IP limiter and deployment-specific trusted proxy configuration are required before multiple API instances or public deployment; Redis is deferred. Express currently trusts no forwarding proxy headers.
+
+Passwords are Argon2id PHC hashes with random library-generated salts, memoryCost=65536 KiB, timeCost=3 and parallelism=1. Verification records contain an HMAC-SHA256 digest bound to user id and AUTH_CODE_SECRET, compared with timingSafeEqual. The outbox must recover the code to send it, so its temporary code payload uses AES-256-GCM with a separately derived key and user-bound authenticated data. It clears that payload after delivery or discard. Plaintext codes/passwords are not stored or returned by the API. These choices follow [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) and [single-use token guidance](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html).
+
+User, EmailVerification and EmailOutbox are committed in one transaction. Per-email advisory locks serialize register/resend/verify; unique normalized emails and verification user ids are also database constraints. The outbox worker locks and rereads each message before sending, checks that the code is current/unexpired and the user remains unverified, and serializes concurrent workers. It retries SMTP failures after 30/60/120/240 seconds, abandons after five delivery attempts or expiry, and never logs codes, credentials or raw transport errors. Retries retain the same Message-ID. Delivery is at least once: a process crash after SMTP acceptance but before the database commit may deliver the same code twice; verification still succeeds only once. Sent/failed records remain until verification, resend or later cleanup. Cleanup of stale accounts/codes is a later maintenance task.
+
+Implementation follows routes/authRoutes.ts -> controllers/authController.ts -> services/authService.ts -> Prisma, with schemas/authSchema.ts and utils/authCrypto.ts. emails/verificationEmail.ts holds Arabic RTL and English templates. services/mailService.ts wraps Nodemailer SMTP; services/emailOutboxService.ts handles delivery/retries, and workers/emailWorker.ts runs it. No repository layer or queue framework was added.
+
+Tests cover normalization/validation, Argon2 verification, encryption binding/tamper detection, templates, safe errors and IP throttling; PostgreSQL tests cover duplicate/concurrent registration, atomic code consumption, concurrent failed-attempt limits, cooldown/hourly resend limits, expired codes, concurrent workers, delayed retries, exhaustion and scoped cleanup. SMTP delivery and verification are also exercised through local Mailpit using the compiled API. Existing trip demo data is preserved.
+
+Fresh-database verification applied all six migrations, confirmed the second run applied none, and passed all eight PostgreSQL integration tests. The compiled API registered a scoped test account, delivered its Arabic message through real SMTP to local Mailpit, consumed the emailed code, and ran the compiled worker once. Test users and the temporary database were removed; existing cities and demo trips were preserved.

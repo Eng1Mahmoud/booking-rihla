@@ -80,3 +80,45 @@ model Trip {
   @@check(expression: sql`"arrivalAt" > "departureAt"`, name: "trip_time_order")
   @@check(expression: sql`"pricePiastres" BETWEEN 0 AND 2147483647`, name: "trip_price_range")
 }
+
+model User {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  phone String
+  passwordHash String
+  language String @default("ar")
+  emailVerifiedAt TimestamptzString?
+  createdAt TimestamptzString @default(now())
+  verification EmailVerification?
+  emails EmailOutbox[]
+  @@check(expression: sql`language IN ('ar', 'en')`, name: "user_language")
+}
+
+model EmailVerification {
+  id String @id @default(uuid())
+  userId String @unique
+  codeHash String
+  expiresAt TimestamptzString
+  attempts Int @default(0)
+  resendAfter TimestamptzString
+  windowStartedAt TimestamptzString
+  sendCount Int @default(1)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@check(expression: sql`attempts BETWEEN 0 AND 5 AND "sendCount" BETWEEN 1 AND 5`, name: "verification_limits")
+}
+
+model EmailOutbox {
+  id String @id @default(uuid())
+  userId String
+  encryptedCode String?
+  expiresAt TimestamptzString
+  createdAt TimestamptzString @default(now())
+  nextAttemptAt TimestamptzString @default(now())
+  attempts Int @default(0)
+  sentAt TimestamptzString?
+  discardedAt TimestamptzString?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([sentAt, discardedAt, nextAttemptAt])
+  @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "outbox_attempts")
+}

@@ -13,14 +13,19 @@
     "city:example": "tsx src/scripts/city-example.ts",
     "test:db": "node --env-file-if-exists=.env --test test/integration/*.test.ts",
     "db:migrate": "prisma db migrate --advance-ref db",
-    "db:seed": "node --env-file-if-exists=.env src/scripts/seed.ts"
+    "db:seed": "node --env-file-if-exists=.env src/scripts/seed.ts",
+    "email:worker": "node --env-file-if-exists=.env src/workers/emailWorker.ts",
+    "email:flush": "node --env-file-if-exists=.env src/workers/emailWorker.ts --once"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",
+    "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
+    "nodemailer": "^10.1.2",
     "temporal-polyfill": "^1.0.6",
     "zod": "^4.6.7"
   },
@@ -29,6 +34,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.19.2",
+    "@types/nodemailer": "^8.0.2",
     "prisma": "^8.0.0-rc.23",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

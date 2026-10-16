@@ -23,6 +23,9 @@ import type { TripSearchService } from './services/tripSearchService.ts';
 
 import type { TripDetailsService } from './services/tripDetailsService.ts';
 
+import { authService, type AuthService } from './services/authService.ts';
+import { createAuthRouter } from './routes/authRoutes.ts';
+
 export function createApp(
   corsOrigins: string[],
   services: {
@@ -33,6 +36,7 @@ export function createApp(
     trips?: TripService;
     tripSearch?: TripSearchService;
     tripDetails?: TripDetailsService;
+    auth?: AuthService;
   } = {},
 ) {
   const app = express();
@@ -64,6 +68,8 @@ export function createApp(
       services.tripDetails,
     ),
   );
+
+  app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {
