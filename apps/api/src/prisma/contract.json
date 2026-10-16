@@ -23,11 +23,30 @@
     "Station": {
       "model": "Station",
       "namespace": "public"
+    },
+    "Trip": {
+      "model": "Trip",
+      "namespace": "public"
     }
   },
   "domain": {
     "namespaces": {
       "public": {
+        "enum": {
+          "TripStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "SCHEDULED",
+                "value": "SCHEDULED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          }
+        },
         "models": {
           "Bus": {
             "fields": {
@@ -73,6 +92,21 @@
                 },
                 "to": {
                   "model": "BusSeat",
+                  "namespace": "public"
+                }
+              },
+              "trips": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "busId"
+                  ]
+                },
+                "to": {
+                  "model": "Trip",
                   "namespace": "public"
                 }
               }
@@ -281,6 +315,21 @@
                   "model": "Station",
                   "namespace": "public"
                 }
+              },
+              "trips": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "routeId"
+                  ]
+                },
+                "to": {
+                  "model": "Trip",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -401,6 +450,126 @@
               },
               "namespaceId": "public",
               "table": "Station"
+            }
+          },
+          "Trip": {
+            "fields": {
+              "arrivalAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "busId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "departureAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pricePiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "routeId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "TripStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              }
+            },
+            "relations": {
+              "bus": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "busId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Bus",
+                  "namespace": "public"
+                }
+              },
+              "route": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "routeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Route",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "arrivalAt": {
+                  "column": "arrivalAt"
+                },
+                "busId": {
+                  "column": "busId"
+                },
+                "departureAt": {
+                  "column": "departureAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "pricePiastres": {
+                  "column": "pricePiastres"
+                },
+                "routeId": {
+                  "column": "routeId"
+                },
+                "status": {
+                  "column": "status"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Trip"
             }
           }
         }
@@ -742,6 +911,176 @@
                 ]
               },
               "uniques": []
+            },
+            "Trip": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('SCHEDULED', 'CANCELLED')",
+                  "name": "Trip_status_check_82227794",
+                  "prefix": "Trip_status_check"
+                },
+                {
+                  "expression": "\"pricePiastres\" BETWEEN 0 AND 2147483647",
+                  "name": "trip_price_range_00e5e7c7",
+                  "prefix": "trip_price_range"
+                },
+                {
+                  "expression": "\"arrivalAt\" > \"departureAt\"",
+                  "name": "trip_time_order_1a534dcc",
+                  "prefix": "trip_time_order"
+                }
+              ],
+              "columns": {
+                "arrivalAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "busId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "departureAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "pricePiastres": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "routeId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "SCHEDULED"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "TripStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Trip_routeId_idx_91ae2fd6"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "routeId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Trip"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Route"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "Trip_busId_idx_00d1f177"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "busId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Trip"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Bus"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "busId"
+                  ],
+                  "name": "Trip_busId_idx_00d1f177",
+                  "prefix": "Trip_busId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "busId",
+                    "status",
+                    "departureAt"
+                  ],
+                  "name": "Trip_busId_status_departureAt_idx_b3d51985",
+                  "prefix": "Trip_busId_status_departureAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "departureAt"
+                  ],
+                  "name": "Trip_departureAt_idx_03e68107",
+                  "prefix": "Trip_departureAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "routeId",
+                    "departureAt"
+                  ],
+                  "name": "Trip_routeId_departureAt_idx_a5b0938e",
+                  "prefix": "Trip_routeId_departureAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "routeId"
+                  ],
+                  "name": "Trip_routeId_idx_91ae2fd6",
+                  "prefix": "Trip_routeId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            }
+          },
+          "valueSet": {
+            "TripStatus": {
+              "kind": "valueSet",
+              "values": [
+                "SCHEDULED",
+                "CANCELLED"
+              ]
             }
           }
         },
@@ -749,10 +1088,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6fb6684070814203ec1bc4bc39271d3302b3d4adbbb75408bb198431316540e6"
+    "storageHash": "159751b38e455c65e102b8c49d8d33823244fe416c71f4bd9f0fe2439cbca5e1"
   },
   "execution": {
-    "executionHash": "a481f376c78d6d610e360c7b8d4299619d72f2a0e6b11948633ca3122624dc81",
+    "executionHash": "82d58af57b9622986cd29c92e5a0b109b393ed1bf14ba94c01a4805bf43d7775",
     "mutations": {
       "defaults": [
         {
@@ -806,6 +1145,17 @@
           },
           "ref": {
             "entry": "Station",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Trip",
             "field": "id",
             "namespace": "public"
           }

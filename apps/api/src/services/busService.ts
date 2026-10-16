@@ -78,6 +78,15 @@ export const busService = {
         const bus = await tx.orm.public.Bus.where({ id }).first();
         if (!bus) return null;
         const count = input.seatCount ?? bus.seatCount;
+        if (
+          count !== bus.seatCount &&
+          (await tx.orm.public.Trip.where({ busId: id }).first())
+        )
+          throw new AppError(
+            409,
+            'BUS_HAS_TRIPS',
+            'A bus used by trips cannot change its seat count',
+          );
         if (count > bus.seatCount) {
           await tx.orm.public.BusSeat.createAll(
             Array.from({ length: count - bus.seatCount }, (_, index) => ({

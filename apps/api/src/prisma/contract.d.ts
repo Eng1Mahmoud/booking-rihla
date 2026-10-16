@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'6fb6684070814203ec1bc4bc39271d3302b3d4adbbb75408bb198431316540e6'>;
+  StorageHashBase<'159751b38e455c65e102b8c49d8d33823244fe416c71f4bd9f0fe2439cbca5e1'>;
 export type ExecutionHash =
-  ExecutionHashBase<'a481f376c78d6d610e360c7b8d4299619d72f2a0e6b11948633ca3122624dc81'>;
+  ExecutionHashBase<'82d58af57b9622986cd29c92e5a0b109b393ed1bf14ba94c01a4805bf43d7775'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -263,6 +263,15 @@ export type FieldOutputTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Trip: {
+      readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly pricePiastres: CodecTypes['pg/int4@1']['output'];
+      readonly routeId: CodecTypes['pg/text@1']['output'];
+      readonly status: 'SCHEDULED' | 'CANCELLED';
+    };
   };
 };
 export type FieldInputTypes = {
@@ -295,6 +304,15 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Trip: {
+      readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly departureAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly pricePiastres: CodecTypes['pg/int4@1']['input'];
+      readonly routeId: CodecTypes['pg/text@1']['input'];
+      readonly status: 'SCHEDULED' | 'CANCELLED';
     };
   };
 };
@@ -329,6 +347,15 @@ export type StorageColumnTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Trip: {
+      readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly pricePiastres: CodecTypes['pg/int4@1']['output'];
+      readonly routeId: CodecTypes['pg/text@1']['output'];
+      readonly status: 'SCHEDULED' | 'CANCELLED';
+    };
   };
 };
 export type StorageColumnInputTypes = {
@@ -362,6 +389,15 @@ export type StorageColumnInputTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
     };
+    readonly Trip: {
+      readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly departureAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly pricePiastres: CodecTypes['pg/int4@1']['input'];
+      readonly routeId: CodecTypes['pg/text@1']['input'];
+      readonly status: 'SCHEDULED' | 'CANCELLED';
+    };
   };
 };
 
@@ -372,7 +408,8 @@ export namespace Models {
     plateNumber: CodecTypes['pg/text@1']['output'];
     seatCount: CodecTypes['pg/int4@1']['output'];
     seats: public_BusSeat[];
-    readonly [RelationKeys]?: 'seats';
+    trips: public_Trip[];
+    readonly [RelationKeys]?: 'seats' | 'trips';
   };
   export type public_BusSeat = {
     busId: CodecTypes['pg/text@1']['output'];
@@ -396,7 +433,8 @@ export namespace Models {
     originStationId: CodecTypes['pg/text@1']['output'];
     destinationStation: public_Station;
     originStation: public_Station;
-    readonly [RelationKeys]?: 'destinationStation' | 'originStation';
+    trips: public_Trip[];
+    readonly [RelationKeys]?: 'destinationStation' | 'originStation' | 'trips';
   };
   export type public_Station = {
     cityId: CodecTypes['pg/text@1']['output'];
@@ -408,6 +446,18 @@ export namespace Models {
     originRoutes: public_Route[];
     readonly [RelationKeys]?: 'city' | 'destinationRoutes' | 'originRoutes';
   };
+  export type public_Trip = {
+    arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    busId: CodecTypes['pg/text@1']['output'];
+    departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    pricePiastres: CodecTypes['pg/int4@1']['output'];
+    routeId: CodecTypes['pg/text@1']['output'];
+    status: 'SCHEDULED' | 'CANCELLED';
+    bus: public_Bus;
+    route: public_Route;
+    readonly [RelationKeys]?: 'bus' | 'route';
+  };
 }
 
 export declare const models: {
@@ -417,6 +467,7 @@ export declare const models: {
     City: Models.public_City;
     Route: Models.public_Route;
     Station: Models.public_Station;
+    Trip: Models.public_Trip;
   };
 };
 
@@ -680,6 +731,122 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly Trip: {
+              columns: {
+                readonly arrivalAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly busId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly departureAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly pricePiastres: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly routeId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly status: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'SCHEDULED'>;
+                  };
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'Trip_busId_idx_00d1f177';
+                  readonly prefix: 'Trip_busId_idx';
+                  readonly columns: readonly ['busId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Trip_busId_status_departureAt_idx_b3d51985';
+                  readonly prefix: 'Trip_busId_status_departureAt_idx';
+                  readonly columns: readonly ['busId', 'status', 'departureAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Trip_departureAt_idx_03e68107';
+                  readonly prefix: 'Trip_departureAt_idx';
+                  readonly columns: readonly ['departureAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Trip_routeId_departureAt_idx_a5b0938e';
+                  readonly prefix: 'Trip_routeId_departureAt_idx';
+                  readonly columns: readonly ['routeId', 'departureAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Trip_routeId_idx_91ae2fd6';
+                  readonly prefix: 'Trip_routeId_idx';
+                  readonly columns: readonly ['routeId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Trip';
+                    readonly columns: readonly ['routeId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Route';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Trip';
+                    readonly columns: readonly ['busId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Bus';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+          };
+          readonly valueSet: {
+            readonly TripStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['SCHEDULED', 'CANCELLED'];
+            };
           };
         };
       };
@@ -696,6 +863,7 @@ type ContractBase = Omit<
     readonly City: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
     readonly Route: { readonly namespace: 'public' & NamespaceId; readonly model: 'Route' };
     readonly Station: { readonly namespace: 'public' & NamespaceId; readonly model: 'Station' };
+    readonly Trip: { readonly namespace: 'public' & NamespaceId; readonly model: 'Trip' };
   };
   readonly domain: {
     readonly namespaces: {
@@ -726,6 +894,14 @@ type ContractBase = Omit<
                   readonly namespace: 'public' & NamespaceId;
                   readonly model: 'BusSeat';
                 };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['busId'];
+                };
+              };
+              readonly trips: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Trip' };
                 readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
@@ -866,6 +1042,14 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
+              readonly trips: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Trip' };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['routeId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'Route';
@@ -942,6 +1126,95 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Trip: {
+            readonly fields: {
+              readonly arrivalAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly busId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly departureAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly pricePiastres: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly routeId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly bus: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['busId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly route: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Route';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['routeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Trip';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly arrivalAt: { readonly column: 'arrivalAt' };
+                readonly busId: { readonly column: 'busId' };
+                readonly departureAt: { readonly column: 'departureAt' };
+                readonly id: { readonly column: 'id' };
+                readonly pricePiastres: { readonly column: 'pricePiastres' };
+                readonly routeId: { readonly column: 'routeId' };
+                readonly status: { readonly column: 'status' };
+              };
+            };
+          };
+        };
+        readonly enum: {
+          readonly TripStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'SCHEDULED'; readonly value: 'SCHEDULED' },
+              { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
+            ];
+          };
+        };
+        readonly enumMemberTypes?: {
+          readonly TripStatus: readonly [
+            { readonly name: 'SCHEDULED'; readonly value: 'SCHEDULED' },
+            { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
+          ];
         };
       };
     };
@@ -1014,6 +1287,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'Station';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Trip';
             readonly field: 'id';
             readonly namespace: 'public';
           };

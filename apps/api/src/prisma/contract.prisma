@@ -26,6 +26,7 @@ model Bus {
   seatCount   Int
   isActive    Boolean   @default(true)
   seats       BusSeat[]
+  trips       Trip[]
 
   @@check(expression: sql`"seatCount" BETWEEN 1 AND 100`, name: "bus_seat_count_range")
 }
@@ -49,8 +50,33 @@ model Route {
   originStation Station @relation("RouteOrigin", fields: [originStationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   destinationStation Station @relation("RouteDestination", fields: [destinationStationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
+  trips Trip[]
+
   @@unique([originStationId, destinationStationId])
   @@index([destinationStationId])
   @@check(expression: sql`"originStationId" <> "destinationStationId"`, name: "route_distinct_stations")
   @@check(expression: sql`"estimatedDurationMinutes" BETWEEN 1 AND 10080`, name: "route_duration_range")
+}
+
+enum TripStatus {
+  SCHEDULED
+  CANCELLED
+}
+
+model Trip {
+  id String @id @default(uuid())
+  routeId String
+  busId String
+  departureAt TimestamptzString
+  arrivalAt TimestamptzString
+  pricePiastres Int
+  status TripStatus @default(SCHEDULED)
+  route Route @relation(fields: [routeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  bus Bus @relation(fields: [busId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([routeId, departureAt])
+  @@index([busId, status, departureAt])
+  @@index([departureAt])
+  @@check(expression: sql`"arrivalAt" > "departureAt"`, name: "trip_time_order")
+  @@check(expression: sql`"pricePiastres" BETWEEN 0 AND 2147483647`, name: "trip_price_range")
 }

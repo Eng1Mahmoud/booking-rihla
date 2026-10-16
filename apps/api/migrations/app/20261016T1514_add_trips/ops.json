@@ -1,0 +1,320 @@
+[
+  {
+    "id": "table.Trip",
+    "label": "Create table \"Trip\"",
+    "summary": "Creates table \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Trip\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Trip\"",
+        "sql": "CREATE TABLE \"public\".\"Trip\" (\n  \"arrivalAt\" timestamptz NOT NULL,\n  \"busId\" text NOT NULL,\n  \"departureAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"pricePiastres\" int4 NOT NULL,\n  \"routeId\" text NOT NULL,\n  \"status\" text DEFAULT 'SCHEDULED' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Trip_status_check_82227794\" CHECK (\"status\" IN ('SCHEDULED', 'CANCELLED')),\n  CONSTRAINT \"trip_price_range_00e5e7c7\" CHECK (\"pricePiastres\" BETWEEN 0 AND 2147483647),\n  CONSTRAINT \"trip_time_order_1a534dcc\" CHECK (\"arrivalAt\" > \"departureAt\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Trip\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Trip.Trip_busId_idx_00d1f177",
+    "label": "Create index \"Trip_busId_idx_00d1f177\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Trip_busId_idx_00d1f177",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Trip_busId_idx_00d1f177\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_busId_idx_00d1f177\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Trip_busId_idx_00d1f177\"",
+        "sql": "CREATE INDEX \"Trip_busId_idx_00d1f177\" ON \"public\".\"Trip\" (\"busId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Trip_busId_idx_00d1f177\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_busId_idx_00d1f177\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Trip.Trip_busId_status_departureAt_idx_b3d51985",
+    "label": "Create index \"Trip_busId_status_departureAt_idx_b3d51985\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Trip_busId_status_departureAt_idx_b3d51985",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Trip_busId_status_departureAt_idx_b3d51985\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_busId_status_departureAt_idx_b3d51985\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Trip_busId_status_departureAt_idx_b3d51985\"",
+        "sql": "CREATE INDEX \"Trip_busId_status_departureAt_idx_b3d51985\" ON \"public\".\"Trip\" (\"busId\", \"status\", \"departureAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Trip_busId_status_departureAt_idx_b3d51985\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_busId_status_departureAt_idx_b3d51985\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Trip.Trip_departureAt_idx_03e68107",
+    "label": "Create index \"Trip_departureAt_idx_03e68107\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Trip_departureAt_idx_03e68107",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Trip_departureAt_idx_03e68107\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_departureAt_idx_03e68107\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Trip_departureAt_idx_03e68107\"",
+        "sql": "CREATE INDEX \"Trip_departureAt_idx_03e68107\" ON \"public\".\"Trip\" (\"departureAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Trip_departureAt_idx_03e68107\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_departureAt_idx_03e68107\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Trip.Trip_routeId_departureAt_idx_a5b0938e",
+    "label": "Create index \"Trip_routeId_departureAt_idx_a5b0938e\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Trip_routeId_departureAt_idx_a5b0938e",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Trip_routeId_departureAt_idx_a5b0938e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_routeId_departureAt_idx_a5b0938e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Trip_routeId_departureAt_idx_a5b0938e\"",
+        "sql": "CREATE INDEX \"Trip_routeId_departureAt_idx_a5b0938e\" ON \"public\".\"Trip\" (\"routeId\", \"departureAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Trip_routeId_departureAt_idx_a5b0938e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_routeId_departureAt_idx_a5b0938e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Trip.Trip_routeId_idx_91ae2fd6",
+    "label": "Create index \"Trip_routeId_idx_91ae2fd6\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Trip_routeId_idx_91ae2fd6",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Trip_routeId_idx_91ae2fd6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_routeId_idx_91ae2fd6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Trip_routeId_idx_91ae2fd6\"",
+        "sql": "CREATE INDEX \"Trip_routeId_idx_91ae2fd6\" ON \"public\".\"Trip\" (\"routeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Trip_routeId_idx_91ae2fd6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Trip_routeId_idx_91ae2fd6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Trip.Trip_routeId_fkey",
+    "label": "Add foreign key \"Trip_routeId_fkey\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Trip_routeId_fkey",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Trip_routeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Trip_routeId_fkey",
+          "public",
+          "\"public\".\"Trip\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Trip_routeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Trip\"\nADD CONSTRAINT \"Trip_routeId_fkey\"\nFOREIGN KEY (\"routeId\")\nREFERENCES \"public\".\"Route\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Trip_routeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Trip_routeId_fkey",
+          "public",
+          "\"public\".\"Trip\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Trip.Trip_busId_fkey",
+    "label": "Add foreign key \"Trip_busId_fkey\" on \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Trip_busId_fkey",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Trip_busId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Trip_busId_fkey",
+          "public",
+          "\"public\".\"Trip\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Trip_busId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Trip\"\nADD CONSTRAINT \"Trip_busId_fkey\"\nFOREIGN KEY (\"busId\")\nREFERENCES \"public\".\"Bus\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Trip_busId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Trip_busId_fkey",
+          "public",
+          "\"public\".\"Trip\""
+        ]
+      }
+    ]
+  }
+]

@@ -76,7 +76,31 @@ export const routeService = {
   async update(id: string, input: UpdateRouteInput): Promise<Route | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Route.where({ id }).update(input);
+      return await db.transaction(async (tx) => {
+        await tx.execute(
+          db.raw
+            .sql`SELECT "id" FROM "public"."Route" WHERE "id" = ${id} FOR UPDATE`
+            .affectedCount()
+            .build(),
+        );
+        const current = await tx.orm.public.Route.where({ id }).first();
+        if (!current) return null;
+        const changesEndpoints =
+          (input.originStationId !== undefined &&
+            input.originStationId !== current.originStationId) ||
+          (input.destinationStationId !== undefined &&
+            input.destinationStationId !== current.destinationStationId);
+        if (
+          changesEndpoints &&
+          (await tx.orm.public.Trip.where({ routeId: id }).first())
+        )
+          throw new AppError(
+            409,
+            'ROUTE_HAS_TRIPS',
+            'A route used by trips cannot change its endpoints; create another route',
+          );
+        return await tx.orm.public.Route.where({ id }).update(input);
+      });
     } catch (error) {
       return handleWriteError(error);
     }
