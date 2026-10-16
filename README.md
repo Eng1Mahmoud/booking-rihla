@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Roles and catalog authorization
+## Current feature: Reservation MVP without passenger cancellation
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-Trip browsing, email verification, sign-in, recovery and role-based catalog protection are complete. Next implement the reservation MVP: transactional seat allocation, passenger ownership, server-calculated totals and cancellation without payment.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Next extend operator management, starting with the remaining fleet metadata and administrative APIs.
 
 ## Git workflow
 
@@ -405,13 +405,13 @@ The contract uses TimestamptzString: PostgreSQL stores timezone-aware timestampt
 
 POST/PATCH require application/json, reject unknown fields and caller ids, and validate UUIDs. PATCH requires at least one supported field and preserves omitted values, including cancellation. Scheduling requires an active route and bus. Missing parents return 404 ROUTE_NOT_FOUND or BUS_NOT_FOUND; inactive parents return 409 ROUTE_INACTIVE or BUS_INACTIVE. Deactivating a catalog record leaves existing trips unchanged, but prevents scheduling/reinstating trips on it. Cancellation remains allowed before departure even with inactive parents.
 
-Create requires a future departure, including when creating a cancelled record. Editing an already departed trip returns 409 TRIP_DEPARTED. Partial time edits are validated against the stored opposite timestamp. PATCH status=CANCELLED cancels a future trip; PATCH status=SCHEDULED reinstates it only after all scheduling checks pass. Booking/refund/notification consequences will be added with those modules; there are no bookings or payments in this feature.
+Create requires a future departure, including when creating a cancelled record. Editing an already departed trip returns 409 TRIP_DEPARTED. Partial time edits are validated against the stored opposite timestamp. For an unbooked future trip, PATCH status=CANCELLED cancels it and PATCH status=SCHEDULED reinstates it after scheduling checks. A trip with reservations rejects actual edits, including status changes, with 409 TRIP_HAS_BOOKINGS. Operator cancellation with affected reservations, refunds and notifications is deferred until its policy and workflow are implemented.
 
 Trip writes run in a transaction. PATCH locks the trip before reading its current fields. Both create and update lock the route for sharing, then lock the target bus for update before checking overlap. A scheduled trip conflicts when another scheduled trip on the same bus departs before its arrival and arrives after its departure. Conflicts return 409 BUS_SCHEDULE_CONFLICT, including concurrent creates and edits. Cancelled trips do not occupy the bus. Back-to-back trips are allowed: no turnaround buffer or vehicle-location feasibility rule is assumed at this stage. Failed edits roll back without changing stored values. This overlap guarantee belongs to the service transaction; direct database writes must use the same scheduling protocol.
 
 Database constraints separately enforce arrival after departure, nonnegative bounded prices, valid statuses and restrictive route/bus foreign keys. Deleting a referenced Bus or Route returns 409 BUS_IN_USE or ROUTE_IN_USE. A bus used by any trip, including a cancelled or past trip, cannot change seatCount (409 BUS_HAS_TRIPS). A route used by any trip cannot change endpoints (409 ROUTE_HAS_TRIPS). Create a different catalog record when needed; unchanged endpoint values, route duration, plates and active flags remain editable. Parent-row locks coordinate these checks with concurrent trip creation. Deleting all dependent trips releases these restrictions.
 
-DELETE currently removes an unreferenced trip, including historical trips. The service maps dependent-record restrictions to 409 TRIP_IN_USE when bookings are introduced. Reservation-specific mutation rules will accompany bookings. These management endpoints require an authenticated ADMIN or SUPER_ADMIN. Passenger search, details and departure seats remain public.
+DELETE currently removes an unreferenced trip, including historical trips. The service maps dependent-record restrictions to 409 TRIP_IN_USE when bookings are introduced. Reservations now prevent trip deletion through a restrictive foreign key and block actual changes to booked trips with 409 TRIP_HAS_BOOKINGS. These management endpoints require an authenticated ADMIN or SUPER_ADMIN. Passenger search, details and departure seats remain public.
 
 Lists accept combined routeId/busId UUID filters and status=SCHEDULED/CANCELLED, with limit=20 and offset=0 by default (limits 1-100, offsets 0-100000). Results sort by departure instant then UUID. Missing filter matches return an empty list. Invalid requests return 400 VALIDATION_ERROR, non-JSON bodies return 415, missing trips return 404 TRIP_NOT_FOUND, and unexpected failures keep the generic safe 500 response.
 
@@ -447,7 +447,7 @@ Replace placeholders with UUIDs and a date printed by npm run db:seed. Choose ex
 
 travelDate is a valid YYYY-MM-DD calendar date from 2000 through 9998, interpreted in Africa/Cairo. The service converts the start of that day and the next day to UTC instants, then includes departureAt >= start and departureAt < end. It separately requires departureAt > the current instant, status=SCHEDULED, and active route/bus records. Past dates return an empty list. Arrival may be on a different date. A fixed +02:00/+03:00 offset or adding 24 hours would fail around DST; utils/cairoTime.ts uses temporal-polyfill with named timezone rules instead. The polyfill is now a direct API dependency, imported locally without modifying global Temporal or changing Prisma's timestamp codecs.
 
-Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Current departure seat availability is exposed by the endpoint below; Booking will add allocation checks.
+Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Current departure seat availability is exposed by the endpoint below using per-trip reservations.
 
 Response shape:
 
@@ -495,9 +495,9 @@ Example seat response for a two-seat bus:
 }
 ```
 
-Seats are sorted numerically. Each seat id belongs to BusSeat and stays the same across different trips on that bus. A future booking must identify the trip and seat together. Changing a trip's assigned bus changes which seat ids this endpoint returns. totalSeats counts the returned catalog seats; availableSeats counts seats marked available.
+Seats are sorted numerically. Each seat id belongs to BusSeat and stays the same across different trips on that bus. A booking identifies the trip and seat together. An unbooked trip may be assigned another bus; a trip with reservations cannot change its assigned bus. totalSeats counts the returned catalog seats; availableSeats counts seats marked available.
 
-There are no bookings or holds yet, so every seat is currently available. This read does not reserve a seat, hold it, or promise availability for a later write. Booking will replace that initial availability calculation with per-trip allocations and transactional uniqueness checks. No inventory table, fake reservations, or extra package is introduced in this step.
+Availability now excludes BookingSeat allocations for the requested trip. The same bus seat can remain available on another departure. This read does not reserve or hold a seat and cannot promise availability for a later write; reservation creation rechecks availability transactionally. Public seat responses expose no passenger names, phone numbers or booking identifiers.
 
 Implementation follows routes/tripRoutes.ts -> controllers/tripDetailsController.ts -> services/tripDetailsService.ts. The existing trip schema supplies UUID and strict empty-query validation. The service shares one eligibility query builder between details and seats. Each endpoint loads related data in one database query; seats and the trip's current bus/eligibility are read in the same snapshot. Services still load Prisma lazily, so default HTTP tests need no database.
 
@@ -594,7 +594,7 @@ Fresh-database verification applied all six migrations, confirmed the second run
 
 Apply npm run db:migrate. A separate AUTH_ACCESS_SECRET in apps/api/.env signs access tokens: generate another independent 32-byte random hex value using the command shown above. Local configuration has already been generated without displaying secrets. parseSessionEnv validates this signing key; it is separate from the verification/outbox encryption key. Changing it invalidates existing access tokens; refresh sessions remain controlled by the database. There is no default signing secret.
 
-Before sign-in, registration clients must retain the verificationId returned by their original POST /register and supply it with both email verification and resend requests. The id is not emailed. It stays stable when resending. Wrong receipts cannot confirm the account or request new codes. Re-registering the same email returns a new decoy receipt and never transfers ownership of the pending credentials. Existing unverified registrations from before this API change, or clients that lose the original receipt, cannot complete activation through duplicate registration; account recovery is the next feature. This is an intentional change before building frontend clients.
+Before sign-in, registration clients must retain the verificationId returned by their original POST /register and supply it with both email verification and resend requests. The id is not emailed. It stays stable when resending. Wrong receipts cannot confirm the account or request new codes. Re-registering the same email returns a new decoy receipt and never transfers ownership of the pending credentials. Existing unverified registrations from before this API change, or clients that lose the original receipt, cannot complete activation through duplicate registration; they can use the password recovery flow below to prove mailbox ownership and set a new password. This is an intentional change before building frontend clients.
 
 | Method | Path                    | Behavior                                                                             |
 | ------ | ----------------------- | ------------------------------------------------------------------------------------ |
@@ -641,7 +641,7 @@ Invalid session credentials return 401 UNAUTHENTICATED, CSRF violations return 4
 
 Implementation uses services/sessionService.ts for login/rotation/revocation, utils/sessionTokens.ts for opaque tokens and jose JWT validation/signing, middlewares/requireAuth.ts for protected requests, middlewares/sessionCsrf.ts for mutation checks, and controllers/sessionController.ts/routes/sessionRoutes.ts for HTTP/cookies. cookie-parser only parses the refresh cookie. Services do not use Express objects, and there is no repository layer.
 
-Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 109 default tests and eleven PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
+Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 116 default tests and twelve PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
 
 Session verification also applied all seven migrations to a fresh temporary database, reran them without changes, passed all nine PostgreSQL integration tests there, and exercised compiled SMTP activation, sign-in, current-user lookup, refresh rotation and logout. The temporary database and scoped test accounts were removed; existing demo trips remain unchanged.
 
@@ -682,7 +682,7 @@ Apply npm run db:migrate before starting the API. The additive migration adds Us
 
 Protected requests require Authorization: Bearer ACCESS_TOKEN. A refresh cookie alone grants no catalog access. No additional session-CSRF header is required for these Bearer-authenticated endpoints. Anonymous/invalid authentication receives 401 UNAUTHENTICATED; an authenticated passenger receives 403 FORBIDDEN. Checks run before controller validation and database mutations, with Cache-Control: no-store on protected responses. HEAD receives the same read authorization. Public CORS preflights remain handled before routers. Route management can expose inactive catalog records, so passengers use the existing filtered search/details endpoints.
 
-The reusable middlewares/requireRole.ts accepts explicit allowed roles: management currently permits ADMIN and SUPER_ADMIN. Future super-admin-only administrator management and refunds will explicitly allow only SUPER_ADMIN. This feature does not add those management operations or booking ownership; ownership will accompany reservations.
+The reusable middlewares/requireRole.ts accepts explicit allowed roles: management currently permits ADMIN and SUPER_ADMIN. Future super-admin-only administrator management and refunds will explicitly allow only SUPER_ADMIN. Those administrator-management operations remain later work. Reservation endpoints now enforce passenger ownership separately, including for administrator accounts.
 
 ### Bootstrap the first super admin
 
@@ -697,3 +697,44 @@ This local operator command promotes an existing active, verified account; it ne
 Read src/middlewares/requireAuth.ts, src/middlewares/requireRole.ts and the catalog routers for request enforcement; src/services/sessionService.ts includes the safe role; src/services/adminBootstrapService.ts and src/scripts/bootstrapAdmin.ts implement the operator command. These paths are under apps/api. Catalog tests use an injected test-only session service to focus on catalog behavior; the authorization integration suite uses actual users, Argon2 hashes, JWTs and database sessions to verify role enforcement, live role changes, suspension, logout and safe bootstrap concurrency. Its cleanup removes only its own fixtures.
 
 Authorization verification: all nine migrations applied to a fresh temporary database; rerunning applied zero. All eleven PostgreSQL integration tests passed there, including bootstrap concurrency. A compiled HTTP smoke test exercised the root npm bootstrap command, repeated it idempotently, checked promotion-time session revocation, privileged catalog creation and immediate denial after demotion. The temporary database and test accounts were removed; no permanent administrator was created.
+
+## Reservation MVP (no payment, no passenger cancellation)
+
+Apply npm run db:migrate before starting the updated API. No extra dependency or environment variable is needed. Reservations use only RESERVED status, consume their seats immediately and do not expire automatically. They do not represent a paid ticket. Payment holds, paid confirmation, QR tickets and booking emails are later features. Passenger cancellation is disabled by the owner's decision; no cancellation, DELETE or PATCH booking endpoint exists. Operator cancellation/refund policy remains a separate future decision.
+
+Every booking endpoint requires Authorization: Bearer ACCESS_TOKEN for an active, email-verified account and an unrevoked session. A refresh cookie alone is insufficient. These Bearer-authenticated endpoints need no session-CSRF header. Responses, including errors, disable caching.
+
+| Method | Path                               | Behavior                                                                  |
+| ------ | ---------------------------------- | ------------------------------------------------------------------------- |
+| POST   | /api/v1/bookings                   | Reserve all selected seats atomically; return 201, reference and Location |
+| GET    | /api/v1/bookings?limit=20&offset=0 | List only the current account's reservations, newest first                |
+| GET    | /api/v1/bookings/:id               | Return an owned reservation, otherwise 404 BOOKING_NOT_FOUND              |
+
+POST accepts only the following JSON shape. Replace UUID placeholders with a trip and its seat ids from GET /api/v1/trips/:id/seats:
+
+```json
+{
+  "tripId": "TRIP_UUID",
+  "contactPhone": "+201012345678",
+  "passengers": [
+    { "seatId": "FIRST_SEAT_UUID", "name": "Mahmoud Ahmed" },
+    { "seatId": "SECOND_SEAT_UUID", "name": "Sara Ahmed" }
+  ]
+}
+```
+
+Choose 1-100 distinct seats on the assigned bus, within its available capacity. Passenger names are trimmed and contain 1-100 characters. contactPhone uses international +country-code format with 8-15 digits; it is a booking contact, not proof of phone ownership. Caller-supplied user ids, prices, totals, status, references and unknown fields are rejected. User ownership comes from the authenticated session. The server snapshots the trip's unit price and multiplies it by passenger count. Currency is EGP and all amounts are integer piastres. For example, two seats at 25000 piastres produce a total of 50000 piastres (EGP 500.00).
+
+Booking stores the owner, trip, unique random BUS- reference, RESERVED status, contact phone, seat count, unit price, total and creation timestamp. BookingSeat stores each seat id, original seat number and passenger name. totalPiastres uses PostgreSQL bigint because 100 int32-priced seats can exceed int32; bounded totals are safely converted to JSON numbers. Database checks enforce the price multiplication and seat-count bounds. A composite foreign key keeps each allocation on its booking's trip, and UNIQUE(tripId, seatId) prevents two reservations for the same departure/seat even if application checks are bypassed. The same physical seat may be booked on a different departure.
+
+Creation rechecks account/session eligibility inside a transaction, locks User then Session, and locks Trip -> Route -> Bus in the same parent order used by trip management. The trip row serializes reservations and trip edits. It must remain future, SCHEDULED and attached to an active route and bus. Every selected seat must belong to that bus and remain unallocated. Booking and all BookingSeat rows commit together; a conflict or failed passenger insertion rolls back everything. The database uniqueness constraint is the final duplicate-seat guard. One competing request receives 201 and the other receives 409 SEAT_UNAVAILABLE. A request containing one occupied seat reserves none of its remaining seats. This MVP uses a short per-trip transaction; later traffic may justify more granular locking.
+
+Bookings return reference/status, paymentRequired: false, currency, contact phone, server prices, timestamps, bilingual trip route/station/city information and ordered passenger seats. User ids, password data and bus plates are excluded. Listing defaults to twenty rows, accepts limits 1-100 and offsets 0-100000, and rejects other query fields. UUID detail lookups return the same 404 for a missing reservation or another account's reservation, including when the caller is an administrator. Past trips remain readable through the owner's booking. Operator booking lookup will use separate authorized APIs later.
+
+Missing trips return 404 TRIP_NOT_FOUND; cancelled/departed/inactive-parent trips return 409 TRIP_UNAVAILABLE; foreign-bus or unknown seats return 400 INVALID_SEATS; occupied seats return 409 SEAT_UNAVAILABLE. Input errors retain 400/415 and authentication errors use 401. Creation has a process-local IP limit of twenty requests per minute, returning 429 and Retry-After. Automatic creation retries are not idempotent: if a response is lost, inspect my bookings before submitting again; repeating occupied seats returns 409.
+
+Trips with reservations reject actual changes to bus, route, departure, arrival, price or status with 409 TRIP_HAS_BOOKINGS; identical values remain allowed. Their deletion returns 409 TRIP_IN_USE. Existing bus capacity protection and restrictive foreign keys preserve reserved seat identities. Public availability marks reserved seats unavailable in one query snapshot without exposing passenger details; it remains a snapshot and creation performs the final check.
+
+Read schemas/bookingSchema.ts, routes/bookingRoutes.ts, controllers/bookingController.ts and services/bookingService.ts under apps/api/src. The code follows the existing Route -> Controller -> Service -> Prisma structure. Tests cover validation, private responses, ownership even for admins, no passenger cancellation, parallel claims for a seat, multi-seat rollback, direct database constraints, separate departures, account/session revocation, unavailable trips, totals beyond int32, trip edit races, historical reads and scoped cleanup. Local development data is preserved.
+
+Reservation verification: all ten migrations applied to a new temporary database, with zero changes on a second run. All twelve PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test exercised competing seat reservations, JSON price totals, owner-only detail lookup, public availability, rejection of booked-trip edits, and absent passenger cancellation routes. Its fixtures and temporary database were removed. The complete default suite has 116 passing tests; type checks, lint, formatting and build pass. Existing development cities/trips remained unchanged, with no test users or reservations left behind.

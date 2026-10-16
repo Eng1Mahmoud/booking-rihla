@@ -30,6 +30,11 @@ export const tripDetailsService = {
     // Read eligibility and the current bus seats in one query/snapshot.
     const trip = await passengerTrips(db, id)
       .select('id', 'busId')
+      .include('bookings', (bookings) =>
+        bookings
+          .select('id')
+          .include('seats', (seats) => seats.select('seatId')),
+      )
       .include('bus', (bus) =>
         bus
           .select('id')
@@ -39,10 +44,14 @@ export const tripDetailsService = {
       )
       .first();
     if (!trip || !trip.bus) return null;
-    // There are no bookings yet. Add per-trip allocation checks with Booking.
+    const reserved = new Set(
+      trip.bookings.flatMap((booking) =>
+        booking.seats.map((seat) => seat.seatId),
+      ),
+    );
     const seats = trip.bus.seats.map((seat) => ({
       ...seat,
-      isAvailable: true,
+      isAvailable: !reserved.has(seat.id),
     }));
     return {
       tripId: trip.id,

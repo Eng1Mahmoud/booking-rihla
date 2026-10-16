@@ -1,0 +1,569 @@
+[
+  {
+    "id": "table.Booking",
+    "label": "Create table \"Booking\"",
+    "summary": "Creates table \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Booking\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Booking\"",
+        "sql": "CREATE TABLE \"public\".\"Booking\" (\n  \"contactPhone\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"reference\" text NOT NULL,\n  \"seatCount\" int4 NOT NULL,\n  \"status\" text DEFAULT 'RESERVED' NOT NULL,\n  \"totalPiastres\" int8 NOT NULL,\n  \"tripId\" text NOT NULL,\n  \"unitPricePiastres\" int4 NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Booking_status_check_78f85807\" CHECK (\"status\" IN ('RESERVED')),\n  CONSTRAINT \"booking_price_total_9fa87c89\" CHECK (\"unitPricePiastres\" BETWEEN 0 AND 2147483647 AND \"totalPiastres\" = \"unitPricePiastres\"::bigint * \"seatCount\"),\n  CONSTRAINT \"booking_seat_count_2c34aaa7\" CHECK (\"seatCount\" BETWEEN 1 AND 100)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Booking\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.BookingSeat",
+    "label": "Create table \"BookingSeat\"",
+    "summary": "Creates table \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BookingSeat\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BookingSeat\"",
+        "sql": "CREATE TABLE \"public\".\"BookingSeat\" (\n  \"bookingId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"passengerName\" text NOT NULL,\n  \"seatId\" text NOT NULL,\n  \"seatNumber\" int4 NOT NULL,\n  \"tripId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"booking_seat_number_eb6d2b3f\" CHECK (\"seatNumber\" BETWEEN 1 AND 100)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BookingSeat\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Booking.Booking_reference_key",
+    "label": "Add unique constraint on \"Booking\" (reference)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Booking_reference_key",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_reference_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_reference_key",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Booking_reference_key\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"Booking_reference_key\" UNIQUE (\"reference\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_reference_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_reference_key",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Booking.Booking_id_tripId_key",
+    "label": "Add unique constraint on \"Booking\" (id, tripId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Booking_id_tripId_key",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_id_tripId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_id_tripId_key",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Booking_id_tripId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"Booking_id_tripId_key\" UNIQUE (\"id\", \"tripId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_id_tripId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_id_tripId_key",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BookingSeat.BookingSeat_tripId_seatId_key",
+    "label": "Add unique constraint on \"BookingSeat\" (tripId, seatId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BookingSeat_tripId_seatId_key",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BookingSeat_tripId_seatId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_tripId_seatId_key",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BookingSeat_tripId_seatId_key\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\" ADD CONSTRAINT \"BookingSeat_tripId_seatId_key\" UNIQUE (\"tripId\", \"seatId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BookingSeat_tripId_seatId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_tripId_seatId_key",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Booking.Booking_tripId_idx_75da6d97",
+    "label": "Create index \"Booking_tripId_idx_75da6d97\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Booking_tripId_idx_75da6d97",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Booking_tripId_idx_75da6d97\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_tripId_idx_75da6d97\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Booking_tripId_idx_75da6d97\"",
+        "sql": "CREATE INDEX \"Booking_tripId_idx_75da6d97\" ON \"public\".\"Booking\" (\"tripId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Booking_tripId_idx_75da6d97\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_tripId_idx_75da6d97\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Booking.Booking_userId_createdAt_idx_f726f04a",
+    "label": "Create index \"Booking_userId_createdAt_idx_f726f04a\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Booking_userId_createdAt_idx_f726f04a",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Booking_userId_createdAt_idx_f726f04a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_userId_createdAt_idx_f726f04a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Booking_userId_createdAt_idx_f726f04a\"",
+        "sql": "CREATE INDEX \"Booking_userId_createdAt_idx_f726f04a\" ON \"public\".\"Booking\" (\"userId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Booking_userId_createdAt_idx_f726f04a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_userId_createdAt_idx_f726f04a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Booking.Booking_userId_idx_a489d58a",
+    "label": "Create index \"Booking_userId_idx_a489d58a\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Booking_userId_idx_a489d58a",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Booking_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Booking_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"Booking_userId_idx_a489d58a\" ON \"public\".\"Booking\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Booking_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingSeat.BookingSeat_bookingId_tripId_idx_52502076",
+    "label": "Create index \"BookingSeat_bookingId_tripId_idx_52502076\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BookingSeat_bookingId_tripId_idx_52502076",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BookingSeat_bookingId_tripId_idx_52502076\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_bookingId_tripId_idx_52502076\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BookingSeat_bookingId_tripId_idx_52502076\"",
+        "sql": "CREATE INDEX \"BookingSeat_bookingId_tripId_idx_52502076\" ON \"public\".\"BookingSeat\" (\"bookingId\", \"tripId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BookingSeat_bookingId_tripId_idx_52502076\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_bookingId_tripId_idx_52502076\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingSeat.BookingSeat_seatId_idx_3076c3cd",
+    "label": "Create index \"BookingSeat_seatId_idx_3076c3cd\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BookingSeat_seatId_idx_3076c3cd",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BookingSeat_seatId_idx_3076c3cd\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_seatId_idx_3076c3cd\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BookingSeat_seatId_idx_3076c3cd\"",
+        "sql": "CREATE INDEX \"BookingSeat_seatId_idx_3076c3cd\" ON \"public\".\"BookingSeat\" (\"seatId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BookingSeat_seatId_idx_3076c3cd\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_seatId_idx_3076c3cd\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Booking.Booking_userId_fkey",
+    "label": "Add foreign key \"Booking_userId_fkey\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Booking_userId_fkey",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Booking_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_userId_fkey",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Booking_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\"\nADD CONSTRAINT \"Booking_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Booking_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_userId_fkey",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Booking.Booking_tripId_fkey",
+    "label": "Add foreign key \"Booking_tripId_fkey\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Booking_tripId_fkey",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Booking_tripId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_tripId_fkey",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Booking_tripId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\"\nADD CONSTRAINT \"Booking_tripId_fkey\"\nFOREIGN KEY (\"tripId\")\nREFERENCES \"public\".\"Trip\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Booking_tripId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_tripId_fkey",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BookingSeat.BookingSeat_bookingId_tripId_fkey",
+    "label": "Add foreign key \"BookingSeat_bookingId_tripId_fkey\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BookingSeat_bookingId_tripId_fkey",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BookingSeat_bookingId_tripId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_bookingId_tripId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BookingSeat_bookingId_tripId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\"\nADD CONSTRAINT \"BookingSeat_bookingId_tripId_fkey\"\nFOREIGN KEY (\"bookingId\", \"tripId\")\nREFERENCES \"public\".\"Booking\" (\"id\", \"tripId\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BookingSeat_bookingId_tripId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_bookingId_tripId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BookingSeat.BookingSeat_seatId_fkey",
+    "label": "Add foreign key \"BookingSeat_seatId_fkey\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BookingSeat_seatId_fkey",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BookingSeat_seatId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_seatId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BookingSeat_seatId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\"\nADD CONSTRAINT \"BookingSeat_seatId_fkey\"\nFOREIGN KEY (\"seatId\")\nREFERENCES \"public\".\"BusSeat\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BookingSeat_seatId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_seatId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  }
+]

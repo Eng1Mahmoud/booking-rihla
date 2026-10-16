@@ -4,6 +4,14 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Booking": {
+      "model": "Booking",
+      "namespace": "public"
+    },
+    "BookingSeat": {
+      "model": "BookingSeat",
+      "namespace": "public"
+    },
     "Bus": {
       "model": "Bus",
       "namespace": "public"
@@ -57,6 +65,15 @@
     "namespaces": {
       "public": {
         "enum": {
+          "BookingStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "RESERVED",
+                "value": "RESERVED"
+              }
+            ]
+          },
           "EmailPurpose": {
             "codecId": "pg/text@1",
             "members": [
@@ -106,6 +123,279 @@
           }
         },
         "models": {
+          "Booking": {
+            "fields": {
+              "contactPhone": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reference": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "seatCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BookingStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "totalPiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "tripId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unitPricePiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "seats": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id",
+                    "tripId"
+                  ],
+                  "targetFields": [
+                    "bookingId",
+                    "tripId"
+                  ]
+                },
+                "to": {
+                  "model": "BookingSeat",
+                  "namespace": "public"
+                }
+              },
+              "trip": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "tripId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Trip",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "contactPhone": {
+                  "column": "contactPhone"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "reference": {
+                  "column": "reference"
+                },
+                "seatCount": {
+                  "column": "seatCount"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "totalPiastres": {
+                  "column": "totalPiastres"
+                },
+                "tripId": {
+                  "column": "tripId"
+                },
+                "unitPricePiastres": {
+                  "column": "unitPricePiastres"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Booking"
+            }
+          },
+          "BookingSeat": {
+            "fields": {
+              "bookingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "passengerName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "seatId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "seatNumber": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "tripId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "bookingId",
+                    "tripId"
+                  ],
+                  "targetFields": [
+                    "id",
+                    "tripId"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              },
+              "seat": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "seatId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BusSeat",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "bookingId": {
+                  "column": "bookingId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "passengerName": {
+                  "column": "passengerName"
+                },
+                "seatId": {
+                  "column": "seatId"
+                },
+                "seatNumber": {
+                  "column": "seatNumber"
+                },
+                "tripId": {
+                  "column": "tripId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "BookingSeat"
+            }
+          },
           "Bus": {
             "fields": {
               "id": {
@@ -213,6 +503,21 @@
               }
             },
             "relations": {
+              "bookings": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "seatId"
+                  ]
+                },
+                "to": {
+                  "model": "BookingSeat",
+                  "namespace": "public"
+                }
+              },
               "bus": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1110,6 +1415,21 @@
               }
             },
             "relations": {
+              "bookings": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "tripId"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              },
               "bus": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1265,6 +1585,21 @@
               }
             },
             "relations": {
+              "bookings": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              },
               "emails": {
                 "cardinality": "1:N",
                 "on": {
@@ -1380,6 +1715,299 @@
       "public": {
         "entries": {
           "table": {
+            "Booking": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('RESERVED')",
+                  "name": "Booking_status_check_78f85807",
+                  "prefix": "Booking_status_check"
+                },
+                {
+                  "expression": "\"unitPricePiastres\" BETWEEN 0 AND 2147483647 AND \"totalPiastres\" = \"unitPricePiastres\"::bigint * \"seatCount\"",
+                  "name": "booking_price_total_9fa87c89",
+                  "prefix": "booking_price_total"
+                },
+                {
+                  "expression": "\"seatCount\" BETWEEN 1 AND 100",
+                  "name": "booking_seat_count_2c34aaa7",
+                  "prefix": "booking_seat_count"
+                }
+              ],
+              "columns": {
+                "contactPhone": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "reference": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "seatCount": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "RESERVED"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BookingStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "totalPiastres": {
+                  "codecId": "pg/int8@1",
+                  "dataType": "pg/int8",
+                  "nullable": false
+                },
+                "tripId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "unitPricePiastres": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Booking_userId_idx_a489d58a"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "Booking_tripId_idx_75da6d97"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "tripId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Trip"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "tripId"
+                  ],
+                  "name": "Booking_tripId_idx_75da6d97",
+                  "prefix": "Booking_tripId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId",
+                    "createdAt"
+                  ],
+                  "name": "Booking_userId_createdAt_idx_f726f04a",
+                  "prefix": "Booking_userId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "Booking_userId_idx_a489d58a",
+                  "prefix": "Booking_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "reference"
+                  ]
+                },
+                {
+                  "columns": [
+                    "id",
+                    "tripId"
+                  ]
+                }
+              ]
+            },
+            "BookingSeat": {
+              "checks": [
+                {
+                  "expression": "\"seatNumber\" BETWEEN 1 AND 100",
+                  "name": "booking_seat_number_eb6d2b3f",
+                  "prefix": "booking_seat_number"
+                }
+              ],
+              "columns": {
+                "bookingId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "passengerName": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "seatId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "seatNumber": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "tripId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "BookingSeat_bookingId_tripId_idx_52502076"
+                  },
+                  "onDelete": "cascade",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "bookingId",
+                      "tripId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BookingSeat"
+                  },
+                  "target": {
+                    "columns": [
+                      "id",
+                      "tripId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "BookingSeat_seatId_idx_3076c3cd"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "seatId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BookingSeat"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BusSeat"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "bookingId",
+                    "tripId"
+                  ],
+                  "name": "BookingSeat_bookingId_tripId_idx_52502076",
+                  "prefix": "BookingSeat_bookingId_tripId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "seatId"
+                  ],
+                  "name": "BookingSeat_seatId_idx_3076c3cd",
+                  "prefix": "BookingSeat_seatId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "tripId",
+                    "seatId"
+                  ]
+                }
+              ]
+            },
             "Bus": {
               "checks": [
                 {
@@ -2495,6 +3123,12 @@
             }
           },
           "valueSet": {
+            "BookingStatus": {
+              "kind": "valueSet",
+              "values": [
+                "RESERVED"
+              ]
+            },
             "EmailPurpose": {
               "kind": "valueSet",
               "values": [
@@ -2524,12 +3158,34 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d2d889f19321aa0b39f1d4a8a148b77003a9939dd31e1d0d4a3f014649254025"
+    "storageHash": "1f5bc6bfc0ff862c29e84fe643773925b533dce9d1823692335e0346b639944f"
   },
   "execution": {
-    "executionHash": "cae4e5331cc9dea06f420faa103f3361d7c6de3e3d2641a89bc126816379509d",
+    "executionHash": "d72a03176e88d02d49c52ab12e20ec9a0133706aa377b9de2b882047fc9d01e1",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Booking",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "BookingSeat",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
         {
           "onCreate": {
             "id": "uuidv4",

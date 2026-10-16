@@ -35,6 +35,7 @@ model BusSeat {
   id     String @id @default(uuid())
   busId  String
   number Int
+  bookings BookingSeat[]
   bus    Bus    @relation(fields: [busId], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@unique([busId, number])
@@ -71,6 +72,7 @@ model Trip {
   arrivalAt TimestamptzString
   pricePiastres Int
   status TripStatus @default(SCHEDULED)
+  bookings Booking[]
   route Route @relation(fields: [routeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   bus Bus @relation(fields: [busId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
@@ -101,6 +103,7 @@ model User {
   loginFailures Int @default(0)
   lockedUntil TimestamptzString?
   sessions Session[]
+  bookings Booking[]
   passwordReset PasswordReset?
   verification EmailVerification?
   emails EmailOutbox[]
@@ -177,4 +180,45 @@ model PasswordReset {
   sendCount Int @default(1)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   @@check(expression: sql`attempts BETWEEN 0 AND 5 AND "sendCount" BETWEEN 1 AND 5`, name: "password_reset_limits")
+}
+
+// Reservations have no passenger cancellation or payment transition in this MVP.
+enum BookingStatus {
+  RESERVED
+}
+
+model Booking {
+  id String @id @default(uuid())
+  reference String @unique
+  userId String
+  tripId String
+  status BookingStatus @default(RESERVED)
+  contactPhone String
+  seatCount Int
+  unitPricePiastres Int
+  totalPiastres BigInt
+  createdAt TimestamptzString @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  seats BookingSeat[]
+  @@unique([id, tripId])
+  @@index([userId, createdAt])
+  @@index([tripId])
+  @@check(expression: sql`"seatCount" BETWEEN 1 AND 100`, name: "booking_seat_count")
+  @@check(expression: sql`"unitPricePiastres" BETWEEN 0 AND 2147483647 AND "totalPiastres" = "unitPricePiastres"::bigint * "seatCount"`, name: "booking_price_total")
+}
+
+model BookingSeat {
+  id String @id @default(uuid())
+  bookingId String
+  tripId String
+  seatId String
+  seatNumber Int
+  passengerName String
+  booking Booking @relation(fields: [bookingId, tripId], references: [id, tripId], onDelete: Cascade, onUpdate: Restrict)
+  seat BusSeat @relation(fields: [seatId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([tripId, seatId])
+  @@index([bookingId, tripId])
+  @@index([seatId])
+  @@check(expression: sql`"seatNumber" BETWEEN 1 AND 100`, name: "booking_seat_number")
 }

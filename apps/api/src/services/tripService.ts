@@ -42,6 +42,21 @@ async function saveTrip(
             'A departed trip cannot be edited',
           );
       }
+      if (
+        current &&
+        Object.entries(input).some(([key, value]) => {
+          const stored = current[key as keyof Trip];
+          return key === 'departureAt' || key === 'arrivalAt'
+            ? Date.parse(String(value)) !== Date.parse(String(stored))
+            : value !== stored;
+        }) &&
+        (await tx.orm.public.Booking.where({ tripId: current.id }).first())
+      )
+        throw new AppError(
+          409,
+          'TRIP_HAS_BOOKINGS',
+          'A trip with reservations cannot be changed',
+        );
       const data = { ...current, ...input } as CreateTripInput;
       if (Date.parse(data.arrivalAt) <= Date.parse(data.departureAt))
         throw new AppError(

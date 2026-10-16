@@ -1,12 +1,12 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP with passenger ownership is next.
+Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Remaining operator management is next.
 
 ## How we will build
 
 Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. The owner authorizes committing and pushing each completed feature after its checks; finish and publish it before starting the next feature. Production publication and real-money operations still need explicit approval. A phase is complete only when its working result can be demonstrated.
 
-This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions.
+This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions. Confirmed owner decision: passengers cannot cancel bookings; no passenger cancellation endpoint or frontend action is planned. Operator cancellation and refunds require a separate policy decision.
 
 ### Milestones
 
@@ -87,10 +87,10 @@ Feature batches:
 - [x] Complete Trip management, scheduled/cancelled status, overlap prevention, catalog safeguards, and tests.
 - [x] Add repeatable demo seed data for realistic searches.
 - [x] Add trip search by origin city/station, destination city/station, and travel date.
-- [x] Add passenger trip details and ordered departure seat availability endpoints; all seats are available until Booking allocations are introduced.
+- [x] Add passenger trip details and ordered departure seat availability endpoints; availability now excludes per-trip BookingSeat allocations.
 - [x] Add pagination for lists, strict request validation, relevant indexes, and empty/error cases for the implemented browsing endpoints.
 
-Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Advanced fleet metadata stays deferred; reservation allocations follow accounts.
+Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Advanced fleet metadata stays deferred; reservation allocations and passenger ownership are now implemented.
 
 ## Phase 4 — Accounts and email verification
 
@@ -120,7 +120,7 @@ Small steps:
 - [ ] Move IP limits to a shared store when deploying multiple instances.
 - [x] Add forgot-password and reset-password codes; revoke all sessions after a reset.
 - [x] Add USER, ADMIN and SUPER_ADMIN roles, protected catalog management, current-role enforcement and a safe first-super-admin command.
-- [ ] Add reservation ownership checks with bookings in phase 6.
+- [x] Add reservation ownership checks with bookings in phase 6.
 - [x] Verify HttpOnly/Secure/SameSite cookies, credentialed exact-origin CORS, custom-header/origin CSRF checks and HTTP failure cases.
 - [ ] Exercise browser cookie/session flows when the actual frontend and deployment hostnames are available.
 
@@ -130,17 +130,17 @@ Working result: complete account lifecycle with tested session rotation and acce
 
 Small steps:
 
-- [ ] Add bookings and booking seats with an explicit status transition model.
-- [ ] Expose availability and reservation APIs needed by the later seat picker.
-- [ ] Add passenger details and server-calculated totals.
-- [ ] Create reservations transactionally and prevent duplicate active seat allocations using a database constraint.
-- [ ] Test two concurrent requests for the same seat; only one succeeds.
-- [ ] Return a booking reference and confirmation data through the API.
-- [ ] Add my bookings and booking details with ownership checks.
-- [ ] Allow cancellation of a no-payment reservation and release its seats.
-- [ ] Clearly label this local flow as a reservation without payment; do not imply a paid ticket.
+- [x] Add Booking/BookingSeat with RESERVED status; introduce payment states only with the later payment feature.
+- [x] Expose availability and reservation APIs needed by the later seat picker.
+- [x] Add passenger details and server-calculated totals.
+- [x] Create reservations transactionally and prevent duplicate active seat allocations using a database constraint.
+- [x] Test two concurrent requests for the same seat; only one succeeds.
+- [x] Return a booking reference and confirmation data through the API.
+- [x] Add my bookings and booking details with ownership checks.
+- [x] Enforce no passenger cancellation: expose no cancellation, DELETE or PATCH booking endpoint.
+- [x] Clearly label this local flow as a reservation without payment; do not imply a paid ticket.
 
-Working result: verified users reserve available seats and view or cancel their own reservations.
+Working result achieved: verified users reserve available seats and view only their own reservations. Passenger cancellation is unavailable; reservations do not expire or collect payment.
 
 **Learning MVP complete.** Review the entire flow and explain the data model before expanding it.
 
@@ -148,11 +148,12 @@ Working result: verified users reserve available seats and view or cancel their 
 
 Small steps:
 
-- [ ] Protect all management endpoints with administrator roles and test access restrictions.
-- [ ] Add city and station management.
+- [x] Protect current catalog management endpoints with administrator roles and test access restrictions.
+- [x] Add city and station management.
 - [ ] Add bus type, amenities, seat layout, bus, and plate-number management.
-- [ ] Add route and single-trip management, including prices and times.
-- [ ] Guard edits to buses, layouts, and trips that already have reservations.
+- [x] Add route and single-trip management, including prices and times.
+- [x] Preserve bus seat capacity/identities and reject changes or deletion of trips with reservations.
+- [ ] Extend reservation safeguards to visual seat layouts when that feature is added.
 - [ ] Add recurring/bulk trip creation with validation and a review of generated departures.
 - [ ] Add filtered booking lists and booking details.
 - [ ] Add user lists and suspend/activate controls; enforce suspension in the API/session flow.
@@ -165,7 +166,7 @@ Working result: authorized operators manage the data previously supplied by seed
 
 Small steps:
 
-- [ ] Agree on the exact hold duration, cancellation windows, and refund rules before implementing paid bookings.
+- [ ] Agree on the exact hold duration and operator cancellation/refund rules before implementing paid bookings; passenger cancellation remains disabled.
 - [ ] Replace immediate reservation confirmation with pending payment and a default ten-minute hold.
 - [ ] Expose hold expiry times and add expiry handling and a worker that releases expired holds.
 - [ ] Keep the active-seat database uniqueness constraint for held and confirmed seats.
@@ -186,7 +187,7 @@ Small steps:
 
 - [ ] Add in-app and emailed tickets with booking references and QR codes.
 - [ ] Add booking confirmation and payment receipt emails.
-- [ ] Apply the agreed cancellation/refund policy to passenger and admin actions.
+- [ ] Apply the agreed operator cancellation/refund policy; keep passenger cancellation unavailable.
 - [ ] Persist refund records; implement provider refunds, retries, and reconciliation without double refunds.
 - [ ] Restrict refund issuance to super admins as described in the role requirements.
 - [ ] Add trip cancellation, affected-passenger notifications, and appropriate refund processing.
@@ -220,7 +221,7 @@ Feature batches, each completed and pushed before the next:
 - [ ] Add registration, verification/resend, login, session restoration, account, and password recovery using react-hook-form and Zod.
 - [ ] Add passenger details, server-priced summaries, reservations, booking references, and confirmation.
 - [ ] Add checkout, hold countdown/expiry, and payment success/failure/cancellation handling.
-- [ ] Add ticket/QR views, upcoming/past/cancelled bookings, details, and allowed cancellation/refund requests.
+- [ ] Add ticket/QR views, upcoming/past/operator-cancelled bookings and details; expose no passenger cancellation action.
 - [ ] Introduce TanStack Query for server data and Zustand only for client state that needs it.
 - [ ] Check keyboard operation, focus, screen-reader labels, contrast, responsive layouts, and full Arabic/English flows.
 
@@ -319,4 +320,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP is next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; remaining operator management is next.

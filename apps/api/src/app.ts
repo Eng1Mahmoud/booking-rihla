@@ -1,3 +1,8 @@
+import {
+  bookingService,
+  type BookingService,
+} from './services/bookingService.ts';
+import { createBookingRouter } from './routes/bookingRoutes.ts';
 import express from 'express';
 import { requireAuth } from './middlewares/requireAuth.ts';
 import { requireRole } from './middlewares/requireRole.ts';
@@ -53,6 +58,7 @@ export function createApp(
     auth?: AuthService;
     sessions?: SessionService;
     passwordReset?: PasswordResetService;
+    bookings?: BookingService;
   } = {},
 ) {
   const app = express();
@@ -109,6 +115,14 @@ export function createApp(
   app.use(
     '/api/v1/auth',
     createPasswordResetRouter(services.passwordReset ?? passwordResetService),
+  );
+
+  app.use(
+    '/api/v1/bookings',
+    createBookingRouter(
+      services.bookings ?? bookingService,
+      services.sessions ?? sessionService,
+    ),
   );
 
   // This runs only if none of the routes above handled the request.
