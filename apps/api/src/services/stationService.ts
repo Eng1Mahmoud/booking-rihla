@@ -1,5 +1,8 @@
 import { AppError } from '../errors/AppError.ts';
-import { isForeignKeyViolation } from '../utils/databaseErrors.ts';
+import {
+  isForeignKeyViolation,
+  isRestrictViolation,
+} from '../utils/databaseErrors.ts';
 import type {
   CreateStationInput,
   UpdateStationInput,
@@ -49,7 +52,17 @@ export const stationService = {
   },
   async remove(id: string): Promise<Station | null> {
     const { db } = await import('../prisma/db.ts');
-    return await db.orm.public.Station.where({ id }).delete();
+    try {
+      return await db.orm.public.Station.where({ id }).delete();
+    } catch (error) {
+      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+        throw new AppError(
+          409,
+          'STATION_HAS_ROUTES',
+          'Remove routes using this station before deleting it',
+        );
+      throw error;
+    }
   },
 };
 export type StationService = typeof stationService;

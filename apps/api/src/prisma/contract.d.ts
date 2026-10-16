@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'da409af4617854fc8a7bdf6f2004b5568a7d0acde1b097d48cae45dd231cdba4'>;
+  StorageHashBase<'6fb6684070814203ec1bc4bc39271d3302b3d4adbbb75408bb198431316540e6'>;
 export type ExecutionHash =
-  ExecutionHashBase<'c5894be3caf2382e3fd503b7574f59025d63647a3f5e9ac5709fc5f8402b0fed'>;
+  ExecutionHashBase<'a481f376c78d6d610e360c7b8d4299619d72f2a0e6b11948633ca3122624dc81'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -250,6 +250,13 @@ export type FieldOutputTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Route: {
+      readonly destinationStationId: CodecTypes['pg/text@1']['output'];
+      readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly originStationId: CodecTypes['pg/text@1']['output'];
+    };
     readonly Station: {
       readonly cityId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -275,6 +282,13 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Route: {
+      readonly destinationStationId: CodecTypes['pg/text@1']['input'];
+      readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly originStationId: CodecTypes['pg/text@1']['input'];
     };
     readonly Station: {
       readonly cityId: CodecTypes['pg/text@1']['input'];
@@ -302,6 +316,13 @@ export type StorageColumnTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
+    readonly Route: {
+      readonly destinationStationId: CodecTypes['pg/text@1']['output'];
+      readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly originStationId: CodecTypes['pg/text@1']['output'];
+    };
     readonly Station: {
       readonly cityId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -327,6 +348,13 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Route: {
+      readonly destinationStationId: CodecTypes['pg/text@1']['input'];
+      readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly originStationId: CodecTypes['pg/text@1']['input'];
     };
     readonly Station: {
       readonly cityId: CodecTypes['pg/text@1']['input'];
@@ -360,13 +388,25 @@ export namespace Models {
     stations: public_Station[];
     readonly [RelationKeys]?: 'stations';
   };
+  export type public_Route = {
+    destinationStationId: CodecTypes['pg/text@1']['output'];
+    estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    isActive: CodecTypes['pg/bool@1']['output'];
+    originStationId: CodecTypes['pg/text@1']['output'];
+    destinationStation: public_Station;
+    originStation: public_Station;
+    readonly [RelationKeys]?: 'destinationStation' | 'originStation';
+  };
   export type public_Station = {
     cityId: CodecTypes['pg/text@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     nameAr: CodecTypes['pg/text@1']['output'];
     nameEn: CodecTypes['pg/text@1']['output'];
     city: public_City;
-    readonly [RelationKeys]?: 'city';
+    destinationRoutes: public_Route[];
+    originRoutes: public_Route[];
+    readonly [RelationKeys]?: 'city' | 'destinationRoutes' | 'originRoutes';
   };
 }
 
@@ -375,6 +415,7 @@ export declare const models: {
     Bus: Models.public_Bus;
     BusSeat: Models.public_BusSeat;
     City: Models.public_City;
+    Route: Models.public_Route;
     Station: Models.public_Station;
   };
 };
@@ -505,6 +546,88 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly Route: {
+              columns: {
+                readonly destinationStationId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly estimatedDurationMinutes: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly isActive: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                  readonly many: false;
+                };
+                readonly originStationId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['originStationId', 'destinationStationId'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'Route_destinationStationId_idx_f43d62cb';
+                  readonly prefix: 'Route_destinationStationId_idx';
+                  readonly columns: readonly ['destinationStationId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Route_originStationId_idx_487c4fe1';
+                  readonly prefix: 'Route_originStationId_idx';
+                  readonly columns: readonly ['originStationId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Route';
+                    readonly columns: readonly ['originStationId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Station';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Route';
+                    readonly columns: readonly ['destinationStationId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Station';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Station: {
               columns: {
                 readonly cityId: {
@@ -571,6 +694,7 @@ type ContractBase = Omit<
     readonly Bus: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
     readonly BusSeat: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusSeat' };
     readonly City: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
+    readonly Route: { readonly namespace: 'public' & NamespaceId; readonly model: 'Route' };
     readonly Station: { readonly namespace: 'public' & NamespaceId; readonly model: 'Station' };
   };
   readonly domain: {
@@ -694,6 +818,67 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Route: {
+            readonly fields: {
+              readonly destinationStationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly estimatedDurationMinutes: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly originStationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly destinationStation: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Station';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['destinationStationId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly originStation: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Station';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['originStationId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Route';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly destinationStationId: { readonly column: 'destinationStationId' };
+                readonly estimatedDurationMinutes: { readonly column: 'estimatedDurationMinutes' };
+                readonly id: { readonly column: 'id' };
+                readonly isActive: { readonly column: 'isActive' };
+                readonly originStationId: { readonly column: 'originStationId' };
+              };
+            };
+          };
           readonly Station: {
             readonly fields: {
               readonly cityId: {
@@ -721,6 +906,28 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['cityId'];
                   readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly destinationRoutes: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Route';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['destinationStationId'];
+                };
+              };
+              readonly originRoutes: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Route';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['originStationId'];
                 };
               };
             };
@@ -791,6 +998,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'City';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Route';
             readonly field: 'id';
             readonly namespace: 'public';
           };

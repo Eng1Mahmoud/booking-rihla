@@ -23,3 +23,12 @@ export function isUniqueViolation(error: unknown, constraint: string): boolean {
     error.constraint === constraint
   );
 }
+
+export function isCheckViolation(error: unknown, constraint: string): boolean {
+  return (
+    hasSqlState(error, '23514') &&
+    error instanceof Error &&
+    'constraint' in error &&
+    error.constraint === constraint
+  );
+}

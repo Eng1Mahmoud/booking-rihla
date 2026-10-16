@@ -2,9 +2,9 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Bus and numbered-seat management
+## Current feature: Directed route management
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs City, Station, and Bus CRUD with automatic numbered seats; the health endpoint remains independent of the database.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs City, Station, Bus/numbered-seat, and Route management; the health endpoint remains independent of the database.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -85,15 +85,15 @@ Request flow: browser → server listening on the configured port → Express ro
 
 References: [Express setup](https://expressjs.com/en/starter/installing/), [Node's TypeScript support](https://nodejs.org/api/typescript.html), [Node environment-file loading](https://nodejs.org/api/cli.html#--env-file-if-existsfile), and [Zod schemas](https://zod.dev/api).
 
-## Next small step
+## Next feature
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; City has a UUID string id and its table is initialized; cities can be created, listed, retrieved, updated, and deleted over HTTP; the standalone example is also available.
+City, Station, Bus/numbered-seat, and Route management are complete. Next add Trip management: connect a route and bus with departure/arrival times and a price in integer piastres. Request IDs and structured logging remain deferred.
 
 ## Git workflow
 
 Group related implementation, validation, tests, migrations, and usage notes into one feature commit. Finish the feature, verify it, explain the result, commit, and push under the owner's standing instruction before starting the next. Finish the backend before the passenger website, then build the dashboard. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
 
-Push changes to GitHub only after the owner reviews them and explicitly approves the push.
+The owner has authorized pushing each completed feature after its checks. Production publication and real-money operations require separate explicit approval.
 
 ## Linting
 
@@ -258,7 +258,7 @@ POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters
 
 List responses contain data and pagination (limit and offset). Limits range from 1 to 100, offsets from 0 to 100000. Invalid inputs return 400, non-JSON create requests return 415, and unexpected database failures return the existing generic 500 response without private details.
 
-City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations/buses service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
+City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations/buses/routes service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
 
 ```sh
 npm test
@@ -337,3 +337,40 @@ The BusSeat foreign key cascades on Bus deletion, so no owned seats are left orp
 Implementation follows routes/busRoutes.ts -> controllers/busController.ts -> services/busService.ts, with schemas/busSchema.ts for validation. No repository layer or extra runtime package is introduced. As with existing management routes, administrator authorization is added with the planned authentication feature before public deployment.
 
 The real PostgreSQL test covers seat UUIDs, the 100-seat boundary, normalized duplicate plates, growing/shrinking, retained ids, rollback after a conflicting combined edit, concurrent creates/capacity edits, database uniqueness/foreign-key/check constraints, and cascading deletion. Test-created buses and seats are cleaned up. The default HTTP suite still runs without PostgreSQL.
+
+## Route API
+
+Run npm run db:migrate before using this feature. Route represents one direction between two existing stations. It stores id (generated UUID), originStationId, destinationStationId, estimatedDurationMinutes, and isActive (default true). The reverse direction is a separate route. Different stations within one city are permitted. This model does not yet schedule departures or assign a bus or price; those belong to Trip.
+
+| Method | Path               | Behavior                                                                             |
+| ------ | ------------------ | ------------------------------------------------------------------------------------ |
+| GET    | /api/v1/routes     | List routes with optional originStationId, destinationStationId and isActive filters |
+| GET    | /api/v1/routes/:id | Read a route or return ROUTE_NOT_FOUND                                               |
+| POST   | /api/v1/routes     | Create a directed route; return 201 and Location                                     |
+| PATCH  | /api/v1/routes/:id | Update endpoints, estimated duration or active status                                |
+| DELETE | /api/v1/routes/:id | Delete the route; return an empty 204                                                |
+
+Example create body (use UUIDs returned by the Station API):
+
+```json
+{
+  "originStationId": "ORIGIN_STATION_UUID",
+  "destinationStationId": "DESTINATION_STATION_UUID",
+  "estimatedDurationMinutes": 180,
+  "isActive": true
+}
+```
+
+POST/PATCH require application/json and reject unknown fields and caller-supplied ids. Estimated duration is a number containing whole minutes from 1 to 10080 (a seven-day application limit); it is an estimate, not a trip's actual arrival time. Endpoints must be distinct valid UUIDs. PATCH requires at least one field and preserves omitted values, including isActive. To disable a route, PATCH isActive to false. Deactivation is a catalog flag at this stage; future Trip rules will enforce scheduling behavior.
+
+List filters can be combined, with isActive accepting only true/false strings. Pagination defaults to limit=20/offset=0, bounds limit to 1-100 and offset to 0-100000, and sorts by UUID. A valid filter without matches returns an empty data array. Responses expose endpoint ids; station names are available through the Station API.
+
+The database enforces directed uniqueness, distinct endpoints, duration bounds, and station foreign keys. Duplicate directions return 409 ROUTE_EXISTS, including concurrent creates and conflicting edits. Missing endpoint stations return 404 STATION_NOT_FOUND. Missing routes return 404 ROUTE_NOT_FOUND. Invalid requests, including a partial update that makes an endpoint equal its stored counterpart, return 400 VALIDATION_ERROR. Failed edits leave the existing row unchanged. Unexpected errors keep the generic safe 500 response.
+
+Deleting either station used by a route returns 409 STATION_HAS_ROUTES; delete its routes first. ON DELETE/UPDATE RESTRICT also protects writes that bypass HTTP. Route deletion maps dependent-record restrictions to 409 ROUTE_IN_USE when later modules add references. Management authorization follows the planned authentication feature before public deployment.
+
+The implementation follows routes/routeRoutes.ts -> controllers/routeController.ts -> services/routeService.ts -> Prisma, with schemas/routeSchema.ts for validation. Single-row writes rely on database constraints atomically rather than a separate read-before-write check. No extra runtime dependencies or architectural layers are introduced.
+
+npm test includes HTTP validation, responses, filters, partial updates and safe errors without requiring PostgreSQL. npm run test:db also verifies persistence, reverse directions, combined filtering/pagination, concurrent duplicate creation, failed-edit rollback, duration bounds, orphan rejection and station deletion restrictions in PostgreSQL. Tests remove only their own scoped rows.
+
+Verification also applied all four migrations to a fresh temporary PostgreSQL database, reran them without changes, ran all four integration tests, exercised the compiled API route list, verified test cleanup, and removed that temporary database. Existing development data was preserved.

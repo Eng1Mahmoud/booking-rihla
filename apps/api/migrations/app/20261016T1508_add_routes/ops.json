@@ -1,0 +1,245 @@
+[
+  {
+    "id": "table.Route",
+    "label": "Create table \"Route\"",
+    "summary": "Creates table \"Route\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Route\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Route\"",
+        "sql": "CREATE TABLE \"public\".\"Route\" (\n  \"destinationStationId\" text NOT NULL,\n  \"estimatedDurationMinutes\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"originStationId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"route_distinct_stations_0ade44e1\" CHECK (\"originStationId\" <> \"destinationStationId\"),\n  CONSTRAINT \"route_duration_range_c4fded6c\" CHECK (\"estimatedDurationMinutes\" BETWEEN 1 AND 10080)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Route\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Route.Route_originStationId_destinationStationId_key",
+    "label": "Add unique constraint on \"Route\" (originStationId, destinationStationId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Route_originStationId_destinationStationId_key",
+        "table": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Route_originStationId_destinationStationId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_originStationId_destinationStationId_key",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Route_originStationId_destinationStationId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Route\" ADD CONSTRAINT \"Route_originStationId_destinationStationId_key\" UNIQUE (\"originStationId\", \"destinationStationId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Route_originStationId_destinationStationId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_originStationId_destinationStationId_key",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Route.Route_destinationStationId_idx_f43d62cb",
+    "label": "Create index \"Route_destinationStationId_idx_f43d62cb\" on \"Route\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Route_destinationStationId_idx_f43d62cb",
+        "table": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Route_destinationStationId_idx_f43d62cb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route_destinationStationId_idx_f43d62cb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Route_destinationStationId_idx_f43d62cb\"",
+        "sql": "CREATE INDEX \"Route_destinationStationId_idx_f43d62cb\" ON \"public\".\"Route\" (\"destinationStationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Route_destinationStationId_idx_f43d62cb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route_destinationStationId_idx_f43d62cb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Route.Route_originStationId_idx_487c4fe1",
+    "label": "Create index \"Route_originStationId_idx_487c4fe1\" on \"Route\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Route_originStationId_idx_487c4fe1",
+        "table": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Route_originStationId_idx_487c4fe1\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route_originStationId_idx_487c4fe1\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Route_originStationId_idx_487c4fe1\"",
+        "sql": "CREATE INDEX \"Route_originStationId_idx_487c4fe1\" ON \"public\".\"Route\" (\"originStationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Route_originStationId_idx_487c4fe1\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Route_originStationId_idx_487c4fe1\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Route.Route_originStationId_fkey",
+    "label": "Add foreign key \"Route_originStationId_fkey\" on \"Route\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Route_originStationId_fkey",
+        "table": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Route_originStationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_originStationId_fkey",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Route_originStationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Route\"\nADD CONSTRAINT \"Route_originStationId_fkey\"\nFOREIGN KEY (\"originStationId\")\nREFERENCES \"public\".\"Station\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Route_originStationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_originStationId_fkey",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Route.Route_destinationStationId_fkey",
+    "label": "Add foreign key \"Route_destinationStationId_fkey\" on \"Route\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Route_destinationStationId_fkey",
+        "table": "Route"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Route_destinationStationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_destinationStationId_fkey",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Route_destinationStationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Route\"\nADD CONSTRAINT \"Route_destinationStationId_fkey\"\nFOREIGN KEY (\"destinationStationId\")\nREFERENCES \"public\".\"Station\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Route_destinationStationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Route_destinationStationId_fkey",
+          "public",
+          "\"public\".\"Route\""
+        ]
+      }
+    ]
+  }
+]

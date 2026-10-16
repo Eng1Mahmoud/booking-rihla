@@ -14,6 +14,9 @@ model Station {
   cityId String
   city   City   @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
+  originRoutes Route[] @relation("RouteOrigin")
+  destinationRoutes Route[] @relation("RouteDestination")
+
   @@index([cityId])
 }
 
@@ -35,4 +38,19 @@ model BusSeat {
 
   @@unique([busId, number])
   @@check(expression: sql`number BETWEEN 1 AND 100`, name: "bus_seat_number_range")
+}
+
+model Route {
+  id String @id @default(uuid())
+  originStationId String
+  destinationStationId String
+  estimatedDurationMinutes Int
+  isActive Boolean @default(true)
+  originStation Station @relation("RouteOrigin", fields: [originStationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  destinationStation Station @relation("RouteDestination", fields: [destinationStationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([originStationId, destinationStationId])
+  @@index([destinationStationId])
+  @@check(expression: sql`"originStationId" <> "destinationStationId"`, name: "route_distinct_stations")
+  @@check(expression: sql`"estimatedDurationMinutes" BETWEEN 1 AND 10080`, name: "route_duration_range")
 }
