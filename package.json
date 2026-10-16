@@ -19,7 +19,8 @@
     "contract:emit": "npm run contract:emit --workspace @booking-bus/api",
     "city:example": "npm run city:example --workspace @booking-bus/api",
     "test:db": "npm run test:db --workspace @booking-bus/api",
-    "db:migrate": "npm run db:migrate --workspace @booking-bus/api"
+    "db:migrate": "npm run db:migrate --workspace @booking-bus/api",
+    "db:seed": "npm run db:seed --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

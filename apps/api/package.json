@@ -12,7 +12,8 @@
     "contract:emit": "prisma contract emit",
     "city:example": "tsx src/scripts/city-example.ts",
     "test:db": "node --env-file-if-exists=.env --test test/integration/*.test.ts",
-    "db:migrate": "prisma db migrate --advance-ref db"
+    "db:migrate": "prisma db migrate --advance-ref db",
+    "db:seed": "node --env-file-if-exists=.env src/scripts/seed.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",
@@ -20,6 +21,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.3.0",
     "helmet": "^8.3.0",
+    "temporal-polyfill": "^1.0.6",
     "zod": "^4.6.7"
   },
   "devDependencies": {

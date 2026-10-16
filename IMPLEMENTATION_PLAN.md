@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: City, Station, Bus/numbered-seat, directed Route, and Trip management are complete. Trips have timezone-aware times, integer-piastre prices, scheduled/cancelled status, atomic scheduling conflict checks, and catalog edit safeguards with HTTP/PostgreSQL tests. Repeatable demo seed data and passenger trip search are next.
+Status: Catalog and Trip management, insert-only repeatable demo seed data, and passenger trip search are complete. Search accepts city or station endpoints and a Cairo travel date, includes bilingual station/city details, and excludes past/cancelled/inactive departures. Cairo DST boundaries, seed idempotency/concurrency, pagination, validation, and real PostgreSQL behavior are tested. Passenger trip details and departure seat availability are next.
 
 ## How we will build
 
@@ -67,11 +67,11 @@ Small steps:
 - [x] Add Route with distinct endpoints, directed uniqueness, duration bounds, complete CRUD, filters, and tests.
 - [x] Add Trip with complete CRUD, route/bus/status filtering, scheduling validation, and tests.
 - [ ] Add bus types, layout metadata, and amenities when extending the basic fleet model.
-- [ ] Add seed data for a small set of cities, stations, buses, routes, and trips.
+- [x] Add insert-only repeatable demo seed data for cities, stations, buses/seats, routes, and three days of trips.
 - [x] Add database constraints for distinct route endpoints and valid estimated duration.
 - [x] Add constraints for valid trip times and nonnegative integer-piastre prices.
 - [x] Store money as integer piastres and trip times as PostgreSQL timestamptz; return UTC ISO strings.
-- [ ] Define Cairo date-search boundaries explicitly when implementing passenger search.
+- [x] Define Cairo date-search boundaries with Africa/Cairo calendar days, including 23/25-hour DST days.
 
 Working result: a fresh database can be recreated using committed migrations and the seed command.
 
@@ -85,8 +85,8 @@ Feature batches:
 - [ ] Extend fleet metadata with bus types, amenities, and visual layouts when needed.
 - [x] Complete Route management APIs.
 - [x] Complete Trip management, scheduled/cancelled status, overlap prevention, catalog safeguards, and tests.
-- [ ] Add repeatable demo seed data for realistic searches.
-- [ ] Add trip search by origin city/station, destination city/station, and travel date.
+- [x] Add repeatable demo seed data for realistic searches.
+- [x] Add trip search by origin city/station, destination city/station, and travel date.
 - [ ] Add trip details and seat availability endpoints.
 - [ ] Add pagination, request validation, relevant indexes, and empty/error cases for each endpoint.
 
@@ -314,4 +314,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat availability are next.
