@@ -61,3 +61,25 @@ export function decryptVerificationCode(userId: string, payload: string) {
     decipher.final(),
   ]).toString('utf8');
 }
+
+// Distinct domains keep reset codes/payloads separate from activation codes.
+export function hashPasswordResetCode(userId: string, code: string) {
+  return hashVerificationCode('password-reset:' + userId, code);
+}
+export function matchesPasswordResetCode(
+  userId: string,
+  code: string,
+  expectedHash: string,
+) {
+  return matchesVerificationCode(
+    'password-reset:' + userId,
+    code,
+    expectedHash,
+  );
+}
+export function encryptPasswordResetCode(userId: string, code: string) {
+  return encryptVerificationCode('password-reset:' + userId, code);
+}
+export function decryptPasswordResetCode(userId: string, payload: string) {
+  return decryptVerificationCode('password-reset:' + userId, payload);
+}

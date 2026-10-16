@@ -1,0 +1,209 @@
+[
+  {
+    "id": "table.PasswordReset",
+    "label": "Create table \"PasswordReset\"",
+    "summary": "Creates table \"PasswordReset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PasswordReset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PasswordReset\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"PasswordReset\"",
+        "sql": "CREATE TABLE \"public\".\"PasswordReset\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"codeHash\" text,\n  \"consumedAt\" timestamptz,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"resendAfter\" timestamptz NOT NULL,\n  \"sendCount\" int4 DEFAULT 1 NOT NULL,\n  \"userId\" text NOT NULL,\n  \"windowStartedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"password_reset_limits_97d2a4bd\" CHECK (attempts BETWEEN 0 AND 5 AND \"sendCount\" BETWEEN 1 AND 5)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PasswordReset\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.EmailOutbox.purpose",
+    "label": "Add column \"purpose\" to \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "purpose",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"purpose\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "EmailOutbox",
+          "purpose"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"purpose\"",
+        "sql": "ALTER TABLE \"public\".\"EmailOutbox\" ADD COLUMN \"purpose\" text DEFAULT 'VERIFY_EMAIL' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"purpose\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "EmailOutbox",
+          "purpose"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.EmailOutbox.EmailOutbox_purpose_check_472ba6b3",
+    "label": "Add check constraint \"EmailOutbox_purpose_check_472ba6b3\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "EmailOutbox_purpose_check_472ba6b3",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"EmailOutbox_purpose_check_472ba6b3\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_purpose_check_472ba6b3",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"EmailOutbox_purpose_check_472ba6b3\"",
+        "sql": "ALTER TABLE \"public\".\"EmailOutbox\" ADD CONSTRAINT \"EmailOutbox_purpose_check_472ba6b3\" CHECK (\"purpose\" IN ('VERIFY_EMAIL', 'PASSWORD_RESET', 'PASSWORD_CHANGED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"EmailOutbox_purpose_check_472ba6b3\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_purpose_check_472ba6b3",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PasswordReset.PasswordReset_userId_key",
+    "label": "Add unique constraint on \"PasswordReset\" (userId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PasswordReset_userId_key",
+        "table": "PasswordReset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PasswordReset_userId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PasswordReset_userId_key",
+          "public",
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PasswordReset_userId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PasswordReset\" ADD CONSTRAINT \"PasswordReset_userId_key\" UNIQUE (\"userId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PasswordReset_userId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PasswordReset_userId_key",
+          "public",
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.PasswordReset.PasswordReset_userId_fkey",
+    "label": "Add foreign key \"PasswordReset_userId_fkey\" on \"PasswordReset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PasswordReset_userId_fkey",
+        "table": "PasswordReset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"PasswordReset_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PasswordReset_userId_fkey",
+          "public",
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"PasswordReset_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PasswordReset\"\nADD CONSTRAINT \"PasswordReset_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"PasswordReset_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PasswordReset_userId_fkey",
+          "public",
+          "\"public\".\"PasswordReset\""
+        ]
+      }
+    ]
+  }
+]

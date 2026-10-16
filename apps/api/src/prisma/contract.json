@@ -24,6 +24,10 @@
       "model": "EmailVerification",
       "namespace": "public"
     },
+    "PasswordReset": {
+      "model": "PasswordReset",
+      "namespace": "public"
+    },
     "RefreshToken": {
       "model": "RefreshToken",
       "namespace": "public"
@@ -53,6 +57,23 @@
     "namespaces": {
       "public": {
         "enum": {
+          "EmailPurpose": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "VERIFY_EMAIL",
+                "value": "VERIFY_EMAIL"
+              },
+              {
+                "name": "PASSWORD_RESET",
+                "value": "PASSWORD_RESET"
+              },
+              {
+                "name": "PASSWORD_CHANGED",
+                "value": "PASSWORD_CHANGED"
+              }
+            ]
+          },
           "TripStatus": {
             "codecId": "pg/text@1",
             "members": [
@@ -316,6 +337,19 @@
                   "kind": "scalar"
                 }
               },
+              "purpose": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "EmailPurpose",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
               "sentAt": {
                 "nullable": true,
                 "type": {
@@ -371,6 +405,9 @@
                 },
                 "nextAttemptAt": {
                   "column": "nextAttemptAt"
+                },
+                "purpose": {
+                  "column": "purpose"
                 },
                 "sentAt": {
                   "column": "sentAt"
@@ -489,6 +526,124 @@
               },
               "namespaceId": "public",
               "table": "EmailVerification"
+            }
+          },
+          "PasswordReset": {
+            "fields": {
+              "attempts": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "codeHash": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "consumedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "resendAfter": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "sendCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "windowStartedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "attempts": {
+                  "column": "attempts"
+                },
+                "codeHash": {
+                  "column": "codeHash"
+                },
+                "consumedAt": {
+                  "column": "consumedAt"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "resendAfter": {
+                  "column": "resendAfter"
+                },
+                "sendCount": {
+                  "column": "sendCount"
+                },
+                "userId": {
+                  "column": "userId"
+                },
+                "windowStartedAt": {
+                  "column": "windowStartedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PasswordReset"
             }
           },
           "RefreshToken": {
@@ -1095,6 +1250,22 @@
                   "namespace": "public"
                 }
               },
+              "passwordReset": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "PasswordReset",
+                  "namespace": "public"
+                }
+              },
               "sessions": {
                 "cardinality": "1:N",
                 "on": {
@@ -1327,6 +1498,11 @@
             "EmailOutbox": {
               "checks": [
                 {
+                  "expression": "\"purpose\" IN ('VERIFY_EMAIL', 'PASSWORD_RESET', 'PASSWORD_CHANGED')",
+                  "name": "EmailOutbox_purpose_check_472ba6b3",
+                  "prefix": "EmailOutbox_purpose_check"
+                },
+                {
                   "expression": "attempts BETWEEN 0 AND 5",
                   "name": "outbox_attempts_4c896e7d",
                   "prefix": "outbox_attempts"
@@ -1379,6 +1555,21 @@
                     "kind": "function"
                   },
                   "nullable": false
+                },
+                "purpose": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "VERIFY_EMAIL"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "EmailPurpose",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "sentAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -1514,6 +1705,108 @@
                     ],
                     "namespaceId": "public",
                     "tableName": "EmailVerification"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "userId"
+                  ]
+                }
+              ]
+            },
+            "PasswordReset": {
+              "checks": [
+                {
+                  "expression": "attempts BETWEEN 0 AND 5 AND \"sendCount\" BETWEEN 1 AND 5",
+                  "name": "password_reset_limits_97d2a4bd",
+                  "prefix": "password_reset_limits"
+                }
+              ],
+              "columns": {
+                "attempts": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nullable": false
+                },
+                "codeHash": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "consumedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "resendAfter": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "sendCount": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "windowStartedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "userId"
+                    ]
+                  },
+                  "onDelete": "cascade",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PasswordReset"
                   },
                   "target": {
                     "columns": [
@@ -2149,6 +2442,14 @@
             }
           },
           "valueSet": {
+            "EmailPurpose": {
+              "kind": "valueSet",
+              "values": [
+                "VERIFY_EMAIL",
+                "PASSWORD_RESET",
+                "PASSWORD_CHANGED"
+              ]
+            },
             "TripStatus": {
               "kind": "valueSet",
               "values": [
@@ -2162,10 +2463,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "30be84a68f66ba076c6fef21e460262255c33f4fb22c55f4bb3b094e525dff1f"
+    "storageHash": "03804b46fac041f0e00910206042e2113d173f5cf77e5afc59cc211163701ec2"
   },
   "execution": {
-    "executionHash": "bf19826272afd2b9f8c0d10f48bc598fd921a34f1efb51295529a070002a3a80",
+    "executionHash": "cae4e5331cc9dea06f420faa103f3361d7c6de3e3d2641a89bc126816379509d",
     "mutations": {
       "defaults": [
         {
@@ -2219,6 +2520,17 @@
           },
           "ref": {
             "entry": "EmailVerification",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PasswordReset",
             "field": "id",
             "namespace": "public"
           }

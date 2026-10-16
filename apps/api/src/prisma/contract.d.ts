@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'30be84a68f66ba076c6fef21e460262255c33f4fb22c55f4bb3b094e525dff1f'>;
+  StorageHashBase<'03804b46fac041f0e00910206042e2113d173f5cf77e5afc59cc211163701ec2'>;
 export type ExecutionHash =
-  ExecutionHashBase<'bf19826272afd2b9f8c0d10f48bc598fd921a34f1efb51295529a070002a3a80'>;
+  ExecutionHashBase<'cae4e5331cc9dea06f420faa103f3361d7c6de3e3d2641a89bc126816379509d'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -258,12 +258,24 @@ export type FieldOutputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['output'];
       readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly sendCount: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+      readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly PasswordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'] | null;
+      readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -349,12 +361,24 @@ export type FieldInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['input'];
       readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly sendCount: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+      readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PasswordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'] | null;
+      readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -440,12 +464,24 @@ export type StorageColumnTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['output'];
       readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly sendCount: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+      readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly PasswordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'] | null;
+      readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -531,12 +567,24 @@ export type StorageColumnInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['input'];
       readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly sendCount: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+      readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PasswordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'] | null;
+      readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -629,6 +677,7 @@ export namespace Models {
     expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
     sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     userId: CodecTypes['pg/text@1']['output'];
     user: public_User;
@@ -637,6 +686,19 @@ export namespace Models {
   export type public_EmailVerification = {
     attempts: CodecTypes['pg/int4@1']['output'];
     codeHash: CodecTypes['pg/text@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
+    sendCount: CodecTypes['pg/int4@1']['output'];
+    userId: CodecTypes['pg/text@1']['output'];
+    windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    user: public_User;
+    readonly [RelationKeys]?: 'user';
+  };
+  export type public_PasswordReset = {
+    attempts: CodecTypes['pg/int4@1']['output'];
+    codeHash: CodecTypes['pg/text@1']['output'] | null;
+    consumedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -712,9 +774,10 @@ export namespace Models {
     passwordHash: CodecTypes['pg/text@1']['output'];
     phone: CodecTypes['pg/text@1']['output'];
     emails: public_EmailOutbox[];
+    passwordReset: public_PasswordReset | null;
     sessions: public_Session[];
     verification: public_EmailVerification | null;
-    readonly [RelationKeys]?: 'emails' | 'sessions' | 'verification';
+    readonly [RelationKeys]?: 'emails' | 'passwordReset' | 'sessions' | 'verification';
   };
 }
 
@@ -725,6 +788,7 @@ export declare const models: {
     City: Models.public_City;
     EmailOutbox: Models.public_EmailOutbox;
     EmailVerification: Models.public_EmailVerification;
+    PasswordReset: Models.public_PasswordReset;
     RefreshToken: Models.public_RefreshToken;
     Route: Models.public_Route;
     Session: Models.public_Session;
@@ -910,6 +974,16 @@ type ContractBase = Omit<
                   readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
                   readonly many: false;
                 };
+                readonly purpose: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'VERIFY_EMAIL'>;
+                  };
+                  readonly many: false;
+                };
                 readonly sentAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -1021,6 +1095,89 @@ type ContractBase = Omit<
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'EmailVerification';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly PasswordReset: {
+              columns: {
+                readonly attempts: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                  readonly many: false;
+                };
+                readonly codeHash: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly consumedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly expiresAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly resendAfter: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly sendCount: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
+                  };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly windowStartedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'PasswordReset';
                     readonly columns: readonly ['userId'];
                   };
                   readonly target: {
@@ -1494,6 +1651,10 @@ type ContractBase = Omit<
             };
           };
           readonly valueSet: {
+            readonly EmailPurpose: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['VERIFY_EMAIL', 'PASSWORD_RESET', 'PASSWORD_CHANGED'];
+            };
             readonly TripStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['SCHEDULED', 'CANCELLED'];
@@ -1519,6 +1680,10 @@ type ContractBase = Omit<
     readonly EmailVerification: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'EmailVerification';
+    };
+    readonly PasswordReset: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PasswordReset';
     };
     readonly RefreshToken: {
       readonly namespace: 'public' & NamespaceId;
@@ -1701,6 +1866,10 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                 };
               };
+              readonly purpose: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly sentAt: {
                 readonly nullable: true;
                 readonly type: {
@@ -1735,6 +1904,7 @@ type ContractBase = Omit<
                 readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly id: { readonly column: 'id' };
                 readonly nextAttemptAt: { readonly column: 'nextAttemptAt' };
+                readonly purpose: { readonly column: 'purpose' };
                 readonly sentAt: { readonly column: 'sentAt' };
                 readonly userId: { readonly column: 'userId' };
               };
@@ -1801,6 +1971,84 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly attempts: { readonly column: 'attempts' };
                 readonly codeHash: { readonly column: 'codeHash' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly id: { readonly column: 'id' };
+                readonly resendAfter: { readonly column: 'resendAfter' };
+                readonly sendCount: { readonly column: 'sendCount' };
+                readonly userId: { readonly column: 'userId' };
+                readonly windowStartedAt: { readonly column: 'windowStartedAt' };
+              };
+            };
+          };
+          readonly PasswordReset: {
+            readonly fields: {
+              readonly attempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly codeHash: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly consumedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly resendAfter: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly sendCount: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly windowStartedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'PasswordReset';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly attempts: { readonly column: 'attempts' };
+                readonly codeHash: { readonly column: 'codeHash' };
+                readonly consumedAt: { readonly column: 'consumedAt' };
                 readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly id: { readonly column: 'id' };
                 readonly resendAfter: { readonly column: 'resendAfter' };
@@ -2213,6 +2461,18 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['userId'];
                 };
               };
+              readonly passwordReset: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PasswordReset';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
               readonly sessions: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -2257,6 +2517,14 @@ type ContractBase = Omit<
           };
         };
         readonly enum: {
+          readonly EmailPurpose: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'VERIFY_EMAIL'; readonly value: 'VERIFY_EMAIL' },
+              { readonly name: 'PASSWORD_RESET'; readonly value: 'PASSWORD_RESET' },
+              { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
+            ];
+          };
           readonly TripStatus: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
@@ -2266,6 +2534,11 @@ type ContractBase = Omit<
           };
         };
         readonly enumMemberTypes?: {
+          readonly EmailPurpose: readonly [
+            { readonly name: 'VERIFY_EMAIL'; readonly value: 'VERIFY_EMAIL' },
+            { readonly name: 'PASSWORD_RESET'; readonly value: 'PASSWORD_RESET' },
+            { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
+          ];
           readonly TripStatus: readonly [
             { readonly name: 'SCHEDULED'; readonly value: 'SCHEDULED' },
             { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
@@ -2342,6 +2615,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'EmailVerification';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'PasswordReset';
             readonly field: 'id';
             readonly namespace: 'public';
           };

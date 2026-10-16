@@ -7,7 +7,7 @@ import { createApp } from '../../src/app.ts';
 import { db } from '../../src/prisma/db.ts';
 import { processEmailOutbox } from '../../src/services/emailOutboxService.ts';
 import { decryptVerificationCode } from '../../src/utils/authCrypto.ts';
-import type { VerificationMail } from '../../src/services/mailService.ts';
+import type { AccountMail } from '../../src/services/mailService.ts';
 
 test('registration, single-use verification, resend limits and retrying encrypted outbox are atomic in PostgreSQL', async (t) => {
   const server = createApp([]).listen(0, '127.0.0.1');
@@ -92,7 +92,7 @@ test('registration, single-use verification, resend limits and retrying encrypte
     (await db.orm.public.EmailOutbox.where({ userId: user.id }).all()).length,
     1,
   );
-  const deliveries: VerificationMail[] = [];
+  const deliveries: AccountMail[] = [];
   const workerResults = await Promise.all([
     processEmailOutbox(async (message) => {
       deliveries.push(message);

@@ -43,7 +43,10 @@ async function queueVerification(
     sendCount: sameWindow ? previous.sendCount + 1 : 1,
   };
   // Replacing the code invalidates every older queued/sent verification email.
-  await tx.orm.public.EmailOutbox.where({ userId }).deleteAll();
+  await tx.orm.public.EmailOutbox.where({
+    userId,
+    purpose: 'VERIFY_EMAIL',
+  }).deleteAll();
   const verification = previous
     ? await tx.orm.public.EmailVerification.where({ id: previous.id }).update(
         challenge,
@@ -152,7 +155,10 @@ export const authService = {
       await tx.orm.public.EmailVerification.where({
         id: challenge.id,
       }).delete();
-      await tx.orm.public.EmailOutbox.where({ userId: user.id }).deleteAll();
+      await tx.orm.public.EmailOutbox.where({
+        userId: user.id,
+        purpose: 'VERIFY_EMAIL',
+      }).deleteAll();
       return true;
     });
     if (!verified)

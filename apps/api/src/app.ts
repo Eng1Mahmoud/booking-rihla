@@ -32,6 +32,12 @@ import {
 } from './services/sessionService.ts';
 import { createSessionRouter } from './routes/sessionRoutes.ts';
 
+import {
+  passwordResetService,
+  type PasswordResetService,
+} from './services/passwordResetService.ts';
+import { createPasswordResetRouter } from './routes/passwordResetRoutes.ts';
+
 export function createApp(
   corsOrigins: string[],
   services: {
@@ -44,6 +50,7 @@ export function createApp(
     tripDetails?: TripDetailsService;
     auth?: AuthService;
     sessions?: SessionService;
+    passwordReset?: PasswordResetService;
   } = {},
 ) {
   const app = express();
@@ -80,6 +87,11 @@ export function createApp(
   app.use(
     '/api/v1/auth',
     createSessionRouter(services.sessions ?? sessionService, corsOrigins),
+  );
+
+  app.use(
+    '/api/v1/auth',
+    createPasswordResetRouter(services.passwordReset ?? passwordResetService),
   );
 
   // This runs only if none of the routes above handled the request.

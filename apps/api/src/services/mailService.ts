@@ -1,14 +1,19 @@
 import nodemailer from 'nodemailer';
 import { parseAuthEnv } from '../config/env.ts';
 import { verificationEmail } from '../emails/verificationEmail.ts';
-export interface VerificationMail {
+import {
+  passwordResetEmail,
+  passwordChangedEmail,
+} from '../emails/passwordResetEmail.ts';
+export interface AccountMail {
   id: string;
   email: string;
-  code: string;
+  code?: string;
+  purpose: 'VERIFY_EMAIL' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED';
   language: string;
 }
-export type SendVerificationMail = (message: VerificationMail) => Promise<void>;
-export const sendVerificationMail: SendVerificationMail = async (message) => {
+export type SendAccountMail = (message: AccountMail) => Promise<void>;
+export const sendAccountMail: SendAccountMail = async (message) => {
   const env = parseAuthEnv(process.env);
   const transport = nodemailer.createTransport({
     host: env.SMTP_HOST,
@@ -27,8 +32,12 @@ export const sendVerificationMail: SendVerificationMail = async (message) => {
     await transport.sendMail({
       from: env.SMTP_FROM,
       to: message.email,
-      messageId: '<verification-' + message.id + '@bus.local>',
-      ...verificationEmail(message.code, message.language),
+      messageId: '<account-' + message.id + '@bus.local>',
+      ...(message.purpose === 'PASSWORD_CHANGED'
+        ? passwordChangedEmail(message.language)
+        : message.purpose === 'PASSWORD_RESET'
+          ? passwordResetEmail(message.code ?? '', message.language)
+          : verificationEmail(message.code ?? '', message.language)),
     });
   } finally {
     transport.close();

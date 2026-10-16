@@ -1,14 +1,13 @@
 import {
   decryptVerificationCode,
   matchesVerificationCode,
+  decryptPasswordResetCode,
+  matchesPasswordResetCode,
 } from '../utils/authCrypto.ts';
-import {
-  sendVerificationMail,
-  type SendVerificationMail,
-} from './mailService.ts';
+import { sendAccountMail, type SendAccountMail } from './mailService.ts';
 
 export async function processEmailOutbox(
-  send: SendVerificationMail = sendVerificationMail,
+  send: SendAccountMail = sendAccountMail,
   userId?: string,
 ) {
   const { db } = await import('../prisma/db.ts');
@@ -39,44 +38,63 @@ export async function processEmailOutbox(
         Date.parse(message.nextAttemptAt) > Date.now()
       )
         return null;
-      const user = await tx.orm.public.User.where({
-        id: message.userId,
-      }).first();
-      const verification = await tx.orm.public.EmailVerification.where({
-        userId: message.userId,
-      }).first();
-      if (
-        !user ||
-        user.emailVerifiedAt ||
-        !verification ||
-        verification.attempts >= 5 ||
-        !message.encryptedCode ||
-        message.attempts >= 5 ||
-        Date.parse(message.expiresAt) <= Date.now()
-      ) {
-        await tx.orm.public.EmailOutbox.where({ id: message.id }).update({
+      async function discard() {
+        await tx.orm.public.EmailOutbox.where({ id: candidate.id }).update({
           discardedAt: new Date().toISOString(),
           encryptedCode: null,
         });
         return 'discarded' as const;
       }
+      const user = await tx.orm.public.User.where({
+        id: message.userId,
+      }).first();
+      if (
+        !user ||
+        message.attempts >= 5 ||
+        Date.parse(message.expiresAt) <= Date.now()
+      )
+        return await discard();
       try {
-        const code = decryptVerificationCode(user.id, message.encryptedCode);
-        if (
-          !matchesVerificationCode(user.id, code, verification.codeHash) ||
-          Date.parse(verification.expiresAt) <= Date.now()
-        ) {
-          await tx.orm.public.EmailOutbox.where({ id: message.id }).update({
-            discardedAt: new Date().toISOString(),
-            encryptedCode: null,
-          });
-          return 'discarded' as const;
+        let code: string | undefined;
+        if (message.purpose !== 'PASSWORD_CHANGED') {
+          if (!user.isActive || !message.encryptedCode) return await discard();
+          if (message.purpose === 'VERIFY_EMAIL') {
+            const verification = await tx.orm.public.EmailVerification.where({
+              userId: user.id,
+            }).first();
+            if (
+              user.emailVerifiedAt ||
+              !verification ||
+              verification.attempts >= 5 ||
+              Date.parse(verification.expiresAt) <= Date.now()
+            )
+              return await discard();
+            code = decryptVerificationCode(user.id, message.encryptedCode);
+            if (!matchesVerificationCode(user.id, code, verification.codeHash))
+              return await discard();
+          } else {
+            const reset = await tx.orm.public.PasswordReset.where({
+              userId: user.id,
+            }).first();
+            if (
+              !reset ||
+              reset.consumedAt ||
+              !reset.codeHash ||
+              reset.attempts >= 5 ||
+              Date.parse(reset.expiresAt) <= Date.now()
+            )
+              return await discard();
+            code = decryptPasswordResetCode(user.id, message.encryptedCode);
+            if (!matchesPasswordResetCode(user.id, code, reset.codeHash))
+              return await discard();
+          }
         }
         await send({
           id: message.id,
           email: user.email,
-          code,
           language: user.language,
+          purpose: message.purpose,
+          ...(code ? { code } : {}),
         });
         await tx.orm.public.EmailOutbox.where({ id: message.id }).update({
           sentAt: new Date().toISOString(),

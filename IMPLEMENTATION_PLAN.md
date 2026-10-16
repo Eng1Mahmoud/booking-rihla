@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery and administrator authorization are next; catalog management remains local until role protection is added.
+Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. Administrator authorization is next; catalog management remains local until role protection is added.
 
 ## How we will build
 
@@ -118,7 +118,7 @@ Small steps:
 - [x] Add current-user lookup, reusable authentication middleware, current-device logout and logout-all with immediate access-token revocation checks.
 - [x] Add durable five-attempt/15-minute login lockout and process-local session endpoint IP limits.
 - [ ] Move IP limits to a shared store when deploying multiple instances.
-- [ ] Add forgot-password and reset-password codes; revoke all sessions after a reset.
+- [x] Add forgot-password and reset-password codes; revoke all sessions after a reset.
 - [ ] Add user, admin, and super-admin authorization and ownership checks.
 - [x] Verify HttpOnly/Secure/SameSite cookies, credentialed exact-origin CORS, custom-header/origin CSRF checks and HTTP failure cases.
 - [ ] Exercise browser cookie/session flows when the actual frontend and deployment hostnames are available.
@@ -318,4 +318,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in and sessions are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are next.
