@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
-import { AppError } from '../errors/app-error.ts';
+import { AppError } from '../errors/AppError.ts';
 
 export const errorHandler: ErrorRequestHandler = (
   error: unknown,

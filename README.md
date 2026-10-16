@@ -1,16 +1,16 @@
 # Bus Booking Platform
 
-A bus booking application for Egypt, built in small, explained steps.
+A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current step: Prisma 8 setup
+## Current feature: City API
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 setup is available for local review; API routes do not use the database yet.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs the City create/list/detail endpoints; the health endpoint remains independent of the database.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
 ## Run locally
 
-Prerequisites: Node.js 24 or later and npm. Run commands from the repository root.
+Prerequisites: Node.js 24.11 or later and npm. Run commands from the repository root.
 
 ```sh
 npm ci
@@ -87,11 +87,11 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; the next learning step is a project model and its first table.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; City has a UUID string id and its table is initialized; cities can be created, listed, and retrieved over HTTP; the standalone example is also available.
 
 ## Git workflow
 
-Keep each commit focused, verify it, and explain it before the next learning step. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
+Group related implementation, validation, tests, migrations, and usage notes into one feature commit. Verify it and explain the result; push only after the owner approves. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
 
 Push changes to GitHub only after the owner reviews them and explicitly approves the push.
 
@@ -140,7 +140,7 @@ Use the configured port if it differs from 4000. The first response includes Acc
 
 ## Local PostgreSQL
 
-Docker Desktop must be running with Linux containers. The API still runs directly with npm; this step runs only PostgreSQL in Docker. Prisma is configured, but application tables have not been added, and the API health endpoint does not check the database yet.
+Docker Desktop must be running with Linux containers. The API still runs directly with npm; this step runs only PostgreSQL in Docker. Prisma and the City table are configured, and the API health endpoint does not check the database yet.
 
 The root .env supplies Compose settings. It is separate from apps/api/.env, which supplies Node API settings. A local root .env with a generated password was created on this machine; do not overwrite it. On a fresh checkout, copy the root .env.example to .env and replace POSTGRES_PASSWORD before starting.
 
@@ -201,8 +201,8 @@ Verification on this machine: PostgreSQL reports healthy; a real SQL query retur
 The official [existing-app PostgreSQL guide](https://www.prisma.io/docs/prisma-orm/quickstart/existing-app/postgresql) is the setup reference. Prisma 8 is currently a release candidate. Run Prisma commands from apps/api, or use the workspace script below from the repository root.
 
 - apps/api/prisma.config.ts configures the CLI and loads the API .env through dotenv.
-- apps/api/src/prisma/contract.prisma still contains the initializer's User/Post examples; these are not the platform's final data model. No application tables or migrations have been created.
-- apps/api/src/prisma/db.ts loads the API .env, validates settings through parseEnv, and requires DATABASE_URL when the database module is imported. HTTP routes do not import it yet, so their liveness and tests remain independent of PostgreSQL.
+- apps/api/src/prisma/contract.prisma defines City with a UUID string id and required Arabic/English names (nameAr and nameEn). The starter User/Post examples were removed. The owner initialized the City table with prisma db init; the migrations directory contains its db reference and contract snapshot.
+- apps/api/src/prisma/db.ts loads the API .env, validates settings through parseEnv, and requires DATABASE_URL when the database module is imported. The city service loads this module only for city requests. Health requests and the default automated suite remain independent of PostgreSQL.
 - apps/api/.env.example includes the API settings and a placeholder database URL. The local API .env uses the credentials from the root Docker .env. Replace the URL with your own credentials on another machine; URL-encode passwords. Both .env files stay ignored by Git.
 - contract.json and contract.d.ts are generated artifacts and must be committed with contract.prisma, as required by the Prisma 8 guide. ESLint and Prettier skip these two artifacts; TypeScript still checks imported types. .gitattributes marks them as generated in GitHub diffs.
 - prisma-8.md is the reference written by the initializer. It is not another project plan.
@@ -215,4 +215,60 @@ npm run contract:emit
 
 The initializer's module: preserve, moduleResolution: bundler, and resolveJsonModule settings are retained. tsx is installed for the guide's scripts; the existing Node development server and tsc build commands remain available. Node 24.11 or newer is required by this project's Prisma setup.
 
-Setup verification does not create tables. Creating a project model and applying its first database change are the next separate learning step.
+Setup verification does not create tables. The City table has been initialized. The baseline migration recreates City in a fresh database. The contract, baseline, reference, snapshots, example script, and City API belong to the same feature batch.
+
+## Run the City learning example
+
+With local PostgreSQL running and the City table initialized, run from the repository root:
+
+```sh
+npm run city:example
+```
+
+This runs apps/api/src/scripts/city-example.ts with tsx from the API workspace, so dotenv reads apps/api/.env. The script looks for Cairo by both names, creates it without specifying an id when absent, reads all cities, and closes the connection in finally. Prisma generates the UUID. Running it sequentially again reuses the matching row. This is a local learning example, not a concurrency-safe seed or an HTTP endpoint; the name fields have no uniqueness constraint yet.
+
+Keep migrations/app/refs/db.json and migrations/snapshots in Git with the contract. The snapshots are generated and excluded from formatting. No migration plan or additional database schema change is applied by this script. It writes the sample row to the configured database.
+
+## City API
+
+Start PostgreSQL, set apps/api/.env from the safe example using your local credentials, then run these commands from the repository root:
+
+```sh
+npm run db:migrate
+npm run dev
+```
+
+The migration command applies pending changes and updates the development db reference. The committed baseline creates City on a fresh database; an already initialized City database needs no duplicate table. The health endpoint checks liveness only.
+
+| Method | Path                             | Behavior                                            |
+| ------ | -------------------------------- | --------------------------------------------------- |
+| GET    | /api/v1/cities?limit=20&offset=0 | Return a page sorted by English name and UUID       |
+| GET    | /api/v1/cities/:id               | Return one city or CITY_NOT_FOUND                   |
+| POST   | /api/v1/cities                   | Create a city and return 201 with a Location header |
+
+Example PowerShell request:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4000/api/v1/cities -ContentType application/json -Body (@{ nameAr = 'القاهرة'; nameEn = 'Cairo' } | ConvertTo-Json)
+```
+
+POST accepts only nameAr/nameEn, trims whitespace, and requires 1-100 characters for each. The server generates the UUID; caller-supplied ids and unknown fields are rejected. City names are not unique yet. These are local development routes; administrator authorization will be added with authentication before public deployment.
+
+List responses contain data and pagination (limit and offset). Limits range from 1 to 100, offsets from 0 to 100000. Invalid inputs return 400, non-JSON create requests return 415, and unexpected database failures return the existing generic 500 response without private details.
+
+City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts a city service for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
+
+```sh
+npm test
+npm run test:db
+```
+
+The default suite uses an in-memory city service and needs no database. test:db is an opt-in real PostgreSQL test: it creates a uniquely named temporary city through HTTP, checks persistence/list/detail, and deletes only its own row afterward. Run it against a development database after applying migrations.
+
+Verification also recreated City from the baseline in a new temporary database, reran migrations, exercised real HTTP operations there, and removed that temporary database. No existing development data was removed.
+
+## Backend structure
+
+Use familiar layer-based folders and camelCase file names. app.ts configures Express; server.ts starts listening. routes map URLs to controllers. controllers handle request/response and validation using schemas. services accept ordinary data, apply business rules when needed, and use Prisma directly. middlewares contains the shared error handler; errors contains AppError. config holds validated environment settings, prisma holds the contract and client, and scripts holds standalone learning/development commands.
+
+Keep the flow Route -> Controller -> Service -> Prisma. Do not add repository, base-class, or dependency-container layers unless a concrete requirement warrants them. Express Request/Response objects stay out of services. Prisma-generated contract and migration artifacts keep their tool-defined names.

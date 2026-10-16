@@ -3,8 +3,8 @@ import { after, before, test } from 'node:test';
 import { once } from 'node:events';
 import type { Server } from 'node:http';
 import express from 'express';
-import { AppError } from '../src/common/errors/app-error.ts';
-import { errorHandler } from '../src/common/middleware/error-handler.ts';
+import { AppError } from '../src/errors/AppError.ts';
+import { errorHandler } from '../src/middlewares/errorHandler.ts';
 
 // These routes exist only in the tests, not in the real API.
 const testApp = express();

@@ -16,7 +16,10 @@
     "lint": "eslint apps/api/src apps/api/test apps/api/prisma.config.ts --max-warnings=0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "contract:emit": "npm run contract:emit --workspace @booking-bus/api"
+    "contract:emit": "npm run contract:emit --workspace @booking-bus/api",
+    "city:example": "npm run city:example --workspace @booking-bus/api",
+    "test:db": "npm run test:db --workspace @booking-bus/api",
+    "db:migrate": "npm run db:migrate --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

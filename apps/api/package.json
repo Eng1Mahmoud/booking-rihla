@@ -9,7 +9,10 @@
     "start": "node --env-file-if-exists=.env dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.ts",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "city:example": "tsx src/scripts/city-example.ts",
+    "test:db": "node --env-file-if-exists=.env --test test/integration/*.test.ts",
+    "db:migrate": "prisma db migrate --advance-ref db"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",

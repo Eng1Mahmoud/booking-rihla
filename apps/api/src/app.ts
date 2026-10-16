@@ -1,10 +1,15 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { AppError } from './common/errors/app-error.ts';
-import { errorHandler } from './common/middleware/error-handler.ts';
+import { AppError } from './errors/AppError.ts';
+import { errorHandler } from './middlewares/errorHandler.ts';
+import { createCityRouter } from './routes/cityRoutes.ts';
+import { cityService, type CityService } from './services/cityService.ts';
 
-export function createApp(corsOrigins: string[]) {
+export function createApp(
+  corsOrigins: string[],
+  cities: CityService = cityService,
+) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -15,6 +20,8 @@ export function createApp(corsOrigins: string[]) {
   app.get('/api/v1/health', (_request, response) => {
     response.json({ status: 'ok' });
   });
+
+  app.use('/api/v1/cities', createCityRouter(cities));
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {

@@ -1,10 +1,10 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Prisma 8 initialization is configured and approved for publication, with PostgreSQL credentials and project tooling integrated. The starter User/Post contract is still an example; no application tables or migrations have been created. The owner approved committing and pushing this setup step. Logging remains deferred.
+Status: the City feature includes a UUID contract, reproducible baseline migration, create/list/detail API routes, strict input validation, bounded pagination, a learning script, and isolated/real-PostgreSQL HTTP checks. The batch uses routes/controllers/services/schemas with Prisma called directly by services. The owner requested this simpler layered structure; pushing still requires owner approval. Stations are next. Logging remains deferred.
 
 ## How we will build
 
-Build one small feature at a time, explain it, run it, verify it, and commit it before moving on. Each phase contains several small commits. A phase is complete only when its working result can be demonstrated.
+Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. Push only after owner approval. A phase is complete only when its working result can be demonstrated.
 
 This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions.
 
@@ -54,7 +54,12 @@ Small steps:
 
 - [x] Run PostgreSQL locally with Docker Compose and a persistent volume.
 - [x] Initialize Prisma 8 and adapt local connection settings and tooling.
-- [ ] Replace the starter contract with the first project model and learn the Prisma 8 migration workflow.
+- [x] Replace the starter contract with City and regenerate its artifacts.
+- [x] Initialize the City table and retain the db reference and contract snapshot.
+- [x] Add a small TypeScript example that creates or reuses Cairo and reads cities.
+- [x] Add the City baseline migration and verify fresh-database recreation.
+- [x] Add City create/list/detail endpoints, validation, pagination, and HTTP tests.
+- [ ] Apply the Prisma 8 change/migration workflow when adding Station.
 - [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
 - [ ] Add a minimal bus, numbered bus seats, route, and trip model.
 - [ ] Add bus types, layout metadata, and amenities when extending the basic fleet model.
@@ -272,4 +277,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented one learning step at a time. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; Prisma 8 setup is approved for publication; the next small step is the first project model and table.
+The roadmap is being implemented in focused feature batches. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; Prisma 8 setup is approved for publication; the complete City batch is ready for a local commit and owner review before pushing; the next batch is Station and its relation to City.

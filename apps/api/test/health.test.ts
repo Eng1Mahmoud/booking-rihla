@@ -56,7 +56,7 @@ test('valid JSON reaches normal routing', async () => {
     body: JSON.stringify({ name: 'Mahmoud' }),
   });
 
-  // No POST route exists yet, so valid input continues to the normal 404.
+  // This path has no POST handler, so valid input continues to the normal 404.
   assert.equal(response.status, 404);
   assert.deepEqual(await response.json(), {
     error: { code: 'NOT_FOUND', message: 'Route not found' },
