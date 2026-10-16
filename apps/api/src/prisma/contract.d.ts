@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'52ff3f3214f6c17ce5390a088b20d25f9c2f3e411157d69b2306c9268b47fbfa'>;
+  StorageHashBase<'105cd6d1e915bc27ceb6897a4d63f01215f213afc180a7012c2674e709d76985'>;
 export type ExecutionHash =
   ExecutionHashBase<'71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865'>;
 export type ProfileHash =
@@ -1146,6 +1146,12 @@ type ContractBase = Omit<
                 { readonly columns: readonly ['id', 'tripId'] },
               ];
               indexes: readonly [
+                {
+                  readonly name: 'Booking_createdAt_id_idx_3855cff1';
+                  readonly prefix: 'Booking_createdAt_id_idx';
+                  readonly columns: readonly ['createdAt', 'id'];
+                  readonly unique: false;
+                },
                 {
                   readonly name: 'Booking_tripId_idx_75da6d97';
                   readonly prefix: 'Booking_tripId_idx';

@@ -207,6 +207,7 @@ model Booking {
   seats BookingSeat[]
   @@unique([id, tripId])
   @@index([userId, createdAt])
+  @@index([createdAt, id])
   @@index([tripId])
   @@check(expression: sql`"seatCount" BETWEEN 1 AND 100`, name: "booking_seat_count")
   @@check(expression: sql`"unitPricePiastres" BETWEEN 0 AND 2147483647 AND "totalPiastres" = "unitPricePiastres"::bigint * "seatCount"`, name: "booking_price_total")

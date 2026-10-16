@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Batch trip preview and creation
+## Current feature: Administrator booking reads
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Next add administrator booking lists/details, then continue the remaining operator APIs.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Next add user lists and suspension/activation, followed by super-admin management and audit logging.
 
 ## Git workflow
 
@@ -730,7 +730,7 @@ Booking stores the owner, trip, unique random BUS- reference, RESERVED status, c
 
 Creation rechecks account/session eligibility inside a transaction, locks User then Session, and locks Trip -> Route -> Bus in the same parent order used by trip management. The trip row serializes reservations and trip edits. It must remain future, SCHEDULED and attached to an active route and bus. Every selected seat must belong to that bus and remain unallocated. Booking and all BookingSeat rows commit together; a conflict or failed passenger insertion rolls back everything. The database uniqueness constraint is the final duplicate-seat guard. One competing request receives 201 and the other receives 409 SEAT_UNAVAILABLE. A request containing one occupied seat reserves none of its remaining seats. This MVP uses a short per-trip transaction; later traffic may justify more granular locking.
 
-Bookings return reference/status, paymentRequired: false, currency, contact phone, server prices, timestamps, bilingual trip route/station/city information and ordered passenger seats. User ids, password data and bus plates are excluded. Listing defaults to twenty rows, accepts limits 1-100 and offsets 0-100000, and rejects other query fields. UUID detail lookups return the same 404 for a missing reservation or another account's reservation, including when the caller is an administrator. Past trips remain readable through the owner's booking. Operator booking lookup will use separate authorized APIs later.
+Bookings return reference/status, paymentRequired: false, currency, contact phone, server prices, timestamps, bilingual trip route/station/city information and ordered passenger seats. User ids, password data and bus plates are excluded. Listing defaults to twenty rows, accepts limits 1-100 and offsets 0-100000, and rejects other query fields. UUID detail lookups return the same 404 for a missing reservation or another account's reservation, including when the caller is an administrator. Past trips remain readable through the owner's booking. Operator booking lookup uses the separate protected /api/v1/admin/bookings APIs described below.
 
 Missing trips return 404 TRIP_NOT_FOUND; cancelled/departed/inactive-parent trips return 409 TRIP_UNAVAILABLE; foreign-bus or unknown seats return 400 INVALID_SEATS; occupied seats return 409 SEAT_UNAVAILABLE. Input errors retain 400/415 and authentication errors use 401. Creation has a process-local IP limit of twenty requests per minute, returning 429 and Retry-After. Automatic creation retries are not idempotent: if a response is lost, inspect my bookings before submitting again; repeating occupied seats returns 409.
 
@@ -880,3 +880,46 @@ Single-trip writes and batch operations use the same Route FOR SHARE then Bus FO
 Read apps/api/src/schemas/tripBatchSchema.ts for request validation, utils/tripBatchDates.ts for calendar generation, controllers/tripBatchController.ts and routes/tripRoutes.ts for HTTP handling, services/tripBatchService.ts for preview/atomic creation, and services/tripScheduling.ts for the shared parent locks and overlap rules. Tests cover calendar boundaries, Cairo DST, strict input, authorization, read-only preview, existing/internal conflicts, changed state after preview, repeated requests, touching intervals, independent trip editing, the 90-departure limit and concurrent single/batch creation. The passenger site and dashboard forms will be implemented in their later phases.
 
 Batch verification: all 133 default tests and all 15 PostgreSQL integration tests pass, as do TypeScript checking, lint, formatting and build. All thirteen existing migrations were replayed on an empty temporary database. A compiled JavaScript HTTP check then verified preview without writes, complete creation, duplicate-request rejection and passenger seats for a generated departure. Scoped fixtures and the temporary database were removed. No new migration or package change is required for this feature.
+
+## Administrator booking lists and details
+
+Apply npm run db:migrate before using this feature. This adds only a Booking(createdAt, id) index for the global newest-first administration list; no table or existing booking row is replaced. The existing user/time, trip and unique reference indexes also serve exact filters. No dependency or new environment variable is needed.
+
+| Method | Path                       | Result                                                       |
+| ------ | -------------------------- | ------------------------------------------------------------ |
+| GET    | /api/v1/admin/bookings     | Paginated reservation summaries across customers             |
+| GET    | /api/v1/admin/bookings/:id | One reservation, its customer and its named seat allocations |
+
+Both routes require a verified active ADMIN or SUPER_ADMIN account with a valid Bearer access token. Authentication/role checks run before filter/id validation; anonymous requests return 401 and passengers return 403. Replies use Cache-Control: no-store. Role changes, account deactivation and session revocation are enforced by the existing database-backed session check, including for previously issued JWTs.
+
+### Search and pagination
+
+Optional query fields on the list are combined with AND:
+
+| Field      | Meaning                                                                                |
+| ---------- | -------------------------------------------------------------------------------------- |
+| reference  | Full BUS- plus 16 hexadecimal characters; trimmed and uppercased before exact matching |
+| email      | Customer account email; trimmed/lowercased before exact matching                       |
+| userId     | Exact customer account UUID                                                            |
+| tripId     | Exact departure UUID                                                                   |
+| travelDate | Trip departure date in Africa/Cairo, YYYY-MM-DD, years 2000-9998                       |
+| limit      | Page size 1-100, default 20                                                            |
+| offset     | Rows to skip 0-100000, default 0                                                       |
+
+Examples: GET /api/v1/admin/bookings?reference=BUS-0123456789ABCDEF or GET /api/v1/admin/bookings?email=customer%40example.com&travelDate=2026-11-01&limit=20&offset=0. Replace these placeholders with real booking/customer data. Reference/email searches are exact, not partial or wildcard searches. URL-encode query values. Repeated, malformed, unknown and nested query fields return 400 VALIDATION_ERROR. Valid filters that match no reservations return data: [] with normal pagination, not 404. travelDate uses the Cairo day's inclusive start and exclusive end, including daylight-saving changes; it is not the booking creation date or the UTC departure date.
+
+List replies contain data: [...] and pagination: { limit, offset }. Results sort by createdAt descending, then id descending for deterministic ties. Each summary contains the existing reservation reference/status/contact phone, seat count, integer-piastre price snapshot/total, currency EGP, paymentRequired: false, createdAt and trip/route/station/city information. It adds customer: { id, name, email, phone } and trip.status. Customer phone is the account phone; contactPhone is the separate phone supplied with that booking. Passenger names and seat allocation arrays are omitted from list queries and responses.
+
+### Read details
+
+GET /api/v1/admin/bookings/:id returns data with the same summary/customer fields plus passengers: [{ seatId, seatNumber, name }], sorted by seatNumber. An invalid UUID or any detail query parameter returns 400. A valid UUID for a missing reservation returns 404 BOOKING_NOT_FOUND. Account fields are explicitly selected: passwords, role, activation/reset codes, login/lockout fields and session/refresh-token data are not returned. Bus plate information is not part of this response; fleet management remains available through its existing protected API.
+
+Operational reads include historical trips, cancelled trips and inactive catalog records; passenger trip-search eligibility must not hide an existing reservation from an operator. Money remains the stored reservation snapshot, and RESERVED still means a reservation without collected payment. This feature does not add payment states, edits, cancellation, refunds or mutation endpoints.
+
+Passenger GET /api/v1/bookings and GET /api/v1/bookings/:id keep their original response and authenticated-owner checks, even when an administrator calls them. Use the separate protected admin routes to read customers' bookings. Public search/details/seat availability still expose no customer or passenger identity. Passenger cancellation remains unavailable.
+
+Read apps/api/src/schemas/adminBookingSchema.ts for exact filters, controllers/adminBookingController.ts for validation and HTTP responses, routes/adminBookingRoutes.ts for protected read routes, and services/adminBookingService.ts for queries and safe account projections. bookingService.ts now shares its base booking query and price/trip summary serializer with the operator service, preserving the passenger response. No repository layer is introduced.
+
+Backend work remaining after this feature: user listing and suspension/activation; super-admin administrator management; administrator audit records; seat holds/expiry and sandbox payment states/provider/webhooks; QR tickets, confirmations and reminders; agreed operator cancellation/refunds; dashboard metrics; then readiness/logging, expired-data cleanup, shared rate limits when needed, CI and backend integration verification. Hold duration and operator cancellation/refund policy must be settled before dependent payment work. Passenger cancellation stays disabled. Production provider onboarding/deployment follow in the release phase; the passenger site and dashboard follow backend completion.
+
+Administrator booking verification: all 138 default tests and all 16 PostgreSQL integration tests passed, along with strict types, lint, formatting and build. All fourteen migrations applied to an empty temporary database; a second run applied zero. Compiled JavaScript passed real login, reservation, administrator list/detail and passenger-ownership HTTP checks. Applying the new index to development left all compared business rows unchanged. Scoped fixtures and the temporary database were removed.

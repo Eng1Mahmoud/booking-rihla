@@ -7,15 +7,18 @@ import type {
 } from '../schemas/bookingSchema.ts';
 import type { AuthContext } from './sessionService.ts';
 import type { db as database } from '../prisma/db.ts';
+export function bookingRecords(db: typeof database) {
+  return db.orm.public.Booking.include('trip', (trip) =>
+    trip.include('route', (route) =>
+      route
+        .include('originStation', (station) => station.include('city'))
+        .include('destinationStation', (station) => station.include('city')),
+    ),
+  );
+}
 function ownBookings(db: typeof database, userId: string) {
-  return db.orm.public.Booking.where({ userId })
-    .include('trip', (trip) =>
-      trip.include('route', (route) =>
-        route
-          .include('originStation', (station) => station.include('city'))
-          .include('destinationStation', (station) => station.include('city')),
-      ),
-    )
+  return bookingRecords(db)
+    .where({ userId })
     .include('seats', (seats) =>
       seats.orderBy((seat) => seat.seatNumber.asc()),
     );
@@ -23,7 +26,7 @@ function ownBookings(db: typeof database, userId: string) {
 type BookingRecord = NonNullable<
   Awaited<ReturnType<ReturnType<typeof ownBookings>['first']>>
 >;
-function serializeBooking(booking: BookingRecord) {
+export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
   if (!booking.trip || !booking.trip.route)
     throw new Error('Reservation trip relation is missing');
   return {
@@ -45,6 +48,11 @@ function serializeBooking(booking: BookingRecord) {
       arrivalAt: new Date(booking.trip.arrivalAt).toISOString(),
       route: booking.trip.route,
     },
+  };
+}
+function serializeBooking(booking: BookingRecord) {
+  return {
+    ...serializeBookingSummary(booking),
     passengers: booking.seats.map((seat) => ({
       seatId: seat.seatId,
       seatNumber: seat.seatNumber,

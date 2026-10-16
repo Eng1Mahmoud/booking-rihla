@@ -1,3 +1,8 @@
+import {
+  adminBookingService,
+  type AdminBookingService,
+} from './services/adminBookingService.ts';
+import { createAdminBookingRouter } from './routes/adminBookingRoutes.ts';
 import type { TripBatchService } from './services/tripBatchService.ts';
 import {
   busTypeService,
@@ -71,6 +76,7 @@ export function createApp(
     sessions?: SessionService;
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
+    adminBookings?: AdminBookingService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
   } = {},
@@ -146,6 +152,14 @@ export function createApp(
     createBookingRouter(
       services.bookings ?? bookingService,
       services.sessions ?? sessionService,
+    ),
+  );
+
+  app.use(
+    '/api/v1/admin/bookings',
+    createAdminBookingRouter(
+      services.adminBookings ?? adminBookingService,
+      admin,
     ),
   );
 
