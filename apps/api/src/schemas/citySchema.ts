@@ -5,6 +5,13 @@ export const createCitySchema = z.strictObject({
   nameEn: z.string().trim().min(1).max(100),
 });
 
+export const updateCitySchema = createCitySchema
+  .partial()
+  .refine(
+    (input) => Object.keys(input).length > 0,
+    'Provide at least one city name',
+  );
+
 export const cityIdSchema = z.uuid();
 
 function pageNumber(min: number, max: number) {
@@ -22,3 +29,5 @@ export const cityListQuerySchema = z.strictObject({
 
 export type CreateCityInput = z.infer<typeof createCitySchema>;
 export type CityListQuery = z.infer<typeof cityListQuerySchema>;
+
+export type UpdateCityInput = z.infer<typeof updateCitySchema>;

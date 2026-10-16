@@ -1,4 +1,8 @@
-import type { CreateCityInput, CityListQuery } from '../schemas/citySchema.ts';
+import type {
+  CreateCityInput,
+  CityListQuery,
+  UpdateCityInput,
+} from '../schemas/citySchema.ts';
 
 export type City = CreateCityInput & { id: string };
 
@@ -21,6 +25,14 @@ export const cityService = {
   async create(input: CreateCityInput): Promise<City> {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.City.create(input);
+  },
+  async update(id: string, input: UpdateCityInput): Promise<City | null> {
+    const { db } = await import('../prisma/db.ts');
+    return await db.orm.public.City.where({ id }).update(input);
+  },
+  async remove(id: string): Promise<City | null> {
+    const { db } = await import('../prisma/db.ts');
+    return await db.orm.public.City.where({ id }).delete();
   },
 };
 

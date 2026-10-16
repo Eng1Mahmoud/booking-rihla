@@ -1,19 +1,21 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: the City feature includes a UUID contract, reproducible baseline migration, create/list/detail API routes, strict input validation, bounded pagination, a learning script, and isolated/real-PostgreSQL HTTP checks. The batch uses routes/controllers/services/schemas with Prisma called directly by services. The owner requested this simpler layered structure; pushing still requires owner approval. Stations are next. Logging remains deferred.
+Status: City backend CRUD is complete with UUID ids, a reproducible baseline, validation, pagination, common errors, a learning script, and isolated/real-PostgreSQL tests. Publish each completed feature after checks, then move to the next. Backend comes first, then the passenger website, then the dashboard. Stations are next. Authentication will add administrator protection to existing management routes before public deployment.
 
 ## How we will build
 
-Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. Push only after owner approval. A phase is complete only when its working result can be demonstrated.
+Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. The owner authorizes committing and pushing each completed feature after its checks; finish and publish it before starting the next feature. Production publication and real-money operations still need explicit approval. A phase is complete only when its working result can be demonstrated.
 
 This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions.
 
 ### Milestones
 
-- **Trip browsing demo — phase 3:** search and view seeded trips through a working website.
-- **Learning MVP — phase 6:** register, verify email, sign in, search, select seats, and make a reservation with a booking reference. No money is collected. This is a local learning milestone, not a public commercial launch.
-- **Complete booking flow — phase 9:** operators manage trips; passengers pay in a sandbox and receive tickets and notifications.
-- **Production release — phase 12:** production payment provider, operational checks, and deployment are ready.
+- **Trip browsing API — phase 3:** search and retrieve seeded trips through tested endpoints.
+- **Reservation backend MVP — phase 6:** verified accounts can search and reserve seats through the API. No money is collected.
+- **Complete backend — phase 10:** accounts, catalog, reservations, operator APIs, sandbox payments, tickets, notifications, and refunds pass their API checks.
+- **Passenger website — phase 11:** connect all passenger flows to the completed backend.
+- **Dashboard — phase 12:** connect all administration flows after the passenger website.
+- **Production release — phase 14:** production payment provider, operational checks, and deployment are ready.
 
 Security, validation, and meaningful tests are added with each relevant feature. The final review does not replace them.
 
@@ -58,7 +60,7 @@ Small steps:
 - [x] Initialize the City table and retain the db reference and contract snapshot.
 - [x] Add a small TypeScript example that creates or reuses Cairo and reads cities.
 - [x] Add the City baseline migration and verify fresh-database recreation.
-- [x] Add City create/list/detail endpoints, validation, pagination, and HTTP tests.
+- [x] Complete City create/list/detail/update/delete endpoints, validation, pagination, and HTTP/PostgreSQL tests.
 - [ ] Apply the Prisma 8 change/migration workflow when adding Station.
 - [ ] Add cities and stations, including Arabic and English names and multiple stations per city.
 - [ ] Add a minimal bus, numbered bus seats, route, and trip model.
@@ -69,20 +71,19 @@ Small steps:
 
 Working result: a fresh database can be recreated using committed migrations and the seed command.
 
-## Phase 3 — Trip browsing demo
+## Phase 3 — Trip browsing API
 
-Small steps:
+Feature batches:
 
-- [ ] Add city and station listing endpoints.
+- [x] Complete City CRUD and paginated listing.
+- [ ] Complete Station CRUD, its City relation, validation, constraints, and tests.
+- [ ] Complete bus types, amenities, layouts, buses, seats, and route management APIs.
+- [ ] Complete trip management and seed data for realistic searches.
 - [ ] Add trip search by origin city/station, destination city/station, and travel date.
-- [ ] Add trip details and basic seat information.
-- [ ] Validate requests and add pagination and appropriate query indexes.
-- [ ] Create `apps/web` with Next.js and a small API client.
-- [ ] Add the search form, results, and trip details pages, with loading, empty, and error states.
-- [ ] Introduce TanStack Query for server data and shared Zod schemas where both apps need them.
-- [ ] Establish mobile layouts, Arabic default, English translation structure, and RTL logical spacing.
+- [ ] Add trip details and seat availability endpoints.
+- [ ] Add pagination, request validation, relevant indexes, and empty/error cases for each endpoint.
 
-Working result: search seeded trips and open their details from a browser.
+Working result: tested catalog and trip-search APIs, without starting frontend applications.
 
 ## Phase 4 — Accounts and email verification
 
@@ -95,7 +96,6 @@ Small steps:
 - [ ] Add resend cooldowns, code attempt limits, and auth rate limits.
 - [ ] Add an email outbox and a small retrying worker for reliable delivery.
 - [ ] Add Arabic and English verification templates.
-- [ ] Add registration, verification, and resend UI using react-hook-form and Zod.
 - [ ] Use generic account responses where needed to avoid exposing registered emails.
 
 Working result: register, receive a code in Mailpit, and activate the account.
@@ -110,7 +110,6 @@ Small steps:
 - [ ] Add failed-login lockout and complete auth rate limiting, using Redis when needed.
 - [ ] Add forgot-password and reset-password codes; revoke all sessions after a reset.
 - [ ] Add user, admin, and super-admin authorization and ownership checks.
-- [ ] Add login, session restoration, account, and password recovery pages.
 - [ ] Verify cookie, CORS, and CSRF behavior for the chosen web/API deployment arrangement.
 
 Working result: complete account lifecycle with tested session rotation and access restrictions.
@@ -120,11 +119,11 @@ Working result: complete account lifecycle with tested session rotation and acce
 Small steps:
 
 - [ ] Add bookings and booking seats with an explicit status transition model.
-- [ ] Add an accessible seat picker showing current availability.
+- [ ] Expose availability and reservation APIs needed by the later seat picker.
 - [ ] Add passenger details and server-calculated totals.
 - [ ] Create reservations transactionally and prevent duplicate active seat allocations using a database constraint.
 - [ ] Test two concurrent requests for the same seat; only one succeeds.
-- [ ] Return a booking reference and add a confirmation page.
+- [ ] Return a booking reference and confirmation data through the API.
 - [ ] Add my bookings and booking details with ownership checks.
 - [ ] Allow cancellation of a no-payment reservation and release its seats.
 - [ ] Clearly label this local flow as a reservation without payment; do not imply a paid ticket.
@@ -133,11 +132,11 @@ Working result: verified users reserve available seats and view or cancel their 
 
 **Learning MVP complete.** Review the entire flow and explain the data model before expanding it.
 
-## Phase 7 — Operator dashboard and management
+## Phase 7 — Operator management APIs
 
 Small steps:
 
-- [ ] Create `apps/admin`, with protected admin access and reusable shared schemas.
+- [ ] Protect all management endpoints with administrator roles and test access restrictions.
 - [ ] Add city and station management.
 - [ ] Add bus type, amenities, seat layout, bus, and plate-number management.
 - [ ] Add route and single-trip management, including prices and times.
@@ -146,7 +145,7 @@ Small steps:
 - [ ] Add filtered booking lists and booking details.
 - [ ] Add user lists and suspend/activate controls; enforce suspension in the API/session flow.
 - [ ] Add super-admin-only admin management.
-- [ ] Record admin mutations in an audit log; add a super-admin audit viewer.
+- [ ] Record admin mutations in an audit log and expose super-admin-only audit queries.
 
 Working result: authorized operators manage the data previously supplied by seeds.
 
@@ -156,7 +155,7 @@ Small steps:
 
 - [ ] Agree on the exact hold duration, cancellation windows, and refund rules before implementing paid bookings.
 - [ ] Replace immediate reservation confirmation with pending payment and a default ten-minute hold.
-- [ ] Add hold countdown, expiry handling, and a worker that releases expired holds.
+- [ ] Expose hold expiry times and add expiry handling and a worker that releases expired holds.
 - [ ] Keep the active-seat database uniqueness constraint for held and confirmed seats.
 - [ ] Define payment and booking transitions, including delayed payment completion after hold expiry.
 - [ ] Add a PaymentProvider interface and PayPal sandbox implementation.
@@ -164,7 +163,7 @@ Small steps:
 - [ ] Persist payment transactions and webhook events.
 - [ ] Verify webhook signatures and process duplicate or out-of-order events safely.
 - [ ] Confirm bookings only after verified payment success; handle failure and cancellation.
-- [ ] Add checkout and payment-result pages plus admin payment lists and provider references.
+- [ ] Expose checkout/payment-result data and admin payment lists with provider references.
 - [ ] Test hold expiry, concurrent booking, duplicate webhooks, and payment/expiry races.
 
 Working result: complete a sandbox payment and obtain exactly one confirmed booking with correct seat allocation.
@@ -186,21 +185,51 @@ Small steps:
 
 Working result: a paid sandbox booking supports the full ticket, notification, cancellation, and refund lifecycle.
 
-## Phase 10 — Complete passenger and admin experience
+## Phase 10 — Backend completion gate
 
-Small steps:
+Complete this before creating apps/web or apps/admin:
 
-- [ ] Complete Arabic and English UI and email coverage and check full RTL behavior.
-- [ ] Add light/dark themes, design tokens, and consistent shadcn/ui components.
-- [ ] Add persistent booking summaries and clear validation and recovery messages.
-- [ ] Separate upcoming, past, and cancelled bookings.
-- [ ] Add dashboard metrics: today's bookings, revenue, upcoming trips, and occupancy; define each metric precisely.
-- [ ] Check mobile layouts, keyboard operation, focus, screen-reader labels, and color contrast.
-- [ ] Use Zustand only for client state that needs it, such as a multi-step booking draft.
+- [ ] Verify every agreed backend feature has models/migrations, endpoints, validation, errors, authorization where relevant, tests, and API usage notes.
+- [ ] Verify pricing, booking status transitions, ownership, session rotation, seat concurrency, and payment/refund idempotency.
+- [ ] Verify fresh database setup, seeds, indexes, pagination, readiness, logs, and background workers.
+- [ ] Confirm email/ticket/notification APIs and Arabic/English templates.
+- [ ] Add backend CI checks and document deployment/API configuration for frontend work.
+- [ ] Resolve outstanding backend defects and push the completed feature commits.
 
-Working result: both applications are complete and usable across languages, themes, and supported screen sizes.
+Working result: the agreed backend scope works through HTTP and repeatable tests, ready for frontend integration. Production provider onboarding remains part of release preparation.
 
-## Phase 11 — Release verification and reliability
+## Phase 11 — Passenger website
+
+Feature batches, each completed and pushed before the next:
+
+- [ ] Create apps/web with Next.js, an API client, and shared Zod schemas where needed.
+- [ ] Add mobile layouts, Arabic default, English coverage, RTL logical spacing, light/dark themes, and consistent shadcn/ui components.
+- [ ] Add search, results, trip details, and accessible seat selection with loading, empty, and error states.
+- [ ] Add registration, verification/resend, login, session restoration, account, and password recovery using react-hook-form and Zod.
+- [ ] Add passenger details, server-priced summaries, reservations, booking references, and confirmation.
+- [ ] Add checkout, hold countdown/expiry, and payment success/failure/cancellation handling.
+- [ ] Add ticket/QR views, upcoming/past/cancelled bookings, details, and allowed cancellation/refund requests.
+- [ ] Introduce TanStack Query for server data and Zustand only for client state that needs it.
+- [ ] Check keyboard operation, focus, screen-reader labels, contrast, responsive layouts, and full Arabic/English flows.
+
+Working result: the passenger website uses the completed backend end to end. Begin the dashboard afterward.
+
+## Phase 12 — Administration dashboard
+
+Feature batches:
+
+- [ ] Create apps/admin with protected administrator access and shared schemas/components where useful.
+- [ ] Add complete city/station management screens.
+- [ ] Add bus types, amenities, layouts, buses, plates, routes, and trip management screens.
+- [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
+- [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
+- [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
+- [ ] Add precisely defined booking/revenue/upcoming-trip/occupancy metrics.
+- [ ] Complete Arabic/English, RTL, themes, accessibility, responsive behavior, and role-specific failure states.
+
+Working result: operators manage the platform through the completed backend with tested role restrictions.
+
+## Phase 13 — Release verification and reliability
 
 Small steps:
 
@@ -214,7 +243,7 @@ Small steps:
 
 Working result: the critical user flows and failure cases pass repeatable checks in CI.
 
-## Phase 12 — Production payments and deployment
+## Phase 14 — Production payments and deployment
 
 Small steps:
 
@@ -254,16 +283,17 @@ These follow the complete initial release; each receives its own scope and imple
 | Seat layout                | Simple numbered seats first                                | Phase 2; extend in phase 7 |
 | Hold duration              | Ten minutes                                                | Phase 8                    |
 | Cancellation/refund policy | No assumed percentages                                     | Phase 8                    |
-| Production provider        | Evaluate actual merchant eligibility and supported methods | Phase 12                   |
+| Production provider        | Evaluate actual merchant eligibility and supported methods | Phase 14                   |
 
-## Learning and Git workflow for every small step
+## Completion and Git workflow for every feature
 
-1. Explain the feature, its purpose, and the files that will change.
-2. Implement one coherent change; avoid generating future modules or unused abstractions.
-3. Run it and demonstrate its behavior. Add meaningful tests for business rules and risky behavior.
-4. Explain the request/data flow, important code, and relevant trade-offs.
-5. Review the diff, exclude secrets/generated clutter, and create a focused Conventional Commit when Git commits are authorized.
-6. Update the roadmap and run instructions, then proceed at the user's learning pace.
+1. Define the feature boundaries and finish its backend behavior together: model, migrations, endpoints, validation, errors, relevant authorization, tests, and usage notes.
+2. Keep the implementation simple and consistent with Route -> Controller -> Service -> Prisma.
+3. Run the feature, exercise normal and failure cases, and verify meaningful database behavior.
+4. Explain the completed result and important code; expand explanations where requested.
+5. Review the diff, exclude local secrets/build output, and create a focused Conventional Commit. Prisma 8 contract artifacts and migrations stay in Git.
+6. Push the completed feature under the owner's standing authorization, then begin the next feature.
+7. Finish the backend first; build the passenger website next and the dashboard afterward.
 
 Use short feature branches as appropriate, keep the main branch working, and avoid combining unrelated features in one commit. Example commit subjects:
 
@@ -277,4 +307,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap is being implemented in focused feature batches. Error handling and the TypeScript configuration fix are approved for publication. Request IDs and logging are deferred. CORS is approved for publication; local PostgreSQL is approved for publication; Prisma 8 setup is approved for publication; the complete City batch is ready for a local commit and owner review before pushing; the next batch is Station and its relation to City.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City CRUD is complete; Station is the next backend feature.

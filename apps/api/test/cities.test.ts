@@ -14,6 +14,17 @@ function memoryCityService(initial: City[] = []): CityService {
     async findById(id) {
       return cities.find((city) => city.id === id) ?? null;
     },
+    async update(id, input) {
+      const city = cities.find((city) => city.id === id);
+      if (!city) return null;
+      Object.assign(city, input);
+      return city;
+    },
+    async remove(id) {
+      const index = cities.findIndex((city) => city.id === id);
+      if (index === -1) return null;
+      return cities.splice(index, 1)[0];
+    },
     async create(input) {
       const city = { id: randomUUID(), ...input };
       cities.push(city);
@@ -174,10 +185,18 @@ test('database failures on every city operation return safe JSON', async (t) => 
     list: fail,
     findById: fail,
     create: fail,
+    update: fail,
+    remove: fail,
   });
   const responses = [
     await fetch(url),
     await fetch(url + '/' + randomUUID()),
+    await fetch(url + '/' + randomUUID(), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameEn: 'Cairo' }),
+    }),
+    await fetch(url + '/' + randomUUID(), { method: 'DELETE' }),
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -193,4 +212,91 @@ test('database failures on every city operation return safe JSON', async (t) => 
       },
     });
   }
+});
+
+test('PATCH updates only supplied names, trims them, and keeps the id', async (t) => {
+  const city = { id: randomUUID(), nameAr: 'القاهرة', nameEn: 'Cairo' };
+  const url = await startServer(t, memoryCityService([city]));
+  const response = await fetch(url + '/' + city.id, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nameEn: ' Cairo Updated ' }),
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    data: { id: city.id, nameAr: 'القاهرة', nameEn: 'Cairo Updated' },
+  });
+  const persisted = await fetch(url + '/' + city.id);
+  assert.equal((await persisted.json()).data.nameEn, 'Cairo Updated');
+});
+
+test('PATCH rejects empty updates, invalid fields, invalid ids, and non-JSON input', async (t) => {
+  let calls = 0;
+  const service = memoryCityService();
+  service.update = async () => {
+    calls++;
+    return null;
+  };
+  const url = await startServer(t, service);
+  const id = randomUUID();
+  for (const body of [
+    {},
+    { nameEn: ' ' },
+    { nameAr: null },
+    { nameEn: 123 },
+    { nameAr: 'x'.repeat(101) },
+    { id: randomUUID() },
+    { unknown: 'value' },
+  ]) {
+    const response = await fetch(url + '/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    assert.equal(response.status, 400);
+  }
+  const invalidId = await fetch(url + '/invalid', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nameEn: 'Cairo' }),
+  });
+  assert.equal(invalidId.status, 400);
+  const nonJson = await fetch(url + '/' + id, {
+    method: 'PATCH',
+    body: 'Cairo',
+  });
+  assert.equal(nonJson.status, 415);
+  assert.equal(calls, 0);
+});
+
+test('PATCH and DELETE return CITY_NOT_FOUND for missing cities', async (t) => {
+  const url = await startServer(t);
+  const id = randomUUID();
+  for (const method of ['PATCH', 'DELETE']) {
+    const response = await fetch(url + '/' + id, {
+      method,
+      ...(method === 'PATCH'
+        ? {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nameEn: 'Cairo' }),
+          }
+        : {}),
+    });
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), {
+      error: { code: 'CITY_NOT_FOUND', message: 'City not found' },
+    });
+  }
+});
+
+test('DELETE removes a city, returns an empty 204 response, and validates ids', async (t) => {
+  const city = { id: randomUUID(), nameAr: 'القاهرة', nameEn: 'Cairo' };
+  const url = await startServer(t, memoryCityService([city]));
+  const invalid = await fetch(url + '/invalid', { method: 'DELETE' });
+  assert.equal(invalid.status, 400);
+  const removed = await fetch(url + '/' + city.id, { method: 'DELETE' });
+  assert.equal(removed.status, 204);
+  assert.equal(await removed.text(), '');
+  const missing = await fetch(url + '/' + city.id);
+  assert.equal(missing.status, 404);
 });

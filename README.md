@@ -4,7 +4,7 @@ A bus booking application for Egypt, built in focused feature batches with expla
 
 ## Current feature: City API
 
-Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs the City create/list/detail endpoints; the health endpoint remains independent of the database.
+Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs the complete City CRUD endpoints; the health endpoint remains independent of the database.
 
 See [the implementation roadmap](IMPLEMENTATION_PLAN.md) for the planned phases and features. Keep project planning in this root file; step-by-step code explanations are provided in the chat.
 
@@ -87,11 +87,11 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next small step
 
-ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; City has a UUID string id and its table is initialized; cities can be created, listed, and retrieved over HTTP; the standalone example is also available.
+ESLint and Prettier are configured. Request IDs and structured logging remain deferred. Helmet security headers are implemented. JSON parsing and the body limit are implemented. CORS is implemented. Local PostgreSQL is running and verified. Prisma 8 is configured; City has a UUID string id and its table is initialized; cities can be created, listed, retrieved, updated, and deleted over HTTP; the standalone example is also available.
 
 ## Git workflow
 
-Group related implementation, validation, tests, migrations, and usage notes into one feature commit. Verify it and explain the result; push only after the owner approves. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
+Group related implementation, validation, tests, migrations, and usage notes into one feature commit. Finish the feature, verify it, explain the result, commit, and push under the owner's standing instruction before starting the next. Finish the backend before the passenger website, then build the dashboard. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
 
 Push changes to GitHub only after the owner reviews them and explicitly approves the push.
 
@@ -215,7 +215,7 @@ npm run contract:emit
 
 The initializer's module: preserve, moduleResolution: bundler, and resolveJsonModule settings are retained. tsx is installed for the guide's scripts; the existing Node development server and tsc build commands remain available. Node 24.11 or newer is required by this project's Prisma setup.
 
-Setup verification does not create tables. The City table has been initialized. The baseline migration recreates City in a fresh database. The contract, baseline, reference, snapshots, example script, and City API belong to the same feature batch.
+Setup verification does not create tables. The City table has been initialized. The baseline migration recreates City in a fresh database. The contract, baseline, reference, snapshots, example script, and complete City CRUD belong to the same backend feature.
 
 ## Run the City learning example
 
@@ -240,11 +240,13 @@ npm run dev
 
 The migration command applies pending changes and updates the development db reference. The committed baseline creates City on a fresh database; an already initialized City database needs no duplicate table. The health endpoint checks liveness only.
 
-| Method | Path                             | Behavior                                            |
-| ------ | -------------------------------- | --------------------------------------------------- |
-| GET    | /api/v1/cities?limit=20&offset=0 | Return a page sorted by English name and UUID       |
-| GET    | /api/v1/cities/:id               | Return one city or CITY_NOT_FOUND                   |
-| POST   | /api/v1/cities                   | Create a city and return 201 with a Location header |
+| Method | Path                             | Behavior                                             |
+| ------ | -------------------------------- | ---------------------------------------------------- |
+| GET    | /api/v1/cities?limit=20&offset=0 | Return a page sorted by English name and UUID        |
+| GET    | /api/v1/cities/:id               | Return one city or CITY_NOT_FOUND                    |
+| POST   | /api/v1/cities                   | Create a city and return 201 with a Location header  |
+| PATCH  | /api/v1/cities/:id               | Update one or both names and return the updated city |
+| DELETE | /api/v1/cities/:id               | Delete a city and return an empty 204 response       |
 
 Example PowerShell request:
 
@@ -272,3 +274,7 @@ Verification also recreated City from the baseline in a new temporary database, 
 Use familiar layer-based folders and camelCase file names. app.ts configures Express; server.ts starts listening. routes map URLs to controllers. controllers handle request/response and validation using schemas. services accept ordinary data, apply business rules when needed, and use Prisma directly. middlewares contains the shared error handler; errors contains AppError. config holds validated environment settings, prisma holds the contract and client, and scripts holds standalone learning/development commands.
 
 Keep the flow Route -> Controller -> Service -> Prisma. Do not add repository, base-class, or dependency-container layers unless a concrete requirement warrants them. Express Request/Response objects stay out of services. Prisma-generated contract and migration artifacts keep their tool-defined names.
+
+City updates use PATCH with at least one of nameAr/nameEn. The same trimmed 1-100 character rules apply; empty updates, unknown fields, and id changes are rejected. Omitted names stay unchanged. PATCH/DELETE validate UUIDs and return CITY_NOT_FOUND when the record is absent. The real PostgreSQL test exercises create/list/detail/update/delete and cleans up its uniquely named row.
+
+Work order: complete, test, document, commit, and push each backend feature before beginning the next. After all agreed backend features are complete, implement the passenger website, then the administration dashboard. Production publication and real-money operations still need explicit approval.

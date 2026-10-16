@@ -6,7 +6,7 @@ import { createApp } from '../../src/app.ts';
 import { db } from '../../src/prisma/db.ts';
 
 // Opt-in test: writes one uniquely named row and removes only that row afterward.
-test('city HTTP routes persist and read UUID records in PostgreSQL', async (t) => {
+test('city HTTP CRUD persists UUID records in PostgreSQL', async (t) => {
   const server = createApp([]).listen(0, '127.0.0.1');
   const createdCity: { id?: string } = {};
   t.after(async () => {
@@ -50,4 +50,23 @@ test('city HTTP routes persist and read UUID records in PostgreSQL', async (t) =
   const page = await list.json();
   assert.equal(page.data.length, 1);
   assert.deepEqual(page.pagination, { limit: 1, offset: 0 });
+  const updated = await fetch(baseUrl + '/' + createdId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nameEn: 'Updated ' + name }),
+  });
+  assert.equal(updated.status, 200);
+  assert.deepEqual((await updated.json()).data, {
+    id: createdId,
+    nameAr: 'اختبار',
+    nameEn: 'Updated ' + name,
+  });
+  const stored = await db.orm.public.City.where({ id: createdId }).first();
+  assert.equal(stored?.nameEn, 'Updated ' + name);
+  const removed = await fetch(baseUrl + '/' + createdId, { method: 'DELETE' });
+  assert.equal(removed.status, 204);
+  assert.equal(await removed.text(), '');
+  assert.equal(await db.orm.public.City.where({ id: createdId }).first(), null);
+  const missing = await fetch(baseUrl + '/' + createdId);
+  assert.equal(missing.status, 404);
 });
