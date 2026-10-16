@@ -1,3 +1,4 @@
+import type { TripBatchService } from './services/tripBatchService.ts';
 import {
   busTypeService,
   type BusTypeService,
@@ -63,6 +64,7 @@ export function createApp(
     buses?: BusService;
     routes?: RouteService;
     trips?: TripService;
+    tripBatches?: TripBatchService;
     tripSearch?: TripSearchService;
     tripDetails?: TripDetailsService;
     auth?: AuthService;
@@ -115,6 +117,7 @@ export function createApp(
       admin,
       services.tripSearch,
       services.tripDetails,
+      services.tripBatches,
     ),
   );
 

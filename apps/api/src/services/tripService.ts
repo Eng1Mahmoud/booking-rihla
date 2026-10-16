@@ -1,3 +1,4 @@
+import { lockTripParents, scheduledTripsInInterval } from './tripScheduling.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isCheckViolation,
@@ -70,47 +71,9 @@ async function saveTrip(
           'VALIDATION_ERROR',
           'Departure must be in the future',
         );
-      // Lock parents in this order for all trip writes. Bus locks serialize scheduling.
-      await tx.execute(
-        db.raw
-          .sql`SELECT "id" FROM "public"."Route" WHERE "id" = ${data.routeId} FOR SHARE`
-          .affectedCount()
-          .build(),
-      );
-      const route = await tx.orm.public.Route.where({
-        id: data.routeId,
-      }).first();
-      if (!route) throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
-      await tx.execute(
-        db.raw
-          .sql`SELECT "id" FROM "public"."Bus" WHERE "id" = ${data.busId} FOR UPDATE`
-          .affectedCount()
-          .build(),
-      );
-      const bus = await tx.orm.public.Bus.where({ id: data.busId }).first();
-      if (!bus) throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
+      await lockTripParents(tx, db, data, data.status === 'SCHEDULED');
       if (data.status === 'SCHEDULED') {
-        if (!route.isActive)
-          throw new AppError(
-            409,
-            'ROUTE_INACTIVE',
-            'Scheduled trips require an active route',
-          );
-        if (!bus.isActive)
-          throw new AppError(
-            409,
-            'BUS_INACTIVE',
-            'Scheduled trips require an active bus',
-          );
-        const overlapping = tx.orm.public.Trip.where({
-          busId: data.busId,
-          status: 'SCHEDULED',
-        })
-          .where((trip) => trip.departureAt.lt(data.arrivalAt))
-          .where((trip) => trip.arrivalAt.gt(data.departureAt));
-        const conflict = await (
-          id ? overlapping.where((trip) => trip.id.neq(id)) : overlapping
-        ).first();
+        const conflict = await scheduledTripsInInterval(tx, data, id).first();
         if (conflict)
           throw new AppError(
             409,

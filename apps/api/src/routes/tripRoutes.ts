@@ -1,3 +1,8 @@
+import { createTripBatchController } from '../controllers/tripBatchController.ts';
+import {
+  tripBatchService,
+  type TripBatchService,
+} from '../services/tripBatchService.ts';
 import type { RequestHandler } from 'express';
 import { Router } from 'express';
 import { createTripController } from '../controllers/tripController.ts';
@@ -20,10 +25,15 @@ export function createTripRouter(
   admin: RequestHandler[],
   searchService: TripSearchService = tripSearchService,
   detailsService: TripDetailsService = tripDetailsService,
+  batches: TripBatchService = tripBatchService,
 ) {
   const router = Router();
   const controller = createTripController(service);
   const detailsController = createTripDetailsController(detailsService);
+
+  const batchController = createTripBatchController(batches);
+  router.post('/batch/preview', ...admin, batchController.preview);
+  router.post('/batch', ...admin, batchController.create);
 
   router.get('/', ...admin, controller.list);
   router.get('/search', createTripSearchController(searchService));

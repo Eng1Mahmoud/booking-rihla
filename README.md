@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Simple fixed seat templates
+## Current feature: Batch trip preview and creation
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Next add recurring/bulk trip creation with validation and a preview, then continue the remaining operator APIs.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Next add administrator booking lists/details, then continue the remaining operator APIs.
 
 ## Git workflow
 
@@ -830,3 +830,53 @@ Read schemas/busSchema.ts for allowed template values, services/busService.ts fo
 Tests cover template validation/defaults, preserved seat ids, public responses, unknown database values, no-op updates, rollback, historical-trip guards, concurrent trip creation/template changes, and real reservations on a configured bus without layoutId. Run the default checks and npm run test:db as described above.
 
 Verification: all 126 default tests and all 14 PostgreSQL integration tests pass, together with TypeScript checks, lint, formatting and build. In an isolated temporary database, the first twelve migrations were replayed, a legacy layout plus a real linked reservation were inserted, and the thirteenth migration preserved the bus, seat, trip, user and booking rows exactly while removing only obsolete layout data. Re-running migrations applied zero changes. The temporary database was removed. Development data was also compared before/after its migration, and compiled JavaScript passed real HTTP health and passenger-seat checks.
+
+## Batch trip preview and creation
+
+Authorized ADMIN/SUPER_ADMIN users can create departures for a finite date range through the existing Trip model. No schema migration, dependency, worker or new environment setting is needed. Every saved departure is an ordinary independent Trip; this is not an indefinitely recurring schedule or a bulk-edit/cancellation API.
+
+| Method | Path                        | Result                                                              |
+| ------ | --------------------------- | ------------------------------------------------------------------- |
+| POST   | /api/v1/trips/batch/preview | 200: compute departures and current conflicts, without saving trips |
+| POST   | /api/v1/trips/batch         | 201: create the entire group, or reject it without saving any trips |
+
+Both endpoints require an administrator Bearer access token, application/json, no query parameters and this same body:
+
+```json
+{
+  "routeId": "ROUTE_UUID",
+  "busId": "BUS_UUID",
+  "startDate": "2026-11-01",
+  "endDate": "2026-11-07",
+  "weekdays": [1, 2, 3, 4, 6, 7],
+  "departureTime": "09:00",
+  "durationMinutes": 180,
+  "pricePiastres": 30000
+}
+```
+
+Replace ids with existing active catalog records and use future travel dates. Weekdays use ISO numbering: Monday 1, Tuesday 2, Wednesday 3, Thursday 4, Friday 5, Saturday 6, Sunday 7. The example selects every day except Friday and generates six departures at 09:00 Cairo time, each lasting 180 minutes and priced at EGP 300 per seat. The interval includes both startDate and endDate and is limited to 90 calendar days, so at most 90 departures are generated. Weekdays must be distinct integers, with at least one chosen day. All fields are required; client-provided ids/status/timeZone or additional fields are rejected.
+
+Dates are strict YYYY-MM-DD; departureTime is 24-hour HH:mm in Africa/Cairo. The allowed duration is an integer 1-10080 elapsed minutes and pricePiastres an integer 0-2147483647. Start must not follow end. Every generated departure must be in the future, and the period must contain at least one selected weekday. Invalid input returns 400 VALIDATION_ERROR; no matching dates return 400 NO_DEPARTURES. Local Cairo times skipped or repeated at a daylight-saving transition return 400 INVALID_DEPARTURE_TIME with the affected date; choose a different unambiguous departure time. The existing Temporal dependency computes each calendar date's Cairo offset separately, and the duration is added to the resulting instant. UTC departure/arrival timestamps are returned for storage and API consistency.
+
+### Read the preview
+
+The preview response wraps its result in data: timeZone, canCreate, totalTrips and trips sorted chronologically. Each row contains date (the Cairo departure date), routeId, busId, departureAt, arrivalAt, pricePiastres, status SCHEDULED and conflicts. Preview rows do not have persisted Trip ids.
+
+- An existing scheduled departure on the same bus appears as { type: EXISTING_TRIP, tripId } in each affected row.
+- Proposed departures that overlap one another appear as { type: BATCH_TRIP, date }, pointing to the other proposed departure's local date.
+- A row with conflicts has a nonempty conflicts array; canCreate is true only when every row is free of conflicts. A conflict preview still returns 200 so the dashboard can display the affected dates.
+
+Cancelled trips do not occupy the bus schedule. Different buses can operate at the same time. Intervals that touch at one endpoint are allowed, consistent with single-trip management; no turnaround buffer or vehicle-location feasibility rule is added here. Both the route and bus must exist and be active: otherwise the API returns ROUTE_NOT_FOUND/BUS_NOT_FOUND (404) or ROUTE_INACTIVE/BUS_INACTIVE (409).
+
+### Confirm the group
+
+After reviewing the preview, POST the same input to /api/v1/trips/batch. Send the scheduling input, not the preview response. Confirmation recomputes departures, locks the route and bus, checks the clock and current catalog state again, and reloads schedule conflicts. A preview does not reserve a bus and is not a guarantee that later confirmation will succeed. API clients may call creation directly; it enforces all the same rules. The later dashboard will show preview before its confirmation button.
+
+On success, data contains timeZone, totalTrips and the newly persisted trips with their unique ids. All are SCHEDULED. All inserts share one PostgreSQL transaction; an error rolls back the whole group. A schedule conflict returns 409 BUS_SCHEDULE_CONFLICT without saving any rows from the request. Refresh the preview, resolve the conflict and submit again. Repeating a successful request while its departures are still scheduled returns a conflict instead of duplicating the group; there is no separate request-token/idempotency API.
+
+Single-trip writes and batch operations use the same Route FOR SHARE then Bus FOR UPDATE lock order and the same overlap query. This serializes concurrent batches, individual creates and edits on the target bus. Ordinary catalog guards continue to protect seat templates/capacity once trips exist. Existing booking prices, ownership, seat allocations and the prohibition on passenger cancellation are unchanged. Generated trips can be edited independently through the existing single-trip endpoints and their reservation safeguards.
+
+Read apps/api/src/schemas/tripBatchSchema.ts for request validation, utils/tripBatchDates.ts for calendar generation, controllers/tripBatchController.ts and routes/tripRoutes.ts for HTTP handling, services/tripBatchService.ts for preview/atomic creation, and services/tripScheduling.ts for the shared parent locks and overlap rules. Tests cover calendar boundaries, Cairo DST, strict input, authorization, read-only preview, existing/internal conflicts, changed state after preview, repeated requests, touching intervals, independent trip editing, the 90-departure limit and concurrent single/batch creation. The passenger site and dashboard forms will be implemented in their later phases.
+
+Batch verification: all 133 default tests and all 15 PostgreSQL integration tests pass, as do TypeScript checking, lint, formatting and build. All thirteen existing migrations were replayed on an empty temporary database. A compiled JavaScript HTTP check then verified preview without writes, complete creation, duplicate-request rejection and passenger seats for a generated departure. Scoped fixtures and the temporary database were removed. No new migration or package change is required for this feature.

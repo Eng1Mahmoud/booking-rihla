@@ -71,6 +71,8 @@ const protectedRoutes: [string, string][] = [
       ] as [string, string][],
   ),
   ['GET', '/api/v1/buses/' + id + '/seats'],
+  ['POST', '/api/v1/trips/batch'],
+  ['POST', '/api/v1/trips/batch/preview'],
 ];
 
 test('every catalog mutation and management read rejects anonymous and passenger requests before validation', async (t) => {
@@ -139,6 +141,18 @@ test('admin and super admin reach catalog controllers and authorized writes keep
       Authorization: 'Bearer ' + role,
       'Content-Type': 'application/json',
     };
+    for (const suffix of ['/batch', '/batch/preview']) {
+      assert.equal(
+        (
+          await fetch(base + '/api/v1/trips' + suffix, {
+            method: 'POST',
+            headers,
+            body: '{}',
+          })
+        ).status,
+        400,
+      );
+    }
     const created = await fetch(base + '/api/v1/cities', {
       method: 'POST',
       headers,
