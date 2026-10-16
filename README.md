@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Passenger trip search and demo seed
+## Current feature: Passenger trip details and seats
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-Catalog, Trip management, repeatable seed data, and passenger search are complete. Next add passenger trip details and departure seat availability, then continue accounts and reservations. Request IDs and structured logging remain deferred.
+Basic catalog, Trip management, demo data, passenger search, details, and departure seat listing are complete. Next implement accounts and email verification, then secure sign-in and reservations. Per-trip seat allocations are added with bookings; advanced fleet metadata and request logging remain deferred.
 
 ## Git workflow
 
@@ -377,7 +377,7 @@ Verification also applied all four migrations to a fresh temporary PostgreSQL da
 
 ## Trip management API
 
-Apply npm run db:migrate before using this feature. Trip joins an existing Route and Bus with departureAt, arrivalAt, pricePiastres, and status. Status is SCHEDULED by default or CANCELLED. The management list includes both statuses and past departures unless filtered. Passenger search is available below; departure seat availability is the next feature.
+Apply npm run db:migrate before using this feature. Trip joins an existing Route and Bus with departureAt, arrivalAt, pricePiastres, and status. Status is SCHEDULED by default or CANCELLED. The management list includes both statuses and past departures unless filtered. Passenger search is available below; passenger detail and seat endpoints are available below.
 
 | Method | Path              | Behavior                                                     |
 | ------ | ----------------- | ------------------------------------------------------------ |
@@ -447,7 +447,7 @@ Replace placeholders with UUIDs and a date printed by npm run db:seed. Choose ex
 
 travelDate is a valid YYYY-MM-DD calendar date from 2000 through 9998, interpreted in Africa/Cairo. The service converts the start of that day and the next day to UTC instants, then includes departureAt >= start and departureAt < end. It separately requires departureAt > the current instant, status=SCHEDULED, and active route/bus records. Past dates return an empty list. Arrival may be on a different date. A fixed +02:00/+03:00 offset or adding 24 hours would fail around DST; utils/cairoTime.ts uses temporal-polyfill with named timezone rules instead. The polyfill is now a direct API dependency, imported locally without modifying global Temporal or changing Prisma's timestamp codecs.
 
-Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Seat availability belongs to the next feature.
+Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Current departure seat availability is exposed by the endpoint below; Booking will add allocation checks.
 
 Response shape:
 
@@ -464,3 +464,43 @@ The /search route is registered before /:id. Management GET /api/v1/trips retain
 Verification covers HTTP input errors and safe responses, normal/23-hour/25-hour Cairo date boundaries, real PostgreSQL endpoint filtering, bilingual relation data, active/cancelled/past exclusions, precise inclusive/exclusive date bounds and pagination, concurrent repeatable seeds, preservation of edited demo records, and production seed refusal. Tests remove only their own randomly scoped fixtures.
 
 The fresh-database verification applied the existing five migrations, passed all six PostgreSQL tests, ran the compiled seed command twice, checked 3 cities/3 buses/60 seats/9 trips, and exercised compiled passenger search. The temporary database was removed. Local demo seeding also ran twice successfully and preserved the pre-existing learning city. No schema change or new migration was required for this feature.
+
+## Passenger trip details and seats
+
+After searching, use a returned Trip id:
+
+| Method | Path                      | Behavior                                                                           |
+| ------ | ------------------------- | ---------------------------------------------------------------------------------- |
+| GET    | /api/v1/trips/:id/details | Passenger trip, price, UTC times, bus capacity, and bilingual station/city details |
+| GET    | /api/v1/trips/:id/seats   | Current bus seat ids/numbers and per-departure availability response               |
+
+These read-only endpoints require a valid UUID and accept no query parameters. They expose only future SCHEDULED trips with an active Route and Bus, matching passenger search. Missing, cancelled, departed, inactive-route and inactive-bus trips all return 404 TRIP_NOT_FOUND. Invalid ids or unsupported query parameters return 400 VALIDATION_ERROR. Unexpected failures return the existing safe 500 JSON response. Both successful and error responses set Cache-Control: no-store so a client must fetch current state.
+
+Details return the same enriched Trip shape as search, wrapped in data. The bus includes only id and seatCount; its plate is not exposed. Route endpoints include station and city names in Arabic and English. Timestamps are normalized to UTC ISO strings and prices remain integer piastres. Existing management GET /api/v1/trips/:id still returns its scalar record, including past/cancelled trips, for the later operator interface.
+
+Example seat response for a two-seat bus:
+
+```json
+{
+  "data": {
+    "tripId": "TRIP_UUID",
+    "busId": "BUS_UUID",
+    "totalSeats": 2,
+    "availableSeats": 2,
+    "seats": [
+      { "id": "SEAT_1_UUID", "number": 1, "isAvailable": true },
+      { "id": "SEAT_2_UUID", "number": 2, "isAvailable": true }
+    ]
+  }
+}
+```
+
+Seats are sorted numerically. Each seat id belongs to BusSeat and stays the same across different trips on that bus. A future booking must identify the trip and seat together. Changing a trip's assigned bus changes which seat ids this endpoint returns. totalSeats counts the returned catalog seats; availableSeats counts seats marked available.
+
+There are no bookings or holds yet, so every seat is currently available. This read does not reserve a seat, hold it, or promise availability for a later write. Booking will replace that initial availability calculation with per-trip allocations and transactional uniqueness checks. No inventory table, fake reservations, or extra package is introduced in this step.
+
+Implementation follows routes/tripRoutes.ts -> controllers/tripDetailsController.ts -> services/tripDetailsService.ts. The existing trip schema supplies UUID and strict empty-query validation. The service shares one eligibility query builder between details and seats. Each endpoint loads related data in one database query; seats and the trip's current bus/eligibility are read in the same snapshot. Services still load Prisma lazily, so default HTTP tests need no database.
+
+Verification covers responses, validation, missing/error behavior and no-store headers in HTTP tests, plus PostgreSQL-backed bilingual details, chronological visibility, cancelled/inactive exclusions, ordered seat ids/counts, repeated reads without mutations, separate departures on the same bus, bus reassignment, preservation of management reads and scoped cleanup. All 82 default tests and 7 PostgreSQL integration tests pass, along with type checking, lint, formatting and build. No migration is required.
+
+Compiled JavaScript verification also read a real seeded trip through both new endpoints, checked bilingual details, absence of vehicle plates, numeric seat ordering and capacity/availability counts, and left existing demo data unchanged.

@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Catalog and Trip management, insert-only repeatable demo seed data, and passenger trip search are complete. Search accepts city or station endpoints and a Cairo travel date, includes bilingual station/city details, and excludes past/cancelled/inactive departures. Cairo DST boundaries, seed idempotency/concurrency, pagination, validation, and real PostgreSQL behavior are tested. Passenger trip details and departure seat availability are next.
+Status: Basic catalog and Trip management, repeatable demo seeds, passenger search, passenger trip details, and departure seat listing are complete. Passenger reads exclude cancelled/departed/inactive trips and expose bilingual route details without vehicle plates. Seat availability currently reflects the absence of bookings; per-trip allocations will be implemented with reservations. Accounts and email verification are next; advanced fleet metadata remains deferred.
 
 ## How we will build
 
@@ -87,10 +87,10 @@ Feature batches:
 - [x] Complete Trip management, scheduled/cancelled status, overlap prevention, catalog safeguards, and tests.
 - [x] Add repeatable demo seed data for realistic searches.
 - [x] Add trip search by origin city/station, destination city/station, and travel date.
-- [ ] Add trip details and seat availability endpoints.
-- [ ] Add pagination, request validation, relevant indexes, and empty/error cases for each endpoint.
+- [x] Add passenger trip details and ordered departure seat availability endpoints; all seats are available until Booking allocations are introduced.
+- [x] Add pagination for lists, strict request validation, relevant indexes, and empty/error cases for the implemented browsing endpoints.
 
-Working result: tested catalog and trip-search APIs, without starting frontend applications.
+Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Advanced fleet metadata stays deferred; reservation allocations follow accounts.
 
 ## Phase 4 — Accounts and email verification
 
@@ -314,4 +314,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat availability are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; accounts and email verification are next.

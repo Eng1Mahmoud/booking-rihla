@@ -21,6 +21,8 @@ import { createTripRouter } from './routes/tripRoutes.ts';
 
 import type { TripSearchService } from './services/tripSearchService.ts';
 
+import type { TripDetailsService } from './services/tripDetailsService.ts';
+
 export function createApp(
   corsOrigins: string[],
   services: {
@@ -30,6 +32,7 @@ export function createApp(
     routes?: RouteService;
     trips?: TripService;
     tripSearch?: TripSearchService;
+    tripDetails?: TripDetailsService;
   } = {},
 ) {
   const app = express();
@@ -55,7 +58,11 @@ export function createApp(
 
   app.use(
     '/api/v1/trips',
-    createTripRouter(services.trips ?? tripService, services.tripSearch),
+    createTripRouter(
+      services.trips ?? tripService,
+      services.tripSearch,
+      services.tripDetails,
+    ),
   );
 
   // This runs only if none of the routes above handled the request.

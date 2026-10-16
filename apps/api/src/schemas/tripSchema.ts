@@ -48,3 +48,5 @@ export const tripListQuerySchema = paginationQuerySchema.extend({
 export type CreateTripInput = z.infer<typeof createTripSchema>;
 export type UpdateTripInput = z.infer<typeof updateTripSchema>;
 export type TripListQuery = z.infer<typeof tripListQuerySchema>;
+
+export const tripDetailsQuerySchema = z.strictObject({});
