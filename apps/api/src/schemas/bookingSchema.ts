@@ -4,6 +4,7 @@ import { paginationQuerySchema } from './paginationSchema.ts';
 export const createBookingSchema = z
   .strictObject({
     tripId: z.uuid(),
+    layoutId: z.uuid().nullable().optional(),
     contactPhone: registerSchema.shape.phone,
     passengers: z
       .array(

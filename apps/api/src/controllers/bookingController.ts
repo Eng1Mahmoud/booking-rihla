@@ -26,7 +26,7 @@ export function createBookingController(service: BookingService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide tripId, contactPhone and 1-100 passengers with distinct seatId/name; no other fields are supported',
+          'Provide tripId, optional layoutId, contactPhone and 1-100 passengers with distinct seatId/name; no other fields are supported',
         );
       const booking = await service.create(owner(response), input.data);
       response

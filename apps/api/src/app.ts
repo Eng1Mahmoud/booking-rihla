@@ -1,3 +1,4 @@
+import type { BusLayoutService } from './services/busLayoutService.ts';
 import {
   busTypeService,
   type BusTypeService,
@@ -71,6 +72,7 @@ export function createApp(
     bookings?: BookingService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
+    busLayouts?: BusLayoutService;
   } = {},
 ) {
   const app = express();
@@ -100,7 +102,7 @@ export function createApp(
 
   app.use(
     '/api/v1/buses',
-    createBusRouter(services.buses ?? busService, admin),
+    createBusRouter(services.buses ?? busService, admin, services.busLayouts),
   );
 
   app.use(

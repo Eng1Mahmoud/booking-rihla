@@ -185,6 +185,7 @@ test('reservation bodies reject supplied prices/owners/status, duplicate seats a
       'totalPiastres',
       'currency',
     ].map((field) => ({ ...valid, [field]: 'not-allowed' })),
+    { ...valid, layoutId: 'invalid' },
     { ...valid, tripId: 'invalid' },
     { ...valid, contactPhone: '01012345678' },
     { ...valid, passengers: [] },
@@ -358,4 +359,28 @@ test('reservation creation IP limit returns safe 429 and Retry-After', async (t)
   assert.equal(response.status, 429);
   assert.ok(response.headers.get('retry-after'));
   assert.equal((await response.json()).error.code, 'RATE_LIMITED');
+});
+
+test('booking passes the displayed layout id to the service and rejects malformed layout identities', async (t) => {
+  const service = fakeService();
+  let received: unknown;
+  service.create = async (_auth, input) => {
+    received = input;
+    return booking;
+  };
+  const base = await start(t, service),
+    layoutId = randomUUID();
+  const response = await fetch(base, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ ...valid, layoutId }),
+  });
+  assert.equal(response.status, 201);
+  assert.equal((received as { layoutId: string }).layoutId, layoutId);
+  const invalid = await fetch(base, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ ...valid, layoutId: 'invalid' }),
+  });
+  assert.equal(invalid.status, 400);
 });

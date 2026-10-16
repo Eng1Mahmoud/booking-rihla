@@ -181,6 +181,15 @@ export const busService = {
             'BUS_HAS_TRIPS',
             'A bus used by trips cannot change its seat count',
           );
+        if (
+          count !== bus.seatCount &&
+          (await tx.orm.public.BusLayout.where({ busId: id }).first())
+        )
+          throw new AppError(
+            409,
+            'BUS_HAS_LAYOUT',
+            'Remove the unreserved layout before resizing its seats',
+          );
         if (count > bus.seatCount) {
           await tx.orm.public.BusSeat.createAll(
             Array.from({ length: count - bus.seatCount }, (_, index) => ({
@@ -224,7 +233,17 @@ export const busService = {
   async remove(id: string): Promise<{ id: string } | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Bus.where({ id }).delete();
+      return await db.transaction(async (tx) => {
+        await tx.execute(
+          db.raw
+            .sql`SELECT "id" FROM "public"."Bus" WHERE "id" = ${id} FOR UPDATE`
+            .affectedCount()
+            .build(),
+        );
+        // Delete map cells first; a blocked bus deletion rolls this back as well.
+        await tx.orm.public.BusLayout.where({ busId: id }).deleteAll();
+        return await tx.orm.public.Bus.where({ id }).delete();
+      });
     } catch (error) {
       if (isForeignKeyViolation(error) || isRestrictViolation(error))
         throw new AppError(

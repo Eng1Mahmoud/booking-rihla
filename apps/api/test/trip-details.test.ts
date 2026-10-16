@@ -49,6 +49,7 @@ const details: NonNullable<
   bus,
 };
 const seats = {
+  layout: null,
   tripId: details.id,
   busId: bus.id,
   totalSeats: 2,

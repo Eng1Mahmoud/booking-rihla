@@ -1,0 +1,371 @@
+[
+  {
+    "id": "table.BusLayout",
+    "label": "Create table \"BusLayout\"",
+    "summary": "Creates table \"BusLayout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusLayout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusLayout\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BusLayout\"",
+        "sql": "CREATE TABLE \"public\".\"BusLayout\" (\n  \"busId\" text NOT NULL,\n  \"columnCount\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"rowCount\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"bus_layout_dimensions_e07be16e\" CHECK (\"rowCount\" BETWEEN 2 AND 51 AND \"columnCount\" BETWEEN 3 AND 8)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusLayout\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.BusLayoutCell",
+    "label": "Create table \"BusLayoutCell\"",
+    "summary": "Creates table \"BusLayoutCell\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusLayoutCell\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BusLayoutCell\"",
+        "sql": "CREATE TABLE \"public\".\"BusLayoutCell\" (\n  \"column\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"layoutId\" text NOT NULL,\n  \"row\" int4 NOT NULL,\n  \"seatId\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"BusLayoutCell_kind_check_2cef50ca\" CHECK (\"kind\" IN ('SEAT', 'AISLE', 'DRIVER', 'DOOR', 'EMPTY')),\n  CONSTRAINT \"bus_layout_cell_coordinates_163905df\" CHECK (row BETWEEN 0 AND 50 AND \"column\" BETWEEN 0 AND 7),\n  CONSTRAINT \"bus_layout_cell_seat_5946a95f\" CHECK ((kind = 'SEAT' AND \"seatId\" IS NOT NULL) OR (kind <> 'SEAT' AND \"seatId\" IS NULL))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusLayoutCell\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusLayout.BusLayout_busId_key",
+    "label": "Add unique constraint on \"BusLayout\" (busId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusLayout_busId_key",
+        "table": "BusLayout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusLayout_busId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayout_busId_key",
+          "public",
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusLayout_busId_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayout\" ADD CONSTRAINT \"BusLayout_busId_key\" UNIQUE (\"busId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusLayout_busId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayout_busId_key",
+          "public",
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusLayoutCell.BusLayoutCell_seatId_key",
+    "label": "Add unique constraint on \"BusLayoutCell\" (seatId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusLayoutCell_seatId_key",
+        "table": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusLayoutCell_seatId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_seatId_key",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusLayoutCell_seatId_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayoutCell\" ADD CONSTRAINT \"BusLayoutCell_seatId_key\" UNIQUE (\"seatId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusLayoutCell_seatId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_seatId_key",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusLayoutCell.BusLayoutCell_layoutId_row_column_key",
+    "label": "Add unique constraint on \"BusLayoutCell\" (layoutId, row, column)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusLayoutCell_layoutId_row_column_key",
+        "table": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusLayoutCell_layoutId_row_column_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_layoutId_row_column_key",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusLayoutCell_layoutId_row_column_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayoutCell\" ADD CONSTRAINT \"BusLayoutCell_layoutId_row_column_key\" UNIQUE (\"layoutId\", \"row\", \"column\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusLayoutCell_layoutId_row_column_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_layoutId_row_column_key",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BusLayoutCell.BusLayoutCell_layoutId_idx_dc26ea26",
+    "label": "Create index \"BusLayoutCell_layoutId_idx_dc26ea26\" on \"BusLayoutCell\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BusLayoutCell_layoutId_idx_dc26ea26",
+        "table": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BusLayoutCell_layoutId_idx_dc26ea26\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell_layoutId_idx_dc26ea26\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BusLayoutCell_layoutId_idx_dc26ea26\"",
+        "sql": "CREATE INDEX \"BusLayoutCell_layoutId_idx_dc26ea26\" ON \"public\".\"BusLayoutCell\" (\"layoutId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BusLayoutCell_layoutId_idx_dc26ea26\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusLayoutCell_layoutId_idx_dc26ea26\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusLayout.BusLayout_busId_fkey",
+    "label": "Add foreign key \"BusLayout_busId_fkey\" on \"BusLayout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusLayout_busId_fkey",
+        "table": "BusLayout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusLayout_busId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayout_busId_fkey",
+          "public",
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusLayout_busId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayout\"\nADD CONSTRAINT \"BusLayout_busId_fkey\"\nFOREIGN KEY (\"busId\")\nREFERENCES \"public\".\"Bus\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusLayout_busId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayout_busId_fkey",
+          "public",
+          "\"public\".\"BusLayout\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusLayoutCell.BusLayoutCell_layoutId_fkey",
+    "label": "Add foreign key \"BusLayoutCell_layoutId_fkey\" on \"BusLayoutCell\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusLayoutCell_layoutId_fkey",
+        "table": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusLayoutCell_layoutId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_layoutId_fkey",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusLayoutCell_layoutId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayoutCell\"\nADD CONSTRAINT \"BusLayoutCell_layoutId_fkey\"\nFOREIGN KEY (\"layoutId\")\nREFERENCES \"public\".\"BusLayout\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusLayoutCell_layoutId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_layoutId_fkey",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusLayoutCell.BusLayoutCell_seatId_fkey",
+    "label": "Add foreign key \"BusLayoutCell_seatId_fkey\" on \"BusLayoutCell\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusLayoutCell_seatId_fkey",
+        "table": "BusLayoutCell"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusLayoutCell_seatId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_seatId_fkey",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusLayoutCell_seatId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusLayoutCell\"\nADD CONSTRAINT \"BusLayoutCell_seatId_fkey\"\nFOREIGN KEY (\"seatId\")\nREFERENCES \"public\".\"BusSeat\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusLayoutCell_seatId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusLayoutCell_seatId_fkey",
+          "public",
+          "\"public\".\"BusLayoutCell\""
+        ]
+      }
+    ]
+  }
+]

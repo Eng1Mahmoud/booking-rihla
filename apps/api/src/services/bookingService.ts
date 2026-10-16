@@ -114,6 +114,17 @@ export const bookingService = {
         const currentBus = await tx.orm.public.Bus.where({
           id: trip.busId,
         }).first();
+        const currentLayout = await tx.orm.public.BusLayout.where({
+          busId: trip.busId,
+        })
+          .select('id')
+          .first();
+        if ((input.layoutId ?? null) !== (currentLayout?.id ?? null))
+          throw new AppError(
+            409,
+            'SEAT_LAYOUT_CHANGED',
+            'Refresh the seat map and confirm your seats before reserving',
+          );
         if (currentBus?.busTypeId)
           await tx.execute(
             db.raw

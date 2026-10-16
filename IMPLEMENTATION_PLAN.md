@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Bus types and amenities are implemented with protected CRUD, atomic assignments and reservation safeguards. Visual seat layouts are next, followed by the remaining operator APIs.
+Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Bus types and amenities are implemented with protected CRUD, atomic assignments and reservation safeguards. Physical seat grids, immutable reserved geometry and stale-selection checks are implemented. Recurring/bulk trip creation is next, followed by the remaining operator APIs.
 
 ## How we will build
 
@@ -67,7 +67,7 @@ Small steps:
 - [x] Add Route with distinct endpoints, directed uniqueness, duration bounds, complete CRUD, filters, and tests.
 - [x] Add Trip with complete CRUD, route/bus/status filtering, scheduling validation, and tests.
 - [x] Add BusType/Amenity catalogs, bilingual labels and atomic bus assignments.
-- [ ] Add visual seat layout metadata.
+- [x] Add per-bus physical grid metadata with seats, aisles, driver, doors and empty cells.
 - [x] Add insert-only repeatable demo seed data for cities, stations, buses/seats, routes, and three days of trips.
 - [x] Add database constraints for distinct route endpoints and valid estimated duration.
 - [x] Add constraints for valid trip times and nonnegative integer-piastre prices.
@@ -84,7 +84,7 @@ Feature batches:
 - [x] Complete Station CRUD, its City relation, validation, constraints, and tests.
 - [x] Complete basic Bus CRUD, numbered seats, active filtering, plate uniqueness, and concurrency/rollback tests.
 - [x] Extend fleet metadata with bus types and amenities in management and passenger trip responses.
-- [ ] Add visual seat layouts.
+- [x] Expose physical layouts and departure-specific availability to the later frontend.
 - [x] Complete Route management APIs.
 - [x] Complete Trip management, scheduled/cancelled status, overlap prevention, catalog safeguards, and tests.
 - [x] Add repeatable demo seed data for realistic searches.
@@ -92,7 +92,7 @@ Feature batches:
 - [x] Add passenger trip details and ordered departure seat availability endpoints; availability now excludes per-trip BookingSeat allocations.
 - [x] Add pagination for lists, strict request validation, relevant indexes, and empty/error cases for the implemented browsing endpoints.
 
-Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Bus types and amenities are implemented; visual layouts stay deferred; reservation allocations and passenger ownership are now implemented.
+Working result achieved for the basic fleet: tested catalog, search, passenger detail, and seat-list APIs. Bus types and amenities are implemented; physical layout APIs and selection safeguards are implemented; reservation allocations and passenger ownership are now implemented.
 
 ## Phase 4 — Accounts and email verification
 
@@ -153,10 +153,10 @@ Small steps:
 - [x] Protect current catalog management endpoints with administrator roles and test access restrictions.
 - [x] Add city and station management.
 - [x] Add bus type, amenity, bus and plate-number management with reservation safeguards.
-- [ ] Add visual seat layout management.
+- [x] Add protected complete-layout read/replace/remove with stable physical seat ids.
 - [x] Add route and single-trip management, including prices and times.
 - [x] Preserve bus seat capacity/identities and reject changes or deletion of trips with reservations.
-- [ ] Extend reservation safeguards to visual seat layouts when that feature is added.
+- [x] Freeze reserved layouts, preserve seat identities and reject stale layout selections during booking.
 - [ ] Add recurring/bulk trip creation with validation and a review of generated departures.
 - [ ] Add filtered booking lists and booking details.
 - [ ] Add user lists and suspend/activate controls; enforce suspension in the API/session flow.
@@ -220,7 +220,7 @@ Feature batches, each completed and pushed before the next:
 
 - [ ] Create apps/web with Next.js, an API client, and shared Zod schemas where needed.
 - [ ] Add mobile layouts, Arabic default, English coverage, RTL logical spacing, light/dark themes, and consistent shadcn/ui components.
-- [ ] Add search, results, trip details, and accessible seat selection with loading, empty, and error states.
+- [ ] Add search, results, trip details and accessible physical seat selection using the completed layout API; preserve the physical LTR grid in Arabic, send layoutId and handle stale maps, with loading/empty/error states.
 - [ ] Add registration, verification/resend, login, session restoration, account, and password recovery using react-hook-form and Zod.
 - [ ] Add passenger details, server-priced summaries, reservations, booking references, and confirmation.
 - [ ] Add checkout, hold countdown/expiry, and payment success/failure/cancellation handling.
@@ -323,4 +323,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; visual seat layouts and remaining operator management are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; physical seat layouts and stale-selection safeguards are complete; recurring/bulk trips and remaining operator management are next.

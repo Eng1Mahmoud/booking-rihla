@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Bus types and amenities
+## Current feature: Physical bus seat layouts
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Next add visual seat layout metadata while preserving reserved seat identities, then continue the remaining operator APIs.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Physical seat layouts and stale-selection protection are complete. Next add recurring/bulk trip creation with validation and a preview, then continue the remaining operator APIs.
 
 ## Git workflow
 
@@ -311,7 +311,7 @@ npm run test:db exercises both City and Station CRUD, moving/filtering stations,
 
 ## Bus and numbered-seat API
 
-Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Optional busTypeId and many-to-many amenities are implemented below; visual seat layouts remain the next fleet extension.
+Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Optional busTypeId and many-to-many amenities are implemented below; physical seat layouts are configured through the dedicated layout API below.
 
 | Method | Path                                          | Behavior                                                |
 | ------ | --------------------------------------------- | ------------------------------------------------------- |
@@ -485,6 +485,7 @@ Example seat response for a two-seat bus:
   "data": {
     "tripId": "TRIP_UUID",
     "busId": "BUS_UUID",
+    "layout": null,
     "totalSeats": 2,
     "availableSeats": 2,
     "seats": [
@@ -641,7 +642,7 @@ Invalid session credentials return 401 UNAUTHENTICATED, CSRF violations return 4
 
 Implementation uses services/sessionService.ts for login/rotation/revocation, utils/sessionTokens.ts for opaque tokens and jose JWT validation/signing, middlewares/requireAuth.ts for protected requests, middlewares/sessionCsrf.ts for mutation checks, and controllers/sessionController.ts/routes/sessionRoutes.ts for HTTP/cookies. cookie-parser only parses the refresh cookie. Services do not use Express objects, and there is no repository layer.
 
-Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 124 default tests and thirteen PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
+Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 131 default tests and fourteen PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
 
 Session verification also applied all seven migrations to a fresh temporary database, reran them without changes, passed all nine PostgreSQL integration tests there, and exercised compiled SMTP activation, sign-in, current-user lookup, refresh rotation and logout. The temporary database and scoped test accounts were removed; existing demo trips remain unchanged.
 
@@ -710,7 +711,7 @@ Every booking endpoint requires Authorization: Bearer ACCESS_TOKEN for an active
 | GET    | /api/v1/bookings?limit=20&offset=0 | List only the current account's reservations, newest first                |
 | GET    | /api/v1/bookings/:id               | Return an owned reservation, otherwise 404 BOOKING_NOT_FOUND              |
 
-POST accepts only the following JSON shape. Replace UUID placeholders with a trip and its seat ids from GET /api/v1/trips/:id/seats:
+POST accepts tripId, contactPhone, passengers and optional layoutId. For a configured map, layoutId must equal the displayed layout.id; omission or a stale id returns 409 SEAT_LAYOUT_CHANGED. Unconfigured numbered-seat buses still accept an omitted/null layoutId. Replace UUID placeholders with a trip and its seat ids from GET /api/v1/trips/:id/seats:
 
 ```json
 {
@@ -773,7 +774,7 @@ Use the returned ids when creating or patching a bus:
 
 Bus POST still requires plateNumber and seatCount. busTypeId is an optional existing UUID or null; amenityIds is an optional array of up to thirty distinct existing UUIDs. PATCH preserves either assignment when omitted; null clears the type and [] clears amenities. amenityIds replaces the complete set rather than appending. Requests reject nested busType/amenities objects and duplicate or invalid ids. GET /api/v1/buses additionally accepts a busTypeId UUID filter alongside pagination and isActive.
 
-Bus management responses now contain busTypeId, busType (id/code/nameAr/nameEn or null), and a flat amenities array sorted by code/UUID. Passenger search and details expose only id, seatCount, busType and amenities under bus. Raw BusAmenity links and plate numbers stay private. Related labels are loaded with the existing included relations, without per-trip lookup loops. Seat availability response fields are unchanged.
+Bus management responses now contain busTypeId, busType (id/code/nameAr/nameEn or null), and a flat amenities array sorted by code/UUID. Passenger search and details expose only id, seatCount, busType and amenities under bus. Raw BusAmenity links and plate numbers stay private. Related labels are loaded with the existing included relations, without per-trip lookup loops. Seat availability now additionally includes layout, described below; the existing numbered seats and count fields stay available.
 
 BusType is a one-to-many relation: one bus may have one type, and many buses can share it. Amenities use the explicit BusAmenity join table because a bus can offer several amenities and an amenity can belong to several buses. UNIQUE(busId, amenityId) prevents duplicate links. Deleting a bus cascades only its links; deleting a type or amenity that is still assigned returns 409 BUS_TYPE_IN_USE or AMENITY_IN_USE. Duplicate normalized codes return 409 BUS_TYPE_CODE_EXISTS or AMENITY_CODE_EXISTS. Missing resource or assignment ids return 404 BUS_TYPE_NOT_FOUND or AMENITY_NOT_FOUND.
 
@@ -784,3 +785,91 @@ A bus with any reservation, including a past one, rejects actual type or amenity
 Read schemas/fleetMetadataSchema.ts for common validation, services/busTypeService.ts and services/amenityService.ts for separate catalog behavior, and services/busService.ts for atomic assignments. Corresponding controllers and routers follow the existing structure. utils/busMetadata.ts produces the flat public labels used by trip search/details. These paths are under apps/api/src. Tests cover admin authorization, CRUD, code uniqueness, invalid references, clearing/preserving assignments, atomic rollback, simultaneous set replacements, public projections, default null/empty metadata and reservation races.
 
 Fleet verification: all eleven migrations applied to an empty temporary database, with zero applied on a second run. All thirteen PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test created metadata through protected APIs, assigned it to a bus, checked public search/details without plate leakage, created a reservation and verified metadata mutation/deletion guards. Fixtures and the temporary database were removed. The 124 default tests, type checks, lint and build pass; existing development catalog data was preserved with no extra types, amenities, links, users or reservations left behind.
+
+## Physical seat layouts
+
+Apply npm run db:migrate. This additive migration creates BusLayout and BusLayoutCell without replacing BusSeat records or changing bookings. Existing buses have no configured layout. No default arrangement is invented, and no new dependency or environment variable is needed.
+
+A layout is a single-deck grid with the vehicle front at the top. Coordinates start at zero. Row zero is the front cabin; later rows run toward the rear. Columns run from the vehicle's left to its right. The frontend must preserve that physical orientation even in Arabic: render the map grid with dir="ltr" and localize its labels separately rather than mirroring seat positions. Seat art, selection styling and the passenger/admin UI will be built in the later frontend phases; this feature provides their data and enforcement.
+
+| Kind   | Meaning                                                |
+| ------ | ------------------------------------------------------ |
+| SEAT   | An existing BusSeat id, with its unchanged seat number |
+| AISLE  | A walking aisle cell                                   |
+| DRIVER | Driver location in a front corner                      |
+| DOOR   | An entrance/exit on an outer column                    |
+| EMPTY  | A deliberately unused part of the grid                 |
+
+For example, a two-plus-two map may be drawn as:
+
+```text
+Front
+Driver   Empty   Aisle   Empty   Door
+Seat 1   Seat 2  Aisle   Seat 3  Seat 4
+Seat 5   Seat 6  Aisle   Seat 7  Seat 8
+Rear
+```
+
+The administrator supplies the actual arrangement for each bus. Different grids can represent 2+2, 2+1, a full rear bench, different door locations and a left/right driver. The current scope uses uniform grid cells and one deck.
+
+### Management endpoints
+
+All layout operations inherit the bus router's ADMIN/SUPER_ADMIN Bearer checks and no-store responses. They require a bus UUID and reject query parameters.
+
+| Method | Path                     | Behavior                                                          |
+| ------ | ------------------------ | ----------------------------------------------------------------- |
+| GET    | /api/v1/buses/:id/layout | Read a configured map, or data: null for a known unconfigured bus |
+| PUT    | /api/v1/buses/:id/layout | Atomically replace the complete map; return 200                   |
+| DELETE | /api/v1/buses/:id/layout | Remove an unreserved map, preserving seats; return idempotent 204 |
+
+An absent bus returns 404 BUS_NOT_FOUND. PUT requires JSON, rowCount (2-51), columnCount (3-8) and the entire cells array, including empty cells. There must be exactly one cell per coordinate within bounds, 1-100 distinct seats behind the front cabin, one driver in either front corner, 1-3 doors on outer columns and at least one aisle cell. A SEAT cell must include seatId; other cells omit it or use null. Every current seat on that bus must appear exactly once. Foreign-bus, missing or unknown seats return 400 INVALID_LAYOUT_SEATS; invalid grid/body structure returns 400 VALIDATION_ERROR. Unknown properties such as caller-supplied seat numbers and availability are rejected.
+
+Example PUT body for a four-seat bus (replace each UUID with that bus's existing seat id):
+
+```json
+{
+  "rowCount": 2,
+  "columnCount": 5,
+  "cells": [
+    { "row": 0, "column": 0, "kind": "DRIVER" },
+    { "row": 0, "column": 1, "kind": "EMPTY" },
+    { "row": 0, "column": 2, "kind": "AISLE" },
+    { "row": 0, "column": 3, "kind": "EMPTY" },
+    { "row": 0, "column": 4, "kind": "DOOR" },
+    { "row": 1, "column": 0, "kind": "SEAT", "seatId": "SEAT_1_UUID" },
+    { "row": 1, "column": 1, "kind": "SEAT", "seatId": "SEAT_2_UUID" },
+    { "row": 1, "column": 2, "kind": "AISLE" },
+    { "row": 1, "column": 3, "kind": "SEAT", "seatId": "SEAT_3_UUID" },
+    { "row": 1, "column": 4, "kind": "SEAT", "seatId": "SEAT_4_UUID" }
+  ]
+}
+```
+
+Reads return id, rowCount, columnCount, front: TOP, columnDirection: VEHICLE_LEFT_TO_RIGHT and cells sorted by row/column. Each cell contains kind and seat: null or { id, number }. Management reads do not label bus seats available, because availability belongs to a particular departure. The layout id identifies the exact arrangement and is not a BusSeat id. Actual changes create a new layout identity; submitting the identical grid in a different array order is a no-op and preserves its identity. Physical seat ids/numbers always remain unchanged.
+
+### Passenger selection and booking
+
+GET /api/v1/trips/:id/seats now includes layout with the same geometry and an isAvailable flag inside each cell's seat. Existing seats, totalSeats and availableSeats remain. The geometry, current bus and trip-specific allocations are read in one snapshot; public output excludes plates and passenger/booking details. The same physical map can show a reserved seat on one departure and an available seat on another. Unconfigured buses return layout: null and their existing numbered seats; a client should not claim physical window/aisle positions for them.
+
+When layout is present, submit its id with the reservation:
+
+```json
+{
+  "tripId": "TRIP_UUID",
+  "layoutId": "LAYOUT_ID_FROM_THE_SEAT_RESPONSE",
+  "contactPhone": "+201012345678",
+  "passengers": [{ "seatId": "CHOSEN_SEAT_UUID", "name": "Passenger name" }]
+}
+```
+
+The booking transaction compares layoutId with the current map while holding the bus lock. A changed, removed, recreated, wrong or omitted layout identity for a configured map returns 409 SEAT_LAYOUT_CHANGED before saving any booking. Refresh the map and ask the passenger to confirm the seat again. For an unconfigured bus, omission/null remains compatible; a non-null stale id is rejected. Layout identity is selection consistency data, not authentication, ownership or a seat hold; occupied seats still return SEAT_UNAVAILABLE. Passenger cancellation remains unavailable.
+
+### Persistence and reservation safeguards
+
+BusLayout stores one grid per bus; BusLayoutCell stores its coordinates, kind and optional BusSeat reference. PostgreSQL enforces dimension/coordinate ranges, allowed kinds, the seat/null rule, unique coordinates and unique seat placement. Service validation additionally requires a complete grid matching the bus's full seat set. The full replacement uses one transaction under a bus row lock; a failed cell insertion restores the entire old map. Parallel replacements cannot combine partial grids. A different layout identity also invalidates an earlier selection after removal/recreation.
+
+Any reservation on the bus, including a past reservation, blocks creating, changing or removing its map with 409 LAYOUT_HAS_BOOKINGS. An identical existing map remains allowed without rewriting cells. Configure physical geometry before accepting bookings. Capacity changes for a bus with an unreserved map return 409 BUS_HAS_LAYOUT; remove the map first, then resize under the existing trip restrictions, and configure the real arrangement again. Existing trips can still prevent capacity changes with BUS_HAS_TRIPS. Removing only the map never deletes seats or releases reservations. Bus deletion removes its map transactionally before deleting the bus; if trip/booking foreign keys block deletion, the map is restored too.
+
+Read schemas/busLayoutSchema.ts for grid validation, controllers/busLayoutController.ts and routes/busLayoutRoutes.ts for the protected API, services/busLayoutService.ts for replacement/identity/locks, and utils/seatLayout.ts for the response shape. tripDetailsService.ts combines the map with occupancy; bookingService.ts rejects stale selections. These paths are under apps/api/src. Tests cover physical arrangements, authorization, complete-grid validation, seat preservation, raw database constraints, rollback, capacity/deletion guards, language-independent coordinates, historical reservation safeguards and concurrent layout edits/removal versus booking.
+
+Layout verification: all twelve migrations applied to an empty temporary database; a second run applied zero. All fourteen PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test exercised administrator map configuration, unchanged physical seat ids/numbers, rejection of an outdated layout selection, successful booking with the current map, per-trip occupancy, frozen reserved geometry and identical coordinates for Arabic/English requests. The temporary database and scoped fixtures were removed. All 131 default tests, type checks, lint, formatting and build pass. Existing development cities/trips remain unchanged with no test maps, cells, users or reservations left behind.
