@@ -1,3 +1,4 @@
+import { busMetadata } from '../utils/busMetadata.ts';
 import type { db as database } from '../prisma/db.ts';
 
 // Search, details and seats share the same passenger eligibility rules.
@@ -11,7 +12,12 @@ export const tripDetailsService = {
   async findById(id: string) {
     const { db } = await import('../prisma/db.ts');
     const trip = await passengerTrips(db, id)
-      .include('bus', (bus) => bus.select('id', 'seatCount'))
+      .include('bus', (bus) =>
+        bus
+          .select('id', 'seatCount')
+          .include('busType')
+          .include('amenityLinks', (links) => links.include('amenity')),
+      )
       .include('route', (route) =>
         route
           .include('originStation', (station) => station.include('city'))
@@ -21,6 +27,11 @@ export const tripDetailsService = {
     if (!trip || !trip.bus) return null;
     return {
       ...trip,
+      bus: {
+        id: trip.bus.id,
+        seatCount: trip.bus.seatCount,
+        ...busMetadata(trip.bus),
+      },
       departureAt: new Date(trip.departureAt).toISOString(),
       arrivalAt: new Date(trip.arrivalAt).toISOString(),
     };

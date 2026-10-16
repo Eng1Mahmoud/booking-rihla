@@ -1,0 +1,530 @@
+[
+  {
+    "id": "table.Amenity",
+    "label": "Create table \"Amenity\"",
+    "summary": "Creates table \"Amenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Amenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Amenity\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Amenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Amenity\"",
+        "sql": "CREATE TABLE \"public\".\"Amenity\" (\n  \"code\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"nameAr\" text NOT NULL,\n  \"nameEn\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"amenity_code_2073f902\" CHECK (code ~ '^[A-Z][A-Z0-9_]{0,31}$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Amenity\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Amenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.BusAmenity",
+    "label": "Create table \"BusAmenity\"",
+    "summary": "Creates table \"BusAmenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusAmenity\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BusAmenity\"",
+        "sql": "CREATE TABLE \"public\".\"BusAmenity\" (\n  \"amenityId\" text NOT NULL,\n  \"busId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusAmenity\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.BusType",
+    "label": "Create table \"BusType\"",
+    "summary": "Creates table \"BusType\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BusType"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BusType\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusType\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BusType\"",
+        "sql": "CREATE TABLE \"public\".\"BusType\" (\n  \"code\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"nameAr\" text NOT NULL,\n  \"nameEn\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"bus_type_code_2073f902\" CHECK (code ~ '^[A-Z][A-Z0-9_]{0,31}$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BusType\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusType\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Bus.busTypeId",
+    "label": "Add column \"busTypeId\" to \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "busTypeId",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"busTypeId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Bus",
+          "busTypeId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"busTypeId\"",
+        "sql": "ALTER TABLE \"public\".\"Bus\" ADD COLUMN \"busTypeId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"busTypeId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Bus",
+          "busTypeId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Amenity.Amenity_code_key",
+    "label": "Add unique constraint on \"Amenity\" (code)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Amenity_code_key",
+        "table": "Amenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Amenity_code_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Amenity_code_key",
+          "public",
+          "\"public\".\"Amenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Amenity_code_key\"",
+        "sql": "ALTER TABLE \"public\".\"Amenity\" ADD CONSTRAINT \"Amenity_code_key\" UNIQUE (\"code\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Amenity_code_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Amenity_code_key",
+          "public",
+          "\"public\".\"Amenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusAmenity.BusAmenity_busId_amenityId_key",
+    "label": "Add unique constraint on \"BusAmenity\" (busId, amenityId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusAmenity_busId_amenityId_key",
+        "table": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusAmenity_busId_amenityId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_busId_amenityId_key",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusAmenity_busId_amenityId_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusAmenity\" ADD CONSTRAINT \"BusAmenity_busId_amenityId_key\" UNIQUE (\"busId\", \"amenityId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusAmenity_busId_amenityId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_busId_amenityId_key",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BusType.BusType_code_key",
+    "label": "Add unique constraint on \"BusType\" (code)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BusType_code_key",
+        "table": "BusType"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BusType_code_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusType_code_key",
+          "public",
+          "\"public\".\"BusType\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BusType_code_key\"",
+        "sql": "ALTER TABLE \"public\".\"BusType\" ADD CONSTRAINT \"BusType_code_key\" UNIQUE (\"code\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BusType_code_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusType_code_key",
+          "public",
+          "\"public\".\"BusType\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Bus.Bus_busTypeId_idx_00e74d42",
+    "label": "Create index \"Bus_busTypeId_idx_00e74d42\" on \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Bus_busTypeId_idx_00e74d42",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Bus_busTypeId_idx_00e74d42\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Bus_busTypeId_idx_00e74d42\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Bus_busTypeId_idx_00e74d42\"",
+        "sql": "CREATE INDEX \"Bus_busTypeId_idx_00e74d42\" ON \"public\".\"Bus\" (\"busTypeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Bus_busTypeId_idx_00e74d42\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Bus_busTypeId_idx_00e74d42\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BusAmenity.BusAmenity_amenityId_idx_28149e7b",
+    "label": "Create index \"BusAmenity_amenityId_idx_28149e7b\" on \"BusAmenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BusAmenity_amenityId_idx_28149e7b",
+        "table": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BusAmenity_amenityId_idx_28149e7b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity_amenityId_idx_28149e7b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BusAmenity_amenityId_idx_28149e7b\"",
+        "sql": "CREATE INDEX \"BusAmenity_amenityId_idx_28149e7b\" ON \"public\".\"BusAmenity\" (\"amenityId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BusAmenity_amenityId_idx_28149e7b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity_amenityId_idx_28149e7b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BusAmenity.BusAmenity_busId_idx_00d1f177",
+    "label": "Create index \"BusAmenity_busId_idx_00d1f177\" on \"BusAmenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BusAmenity_busId_idx_00d1f177",
+        "table": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BusAmenity_busId_idx_00d1f177\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity_busId_idx_00d1f177\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BusAmenity_busId_idx_00d1f177\"",
+        "sql": "CREATE INDEX \"BusAmenity_busId_idx_00d1f177\" ON \"public\".\"BusAmenity\" (\"busId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BusAmenity_busId_idx_00d1f177\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BusAmenity_busId_idx_00d1f177\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusAmenity.BusAmenity_busId_fkey",
+    "label": "Add foreign key \"BusAmenity_busId_fkey\" on \"BusAmenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusAmenity_busId_fkey",
+        "table": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusAmenity_busId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_busId_fkey",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusAmenity_busId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusAmenity\"\nADD CONSTRAINT \"BusAmenity_busId_fkey\"\nFOREIGN KEY (\"busId\")\nREFERENCES \"public\".\"Bus\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusAmenity_busId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_busId_fkey",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BusAmenity.BusAmenity_amenityId_fkey",
+    "label": "Add foreign key \"BusAmenity_amenityId_fkey\" on \"BusAmenity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BusAmenity_amenityId_fkey",
+        "table": "BusAmenity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BusAmenity_amenityId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_amenityId_fkey",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BusAmenity_amenityId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BusAmenity\"\nADD CONSTRAINT \"BusAmenity_amenityId_fkey\"\nFOREIGN KEY (\"amenityId\")\nREFERENCES \"public\".\"Amenity\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BusAmenity_amenityId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BusAmenity_amenityId_fkey",
+          "public",
+          "\"public\".\"BusAmenity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Bus.Bus_busTypeId_fkey",
+    "label": "Add foreign key \"Bus_busTypeId_fkey\" on \"Bus\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Bus_busTypeId_fkey",
+        "table": "Bus"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Bus_busTypeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_busTypeId_fkey",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Bus_busTypeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Bus\"\nADD CONSTRAINT \"Bus_busTypeId_fkey\"\nFOREIGN KEY (\"busTypeId\")\nREFERENCES \"public\".\"BusType\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Bus_busTypeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Bus_busTypeId_fkey",
+          "public",
+          "\"public\".\"Bus\""
+        ]
+      }
+    ]
+  }
+]

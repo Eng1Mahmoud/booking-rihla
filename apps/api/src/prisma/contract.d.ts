@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'1f5bc6bfc0ff862c29e84fe643773925b533dce9d1823692335e0346b639944f'>;
+  StorageHashBase<'3aee57fb27e3013f2f83b4e064e0c7adfd52ca06bf7bf5b8b0b6dd1910169007'>;
 export type ExecutionHash =
-  ExecutionHashBase<'d72a03176e88d02d49c52ab12e20ec9a0133706aa377b9de2b882047fc9d01e1'>;
+  ExecutionHashBase<'71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -234,6 +234,12 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly Amenity: {
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
+    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -255,15 +261,27 @@ export type FieldOutputTypes = {
       readonly tripId: CodecTypes['pg/text@1']['output'];
     };
     readonly Bus: {
+      readonly busTypeId: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly plateNumber: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
     };
+    readonly BusAmenity: {
+      readonly amenityId: CodecTypes['pg/text@1']['output'];
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+    };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly number: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly BusType: {
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -358,6 +376,12 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly Amenity: {
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -379,15 +403,27 @@ export type FieldInputTypes = {
       readonly tripId: CodecTypes['pg/text@1']['input'];
     };
     readonly Bus: {
+      readonly busTypeId: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly plateNumber: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
     };
+    readonly BusAmenity: {
+      readonly amenityId: CodecTypes['pg/text@1']['input'];
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+    };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly number: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly BusType: {
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
     };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['input'];
@@ -482,6 +518,12 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly Amenity: {
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
+    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -503,15 +545,27 @@ export type StorageColumnTypes = {
       readonly tripId: CodecTypes['pg/text@1']['output'];
     };
     readonly Bus: {
+      readonly busTypeId: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly plateNumber: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
     };
+    readonly BusAmenity: {
+      readonly amenityId: CodecTypes['pg/text@1']['output'];
+      readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+    };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly number: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly BusType: {
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nameAr: CodecTypes['pg/text@1']['output'];
+      readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -606,6 +660,12 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly Amenity: {
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
+    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -627,15 +687,27 @@ export type StorageColumnInputTypes = {
       readonly tripId: CodecTypes['pg/text@1']['input'];
     };
     readonly Bus: {
+      readonly busTypeId: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly plateNumber: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
     };
+    readonly BusAmenity: {
+      readonly amenityId: CodecTypes['pg/text@1']['input'];
+      readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+    };
     readonly BusSeat: {
       readonly busId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly number: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly BusType: {
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nameAr: CodecTypes['pg/text@1']['input'];
+      readonly nameEn: CodecTypes['pg/text@1']['input'];
     };
     readonly City: {
       readonly id: CodecTypes['pg/text@1']['input'];
@@ -730,6 +802,14 @@ export type StorageColumnInputTypes = {
 };
 
 export namespace Models {
+  export type public_Amenity = {
+    code: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    nameAr: CodecTypes['pg/text@1']['output'];
+    nameEn: CodecTypes['pg/text@1']['output'];
+    buses: public_BusAmenity[];
+    readonly [RelationKeys]?: 'buses';
+  };
   export type public_Booking = {
     contactPhone: CodecTypes['pg/text@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -758,13 +838,24 @@ export namespace Models {
     readonly [RelationKeys]?: 'booking' | 'seat';
   };
   export type public_Bus = {
+    busTypeId: CodecTypes['pg/text@1']['output'] | null;
     id: CodecTypes['pg/text@1']['output'];
     isActive: CodecTypes['pg/bool@1']['output'];
     plateNumber: CodecTypes['pg/text@1']['output'];
     seatCount: CodecTypes['pg/int4@1']['output'];
+    amenityLinks: public_BusAmenity[];
+    busType: public_BusType | null;
     seats: public_BusSeat[];
     trips: public_Trip[];
-    readonly [RelationKeys]?: 'seats' | 'trips';
+    readonly [RelationKeys]?: 'amenityLinks' | 'busType' | 'seats' | 'trips';
+  };
+  export type public_BusAmenity = {
+    amenityId: CodecTypes['pg/text@1']['output'];
+    busId: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    amenity: public_Amenity;
+    bus: public_Bus;
+    readonly [RelationKeys]?: 'amenity' | 'bus';
   };
   export type public_BusSeat = {
     busId: CodecTypes['pg/text@1']['output'];
@@ -773,6 +864,14 @@ export namespace Models {
     bookings: public_BookingSeat[];
     bus: public_Bus;
     readonly [RelationKeys]?: 'bookings' | 'bus';
+  };
+  export type public_BusType = {
+    code: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    nameAr: CodecTypes['pg/text@1']['output'];
+    nameEn: CodecTypes['pg/text@1']['output'];
+    buses: public_Bus[];
+    readonly [RelationKeys]?: 'buses';
   };
   export type public_City = {
     id: CodecTypes['pg/text@1']['output'];
@@ -898,10 +997,13 @@ export namespace Models {
 
 export declare const models: {
   public: {
+    Amenity: Models.public_Amenity;
     Booking: Models.public_Booking;
     BookingSeat: Models.public_BookingSeat;
     Bus: Models.public_Bus;
+    BusAmenity: Models.public_BusAmenity;
     BusSeat: Models.public_BusSeat;
+    BusType: Models.public_BusType;
     City: Models.public_City;
     EmailOutbox: Models.public_EmailOutbox;
     EmailVerification: Models.public_EmailVerification;
@@ -933,6 +1035,38 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly Amenity: {
+              columns: {
+                readonly code: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameAr: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameEn: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['code'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly Booking: {
               columns: {
                 readonly contactPhone: {
@@ -1137,6 +1271,12 @@ type ContractBase = Omit<
             };
             readonly Bus: {
               columns: {
+                readonly busTypeId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly id: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -1168,8 +1308,92 @@ type ContractBase = Omit<
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['plateNumber'] }];
-              indexes: readonly [];
-              foreignKeys: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'Bus_busTypeId_idx_00e74d42';
+                  readonly prefix: 'Bus_busTypeId_idx';
+                  readonly columns: readonly ['busTypeId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Bus';
+                    readonly columns: readonly ['busTypeId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BusType';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly BusAmenity: {
+              columns: {
+                readonly amenityId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly busId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['busId', 'amenityId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'BusAmenity_amenityId_idx_28149e7b';
+                  readonly prefix: 'BusAmenity_amenityId_idx';
+                  readonly columns: readonly ['amenityId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'BusAmenity_busId_idx_00d1f177';
+                  readonly prefix: 'BusAmenity_busId_idx';
+                  readonly columns: readonly ['busId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BusAmenity';
+                    readonly columns: readonly ['busId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Bus';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BusAmenity';
+                    readonly columns: readonly ['amenityId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Amenity';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
             };
             readonly BusSeat: {
               columns: {
@@ -1216,6 +1440,38 @@ type ContractBase = Omit<
                   };
                 },
               ];
+            };
+            readonly BusType: {
+              columns: {
+                readonly code: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameAr: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameEn: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['code'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
             };
             readonly City: {
               columns: {
@@ -2007,13 +2263,19 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly Amenity: { readonly namespace: 'public' & NamespaceId; readonly model: 'Amenity' };
     readonly Booking: { readonly namespace: 'public' & NamespaceId; readonly model: 'Booking' };
     readonly BookingSeat: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'BookingSeat';
     };
     readonly Bus: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+    readonly BusAmenity: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'BusAmenity';
+    };
     readonly BusSeat: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusSeat' };
+    readonly BusType: { readonly namespace: 'public' & NamespaceId; readonly model: 'BusType' };
     readonly City: { readonly namespace: 'public' & NamespaceId; readonly model: 'City' };
     readonly EmailOutbox: {
       readonly namespace: 'public' & NamespaceId;
@@ -2041,6 +2303,49 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly Amenity: {
+            readonly fields: {
+              readonly code: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameAr: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameEn: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly buses: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BusAmenity';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['amenityId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Amenity';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly code: { readonly column: 'code' };
+                readonly id: { readonly column: 'id' };
+                readonly nameAr: { readonly column: 'nameAr' };
+                readonly nameEn: { readonly column: 'nameEn' };
+              };
+            };
+          };
           readonly Booking: {
             readonly fields: {
               readonly contactPhone: {
@@ -2203,6 +2508,10 @@ type ContractBase = Omit<
           };
           readonly Bus: {
             readonly fields: {
+              readonly busTypeId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -2221,6 +2530,29 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly amenityLinks: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BusAmenity';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['busId'];
+                };
+              };
+              readonly busType: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BusType';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['busTypeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
               readonly seats: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -2245,10 +2577,59 @@ type ContractBase = Omit<
               readonly table: 'Bus';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly busTypeId: { readonly column: 'busTypeId' };
                 readonly id: { readonly column: 'id' };
                 readonly isActive: { readonly column: 'isActive' };
                 readonly plateNumber: { readonly column: 'plateNumber' };
                 readonly seatCount: { readonly column: 'seatCount' };
+              };
+            };
+          };
+          readonly BusAmenity: {
+            readonly fields: {
+              readonly amenityId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly busId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly amenity: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Amenity';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['amenityId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly bus: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['busId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'BusAmenity';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly amenityId: { readonly column: 'amenityId' };
+                readonly busId: { readonly column: 'busId' };
+                readonly id: { readonly column: 'id' };
               };
             };
           };
@@ -2296,6 +2677,46 @@ type ContractBase = Omit<
                 readonly busId: { readonly column: 'busId' };
                 readonly id: { readonly column: 'id' };
                 readonly number: { readonly column: 'number' };
+              };
+            };
+          };
+          readonly BusType: {
+            readonly fields: {
+              readonly code: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameAr: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameEn: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly buses: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bus' };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['busTypeId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'BusType';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly code: { readonly column: 'code' };
+                readonly id: { readonly column: 'id' };
+                readonly nameAr: { readonly column: 'nameAr' };
+                readonly nameEn: { readonly column: 'nameEn' };
               };
             };
           };
@@ -3142,6 +3563,14 @@ type ContractBase = Omit<
         {
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
+            readonly entry: 'Amenity';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
             readonly entry: 'Booking';
             readonly field: 'id';
             readonly namespace: 'public';
@@ -3166,7 +3595,23 @@ type ContractBase = Omit<
         {
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
+            readonly entry: 'BusAmenity';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
             readonly entry: 'BusSeat';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'BusType';
             readonly field: 'id';
             readonly namespace: 'public';
           };

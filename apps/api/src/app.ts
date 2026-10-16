@@ -1,4 +1,14 @@
 import {
+  busTypeService,
+  type BusTypeService,
+} from './services/busTypeService.ts';
+import {
+  amenityService,
+  type AmenityService,
+} from './services/amenityService.ts';
+import { createBusTypeRouter } from './routes/busTypeRoutes.ts';
+import { createAmenityRouter } from './routes/amenityRoutes.ts';
+import {
   bookingService,
   type BookingService,
 } from './services/bookingService.ts';
@@ -59,6 +69,8 @@ export function createApp(
     sessions?: SessionService;
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
+    busTypes?: BusTypeService;
+    amenities?: AmenityService;
   } = {},
 ) {
   const app = express();
@@ -104,6 +116,15 @@ export function createApp(
       services.tripSearch,
       services.tripDetails,
     ),
+  );
+
+  app.use(
+    '/api/v1/bus-types',
+    createBusTypeRouter(services.busTypes ?? busTypeService, admin),
+  );
+  app.use(
+    '/api/v1/amenities',
+    createAmenityRouter(services.amenities ?? amenityService, admin),
   );
 
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));

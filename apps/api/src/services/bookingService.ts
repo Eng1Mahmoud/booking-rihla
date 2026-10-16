@@ -110,6 +110,23 @@ export const bookingService = {
             .affectedCount()
             .build(),
         );
+        // Serialize catalog definition edits with the first reservation for this bus.
+        const currentBus = await tx.orm.public.Bus.where({
+          id: trip.busId,
+        }).first();
+        if (currentBus?.busTypeId)
+          await tx.execute(
+            db.raw
+              .sql`SELECT "id" FROM "public"."BusType" WHERE "id" = ${currentBus.busTypeId} FOR SHARE`
+              .affectedCount()
+              .build(),
+          );
+        await tx.execute(
+          db.raw
+            .sql`SELECT a."id" FROM "public"."Amenity" a JOIN "public"."BusAmenity" ba ON ba."amenityId" = a."id" WHERE ba."busId" = ${trip.busId} ORDER BY a."id" FOR SHARE OF a`
+            .affectedCount()
+            .build(),
+        );
         const route = await tx.orm.public.Route.where({
           id: trip.routeId,
         }).first();

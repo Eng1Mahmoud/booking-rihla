@@ -25,6 +25,9 @@ model Bus {
   plateNumber String    @unique
   seatCount   Int
   isActive    Boolean   @default(true)
+  busTypeId String?
+  busType BusType? @relation(fields: [busTypeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  amenityLinks BusAmenity[]
   seats       BusSeat[]
   trips       Trip[]
 
@@ -221,4 +224,30 @@ model BookingSeat {
   @@index([bookingId, tripId])
   @@index([seatId])
   @@check(expression: sql`"seatNumber" BETWEEN 1 AND 100`, name: "booking_seat_number")
+}
+
+model BusType {
+  id String @id @default(uuid())
+  code String @unique
+  nameAr String
+  nameEn String
+  buses Bus[]
+  @@check(expression: sql`code ~ '^[A-Z][A-Z0-9_]{0,31}$'`, name: "bus_type_code")
+}
+model Amenity {
+  id String @id @default(uuid())
+  code String @unique
+  nameAr String
+  nameEn String
+  buses BusAmenity[]
+  @@check(expression: sql`code ~ '^[A-Z][A-Z0-9_]{0,31}$'`, name: "amenity_code")
+}
+model BusAmenity {
+  id String @id @default(uuid())
+  busId String
+  amenityId String
+  bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([busId, amenityId])
+  @@index([amenityId])
 }

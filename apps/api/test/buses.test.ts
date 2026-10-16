@@ -21,7 +21,13 @@ function fakeService(): BusService {
       return null;
     },
     async create(input) {
-      return { id: randomUUID(), ...input };
+      return {
+        id: randomUUID(),
+        ...input,
+        busTypeId: input.busTypeId ?? null,
+        busType: null,
+        amenities: [],
+      };
     },
     async update() {
       return null;
@@ -60,6 +66,9 @@ test('bus creation normalizes plates, defaults active, and returns 201 with Loca
     plateNumber: 'ABC 123',
     seatCount: 100,
     isActive: true,
+    busTypeId: null,
+    busType: null,
+    amenities: [],
   });
   assert.equal(response.headers.get('location'), '/api/v1/buses/' + data.id);
 });
@@ -97,6 +106,9 @@ test('bus list filters parse true and false explicitly with bounded pagination',
 
 test('bus details and seat list use the supplied service and validate ids', async (t) => {
   const bus: Bus = {
+    busTypeId: null,
+    busType: null,
+    amenities: [],
     id: randomUUID(),
     plateNumber: 'ABC',
     seatCount: 1,
@@ -123,6 +135,9 @@ test('bus details and seat list use the supplied service and validate ids', asyn
 
 test('bus PATCH forwards only provided fields without defaulting active', async (t) => {
   const bus: Bus = {
+    busTypeId: null,
+    busType: null,
+    amenities: [],
     id: randomUUID(),
     plateNumber: 'OLD',
     seatCount: 3,

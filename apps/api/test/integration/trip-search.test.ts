@@ -81,7 +81,12 @@ test('repeatable scoped seeds and passenger search enforce endpoints, Cairo boun
   );
   assert.equal(result[0].route.originStation.city.nameEn, 'Cairo');
   assert.equal(result[0].route.destinationStation.nameAr, 'محرم بك');
-  assert.deepEqual(result[0].bus, { id: bus.id, seatCount: 20 });
+  assert.deepEqual(result[0].bus, {
+    id: bus.id,
+    seatCount: 20,
+    busType: null,
+    amenities: [],
+  });
   assert.equal(result[0].pricePiastres, 25000);
   assert.ok(result[0].departureAt.endsWith('Z'));
   assert.equal(

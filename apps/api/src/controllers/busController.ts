@@ -16,7 +16,7 @@ export function createBusController(service: BusService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Use limit 1-100, offset 0-100000, and optional isActive=true/false; no other query fields are supported',
+          'Use limit 1-100, offset 0-100000, and optional busTypeId UUID and isActive=true/false; no other query fields are supported',
         );
       }
       const buses = await service.list(query.data);
@@ -62,7 +62,7 @@ export function createBusController(service: BusService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), and optional isActive (boolean)',
+          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), optional isActive, busTypeId (UUID/null), and amenityIds (up to 30 distinct UUIDs)',
         );
       }
       const bus = await service.create(input.data);
@@ -92,7 +92,7 @@ export function createBusController(service: BusService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), or isActive (boolean); no other fields are allowed',
+          'Provide plateNumber (1-32 characters), seatCount (integer 1-100), isActive (boolean), busTypeId (UUID/null), or amenityIds (up to 30 distinct UUIDs); no other fields are allowed',
         );
       }
       const bus = await service.update(id.data, input.data);

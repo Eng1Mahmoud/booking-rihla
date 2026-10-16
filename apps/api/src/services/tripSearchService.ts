@@ -1,3 +1,4 @@
+import { busMetadata } from '../utils/busMetadata.ts';
 import type { TripSearchQuery } from '../schemas/tripSearchSchema.ts';
 import { cairoDayBounds } from '../utils/cairoTime.ts';
 
@@ -39,7 +40,12 @@ export const tripSearchService = {
       .orderBy([(trip) => trip.departureAt.asc(), (trip) => trip.id.asc()])
       .limit(limit)
       .offset(offset)
-      .include('bus', (bus) => bus.select('id', 'seatCount'))
+      .include('bus', (bus) =>
+        bus
+          .select('id', 'seatCount')
+          .include('busType')
+          .include('amenityLinks', (links) => links.include('amenity')),
+      )
       .include('route', (route) =>
         route
           .include('originStation', (station) => station.include('city'))
@@ -48,6 +54,13 @@ export const tripSearchService = {
       .all();
     return trips.map((trip) => ({
       ...trip,
+      bus: trip.bus
+        ? {
+            id: trip.bus.id,
+            seatCount: trip.bus.seatCount,
+            ...busMetadata(trip.bus),
+          }
+        : null,
       departureAt: new Date(trip.departureAt).toISOString(),
       arrivalAt: new Date(trip.arrivalAt).toISOString(),
     }));

@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Reservation MVP without passenger cancellation
+## Current feature: Bus types and amenities
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Next extend operator management, starting with the remaining fleet metadata and administrative APIs.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Next add visual seat layout metadata while preserving reserved seat identities, then continue the remaining operator APIs.
 
 ## Git workflow
 
@@ -311,7 +311,7 @@ npm run test:db exercises both City and Station CRUD, moving/filtering stations,
 
 ## Bus and numbered-seat API
 
-Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Names/types/amenities and visual seat layouts remain a later fleet extension.
+Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Optional busTypeId and many-to-many amenities are implemented below; visual seat layouts remain the next fleet extension.
 
 | Method | Path                                          | Behavior                                                |
 | ------ | --------------------------------------------- | ------------------------------------------------------- |
@@ -447,7 +447,7 @@ Replace placeholders with UUIDs and a date printed by npm run db:seed. Choose ex
 
 travelDate is a valid YYYY-MM-DD calendar date from 2000 through 9998, interpreted in Africa/Cairo. The service converts the start of that day and the next day to UTC instants, then includes departureAt >= start and departureAt < end. It separately requires departureAt > the current instant, status=SCHEDULED, and active route/bus records. Past dates return an empty list. Arrival may be on a different date. A fixed +02:00/+03:00 offset or adding 24 hours would fail around DST; utils/cairoTime.ts uses temporal-polyfill with named timezone rules instead. The polyfill is now a direct API dependency, imported locally without modifying global Temporal or changing Prisma's timestamp codecs.
 
-Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Current departure seat availability is exposed by the endpoint below using per-trip reservations.
+Results sort by departure instant then UUID. limit defaults to 20 (1-100), offset to 0 (0-100000). Pagination is applied in the database. Each result includes Trip fields with UTC ISO timestamps, bus id/seatCount, bilingual busType and amenities (not its plate), and the route with origin/destination stations and their cities, including Arabic/English names. Relations are included in the database query rather than loaded in a per-trip loop. SeatCount is vehicle capacity; it is not a count of remaining available seats. Current departure seat availability is exposed by the endpoint below using per-trip reservations.
 
 Response shape:
 
@@ -476,7 +476,7 @@ After searching, use a returned Trip id:
 
 These read-only endpoints require a valid UUID and accept no query parameters. They expose only future SCHEDULED trips with an active Route and Bus, matching passenger search. Missing, cancelled, departed, inactive-route and inactive-bus trips all return 404 TRIP_NOT_FOUND. Invalid ids or unsupported query parameters return 400 VALIDATION_ERROR. Unexpected failures return the existing safe 500 JSON response. Both successful and error responses set Cache-Control: no-store so a client must fetch current state.
 
-Details return the same enriched Trip shape as search, wrapped in data. The bus includes only id and seatCount; its plate is not exposed. Route endpoints include station and city names in Arabic and English. Timestamps are normalized to UTC ISO strings and prices remain integer piastres. Existing management GET /api/v1/trips/:id still returns its scalar record, including past/cancelled trips, for the later operator interface.
+Details return the same enriched Trip shape as search, wrapped in data. The bus includes id, seatCount, bilingual busType (or null) and amenities; its plate and internal linking rows are not exposed. Route endpoints include station and city names in Arabic and English. Timestamps are normalized to UTC ISO strings and prices remain integer piastres. Existing management GET /api/v1/trips/:id still returns its scalar record, including past/cancelled trips, for the later operator interface.
 
 Example seat response for a two-seat bus:
 
@@ -641,7 +641,7 @@ Invalid session credentials return 401 UNAUTHENTICATED, CSRF violations return 4
 
 Implementation uses services/sessionService.ts for login/rotation/revocation, utils/sessionTokens.ts for opaque tokens and jose JWT validation/signing, middlewares/requireAuth.ts for protected requests, middlewares/sessionCsrf.ts for mutation checks, and controllers/sessionController.ts/routes/sessionRoutes.ts for HTTP/cookies. cookie-parser only parses the refresh cookie. Services do not use Express objects, and there is no repository layer.
 
-Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 116 default tests and twelve PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
+Validation covers signup-receipt ownership, verified-account enforcement, JWT tampering/expiry/audience/purpose, safe cookies, CSRF/origin failures, durable lockout, rotating hashed refresh tokens, replay and concurrent refresh revocation, separate-device logout, logout-all, inactive/expired sessions, safe error output and scoped cleanup. The full suites contain 124 default tests and thirteen PostgreSQL integration tests. Shared rate-limit storage and browser frontend integration remain later feature batches.
 
 Session verification also applied all seven migrations to a fresh temporary database, reran them without changes, passed all nine PostgreSQL integration tests there, and exercised compiled SMTP activation, sign-in, current-user lookup, refresh rotation and logout. The temporary database and scoped test accounts were removed; existing demo trips remain unchanged.
 
@@ -670,15 +670,15 @@ Verification: all eight migrations applied to an empty temporary database; a sec
 
 Apply npm run db:migrate before starting the API. The additive migration adds User.role with a USER default and a PostgreSQL check constraint allowing USER, ADMIN and SUPER_ADMIN. Existing accounts stay USER. Public registration rejects role, isAdmin and other unknown fields. Login, refresh and current-user responses now include role in their safe user object. Access JWTs do not carry authorization roles; requireAuth reads the current user and session from PostgreSQL on every protected request, so demotion takes effect at the next check without waiting for token expiry. Suspension, unverified email and revoked/expired sessions still return 401.
 
-| Endpoints                                                                    | Public access | Required role        |
-| ---------------------------------------------------------------------------- | ------------- | -------------------- |
-| GET /api/v1/health                                                           | Yes           | None                 |
-| GET /api/v1/cities and /cities/:id                                           | Yes           | None                 |
-| GET /api/v1/stations and /stations/:id                                       | Yes           | None                 |
-| GET /api/v1/trips/search, /trips/:id/details, /trips/:id/seats               | Yes           | None                 |
-| POST/PATCH/DELETE catalog endpoints (cities, stations, buses, routes, trips) | No            | ADMIN or SUPER_ADMIN |
-| All /api/v1/buses and /api/v1/routes endpoints                               | No            | ADMIN or SUPER_ADMIN |
-| GET /api/v1/trips and /trips/:id management endpoints                        | No            | ADMIN or SUPER_ADMIN |
+| Endpoints                                                                            | Public access | Required role        |
+| ------------------------------------------------------------------------------------ | ------------- | -------------------- |
+| GET /api/v1/health                                                                   | Yes           | None                 |
+| GET /api/v1/cities and /cities/:id                                                   | Yes           | None                 |
+| GET /api/v1/stations and /stations/:id                                               | Yes           | None                 |
+| GET /api/v1/trips/search, /trips/:id/details, /trips/:id/seats                       | Yes           | None                 |
+| POST/PATCH/DELETE catalog endpoints (cities, stations, buses, routes, trips)         | No            | ADMIN or SUPER_ADMIN |
+| All /api/v1/buses, /api/v1/routes, /api/v1/bus-types and /api/v1/amenities endpoints | No            | ADMIN or SUPER_ADMIN |
+| GET /api/v1/trips and /trips/:id management endpoints                                | No            | ADMIN or SUPER_ADMIN |
 
 Protected requests require Authorization: Bearer ACCESS_TOKEN. A refresh cookie alone grants no catalog access. No additional session-CSRF header is required for these Bearer-authenticated endpoints. Anonymous/invalid authentication receives 401 UNAUTHENTICATED; an authenticated passenger receives 403 FORBIDDEN. Checks run before controller validation and database mutations, with Cache-Control: no-store on protected responses. HEAD receives the same read authorization. Public CORS preflights remain handled before routers. Route management can expose inactive catalog records, so passengers use the existing filtered search/details endpoints.
 
@@ -738,3 +738,49 @@ Trips with reservations reject actual changes to bus, route, departure, arrival,
 Read schemas/bookingSchema.ts, routes/bookingRoutes.ts, controllers/bookingController.ts and services/bookingService.ts under apps/api/src. The code follows the existing Route -> Controller -> Service -> Prisma structure. Tests cover validation, private responses, ownership even for admins, no passenger cancellation, parallel claims for a seat, multi-seat rollback, direct database constraints, separate departures, account/session revocation, unavailable trips, totals beyond int32, trip edit races, historical reads and scoped cleanup. Local development data is preserved.
 
 Reservation verification: all ten migrations applied to a new temporary database, with zero changes on a second run. All twelve PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test exercised competing seat reservations, JSON price totals, owner-only detail lookup, public availability, rejection of booked-trip edits, and absent passenger cancellation routes. Its fixtures and temporary database were removed. The complete default suite has 116 passing tests; type checks, lint, formatting and build pass. Existing development cities/trips remained unchanged, with no test users or reservations left behind.
+
+## Bus types and amenities
+
+Apply npm run db:migrate before starting the updated API. The additive migration creates BusType, Amenity and BusAmenity and adds nullable Bus.busTypeId. Existing buses keep a null type and empty amenities; seats, trips and bookings remain unchanged. No category is assigned automatically and no extra dependency or environment variable is needed.
+
+All of these endpoints require an active, verified ADMIN or SUPER_ADMIN session with Authorization: Bearer ACCESS_TOKEN and disable caching. Passengers and anonymous callers cannot manage or list the catalogs directly; passenger trip search/details include the assigned labels.
+
+| Resource  | List/create                | Detail/update/delete                   |
+| --------- | -------------------------- | -------------------------------------- |
+| Bus types | GET/POST /api/v1/bus-types | GET/PATCH/DELETE /api/v1/bus-types/:id |
+| Amenities | GET/POST /api/v1/amenities | GET/PATCH/DELETE /api/v1/amenities/:id |
+
+Both resources accept code, nameAr and nameEn when creating. PATCH accepts any nonempty subset. Names are trimmed and contain 1-100 characters. Codes are trimmed, uppercased and contain 1-32 ASCII letters/digits/underscores, beginning with a letter. Each resource has its own unique-code constraint and database code-format check. Lists sort by code then UUID and support the existing limit/offset bounds. Unknown body/query fields are rejected; writes require JSON. Detail/update/delete paths require UUIDs and no query parameters.
+
+Example bus type and amenity bodies:
+
+```json
+{ "code": "VIP", "nameAr": "مميز", "nameEn": "Premium" }
+```
+
+```json
+{ "code": "WIFI", "nameAr": "واي فاي", "nameEn": "Wi-Fi" }
+```
+
+Use the returned ids when creating or patching a bus:
+
+```json
+{
+  "busTypeId": "BUS_TYPE_UUID",
+  "amenityIds": ["WIFI_UUID", "USB_UUID"]
+}
+```
+
+Bus POST still requires plateNumber and seatCount. busTypeId is an optional existing UUID or null; amenityIds is an optional array of up to thirty distinct existing UUIDs. PATCH preserves either assignment when omitted; null clears the type and [] clears amenities. amenityIds replaces the complete set rather than appending. Requests reject nested busType/amenities objects and duplicate or invalid ids. GET /api/v1/buses additionally accepts a busTypeId UUID filter alongside pagination and isActive.
+
+Bus management responses now contain busTypeId, busType (id/code/nameAr/nameEn or null), and a flat amenities array sorted by code/UUID. Passenger search and details expose only id, seatCount, busType and amenities under bus. Raw BusAmenity links and plate numbers stay private. Related labels are loaded with the existing included relations, without per-trip lookup loops. Seat availability response fields are unchanged.
+
+BusType is a one-to-many relation: one bus may have one type, and many buses can share it. Amenities use the explicit BusAmenity join table because a bus can offer several amenities and an amenity can belong to several buses. UNIQUE(busId, amenityId) prevents duplicate links. Deleting a bus cascades only its links; deleting a type or amenity that is still assigned returns 409 BUS_TYPE_IN_USE or AMENITY_IN_USE. Duplicate normalized codes return 409 BUS_TYPE_CODE_EXISTS or AMENITY_CODE_EXISTS. Missing resource or assignment ids return 404 BUS_TYPE_NOT_FOUND or AMENITY_NOT_FOUND.
+
+Creation saves the bus, seats and amenity links in one transaction. Updating locks the bus and validates all catalog references before making changes; seat resizing, scalar changes and complete amenity-set replacement commit together. Bad references or conflicting plates roll back the whole request. Parallel replacements serialize, so their sets cannot merge accidentally. Parent catalog rows are locked against deletion/definition changes during assignment.
+
+A bus with any reservation, including a past one, rejects actual type or amenity-set changes with 409 BUS_HAS_BOOKINGS. Updating the code or names of a type/amenity used by a reserved bus returns 409 BUS_TYPE_HAS_BOOKINGS or AMENITY_HAS_BOOKINGS. Identical assignments and identical labels remain allowed. The first reservation locks its type and amenities while holding the bus lock, so concurrent definition edits or assignment changes either finish before reservation or are refused after it. This conservative rule preserves the advertised service until a later feature supports per-departure historical metadata. Existing seat-capacity and booked-trip protections remain in place; passenger cancellation stays unavailable.
+
+Read schemas/fleetMetadataSchema.ts for common validation, services/busTypeService.ts and services/amenityService.ts for separate catalog behavior, and services/busService.ts for atomic assignments. Corresponding controllers and routers follow the existing structure. utils/busMetadata.ts produces the flat public labels used by trip search/details. These paths are under apps/api/src. Tests cover admin authorization, CRUD, code uniqueness, invalid references, clearing/preserving assignments, atomic rollback, simultaneous set replacements, public projections, default null/empty metadata and reservation races.
+
+Fleet verification: all eleven migrations applied to an empty temporary database, with zero applied on a second run. All thirteen PostgreSQL integration tests passed there. A compiled JavaScript HTTP smoke test created metadata through protected APIs, assigned it to a bus, checked public search/details without plate leakage, created a reservation and verified metadata mutation/deletion guards. Fixtures and the temporary database were removed. The 124 default tests, type checks, lint and build pass; existing development catalog data was preserved with no extra types, amenities, links, users or reservations left behind.

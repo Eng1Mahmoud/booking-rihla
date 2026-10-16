@@ -68,7 +68,12 @@ test('passenger details and seats follow eligible trips and the assigned bus wit
   assert.ok(details.departureAt.endsWith('Z'));
   assert.equal(details.route.originStation.nameAr, 'رمسيس');
   assert.equal(details.route.destinationStation.city.nameEn, 'Alexandria');
-  assert.deepEqual(details.bus, { id: bus.id, seatCount: 20 });
+  assert.deepEqual(details.bus, {
+    id: bus.id,
+    seatCount: 20,
+    busType: null,
+    amenities: [],
+  });
   assert.ok(!JSON.stringify(details).includes('plateNumber'));
   const seats = await read(trip.id, 'seats');
   assert.equal(seats.tripId, trip.id);

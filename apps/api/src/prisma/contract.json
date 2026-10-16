@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Amenity": {
+      "model": "Amenity",
+      "namespace": "public"
+    },
     "Booking": {
       "model": "Booking",
       "namespace": "public"
@@ -16,8 +20,16 @@
       "model": "Bus",
       "namespace": "public"
     },
+    "BusAmenity": {
+      "model": "BusAmenity",
+      "namespace": "public"
+    },
     "BusSeat": {
       "model": "BusSeat",
+      "namespace": "public"
+    },
+    "BusType": {
+      "model": "BusType",
       "namespace": "public"
     },
     "City": {
@@ -123,6 +135,73 @@
           }
         },
         "models": {
+          "Amenity": {
+            "fields": {
+              "code": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameAr": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameEn": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "buses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "amenityId"
+                  ]
+                },
+                "to": {
+                  "model": "BusAmenity",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "code": {
+                  "column": "code"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "nameAr": {
+                  "column": "nameAr"
+                },
+                "nameEn": {
+                  "column": "nameEn"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Amenity"
+            }
+          },
           "Booking": {
             "fields": {
               "contactPhone": {
@@ -398,6 +477,13 @@
           },
           "Bus": {
             "fields": {
+              "busTypeId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -428,6 +514,37 @@
               }
             },
             "relations": {
+              "amenityLinks": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "busId"
+                  ]
+                },
+                "to": {
+                  "model": "BusAmenity",
+                  "namespace": "public"
+                }
+              },
+              "busType": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "busTypeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BusType",
+                  "namespace": "public"
+                }
+              },
               "seats": {
                 "cardinality": "1:N",
                 "on": {
@@ -461,6 +578,9 @@
             },
             "storage": {
               "fields": {
+                "busTypeId": {
+                  "column": "busTypeId"
+                },
                 "id": {
                   "column": "id"
                 },
@@ -476,6 +596,80 @@
               },
               "namespaceId": "public",
               "table": "Bus"
+            }
+          },
+          "BusAmenity": {
+            "fields": {
+              "amenityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "busId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "amenity": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "amenityId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Amenity",
+                  "namespace": "public"
+                }
+              },
+              "bus": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "busId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Bus",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amenityId": {
+                  "column": "amenityId"
+                },
+                "busId": {
+                  "column": "busId"
+                },
+                "id": {
+                  "column": "id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "BusAmenity"
             }
           },
           "BusSeat": {
@@ -549,6 +743,73 @@
               },
               "namespaceId": "public",
               "table": "BusSeat"
+            }
+          },
+          "BusType": {
+            "fields": {
+              "code": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameAr": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nameEn": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "buses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "busTypeId"
+                  ]
+                },
+                "to": {
+                  "model": "Bus",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "code": {
+                  "column": "code"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "nameAr": {
+                  "column": "nameAr"
+                },
+                "nameEn": {
+                  "column": "nameEn"
+                }
+              },
+              "namespaceId": "public",
+              "table": "BusType"
             }
           },
           "City": {
@@ -1715,6 +1976,51 @@
       "public": {
         "entries": {
           "table": {
+            "Amenity": {
+              "checks": [
+                {
+                  "expression": "code ~ '^[A-Z][A-Z0-9_]{0,31}$'",
+                  "name": "amenity_code_2073f902",
+                  "prefix": "amenity_code"
+                }
+              ],
+              "columns": {
+                "code": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameAr": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameEn": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "code"
+                  ]
+                }
+              ]
+            },
             "Booking": {
               "checks": [
                 {
@@ -2017,6 +2323,11 @@
                 }
               ],
               "columns": {
+                "busTypeId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -2042,8 +2353,39 @@
                   "nullable": false
                 }
               },
-              "foreignKeys": [],
-              "indexes": [],
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Bus_busTypeId_idx_00e74d42"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "busTypeId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Bus"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BusType"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "busTypeId"
+                  ],
+                  "name": "Bus_busTypeId_idx_00e74d42",
+                  "prefix": "Bus_busTypeId_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -2053,6 +2395,100 @@
                 {
                   "columns": [
                     "plateNumber"
+                  ]
+                }
+              ]
+            },
+            "BusAmenity": {
+              "columns": {
+                "amenityId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "busId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "BusAmenity_busId_idx_00d1f177"
+                  },
+                  "onDelete": "cascade",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "busId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BusAmenity"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Bus"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "BusAmenity_amenityId_idx_28149e7b"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "amenityId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BusAmenity"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Amenity"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "amenityId"
+                  ],
+                  "name": "BusAmenity_amenityId_idx_28149e7b",
+                  "prefix": "BusAmenity_amenityId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "busId"
+                  ],
+                  "name": "BusAmenity_busId_idx_00d1f177",
+                  "prefix": "BusAmenity_busId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "busId",
+                    "amenityId"
                   ]
                 }
               ]
@@ -2125,6 +2561,51 @@
                   "columns": [
                     "busId",
                     "number"
+                  ]
+                }
+              ]
+            },
+            "BusType": {
+              "checks": [
+                {
+                  "expression": "code ~ '^[A-Z][A-Z0-9_]{0,31}$'",
+                  "name": "bus_type_code_2073f902",
+                  "prefix": "bus_type_code"
+                }
+              ],
+              "columns": {
+                "code": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameAr": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nameEn": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "code"
                   ]
                 }
               ]
@@ -3158,12 +3639,23 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1f5bc6bfc0ff862c29e84fe643773925b533dce9d1823692335e0346b639944f"
+    "storageHash": "3aee57fb27e3013f2f83b4e064e0c7adfd52ca06bf7bf5b8b0b6dd1910169007"
   },
   "execution": {
-    "executionHash": "d72a03176e88d02d49c52ab12e20ec9a0133706aa377b9de2b882047fc9d01e1",
+    "executionHash": "71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Amenity",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
         {
           "onCreate": {
             "id": "uuidv4",
@@ -3203,7 +3695,29 @@
             "kind": "generator"
           },
           "ref": {
+            "entry": "BusAmenity",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
             "entry": "BusSeat",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "BusType",
             "field": "id",
             "namespace": "public"
           }
