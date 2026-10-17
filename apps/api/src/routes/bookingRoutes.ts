@@ -1,3 +1,8 @@
+import { createPaymentCheckoutController } from '../controllers/paymentCheckoutController.ts';
+import {
+  paymentCheckoutService,
+  type PaymentCheckoutService,
+} from '../services/paymentCheckoutService.ts';
 import { createPaymentAttemptController } from '../controllers/paymentAttemptController.ts';
 import {
   paymentAttemptService,
@@ -14,6 +19,7 @@ export function createBookingRouter(
   service: BookingService,
   sessions: SessionService,
   payments: PaymentAttemptService = paymentAttemptService,
+  checkout: PaymentCheckoutService = paymentCheckoutService,
 ) {
   const router = Router();
   const controller = createBookingController(service);
@@ -39,6 +45,43 @@ export function createBookingRouter(
   const paymentController = createPaymentAttemptController(payments);
   router.post('/:id/payment-attempt', paymentController.prepare);
   router.get('/:id/payment-attempt', paymentController.get);
+  const checkoutController = createPaymentCheckoutController(checkout);
+  router.post(
+    '/:id/checkout',
+    rateLimit({
+      limit: 20,
+      windowMs: 60000,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) =>
+        next(
+          new AppError(
+            429,
+            'RATE_LIMITED',
+            'Too many checkout requests; try again later',
+          ),
+        ),
+    }),
+    checkoutController.start,
+  );
+  router.get(
+    '/:id/payment',
+    rateLimit({
+      limit: 120,
+      windowMs: 60000,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) =>
+        next(
+          new AppError(
+            429,
+            'RATE_LIMITED',
+            'Too many payment status requests; try again later',
+          ),
+        ),
+    }),
+    checkoutController.get,
+  );
   router.get('/', controller.list);
   router.get('/:id', controller.getById);
   // Passenger cancellation is deliberately unavailable: no DELETE/PATCH/cancel route.

@@ -30,6 +30,22 @@ export const errorHandler: ErrorRequestHandler = (
     }
   }
 
+  // Explicit operational unavailability has a fixed public message, not an
+  // arbitrary upstream/server exception message.
+  if (
+    error instanceof AppError &&
+    error.statusCode === 503 &&
+    error.code === 'PAYMENT_UNAVAILABLE'
+  ) {
+    response.status(503).json({
+      error: {
+        code: 'PAYMENT_UNAVAILABLE',
+        message: 'Payment is temporarily unavailable',
+      },
+    });
+    return;
+  }
+
   if (
     error instanceof AppError &&
     Number.isInteger(error.statusCode) &&

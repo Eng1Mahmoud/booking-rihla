@@ -1,3 +1,4 @@
+import { paymobCheckoutUrlSchema } from '../payments/checkoutUrl.ts';
 import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
 import { parsePaymobEnv } from '../config/paymob.ts';
@@ -35,30 +36,10 @@ const resultSchema = z.object({
     .string()
     .regex(/^[1-9][0-9]*$/)
     .refine((v) => Number.isSafeInteger(Number(v))),
-  checkoutUrl: z
-    .string()
-    .max(8192)
-    .refine((value) => {
-      if (!URL.canParse(value)) return false;
-      const url = new URL(value);
-      return (
-        url.origin === 'https://accept.paymob.com' &&
-        url.pathname === '/unifiedcheckout/' &&
-        !url.username &&
-        !url.password &&
-        !url.hash &&
-        /^(?:egy_)?pk_?test_[A-Za-z0-9_-]+$/.test(
-          url.searchParams.get('publicKey') ?? '',
-        ) &&
-        /^(?:egy_)?csk_test_[A-Za-z0-9_-]+$/.test(
-          url.searchParams.get('clientSecret') ?? '',
-        ) &&
-        [...url.searchParams.keys()].length === 2
-      );
-    }),
+  checkoutUrl: paymobCheckoutUrlSchema,
 });
-// Internal until inquiry/capture/void reconciliation is complete. No public route
-// or worker invokes this service, and it never returns a usable checkout link.
+// Durable creation only: the owner-scoped checkout service controls link exposure.
+// This service returns operation metadata only, never a usable checkout link.
 export function createPaymentAuthorizationService(dependencies: {
   provider: Pick<PaymentProvider, 'createAuthorization'>;
   integrationId: number;

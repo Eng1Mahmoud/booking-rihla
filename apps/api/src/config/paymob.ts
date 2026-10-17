@@ -99,3 +99,25 @@ export function parsePaymobWebhookEnv(
     );
   return result.data;
 }
+
+// Checkout remains a separate, explicit opt-in after TEST merchant verification.
+export function parsePaymobCheckoutEnv(
+  environment: NodeJS.ProcessEnv,
+): PaymobConfig | null {
+  const flag = environment['PAYMOB_CHECKOUT_ENABLED'];
+  if (flag === undefined || flag === 'false') return null;
+  if (flag !== 'true')
+    throw new Error('Invalid payment configuration: PAYMOB_CHECKOUT_ENABLED');
+  const config = parsePaymobEnv(environment);
+  if (!config) throw new Error('Checkout requires PAYMOB_ENABLED');
+  if (environment['PAYMOB_RECONCILIATION_ENABLED'] !== 'true')
+    throw new Error('Checkout requires PAYMOB_RECONCILIATION_ENABLED');
+  const webhook = parsePaymobWebhookEnv(environment);
+  if (
+    !webhook ||
+    webhook.PAYMOB_OWNER_ID !== config.PAYMOB_OWNER_ID ||
+    webhook.PAYMOB_INTEGRATION_ID !== config.PAYMOB_INTEGRATION_ID
+  )
+    throw new Error('Checkout requires owner-scoped PAYMOB_WEBHOOK_ENABLED');
+  return config;
+}

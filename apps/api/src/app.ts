@@ -1,3 +1,4 @@
+import type { PaymentCheckoutService } from './services/paymentCheckoutService.ts';
 import type { PaymentAttemptService } from './services/paymentAttemptService.ts';
 import {
   paymobWebhookService,
@@ -105,6 +106,7 @@ export function createApp(
     amenities?: AmenityService;
     paymobWebhook?: PaymobWebhookService;
     paymentAttempts?: PaymentAttemptService;
+    paymentCheckout?: PaymentCheckoutService;
   } = {},
 ) {
   const app = express();
@@ -184,6 +186,7 @@ export function createApp(
       services.bookings ?? bookingService,
       services.sessions ?? sessionService,
       services.paymentAttempts,
+      services.paymentCheckout,
     ),
   );
 
