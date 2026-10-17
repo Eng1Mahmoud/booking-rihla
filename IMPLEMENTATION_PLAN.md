@@ -167,7 +167,7 @@ Working result: authorized operators manage the data previously supplied by seed
 
 ## Phase 8 — Seat holds and sandbox payments
 
-Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth/Cap only. The owner does not have a Paymob account yet. The adapter is implemented and tested with deterministic transport fixtures; account activation, exact Auth request fields and remote behavior remain unverified. No payment endpoint, webhook listener, payment persistence or booking confirmation is enabled by the adapter alone. Existing seat-hold behavior remains unchanged until the durable integration is implemented. A timeout is an unknown outcome; never repeat a capture blindly or release a seat while its capture outcome is unknown. Operator cancellation/refund policy still needs agreement before paid-booking activation.
+Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth/Cap only. The owner now has a Paymob account and local TEST credentials; API-key authentication succeeded without creating a payment. A local payment:setup check supports preparation without an existing transaction or owner id. The adapter is implemented and tested with deterministic transport fixtures; account activation, exact Auth request fields and remote behavior remain unverified. No payment endpoint, webhook listener, payment persistence or booking confirmation is enabled by the adapter alone. Existing seat-hold behavior remains unchanged until the durable integration is implemented. A timeout is an unknown outcome; never repeat a capture blindly or release a seat while its capture outcome is unknown. Operator cancellation/refund policy still needs agreement before paid-booking activation.
 
 Small steps:
 

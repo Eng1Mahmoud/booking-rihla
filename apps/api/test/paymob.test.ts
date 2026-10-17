@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
-import { parsePaymobEnv } from '../src/config/paymob.ts';
+import { inspectPaymobSetup, parsePaymobEnv } from '../src/config/paymob.ts';
 import { createPaymobProvider } from '../src/payments/paymobProvider.ts';
 import { PaymentProviderError } from '../src/payments/paymentProvider.ts';
 import { verifyPaymobCallback } from '../src/payments/paymobHmac.ts';
@@ -460,4 +460,54 @@ test('provider snapshots configuration so later mutation cannot replace test cre
   });
   settings.PAYMOB_SECRET_KEY = 'sk_live_private';
   await provider.voidAuthorization('2556706');
+});
+
+test('setup can validate credentials before the first transaction without weakening provider ownership checks', () => {
+  const bootstrap = {
+    ...environment,
+    PAYMOB_ENABLED: 'false',
+    PAYMOB_OWNER_ID: '',
+    PAYMOB_AUTH_CAPTURE_ENABLED: 'false',
+    PAYMOB_NOTIFICATION_URL: '',
+    PAYMOB_RETURN_URL: '',
+  };
+  const report = inspectPaymobSetup(bootstrap);
+  assert.deepEqual(report.credentialIssues, []);
+  assert.deepEqual(report.remainingSettings, [
+    'PAYMOB_OWNER_ID',
+    'PAYMOB_AUTH_CAPTURE_ENABLED',
+    'PAYMOB_NOTIFICATION_URL',
+    'PAYMOB_RETURN_URL',
+  ]);
+  assert.throws(
+    () => parsePaymobEnv({ ...bootstrap, PAYMOB_ENABLED: 'true' }),
+    /PAYMOB_OWNER_ID/,
+  );
+  assert.deepEqual(inspectPaymobSetup(environment).remainingSettings, []);
+  for (const [overrides, status] of [
+    [bootstrap, 0],
+    [{ ...bootstrap, PAYMOB_SECRET_KEY: 'sk_live_private' }, 1],
+  ] as const) {
+    const result = spawnSync(
+      process.execPath,
+      ['src/scripts/setupPayments.ts'],
+      {
+        cwd: new URL('..', import.meta.url),
+        env: { ...process.env, ...overrides },
+        encoding: 'utf8',
+        timeout: 10000,
+      },
+    );
+    assert.ifError(result.error);
+    assert.equal(result.status, status);
+    const output = result.stdout + result.stderr;
+    assert.match(output, /No payment request was sent/);
+    assert.match(output, /PAYMOB_OWNER_ID/);
+    for (const secret of [
+      environment.PAYMOB_API_KEY,
+      environment.PAYMOB_HMAC_SECRET,
+      'sk_live_private',
+    ])
+      assert.ok(!output.includes(secret));
+  }
 });

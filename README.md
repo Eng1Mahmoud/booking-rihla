@@ -1046,7 +1046,7 @@ Existing conservative trip/fleet history guards still apply to all booking recor
 
 ## Paymob TEST provider foundation
 
-The payment-provider transport layer is now implemented for Paymob Egypt and EGP. This replaces the earlier PayPal proposal because the booking amounts are in EGP. This is a provider preparation step, not a working paid checkout: no payment endpoints, webhook listener, Payment table, payment worker or booking confirmation transition is exposed yet. Existing checkout holds still expire as described above. No database migration or dependency installation is needed for this step. The project owner does not have a Paymob account yet; no actual Paymob request or money movement has been performed.
+The payment-provider transport layer is now implemented for Paymob Egypt and EGP. This replaces the earlier PayPal proposal because the booking amounts are in EGP. This is a provider preparation step, not a working paid checkout: no payment endpoints, webhook listener, Payment table, payment worker or booking confirmation transition is exposed yet. Existing checkout holds still expire as described above. No database migration or dependency installation is needed for this step. The project owner now has a Paymob account and local TEST credentials. An API-key authentication check succeeded; it did not create a payment or verify Auth/Cap capability.
 
 Files to read:
 
@@ -1073,3 +1073,9 @@ The proposed integration will authorize first, then take a short Trip lock to va
 Verification covers the official independent HMAC example, modified/forged callbacks, test-only credentials, exact amounts, merchant/integration identity, mismatched intentions, expiry boundaries, slow responses, safe errors and no automatic POST retries. These are transport/configuration tests with synthetic responses, not a successful Paymob sandbox payment.
 
 Official references: [Intention API](https://developers.paymob.com/paymob-docs/developers/intention-apis/create-intention), [Auth/Cap](https://developers.paymob.com/paymob-docs/payments-and-features/core-features/auth-cap), [Paymob-owned integration reference](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/blob/main/skills/paymob-integration/references/advanced-features.md), [HMAC field order](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/blob/main/skills/paymob-integration/references/hmac-verification.md), [Transaction inquiry](https://developers.paymob.com/paymob-docs/developers/transaction-inquiry-apis/by-transaction-id), [Credentials setup](https://developers.paymob.com/paymob-docs/need-help/setup-guides/getting-integration-credentials).
+
+### Inspect setup before the first transaction
+
+Run npm run payment:setup to validate TEST credential formats and list remaining settings locally, even while PAYMOB_ENABLED=false and PAYMOB_OWNER_ID is empty. Exit code 0 means credential formats pass; it does not mean paid checkout is ready. Invalid or missing credentials exit with code 1. Only field names are printed. No network, database, file changes or payment requests occur.
+
+No existing transaction is needed to run this check or continue backend implementation. Leave the owner empty until it can be established from an authenticated TEST transaction inquiry during provider verification. Do not substitute a guessed merchant/profile id. This command does not create the first transaction. The operational provider still requires the owner, HTTPS notification/return URLs and confirmed Auth/Cap; payment:check retains strict validation when enabled. Public callback delivery, the checkout flow and durable payment reconciliation still need implementation before end-to-end payment testing. Do not enable the provider merely because setup passes.
