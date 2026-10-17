@@ -20,7 +20,9 @@
     "booking:worker": "node --env-file-if-exists=.env src/workers/bookingHoldWorker.ts",
     "booking:expire": "node --env-file-if-exists=.env src/workers/bookingHoldWorker.ts --once",
     "payment:check": "node --env-file-if-exists=.env src/scripts/checkPayments.ts",
-    "payment:setup": "node --env-file-if-exists=.env src/scripts/setupPayments.ts"
+    "payment:setup": "node --env-file-if-exists=.env src/scripts/setupPayments.ts",
+    "payment:worker": "node --env-file-if-exists=.env src/workers/paymentWorker.ts",
+    "payment:reconcile": "node --env-file-if-exists=.env src/workers/paymentWorker.ts --once"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",

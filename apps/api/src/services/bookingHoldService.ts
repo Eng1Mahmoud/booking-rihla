@@ -3,7 +3,12 @@ type Transaction = Parameters<Parameters<typeof database.transaction>[0]>[0];
 export const holdDurationMs = 10 * 60 * 1000;
 export function bookingState(
   booking: {
-    status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
+    status:
+      | 'RESERVED'
+      | 'PENDING_PAYMENT'
+      | 'PAYMENT_PROCESSING'
+      | 'CONFIRMED'
+      | 'EXPIRED';
     expiresAt: string | null;
   },
   now = Date.now(),
@@ -14,7 +19,7 @@ export function bookingState(
     ? 'EXPIRED'
     : booking.status;
 }
-// Caller must hold the Trip row FOR UPDATE; creation, expiry and future payment confirmation share it.
+// Caller must hold the Trip row FOR UPDATE; creation, expiry and payment confirmation share it.
 export async function expireTripHolds(
   tx: Transaction,
   db: typeof database,

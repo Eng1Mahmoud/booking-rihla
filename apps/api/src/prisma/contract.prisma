@@ -192,6 +192,8 @@ model PasswordReset {
 enum BookingStatus {
   RESERVED
   PENDING_PAYMENT
+  PAYMENT_PROCESSING
+  CONFIRMED
   EXPIRED
 }
 
@@ -213,7 +215,7 @@ model Booking {
   paymentAttempt PaymentAttempt?
   @@unique([id, tripId])
   @@index([status, expiresAt, tripId])
-  @@check(expression: sql`("status" = 'RESERVED' AND "expiresAt" IS NULL) OR ("status" IN ('PENDING_PAYMENT', 'EXPIRED') AND "expiresAt" IS NOT NULL)`, name: "booking_hold_expiry")
+  @@check(expression: sql`("status" = 'RESERVED' AND "expiresAt" IS NULL) OR ("status" IN ('PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED') AND "expiresAt" IS NOT NULL)`, name: "booking_hold_expiry")
   @@index([userId, createdAt])
   @@index([createdAt, id])
   @@index([tripId])
@@ -335,9 +337,39 @@ model PaymentAuthorization {
   encryptedCheckoutUrl String?
   createdAt TimestamptzString @default(now())
   updatedAt TimestamptzString @default(now())
+  settlement PaymentSettlement?
+  reconciliationComplete Boolean @default(false)
+  nextReconcileAt TimestamptzString @default(now())
   attempt PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   @@index([status, updatedAt])
+  @@index([reconciliationComplete, nextReconcileAt], name: "payment_reconcile_due")
   @@check(expression: sql`"integrationId" ~ '^[1-9][0-9]*$' AND "ownerId" ~ '^[1-9][0-9]*$'`, name: "payment_authorization_scope")
   @@check(expression: sql`("intentionId" IS NULL AND "orderId" IS NULL) OR ("intentionId" IS NOT NULL AND "orderId" IS NOT NULL)`, name: "payment_authorization_references")
   @@check(expression: sql`("status" = 'READY' AND "encryptedCheckoutUrl" IS NOT NULL AND "intentionId" IS NOT NULL) OR ("status" <> 'READY' AND "encryptedCheckoutUrl" IS NULL)`, name: "payment_authorization_checkout")
+}
+
+// A committed row grants exactly one caller permission to send capture or void.
+enum PaymentSettlementKind {
+ CAPTURE
+ VOID
+}
+enum PaymentSettlementStatus {
+ REQUESTED
+ UNKNOWN
+ SUCCEEDED
+ REVIEW
+}
+model PaymentSettlement {
+ id String @id @default(uuid())
+ authorizationId String @unique
+ transactionId String @unique
+ kind PaymentSettlementKind
+ status PaymentSettlementStatus @default(REQUESTED)
+ amountPiastres BigInt
+ createdAt TimestamptzString @default(now())
+ updatedAt TimestamptzString @default(now())
+ authorization PaymentAuthorization @relation(fields: [authorizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+ @@index([status, updatedAt])
+ @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700`, name: "payment_settlement_amount")
+ @@check(expression: sql`"transactionId" ~ '^[1-9][0-9]{0,15}$'`, name: "payment_settlement_transaction")
 }

@@ -64,6 +64,10 @@
       "model": "PaymentEvent",
       "namespace": "public"
     },
+    "PaymentSettlement": {
+      "model": "PaymentSettlement",
+      "namespace": "public"
+    },
     "RefreshToken": {
       "model": "RefreshToken",
       "namespace": "public"
@@ -103,6 +107,14 @@
               {
                 "name": "PENDING_PAYMENT",
                 "value": "PENDING_PAYMENT"
+              },
+              {
+                "name": "PAYMENT_PROCESSING",
+                "value": "PAYMENT_PROCESSING"
+              },
+              {
+                "name": "CONFIRMED",
+                "value": "CONFIRMED"
               },
               {
                 "name": "EXPIRED",
@@ -149,6 +161,40 @@
               {
                 "name": "EXPIRED",
                 "value": "EXPIRED"
+              }
+            ]
+          },
+          "PaymentSettlementKind": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "CAPTURE",
+                "value": "CAPTURE"
+              },
+              {
+                "name": "VOID",
+                "value": "VOID"
+              }
+            ]
+          },
+          "PaymentSettlementStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "REQUESTED",
+                "value": "REQUESTED"
+              },
+              {
+                "name": "UNKNOWN",
+                "value": "UNKNOWN"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "REVIEW",
+                "value": "REVIEW"
               }
             ]
           },
@@ -1591,6 +1637,13 @@
                   "kind": "scalar"
                 }
               },
+              "nextReconcileAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "orderId": {
                 "nullable": true,
                 "type": {
@@ -1609,6 +1662,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reconciliationComplete": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
                   "kind": "scalar"
                 }
               },
@@ -1649,6 +1709,22 @@
                   "model": "PaymentAttempt",
                   "namespace": "public"
                 }
+              },
+              "settlement": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "authorizationId"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentSettlement",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -1668,6 +1744,9 @@
                 "intentionId": {
                   "column": "intentionId"
                 },
+                "nextReconcileAt": {
+                  "column": "nextReconcileAt"
+                },
                 "orderId": {
                   "column": "orderId"
                 },
@@ -1676,6 +1755,9 @@
                 },
                 "paymentAttemptId": {
                   "column": "paymentAttemptId"
+                },
+                "reconciliationComplete": {
+                  "column": "reconciliationComplete"
                 },
                 "status": {
                   "column": "status"
@@ -1777,6 +1859,126 @@
               },
               "namespaceId": "public",
               "table": "PaymentEvent"
+            }
+          },
+          "PaymentSettlement": {
+            "fields": {
+              "amountPiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "authorizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "PaymentSettlementKind",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "PaymentSettlementStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "transactionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "authorization": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "authorizationId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentAuthorization",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amountPiastres": {
+                  "column": "amountPiastres"
+                },
+                "authorizationId": {
+                  "column": "authorizationId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "transactionId": {
+                  "column": "transactionId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PaymentSettlement"
             }
           },
           "RefreshToken": {
@@ -2666,13 +2868,13 @@
             "Booking": {
               "checks": [
                 {
-                  "expression": "\"status\" IN ('RESERVED', 'PENDING_PAYMENT', 'EXPIRED')",
-                  "name": "Booking_status_check_0f52eb04",
+                  "expression": "\"status\" IN ('RESERVED', 'PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED')",
+                  "name": "Booking_status_check_5436125a",
                   "prefix": "Booking_status_check"
                 },
                 {
-                  "expression": "(\"status\" = 'RESERVED' AND \"expiresAt\" IS NULL) OR (\"status\" IN ('PENDING_PAYMENT', 'EXPIRED') AND \"expiresAt\" IS NOT NULL)",
-                  "name": "booking_hold_expiry_23e99e27",
+                  "expression": "(\"status\" = 'RESERVED' AND \"expiresAt\" IS NULL) OR (\"status\" IN ('PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED') AND \"expiresAt\" IS NOT NULL)",
+                  "name": "booking_hold_expiry_9066aef4",
                   "prefix": "booking_hold_expiry"
                 },
                 {
@@ -3832,6 +4034,15 @@
                   "dataType": "pg/text",
                   "nullable": true
                 },
+                "nextReconcileAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
                 "orderId": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -3845,6 +4056,15 @@
                 "paymentAttemptId": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
+                  "nullable": false
+                },
+                "reconciliationComplete": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
                   "nullable": false
                 },
                 "status": {
@@ -3905,6 +4125,15 @@
                   ],
                   "name": "PaymentAuthorization_status_updatedAt_idx_29f913bb",
                   "prefix": "PaymentAuthorization_status_updatedAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "reconciliationComplete",
+                    "nextReconcileAt"
+                  ],
+                  "name": "payment_reconcile_due_05983068",
+                  "prefix": "payment_reconcile_due",
                   "unique": false
                 }
               ],
@@ -4015,6 +4244,149 @@
                 {
                   "columns": [
                     "eventKey"
+                  ]
+                }
+              ]
+            },
+            "PaymentSettlement": {
+              "checks": [
+                {
+                  "expression": "\"kind\" IN ('CAPTURE', 'VOID')",
+                  "name": "PaymentSettlement_kind_check_5f50b4db",
+                  "prefix": "PaymentSettlement_kind_check"
+                },
+                {
+                  "expression": "\"status\" IN ('REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW')",
+                  "name": "PaymentSettlement_status_check_83fae29f",
+                  "prefix": "PaymentSettlement_status_check"
+                },
+                {
+                  "expression": "\"amountPiastres\" BETWEEN 1 AND 214748364700",
+                  "name": "payment_settlement_amount_8155a401",
+                  "prefix": "payment_settlement_amount"
+                },
+                {
+                  "expression": "\"transactionId\" ~ '^[1-9][0-9]{0,15}$'",
+                  "name": "payment_settlement_transaction_2901d1e8",
+                  "prefix": "payment_settlement_transaction"
+                }
+              ],
+              "columns": {
+                "amountPiastres": {
+                  "codecId": "pg/int8@1",
+                  "dataType": "pg/int8",
+                  "nullable": false
+                },
+                "authorizationId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PaymentSettlementKind",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "REQUESTED"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PaymentSettlementStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "transactionId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "authorizationId"
+                    ]
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "authorizationId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentSettlement"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentAuthorization"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "status",
+                    "updatedAt"
+                  ],
+                  "name": "PaymentSettlement_status_updatedAt_idx_29f913bb",
+                  "prefix": "PaymentSettlement_status_updatedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "authorizationId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "transactionId"
                   ]
                 }
               ]
@@ -4674,6 +5046,8 @@
               "values": [
                 "RESERVED",
                 "PENDING_PAYMENT",
+                "PAYMENT_PROCESSING",
+                "CONFIRMED",
                 "EXPIRED"
               ]
             },
@@ -4693,6 +5067,22 @@
                 "UNKNOWN",
                 "FAILED",
                 "EXPIRED"
+              ]
+            },
+            "PaymentSettlementKind": {
+              "kind": "valueSet",
+              "values": [
+                "CAPTURE",
+                "VOID"
+              ]
+            },
+            "PaymentSettlementStatus": {
+              "kind": "valueSet",
+              "values": [
+                "REQUESTED",
+                "UNKNOWN",
+                "SUCCEEDED",
+                "REVIEW"
               ]
             },
             "SeatLayout": {
@@ -4722,10 +5112,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1f485d4ef82f51f46ce5d63f43fa0fb8287111853c6256d46b31b10fc4329d2b"
+    "storageHash": "4d51d1d63786615f5b75c65d4a37be4f38471952ac4f1ee5e0c09a5ad6da9ced"
   },
   "execution": {
-    "executionHash": "11b082e61e451843659ed9866b4e41cb8b1856b2ec1e7720c0ad2df50bfaa9c3",
+    "executionHash": "1f1ba402c5c4659a6d727f1c3c6235e465296fd239cebf0aa1242cf35528afa6",
     "mutations": {
       "defaults": [
         {
@@ -4889,6 +5279,17 @@
           },
           "ref": {
             "entry": "PaymentEvent",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PaymentSettlement",
             "field": "id",
             "namespace": "public"
           }

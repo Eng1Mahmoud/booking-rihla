@@ -1,0 +1,497 @@
+[
+  {
+    "id": "dropCheckConstraint.Booking.Booking_status_check_0f52eb04",
+    "label": "Drop check constraint \"Booking_status_check_0f52eb04\" on \"Booking\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Booking_status_check_0f52eb04",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_status_check_0f52eb04\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_0f52eb04",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"Booking_status_check_0f52eb04\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" DROP CONSTRAINT \"Booking_status_check_0f52eb04\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_status_check_0f52eb04\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_0f52eb04",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.Booking.booking_hold_expiry_23e99e27",
+    "label": "Drop check constraint \"booking_hold_expiry_23e99e27\" on \"Booking\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "booking_hold_expiry_23e99e27",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"booking_hold_expiry_23e99e27\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_23e99e27",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"booking_hold_expiry_23e99e27\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" DROP CONSTRAINT \"booking_hold_expiry_23e99e27\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"booking_hold_expiry_23e99e27\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_23e99e27",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.PaymentSettlement",
+    "label": "Create table \"PaymentSettlement\"",
+    "summary": "Creates table \"PaymentSettlement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentSettlement\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"PaymentSettlement\"",
+        "sql": "CREATE TABLE \"public\".\"PaymentSettlement\" (\n  \"amountPiastres\" int8 NOT NULL,\n  \"authorizationId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"status\" text DEFAULT 'REQUESTED' NOT NULL,\n  \"transactionId\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"PaymentSettlement_kind_check_5f50b4db\" CHECK (\"kind\" IN ('CAPTURE', 'VOID')),\n  CONSTRAINT \"PaymentSettlement_status_check_83fae29f\" CHECK (\"status\" IN ('REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW')),\n  CONSTRAINT \"payment_settlement_amount_8155a401\" CHECK (\"amountPiastres\" BETWEEN 1 AND 214748364700),\n  CONSTRAINT \"payment_settlement_transaction_2901d1e8\" CHECK (\"transactionId\" ~ '^[1-9][0-9]{0,15}$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentSettlement\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.PaymentAuthorization.nextReconcileAt",
+    "label": "Add column \"nextReconcileAt\" to \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "nextReconcileAt",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"nextReconcileAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentAuthorization",
+          "nextReconcileAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"nextReconcileAt\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD COLUMN \"nextReconcileAt\" timestamptz DEFAULT (now()) NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"nextReconcileAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentAuthorization",
+          "nextReconcileAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.PaymentAuthorization.reconciliationComplete",
+    "label": "Add column \"reconciliationComplete\" to \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reconciliationComplete",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reconciliationComplete\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentAuthorization",
+          "reconciliationComplete"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reconciliationComplete\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD COLUMN \"reconciliationComplete\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reconciliationComplete\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentAuthorization",
+          "reconciliationComplete"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Booking.Booking_status_check_5436125a",
+    "label": "Add check constraint \"Booking_status_check_5436125a\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Booking_status_check_5436125a",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_status_check_5436125a\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_5436125a",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Booking_status_check_5436125a\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"Booking_status_check_5436125a\" CHECK (\"status\" IN ('RESERVED', 'PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_status_check_5436125a\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_5436125a",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Booking.booking_hold_expiry_9066aef4",
+    "label": "Add check constraint \"booking_hold_expiry_9066aef4\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "booking_hold_expiry_9066aef4",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"booking_hold_expiry_9066aef4\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_9066aef4",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"booking_hold_expiry_9066aef4\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"booking_hold_expiry_9066aef4\" CHECK ((\"status\" = 'RESERVED' AND \"expiresAt\" IS NULL) OR (\"status\" IN ('PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED') AND \"expiresAt\" IS NOT NULL))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"booking_hold_expiry_9066aef4\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_9066aef4",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentSettlement.PaymentSettlement_authorizationId_key",
+    "label": "Add unique constraint on \"PaymentSettlement\" (authorizationId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSettlement_authorizationId_key",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_authorizationId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentSettlement_authorizationId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" ADD CONSTRAINT \"PaymentSettlement_authorizationId_key\" UNIQUE (\"authorizationId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_authorizationId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentSettlement.PaymentSettlement_transactionId_key",
+    "label": "Add unique constraint on \"PaymentSettlement\" (transactionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSettlement_transactionId_key",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_transactionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_transactionId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentSettlement_transactionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" ADD CONSTRAINT \"PaymentSettlement_transactionId_key\" UNIQUE (\"transactionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_transactionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_transactionId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentAuthorization.payment_reconcile_due_05983068",
+    "label": "Create index \"payment_reconcile_due_05983068\" on \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "payment_reconcile_due_05983068",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payment_reconcile_due_05983068\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"payment_reconcile_due_05983068\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payment_reconcile_due_05983068\"",
+        "sql": "CREATE INDEX \"payment_reconcile_due_05983068\" ON \"public\".\"PaymentAuthorization\" (\"reconciliationComplete\", \"nextReconcileAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payment_reconcile_due_05983068\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"payment_reconcile_due_05983068\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentSettlement.PaymentSettlement_status_updatedAt_idx_29f913bb",
+    "label": "Create index \"PaymentSettlement_status_updatedAt_idx_29f913bb\" on \"PaymentSettlement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentSettlement_status_updatedAt_idx_29f913bb",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentSettlement_status_updatedAt_idx_29f913bb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSettlement_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"PaymentSettlement_status_updatedAt_idx_29f913bb\"",
+        "sql": "CREATE INDEX \"PaymentSettlement_status_updatedAt_idx_29f913bb\" ON \"public\".\"PaymentSettlement\" (\"status\", \"updatedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentSettlement_status_updatedAt_idx_29f913bb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSettlement_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.PaymentSettlement.PaymentSettlement_authorizationId_fkey",
+    "label": "Add foreign key \"PaymentSettlement_authorizationId_fkey\" on \"PaymentSettlement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PaymentSettlement_authorizationId_fkey",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"PaymentSettlement_authorizationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_fkey",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"PaymentSettlement_authorizationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\"\nADD CONSTRAINT \"PaymentSettlement_authorizationId_fkey\"\nFOREIGN KEY (\"authorizationId\")\nREFERENCES \"public\".\"PaymentAuthorization\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"PaymentSettlement_authorizationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_fkey",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  }
+]

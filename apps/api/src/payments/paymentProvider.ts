@@ -27,7 +27,7 @@ export interface PaymentTransaction {
   live: boolean;
   capturedPiastres: number;
 }
-// Transport operations only: the future payment service must persist intent/operation
+// Transport operations only: payment services must persist intent/operation
 // identifiers, enforce ownership and seat locks, and reconcile uncertain outcomes.
 // Never expose these methods directly as public capture/void endpoints.
 export interface PaymentProvider {
