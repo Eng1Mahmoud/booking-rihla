@@ -517,3 +517,92 @@ test('setup can validate credentials before the first transaction without weaken
       assert.ok(!output.includes(secret));
   }
 });
+
+test('reference inquiry uses authenticated fixed-host lookup and returns no checkout or customer fields', async () => {
+  const reference = '00000000-0000-4000-8000-000000000001';
+  let calls = 0;
+  const provider = createPaymobProvider(config, async (url, options) => {
+    calls++;
+    if (calls === 1) {
+      assert.equal(url, 'https://accept.paymob.com/api/auth/tokens');
+      assert.deepEqual(JSON.parse(String(options?.body)), {
+        api_key: config.PAYMOB_API_KEY,
+      });
+      return response({ token: 'private_auth_token' });
+    }
+    assert.equal(
+      url,
+      'https://accept.paymob.com/api/ecommerce/orders/transaction_inquiry',
+    );
+    assert.equal(options?.method, 'POST');
+    assert.equal(options?.redirect, 'error');
+    assert.equal(
+      (options?.headers as Record<string, string>).Authorization,
+      'Bearer private_auth_token',
+    );
+    assert.deepEqual(JSON.parse(String(options?.body)), {
+      auth_token: 'private_auth_token',
+      merchant_order_id: reference,
+    });
+    return response({
+      ...transaction,
+      order: { ...transaction.order, merchant_order_id: reference },
+      billing_data: { email: 'private@example.test' },
+    });
+  });
+  const value = await provider.getTransactionByReference(reference);
+  assert.equal(value.reference, reference);
+  assert.equal(value.orderId, '4778239');
+  assert.equal(calls, 2);
+  assert.ok(!JSON.stringify(value).includes('private'));
+  await assert.rejects(provider.getTransactionByReference('not-a-uuid'));
+  assert.equal(calls, 2);
+});
+
+test('reference inquiry rejects mismatched scope, missing reference, live data and malformed results without retries', async () => {
+  const reference = '00000000-0000-4000-8000-000000000001';
+  const original = {
+    ...transaction,
+    order: { ...transaction.order, merchant_order_id: reference },
+  };
+  for (const patch of [
+    { order: { id: 4778239 } },
+    { order: { id: 4778239, merchant_order_id: 'other' } },
+    { integration_id: 1 },
+    { owner: 1 },
+    { is_live: true },
+    { currency: 'USD' },
+    { captured_amount: 30001 },
+    { id: '2556706' },
+  ]) {
+    let calls = 0;
+    const provider = createPaymobProvider(config, async () => {
+      calls++;
+      return response(
+        calls === 1 ? { token: 'private' } : { ...original, ...patch },
+      );
+    });
+    await assert.rejects(
+      provider.getTransactionByReference(reference),
+      PaymentProviderError,
+    );
+    assert.equal(calls, 2);
+  }
+  for (const scenario of ['absent', 'timeout', 'json']) {
+    let calls = 0;
+    const provider = createPaymobProvider(config, async () => {
+      calls++;
+      if (calls === 1) return response({ token: 'private' });
+      if (scenario === 'timeout') throw new Error('private details');
+      if (scenario === 'json') return new Response('private invalid JSON');
+      return response({}, 404);
+    });
+    await assert.rejects(
+      provider.getTransactionByReference(reference),
+      (error: unknown) =>
+        error instanceof PaymentProviderError &&
+        !error.message.includes('private'),
+    );
+    assert.equal(calls, 2);
+  }
+});

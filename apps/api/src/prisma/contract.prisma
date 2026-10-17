@@ -344,7 +344,7 @@ model PaymentAuthorization {
   @@index([status, updatedAt])
   @@index([reconciliationComplete, nextReconcileAt], name: "payment_reconcile_due")
   @@check(expression: sql`"integrationId" ~ '^[1-9][0-9]*$' AND "ownerId" ~ '^[1-9][0-9]*$'`, name: "payment_authorization_scope")
-  @@check(expression: sql`("intentionId" IS NULL AND "orderId" IS NULL) OR ("intentionId" IS NOT NULL AND "orderId" IS NOT NULL)`, name: "payment_authorization_references")
+  @@check(expression: sql`"intentionId" IS NULL OR "orderId" IS NOT NULL`, name: "payment_authorization_references")
   @@check(expression: sql`("status" = 'READY' AND "encryptedCheckoutUrl" IS NOT NULL AND "intentionId" IS NOT NULL) OR ("status" <> 'READY' AND "encryptedCheckoutUrl" IS NULL)`, name: "payment_authorization_checkout")
 }
 

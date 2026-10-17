@@ -46,3 +46,25 @@ export function verifiedPayment(
     return null;
   return t;
 }
+
+// Reference correlation is accepted only from authenticated inquiry, never a callback.
+export function verifiedReferencePayment(
+  raw: unknown,
+  expected: {
+    reference: string;
+    orderId: string | null;
+    integrationId: string;
+    ownerId: string;
+    amountPiastres: bigint;
+  },
+) {
+  const parsed = transaction
+    .extend({ reference: z.literal(expected.reference) })
+    .safeParse(raw);
+  if (!parsed.success) return null;
+  return verifiedPayment(parsed.data, {
+    ...expected,
+    transactionId: parsed.data.id,
+    orderId: expected.orderId ?? parsed.data.orderId,
+  });
+}

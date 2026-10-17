@@ -39,6 +39,9 @@ export interface PaymentProvider {
   capture(transactionId: string, amountPiastres: number): Promise<void>;
   voidAuthorization(transactionId: string): Promise<void>;
   getTransaction(transactionId: string): Promise<PaymentTransaction>;
+  getTransactionByReference(
+    reference: string,
+  ): Promise<PaymentTransaction & { reference: string }>;
 }
 // An uncertain POST must be reconciled by inquiry, never blindly repeated.
 export class PaymentProviderError extends Error {

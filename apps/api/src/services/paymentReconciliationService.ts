@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import type { PaymentProvider } from '../payments/paymentProvider.ts';
-import { verifiedPayment } from '../payments/paymentVerification.ts';
+import {
+  verifiedPayment,
+  verifiedReferencePayment,
+} from '../payments/paymentVerification.ts';
 import { parsePaymobEnv } from '../config/paymob.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
 type Kind = 'CAPTURE' | 'VOID';
@@ -17,7 +20,8 @@ export function createPaymentReconciliationService(
   provider: Pick<
     PaymentProvider,
     'getTransaction' | 'capture' | 'voidAuthorization'
-  >,
+  > &
+    Partial<Pick<PaymentProvider, 'getTransactionByReference'>>,
   scope: { integrationId: number; ownerId: number },
 ) {
   const integrationId = String(
@@ -41,10 +45,10 @@ export function createPaymentReconciliationService(
     followUp = false,
   ): Promise<Decision> {
     const { db } = await import('../prisma/db.ts');
-    const initial = await db.orm.public.PaymentAuthorization.where({
+    let initial = await db.orm.public.PaymentAuthorization.where({
       id: authorizationId,
     }).first();
-    if (!initial?.orderId) return { state: 'WAITING' };
+    if (!initial) return { state: 'WAITING' };
     if (initial.integrationId !== integrationId || initial.ownerId !== ownerId)
       return { state: 'MISMATCH' };
     const existing = await db.orm.public.PaymentSettlement.where({
@@ -60,6 +64,63 @@ export function createPaymentReconciliationService(
       id: attempt.bookingId,
     }).first();
     if (!initialBooking) return { state: 'MISMATCH' };
+    let recoveredTransactionId: string | undefined;
+    let queriedReference = false;
+    if (!initial.orderId) {
+      // Leave a live creation request time to finish. A stale REQUESTING is never resent.
+      if (
+        !provider.getTransactionByReference ||
+        !['REQUESTING', 'UNKNOWN'].includes(initial.status) ||
+        (initial.status === 'REQUESTING' &&
+          Date.parse(initial.createdAt) > Date.now() - 30000)
+      )
+        return { state: 'WAITING' };
+      let raw: unknown;
+      try {
+        queriedReference = true;
+        raw = await provider.getTransactionByReference(initial.id);
+      } catch {
+        return { state: 'RETRY' };
+      }
+      const recovered = verifiedReferencePayment(raw, {
+        reference: initial.id,
+        orderId: null,
+        integrationId,
+        ownerId,
+        amountPiastres: attempt.amountPiastres,
+      });
+      if (!recovered) return { state: 'MISMATCH' };
+      // Compare-and-set prevents a slow recovery from replacing a concurrently saved order.
+      const saved = await db.orm.public.PaymentAuthorization.where({
+        id: initial.id,
+        orderId: null,
+        status: initial.status,
+        reconciliationComplete: false,
+      }).update({
+        orderId: recovered.orderId,
+        status: 'UNKNOWN',
+        updatedAt: new Date().toISOString(),
+      });
+      initial =
+        saved ??
+        (await db.orm.public.PaymentAuthorization.where({
+          id: initial.id,
+        }).first());
+      if (
+        !initial ||
+        initial.orderId !== recovered.orderId ||
+        initial.integrationId !== integrationId ||
+        initial.ownerId !== ownerId
+      )
+        return { state: 'MISMATCH' };
+      if (
+        recovered.authorization &&
+        !recovered.capture &&
+        !recovered.standalone
+      )
+        recoveredTransactionId = recovered.id;
+    }
+    if (!initial.orderId) return { state: 'WAITING' };
     let candidates = existing ? [existing.transactionId] : [];
     if (!existing) {
       const events = await db.orm.public.PaymentEvent.where({
@@ -91,6 +152,37 @@ export function createPaymentReconciliationService(
             .map((event) => event.transactionId),
         ),
       ].slice(0, 5);
+    }
+    if (!existing && !candidates.length && recoveredTransactionId)
+      candidates = [recoveredTransactionId];
+    if (
+      !existing &&
+      !candidates.length &&
+      !queriedReference &&
+      provider.getTransactionByReference
+    ) {
+      let raw: unknown;
+      try {
+        raw = await provider.getTransactionByReference(initial.id);
+      } catch {
+        return { state: 'RETRY' };
+      }
+      const recovered = verifiedReferencePayment(raw, {
+        reference: initial.id,
+        orderId: initial.orderId,
+        integrationId,
+        ownerId,
+        amountPiastres: attempt.amountPiastres,
+      });
+      if (!recovered) return { state: 'MISMATCH' };
+      // Inquiry returns the latest transaction, which may be a capture/refund child.
+      // Only an original authorization is eligible; never guess a parent ID.
+      if (
+        recovered.authorization &&
+        !recovered.capture &&
+        !recovered.standalone
+      )
+        candidates = [recovered.id];
     }
     let sawVerified = false;
     for (const transactionId of candidates) {
@@ -342,7 +434,6 @@ export function createPaymentReconciliationService(
       const rows = await db.orm.public.PaymentAuthorization.where({
         reconciliationComplete: false,
       })
-        .where((p) => p.orderId.isNotNull())
         .where((p) => p.nextReconcileAt.lte(new Date().toISOString()))
         .orderBy((p) => p.nextReconcileAt.asc())
         .limit(limit)

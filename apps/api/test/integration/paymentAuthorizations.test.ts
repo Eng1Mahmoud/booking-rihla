@@ -356,7 +356,7 @@ test('authorization creation commits before sending, sends once and never resurr
         db.orm.public.PaymentAuthorization.where({ id: ready.id }).update({
           orderId: null,
         }),
-        (e) => isCheckViolation(e, 'payment_authorization_references_e5a362ee'),
+        (e) => isCheckViolation(e, 'payment_authorization_references_f4507849'),
       );
       await assert.rejects(
         db.orm.public.PaymentAuthorization.where({ id: ready.id }).update({

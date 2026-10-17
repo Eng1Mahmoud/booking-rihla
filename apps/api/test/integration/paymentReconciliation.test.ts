@@ -7,6 +7,7 @@ import { db } from '../../src/prisma/db.ts';
 import { buildDemoData } from '../../src/scripts/demoData.ts';
 import { seedDemo } from '../../src/scripts/demoSeed.ts';
 import { signAccessToken } from '../../src/utils/sessionTokens.ts';
+import { bookingService } from '../../src/services/bookingService.ts';
 import { paymentAttemptService } from '../../src/services/paymentAttemptService.ts';
 import { createPaymentAuthorizationService } from '../../src/services/paymentAuthorizationService.ts';
 import { createPaymentReconciliationService } from '../../src/services/paymentReconciliationService.ts';
@@ -118,11 +119,18 @@ test('verified payment reconciliation captures once, protects seats and voids la
   const seats = data.seats
     .filter((s) => s.busId === trip.busId)
     .sort((a, b) => a.number - b.number);
+  let serviceFixtures = false;
   async function reserve(
     owner = first,
     seatIds = [seats[0]!.id],
     target = trip,
   ) {
+    if (serviceFixtures)
+      return bookingService.create(owner.auth, {
+        tripId: target.id,
+        contactPhone: '+201012345678',
+        passengers: seatIds.map((seatId) => ({ seatId, name: 'Passenger' })),
+      });
     const response = await fetch(base + '/bookings', {
       method: 'POST',
       headers: {
@@ -163,7 +171,7 @@ test('verified payment reconciliation captures once, protects seats and voids la
   };
   const scope = { integrationId: 6741, ownerId: 4705 };
   const service = createPaymentReconciliationService(provider, scope);
-  async function ready(notify = true) {
+  async function ready(notify = true, lostResponse = false) {
     const booking = await reserve(first, [seats[nextSeat++]!.id]);
     const attempt = (
       await paymentAttemptService.prepare(first.auth, booking.id, randomUUID())
@@ -173,12 +181,15 @@ test('verified payment reconciliation captures once, protects seats and voids la
       orderId = String(number + 100000);
     const result = await createPaymentAuthorizationService({
       provider: {
-        createAuthorization: async () => ({
-          intentionId: 'pi_test_' + id,
-          orderId,
-          checkoutUrl:
-            'https://accept.paymob.com/unifiedcheckout/?publicKey=pk_test_fixture&clientSecret=csk_test_fixture',
-        }),
+        createAuthorization: async () => {
+          if (lostResponse) throw new PaymentProviderError(true);
+          return {
+            intentionId: 'pi_test_' + id,
+            orderId,
+            checkoutUrl:
+              'https://accept.paymob.com/unifiedcheckout/?publicKey=pk_test_fixture&clientSecret=csk_test_fixture',
+          };
+        },
       },
       ...scope,
       encryptionKey: Buffer.alloc(32, 7),
@@ -585,6 +596,198 @@ test('verified payment reconciliation captures once, protects seats and voids la
       );
       onInquiry = undefined;
       await service.reconcile(c.operationId);
+    },
+  );
+  // Additional recovery fixtures use the real booking service directly; HTTP
+  // booking behavior stays covered above without exhausting its production limiter.
+  serviceFixtures = true;
+  async function forgetOrder(
+    c: Context,
+    status: 'UNKNOWN' | 'REQUESTING' = 'UNKNOWN',
+  ) {
+    await db.orm.public.PaymentAuthorization.where({
+      id: c.operationId,
+    }).update({
+      status,
+      intentionId: null,
+      orderId: null,
+      encryptedCheckoutUrl: null,
+    });
+  }
+  function recovery(c: Context, patch: Record<string, unknown> = {}) {
+    return createPaymentReconciliationService(
+      {
+        ...provider,
+        async getTransactionByReference(reference: string) {
+          assert.equal(reference, c.operationId);
+          return { ...remote.get(c.id)!, reference, ...patch };
+        },
+      },
+      scope,
+    );
+  }
+  await t.test(
+    'missing-order recovery races safely, captures once without callback, and never reconstructs checkout',
+    async () => {
+      const c = await ready(false, true),
+        before = calls.capture;
+      let resends = 0;
+      const repeated = await createPaymentAuthorizationService({
+        provider: {
+          async createAuthorization() {
+            resends++;
+            throw new Error('Must not resend');
+          },
+        },
+        ...scope,
+        encryptionKey: Buffer.alloc(32, 7),
+      }).start(first.auth, c.booking.id);
+      assert.equal(repeated.status, 'UNKNOWN');
+      assert.equal(resends, 0);
+      await Promise.all(
+        Array.from({ length: 6 }, () => recovery(c).reconcile(c.operationId)),
+      );
+      assert.equal(calls.capture, before + 1);
+      assert.equal((await bookingRow(c))!.status, 'CONFIRMED');
+      const operation = (await db.orm.public.PaymentAuthorization.where({
+        id: c.operationId,
+      }).first())!;
+      assert.equal(operation.orderId, c.orderId);
+      assert.equal(operation.intentionId, null);
+      assert.equal(operation.encryptedCheckoutUrl, null);
+      assert.equal((await settlement(c))!.transactionId, c.id);
+    },
+  );
+  await t.test(
+    'fresh creation waits; stale REQUESTING is recovered by the existing worker batch',
+    async () => {
+      const c = await ready(false),
+        before = calls.capture;
+      await forgetOrder(c, 'REQUESTING');
+      let queried = 0;
+      const worker = createPaymentReconciliationService(
+        {
+          ...provider,
+          async getTransactionByReference(reference: string) {
+            queried++;
+            assert.equal(reference, c.operationId);
+            return { ...remote.get(c.id)!, reference };
+          },
+        },
+        scope,
+      );
+      assert.equal((await worker.reconcile(c.operationId)).state, 'WAITING');
+      assert.equal(queried, 0);
+      // Isolate this due row from other fixture operations for the bounded batch.
+      await db.orm.public.PaymentAuthorization.where({
+        reconciliationComplete: false,
+      }).updateAll({
+        nextReconcileAt: new Date(Date.now() + 60000).toISOString(),
+      });
+      await db.orm.public.PaymentAuthorization.where({
+        id: c.operationId,
+      }).update({
+        createdAt: new Date(Date.now() - 60000).toISOString(),
+        nextReconcileAt: new Date(Date.now() - 1000).toISOString(),
+      });
+      const counts = await worker.runBatch(1);
+      assert.equal(counts.checked, 1);
+      assert.equal(counts.failed, 0);
+      assert.equal(calls.capture, before + 1);
+      assert.equal((await bookingRow(c))!.status, 'CONFIRMED');
+    },
+  );
+  await t.test(
+    'wrong reference, amount or scope never persists a recovered order; unavailable inquiry never resends creation',
+    async () => {
+      const c = await ready(false),
+        before = calls.capture;
+      await forgetOrder(c);
+      for (const patch of [
+        { reference: randomUUID() },
+        { ownerId: 9 },
+        { integrationId: 9 },
+        { amountPiastres: 1 },
+        { live: true },
+        { currency: 'USD' },
+      ]) {
+        assert.equal(
+          (await recovery(c, patch).reconcile(c.operationId)).state,
+          'MISMATCH',
+        );
+        assert.equal(
+          (await db.orm.public.PaymentAuthorization.where({
+            id: c.operationId,
+          }).first())!.orderId,
+          null,
+        );
+      }
+      const offline = createPaymentReconciliationService(
+        {
+          ...provider,
+          async getTransactionByReference() {
+            throw new Error('private provider failure');
+          },
+        },
+        scope,
+      );
+      assert.equal((await offline.reconcile(c.operationId)).state, 'RETRY');
+      assert.equal(calls.capture, before);
+      assert.equal(await settlement(c), null);
+      await recovery(c).reconcile(c.operationId);
+    },
+  );
+  await t.test(
+    'expired missing-order recovery voids authorization without taking the replacement seat',
+    async () => {
+      const c = await ready(false),
+        beforeCapture = calls.capture,
+        beforeVoid = calls.void;
+      await forgetOrder(c);
+      await expire(c);
+      const seat = (await db.orm.public.BookingSeat.where({
+        bookingId: c.booking.id,
+      }).first())!;
+      const replacement = await reserve(second, [seat.seatId]);
+      assert.equal(
+        (await recovery(c).reconcile(c.operationId)).state,
+        'SUCCEEDED',
+      );
+      assert.equal(calls.capture, beforeCapture);
+      assert.equal(calls.void, beforeVoid + 1);
+      assert.equal((await bookingRow(c))!.status, 'EXPIRED');
+      assert.equal(
+        (await db.orm.public.BookingSeat.where({
+          bookingId: replacement.id,
+        }).first())!.releasedAt,
+        null,
+      );
+    },
+  );
+  await t.test(
+    'known-order callback fallback accepts only its own original authorization, never a child or different order',
+    async () => {
+      const c = await ready(false),
+        before = calls.capture;
+      assert.equal(
+        (await recovery(c, { orderId: '99999999' }).reconcile(c.operationId))
+          .state,
+        'MISMATCH',
+      );
+      assert.equal(
+        (
+          await recovery(c, { authorization: false, capture: true }).reconcile(
+            c.operationId,
+          )
+        ).state,
+        'WAITING',
+      );
+      assert.equal(calls.capture, before);
+      assert.equal(
+        (await recovery(c).reconcile(c.operationId)).state,
+        'SUCCEEDED',
+      );
+      assert.equal(calls.capture, before + 1);
     },
   );
 });

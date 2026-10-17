@@ -106,6 +106,38 @@ export function createPaymobProvider(
       throw new PaymentProviderError(method === 'POST');
     }
   }
+  function normalize(parsed: z.infer<typeof transactionSchema>) {
+    const t = parsed;
+    if ((t.captured_amount ?? 0) > t.amount_cents)
+      throw new PaymentProviderError();
+    return {
+      id: String(t.id),
+      orderId: String(t.order.id),
+      integrationId: t.integration_id,
+      ownerId: t.owner,
+      amountPiastres: t.amount_cents,
+      currency: t.currency,
+      pending: t.pending,
+      success: t.success,
+      authorization: t.is_auth,
+      capture: t.is_capture,
+      voided: t.is_voided,
+      refunded: t.is_refunded,
+      standalone: t.is_standalone_payment,
+      live: t.is_live,
+      capturedPiastres: t.captured_amount ?? 0,
+    };
+  }
+  async function authToken() {
+    const credentials = await request('/api/auth/tokens', 'POST', {
+      api_key: config.PAYMOB_API_KEY,
+    });
+    const parsed = z
+      .object({ token: z.string().min(1) })
+      .safeParse(credentials);
+    if (!parsed.success) throw new PaymentProviderError();
+    return parsed.data.token;
+  }
   return {
     async createAuthorization(rawInput: AuthorizationInput) {
       const input = inputSchema.parse(rawInput);
@@ -166,20 +198,43 @@ export function createPaymobProvider(
         transaction_id: Number(id),
       });
     },
+    async getTransactionByReference(reference) {
+      z.uuid().parse(reference);
+      const token = await authToken();
+      // This POST is a read-only inquiry. Never repeat intention creation here.
+      const raw = await request(
+        '/api/ecommerce/orders/transaction_inquiry',
+        'POST',
+        {
+          auth_token: token,
+          merchant_order_id: reference,
+        },
+        token,
+      );
+      const parsed = transactionSchema
+        .extend({
+          order: z.object({
+            id: numericId,
+            merchant_order_id: z.literal(reference),
+          }),
+        })
+        .safeParse(raw);
+      if (
+        !parsed.success ||
+        parsed.data.integration_id !== config.PAYMOB_INTEGRATION_ID ||
+        parsed.data.owner !== config.PAYMOB_OWNER_ID
+      )
+        throw new PaymentProviderError();
+      return { ...normalize(parsed.data), reference };
+    },
     async getTransaction(id) {
       transactionId.parse(id);
-      const credentials = await request('/api/auth/tokens', 'POST', {
-        api_key: config.PAYMOB_API_KEY,
-      });
-      const token = z
-        .object({ token: z.string().min(1) })
-        .safeParse(credentials);
-      if (!token.success) throw new PaymentProviderError();
+      const token = await authToken();
       const raw = await request(
         '/api/acceptance/transactions/' + id,
         'GET',
         undefined,
-        token.data.token,
+        token,
       );
       const parsed = transactionSchema.safeParse(raw);
       if (
@@ -189,26 +244,7 @@ export function createPaymobProvider(
         parsed.data.owner !== config.PAYMOB_OWNER_ID
       )
         throw new PaymentProviderError();
-      const t = parsed.data;
-      if ((t.captured_amount ?? 0) > t.amount_cents)
-        throw new PaymentProviderError();
-      return {
-        id: String(t.id),
-        orderId: String(t.order.id),
-        integrationId: t.integration_id,
-        ownerId: t.owner,
-        amountPiastres: t.amount_cents,
-        currency: t.currency,
-        pending: t.pending,
-        success: t.success,
-        authorization: t.is_auth,
-        capture: t.is_capture,
-        voided: t.is_voided,
-        refunded: t.is_refunded,
-        standalone: t.is_standalone_payment,
-        live: t.is_live,
-        capturedPiastres: t.captured_amount ?? 0,
-      };
+      return normalize(parsed.data);
     },
   };
 }

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "dropCheckConstraint.PaymentAuthorization.payment_authorization_references_e5a362ee",
+    "label": "Drop check constraint \"payment_authorization_references_e5a362ee\" on \"PaymentAuthorization\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "payment_authorization_references_e5a362ee",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"payment_authorization_references_e5a362ee\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_references_e5a362ee",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"payment_authorization_references_e5a362ee\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" DROP CONSTRAINT \"payment_authorization_references_e5a362ee\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"payment_authorization_references_e5a362ee\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_references_e5a362ee",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.PaymentAuthorization.payment_authorization_references_f4507849",
+    "label": "Add check constraint \"payment_authorization_references_f4507849\" on \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "payment_authorization_references_f4507849",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"payment_authorization_references_f4507849\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_references_f4507849",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"payment_authorization_references_f4507849\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD CONSTRAINT \"payment_authorization_references_f4507849\" CHECK (\"intentionId\" IS NULL OR \"orderId\" IS NOT NULL)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"payment_authorization_references_f4507849\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_references_f4507849",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  }
+]

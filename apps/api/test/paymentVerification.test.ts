@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { verifiedPayment } from '../src/payments/paymentVerification.ts';
+import {
+  verifiedPayment,
+  verifiedReferencePayment,
+} from '../src/payments/paymentVerification.ts';
 import { bookingState } from '../src/services/bookingHoldService.ts';
 const remote = {
   id: '1234',
@@ -89,4 +92,42 @@ test('payment worker is opt-in, starts without database access when disabled and
     assert.match(result.stdout + result.stderr, pattern);
     assert.ok(!(result.stdout + result.stderr).includes('private_test_secret'));
   }
+});
+
+test('recovered reference and existing order must match alongside the complete financial scope', () => {
+  const reference = '00000000-0000-4000-8000-000000000001';
+  const value = { ...remote, reference };
+  assert.deepEqual(
+    verifiedReferencePayment(value, { ...expected, reference, orderId: null }),
+    remote,
+  );
+  assert.deepEqual(
+    verifiedReferencePayment(value, { ...expected, reference }),
+    remote,
+  );
+  for (const patch of [
+    { reference: 'other' },
+    { reference: undefined },
+    { live: true },
+    { amountPiastres: 1 },
+    { ownerId: 1 },
+    { integrationId: 1 },
+    { currency: 'USD' },
+    { orderId: '0' },
+  ])
+    assert.equal(
+      verifiedReferencePayment(
+        { ...value, ...patch },
+        { ...expected, reference, orderId: null },
+      ),
+      null,
+    );
+  assert.equal(
+    verifiedReferencePayment(value, {
+      ...expected,
+      reference,
+      orderId: '9999',
+    }),
+    null,
+  );
 });
