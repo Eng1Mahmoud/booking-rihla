@@ -188,9 +188,11 @@ model PasswordReset {
   @@check(expression: sql`attempts BETWEEN 0 AND 5 AND "sendCount" BETWEEN 1 AND 5`, name: "password_reset_limits")
 }
 
-// Reservations have no passenger cancellation or payment transition in this MVP.
+// Legacy reservations stay RESERVED; new checkout requests are expiring holds.
 enum BookingStatus {
   RESERVED
+  PENDING_PAYMENT
+  EXPIRED
 }
 
 model Booking {
@@ -199,6 +201,7 @@ model Booking {
   userId String
   tripId String
   status BookingStatus @default(RESERVED)
+  expiresAt TimestamptzString?
   contactPhone String
   seatCount Int
   unitPricePiastres Int
@@ -208,6 +211,8 @@ model Booking {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   seats BookingSeat[]
   @@unique([id, tripId])
+  @@index([status, expiresAt, tripId])
+  @@check(expression: sql`("status" = 'RESERVED' AND "expiresAt" IS NULL) OR ("status" IN ('PENDING_PAYMENT', 'EXPIRED') AND "expiresAt" IS NOT NULL)`, name: "booking_hold_expiry")
   @@index([userId, createdAt])
   @@index([createdAt, id])
   @@index([tripId])
@@ -222,9 +227,10 @@ model BookingSeat {
   seatId String
   seatNumber Int
   passengerName String
+  releasedAt TimestamptzString?
   booking Booking @relation(fields: [bookingId, tripId], references: [id, tripId], onDelete: Cascade, onUpdate: Restrict)
   seat BusSeat @relation(fields: [seatId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  @@unique([tripId, seatId])
+  @@index([tripId, seatId], unique: true, where: sql`"releasedAt" IS NULL`, name: "booking_seat_active_unique")
   @@index([bookingId, tripId])
   @@index([seatId])
   @@check(expression: sql`"seatNumber" BETWEEN 1 AND 100`, name: "booking_seat_number")

@@ -52,8 +52,9 @@ const origin = {
 const booking = {
   id: randomUUID(),
   reference: 'BUS-1234567890ABCDEF',
-  status: 'RESERVED' as const,
-  paymentRequired: false,
+  status: 'PENDING_PAYMENT' as const,
+  paymentRequired: true,
+  expiresAt: '2099-01-01T12:10:00.000Z',
   currency: 'EGP',
   contactPhone: '+201012345678',
   seatCount: 1,

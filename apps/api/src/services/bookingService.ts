@@ -1,3 +1,8 @@
+import {
+  bookingState,
+  expireTripHolds,
+  holdDurationMs,
+} from './bookingHoldService.ts';
 import { randomBytes } from 'node:crypto';
 import { AppError } from '../errors/AppError.ts';
 import { isUniqueViolation } from '../utils/databaseErrors.ts';
@@ -29,11 +34,15 @@ type BookingRecord = NonNullable<
 export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
   if (!booking.trip || !booking.trip.route)
     throw new Error('Reservation trip relation is missing');
+  const status = bookingState(booking);
   return {
     id: booking.id,
     reference: booking.reference,
-    status: booking.status,
-    paymentRequired: false,
+    status,
+    paymentRequired: status === 'PENDING_PAYMENT',
+    expiresAt: booking.expiresAt
+      ? new Date(booking.expiresAt).toISOString()
+      : null,
     currency: 'EGP',
     contactPhone: booking.contactPhone,
     seatCount: booking.seatCount,
@@ -166,8 +175,11 @@ export const bookingService = {
             'INVALID_SEATS',
             'Choose distinct seats belonging to this trip bus',
           );
+        const now = Date.now();
+        await expireTripHolds(tx, db, trip.id, new Date(now).toISOString());
         const occupied = await tx.orm.public.BookingSeat.where({
           tripId: trip.id,
+          releasedAt: null,
         }).all();
         if (
           input.passengers.some((passenger) =>
@@ -182,6 +194,10 @@ export const bookingService = {
         const booking = await tx.orm.public.Booking.create({
           userId: user.id,
           tripId: trip.id,
+          status: 'PENDING_PAYMENT',
+          expiresAt: new Date(
+            Math.min(now + holdDurationMs, Date.parse(trip.departureAt)),
+          ).toISOString(),
           reference: 'BUS-' + randomBytes(8).toString('hex').toUpperCase(),
           contactPhone: input.contactPhone,
           seatCount: input.passengers.length,
@@ -201,7 +217,7 @@ export const bookingService = {
         return booking.id;
       });
     } catch (error) {
-      if (isUniqueViolation(error, 'BookingSeat_tripId_seatId_key'))
+      if (isUniqueViolation(error, 'booking_seat_active_unique_225b95a2'))
         throw new AppError(
           409,
           'SEAT_UNAVAILABLE',

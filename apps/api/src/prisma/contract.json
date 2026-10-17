@@ -87,6 +87,14 @@
               {
                 "name": "RESERVED",
                 "value": "RESERVED"
+              },
+              {
+                "name": "PENDING_PAYMENT",
+                "value": "PENDING_PAYMENT"
+              },
+              {
+                "name": "EXPIRED",
+                "value": "EXPIRED"
               }
             ]
           },
@@ -332,6 +340,13 @@
                   "kind": "scalar"
                 }
               },
+              "expiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -454,6 +469,9 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
                 "id": {
                   "column": "id"
                 },
@@ -503,6 +521,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "releasedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -574,6 +599,9 @@
                 },
                 "passengerName": {
                   "column": "passengerName"
+                },
+                "releasedAt": {
+                  "column": "releasedAt"
                 },
                 "seatId": {
                   "column": "seatId"
@@ -2246,9 +2274,14 @@
             "Booking": {
               "checks": [
                 {
-                  "expression": "\"status\" IN ('RESERVED')",
-                  "name": "Booking_status_check_78f85807",
+                  "expression": "\"status\" IN ('RESERVED', 'PENDING_PAYMENT', 'EXPIRED')",
+                  "name": "Booking_status_check_0f52eb04",
                   "prefix": "Booking_status_check"
+                },
+                {
+                  "expression": "(\"status\" = 'RESERVED' AND \"expiresAt\" IS NULL) OR (\"status\" IN ('PENDING_PAYMENT', 'EXPIRED') AND \"expiresAt\" IS NOT NULL)",
+                  "name": "booking_hold_expiry_23e99e27",
+                  "prefix": "booking_hold_expiry"
                 },
                 {
                   "expression": "\"unitPricePiastres\" BETWEEN 0 AND 2147483647 AND \"totalPiastres\" = \"unitPricePiastres\"::bigint * \"seatCount\"",
@@ -2275,6 +2308,11 @@
                     "kind": "function"
                   },
                   "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
                 },
                 "id": {
                   "codecId": "pg/text@1",
@@ -2383,6 +2421,16 @@
                 },
                 {
                   "columns": [
+                    "status",
+                    "expiresAt",
+                    "tripId"
+                  ],
+                  "name": "Booking_status_expiresAt_tripId_idx_bd4e6fd1",
+                  "prefix": "Booking_status_expiresAt_tripId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
                     "tripId"
                   ],
                   "name": "Booking_tripId_idx_75da6d97",
@@ -2449,6 +2497,11 @@
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": false
+                },
+                "releasedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
                 },
                 "seatId": {
                   "codecId": "pg/text@1",
@@ -2529,6 +2582,16 @@
                   "name": "BookingSeat_seatId_idx_3076c3cd",
                   "prefix": "BookingSeat_seatId_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "tripId",
+                    "seatId"
+                  ],
+                  "name": "booking_seat_active_unique_225b95a2",
+                  "prefix": "booking_seat_active_unique",
+                  "unique": true,
+                  "where": "\"releasedAt\" IS NULL"
                 }
               ],
               "primaryKey": {
@@ -2536,14 +2599,7 @@
                   "id"
                 ]
               },
-              "uniques": [
-                {
-                  "columns": [
-                    "tripId",
-                    "seatId"
-                  ]
-                }
-              ]
+              "uniques": []
             },
             "Bus": {
               "checks": [
@@ -3873,7 +3929,9 @@
             "BookingStatus": {
               "kind": "valueSet",
               "values": [
-                "RESERVED"
+                "RESERVED",
+                "PENDING_PAYMENT",
+                "EXPIRED"
               ]
             },
             "EmailPurpose": {
@@ -3911,7 +3969,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e91f2b659cec7b7d1457a3320ee84afd8f038a4431a0ad26609f6564025a49a9"
+    "storageHash": "dd4d1d64f1070080d436320e9e83fc6b050ec149e6243827f8885359a8c19148"
   },
   "execution": {
     "executionHash": "230848f79ab5653cd953ddc7496e50f7b9fe8ebcfb436eff7cf5443a46674644",

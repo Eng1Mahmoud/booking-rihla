@@ -1,0 +1,332 @@
+[
+  {
+    "id": "dropCheckConstraint.Booking.Booking_status_check_78f85807",
+    "label": "Drop check constraint \"Booking_status_check_78f85807\" on \"Booking\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Booking_status_check_78f85807",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_status_check_78f85807\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_78f85807",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"Booking_status_check_78f85807\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" DROP CONSTRAINT \"Booking_status_check_78f85807\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_status_check_78f85807\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_78f85807",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropConstraint.BookingSeat.BookingSeat_tripId_seatId_key",
+    "label": "Drop constraint \"BookingSeat_tripId_seatId_key\" on \"BookingSeat\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BookingSeat_tripId_seatId_key",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BookingSeat_tripId_seatId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_tripId_seatId_key",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"BookingSeat_tripId_seatId_key\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\" DROP CONSTRAINT \"BookingSeat_tripId_seatId_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BookingSeat_tripId_seatId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_tripId_seatId_key",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Booking.expiresAt",
+    "label": "Add column \"expiresAt\" to \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "expiresAt",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"expiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Booking",
+          "expiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"expiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD COLUMN \"expiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"expiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Booking",
+          "expiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.BookingSeat.releasedAt",
+    "label": "Add column \"releasedAt\" to \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "releasedAt",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"releasedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "releasedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"releasedAt\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\" ADD COLUMN \"releasedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"releasedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "releasedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Booking.Booking_status_check_0f52eb04",
+    "label": "Add check constraint \"Booking_status_check_0f52eb04\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Booking_status_check_0f52eb04",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Booking_status_check_0f52eb04\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_0f52eb04",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Booking_status_check_0f52eb04\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"Booking_status_check_0f52eb04\" CHECK (\"status\" IN ('RESERVED', 'PENDING_PAYMENT', 'EXPIRED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Booking_status_check_0f52eb04\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Booking_status_check_0f52eb04",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Booking.booking_hold_expiry_23e99e27",
+    "label": "Add check constraint \"booking_hold_expiry_23e99e27\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "booking_hold_expiry_23e99e27",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"booking_hold_expiry_23e99e27\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_23e99e27",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"booking_hold_expiry_23e99e27\"",
+        "sql": "ALTER TABLE \"public\".\"Booking\" ADD CONSTRAINT \"booking_hold_expiry_23e99e27\" CHECK ((\"status\" = 'RESERVED' AND \"expiresAt\" IS NULL) OR (\"status\" IN ('PENDING_PAYMENT', 'EXPIRED') AND \"expiresAt\" IS NOT NULL))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"booking_hold_expiry_23e99e27\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "booking_hold_expiry_23e99e27",
+          "public",
+          "\"public\".\"Booking\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Booking.Booking_status_expiresAt_tripId_idx_bd4e6fd1",
+    "label": "Create index \"Booking_status_expiresAt_tripId_idx_bd4e6fd1\" on \"Booking\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Booking_status_expiresAt_tripId_idx_bd4e6fd1",
+        "table": "Booking"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Booking_status_expiresAt_tripId_idx_bd4e6fd1\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_status_expiresAt_tripId_idx_bd4e6fd1\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Booking_status_expiresAt_tripId_idx_bd4e6fd1\"",
+        "sql": "CREATE INDEX \"Booking_status_expiresAt_tripId_idx_bd4e6fd1\" ON \"public\".\"Booking\" (\"status\", \"expiresAt\", \"tripId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Booking_status_expiresAt_tripId_idx_bd4e6fd1\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Booking_status_expiresAt_tripId_idx_bd4e6fd1\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingSeat.booking_seat_active_unique_225b95a2",
+    "label": "Create index \"booking_seat_active_unique_225b95a2\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "booking_seat_active_unique_225b95a2",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"booking_seat_active_unique_225b95a2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"booking_seat_active_unique_225b95a2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"booking_seat_active_unique_225b95a2\"",
+        "sql": "CREATE UNIQUE INDEX \"booking_seat_active_unique_225b95a2\" ON \"public\".\"BookingSeat\" (\"tripId\", \"seatId\") WHERE (\"releasedAt\" IS NULL)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"booking_seat_active_unique_225b95a2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"booking_seat_active_unique_225b95a2\""
+        ]
+      }
+    ]
+  }
+]

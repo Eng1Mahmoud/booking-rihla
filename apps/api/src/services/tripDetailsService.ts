@@ -1,3 +1,4 @@
+import { bookingState } from './bookingHoldService.ts';
 import { busMetadata } from '../utils/busMetadata.ts';
 import type { db as database } from '../prisma/db.ts';
 
@@ -44,8 +45,10 @@ export const tripDetailsService = {
       .select('id', 'busId')
       .include('bookings', (bookings) =>
         bookings
-          .select('id')
-          .include('seats', (seats) => seats.select('seatId')),
+          .select('id', 'status', 'expiresAt')
+          .include('seats', (seats) =>
+            seats.where({ releasedAt: null }).select('seatId'),
+          ),
       )
       .include('bus', (bus) =>
         bus
@@ -57,9 +60,9 @@ export const tripDetailsService = {
       .first();
     if (!trip || !trip.bus) return null;
     const reserved = new Set(
-      trip.bookings.flatMap((booking) =>
-        booking.seats.map((seat) => seat.seatId),
-      ),
+      trip.bookings
+        .filter((booking) => bookingState(booking) !== 'EXPIRED')
+        .flatMap((booking) => booking.seats.map((seat) => seat.seatId)),
     );
     const seats = trip.bus.seats.map((seat) => ({
       ...seat,

@@ -137,7 +137,9 @@ test('administrator booking reads filter real reservations, preserve passenger o
   });
   assert.equal(details.contactPhone, '+201099999999');
   assert.equal(details.trip.status, 'SCHEDULED');
-  assert.equal(details.paymentRequired, false);
+  assert.equal(details.paymentRequired, true);
+  assert.equal(details.status, 'PENDING_PAYMENT');
+  assert.equal(details.expiresAt, first.expiresAt);
   assert.equal(details.currency, 'EGP');
   assert.equal(details.totalPiastres, 2 * trip.pricePiastres);
   assert.deepEqual(

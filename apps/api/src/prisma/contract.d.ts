@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'e91f2b659cec7b7d1457a3320ee84afd8f038a4431a0ad26609f6564025a49a9'>;
+  StorageHashBase<'dd4d1d64f1070080d436320e9e83fc6b050ec149e6243827f8885359a8c19148'>;
 export type ExecutionHash =
   ExecutionHashBase<'230848f79ab5653cd953ddc7496e50f7b9fe8ebcfb436eff7cf5443a46674644'>;
 export type ProfileHash =
@@ -254,10 +254,11 @@ export type FieldOutputTypes = {
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly reference: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
-      readonly status: 'RESERVED';
+      readonly status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
       readonly totalPiastres: CodecTypes['pg/int8@1']['output'];
       readonly tripId: CodecTypes['pg/text@1']['output'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -267,6 +268,7 @@ export type FieldOutputTypes = {
       readonly bookingId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly passengerName: CodecTypes['pg/text@1']['output'];
+      readonly releasedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly seatId: CodecTypes['pg/text@1']['output'];
       readonly seatNumber: CodecTypes['pg/int4@1']['output'];
       readonly tripId: CodecTypes['pg/text@1']['output'];
@@ -408,10 +410,11 @@ export type FieldInputTypes = {
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly reference: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
-      readonly status: 'RESERVED';
+      readonly status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
       readonly totalPiastres: CodecTypes['pg/int8@1']['input'];
       readonly tripId: CodecTypes['pg/text@1']['input'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['input'];
@@ -421,6 +424,7 @@ export type FieldInputTypes = {
       readonly bookingId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly passengerName: CodecTypes['pg/text@1']['input'];
+      readonly releasedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly seatId: CodecTypes['pg/text@1']['input'];
       readonly seatNumber: CodecTypes['pg/int4@1']['input'];
       readonly tripId: CodecTypes['pg/text@1']['input'];
@@ -562,10 +566,11 @@ export type StorageColumnTypes = {
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly reference: CodecTypes['pg/text@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
-      readonly status: 'RESERVED';
+      readonly status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
       readonly totalPiastres: CodecTypes['pg/int8@1']['output'];
       readonly tripId: CodecTypes['pg/text@1']['output'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -575,6 +580,7 @@ export type StorageColumnTypes = {
       readonly bookingId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly passengerName: CodecTypes['pg/text@1']['output'];
+      readonly releasedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly seatId: CodecTypes['pg/text@1']['output'];
       readonly seatNumber: CodecTypes['pg/int4@1']['output'];
       readonly tripId: CodecTypes['pg/text@1']['output'];
@@ -716,10 +722,11 @@ export type StorageColumnInputTypes = {
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly reference: CodecTypes['pg/text@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
-      readonly status: 'RESERVED';
+      readonly status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
       readonly totalPiastres: CodecTypes['pg/int8@1']['input'];
       readonly tripId: CodecTypes['pg/text@1']['input'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['input'];
@@ -729,6 +736,7 @@ export type StorageColumnInputTypes = {
       readonly bookingId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly passengerName: CodecTypes['pg/text@1']['input'];
+      readonly releasedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly seatId: CodecTypes['pg/text@1']['input'];
       readonly seatNumber: CodecTypes['pg/int4@1']['input'];
       readonly tripId: CodecTypes['pg/text@1']['input'];
@@ -873,10 +881,11 @@ export namespace Models {
   export type public_Booking = {
     contactPhone: CodecTypes['pg/text@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     id: CodecTypes['pg/text@1']['output'];
     reference: CodecTypes['pg/text@1']['output'];
     seatCount: CodecTypes['pg/int4@1']['output'];
-    status: 'RESERVED';
+    status: 'RESERVED' | 'PENDING_PAYMENT' | 'EXPIRED';
     totalPiastres: CodecTypes['pg/int8@1']['output'];
     tripId: CodecTypes['pg/text@1']['output'];
     unitPricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -890,6 +899,7 @@ export namespace Models {
     bookingId: CodecTypes['pg/text@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     passengerName: CodecTypes['pg/text@1']['output'];
+    releasedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     seatId: CodecTypes['pg/text@1']['output'];
     seatNumber: CodecTypes['pg/int4@1']['output'];
     tripId: CodecTypes['pg/text@1']['output'];
@@ -1226,6 +1236,12 @@ type ContractBase = Omit<
                   readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
                   readonly many: false;
                 };
+                readonly expiresAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly id: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -1289,6 +1305,12 @@ type ContractBase = Omit<
                   readonly name: 'Booking_createdAt_id_idx_3855cff1';
                   readonly prefix: 'Booking_createdAt_id_idx';
                   readonly columns: readonly ['createdAt', 'id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Booking_status_expiresAt_tripId_idx_bd4e6fd1';
+                  readonly prefix: 'Booking_status_expiresAt_tripId_idx';
+                  readonly columns: readonly ['status', 'expiresAt', 'tripId'];
                   readonly unique: false;
                 },
                 {
@@ -1357,6 +1379,12 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly releasedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly seatId: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -1377,7 +1405,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['tripId', 'seatId'] }];
+              uniques: readonly [];
               indexes: readonly [
                 {
                   readonly name: 'BookingSeat_bookingId_tripId_idx_52502076';
@@ -1390,6 +1418,13 @@ type ContractBase = Omit<
                   readonly prefix: 'BookingSeat_seatId_idx';
                   readonly columns: readonly ['seatId'];
                   readonly unique: false;
+                },
+                {
+                  readonly name: 'booking_seat_active_unique_225b95a2';
+                  readonly prefix: 'booking_seat_active_unique';
+                  readonly columns: readonly ['tripId', 'seatId'];
+                  readonly where: '"releasedAt" IS NULL';
+                  readonly unique: true;
                 },
               ];
               foreignKeys: readonly [
@@ -2407,7 +2442,7 @@ type ContractBase = Omit<
           readonly valueSet: {
             readonly BookingStatus: {
               readonly kind: 'valueSet';
-              readonly values: readonly ['RESERVED'];
+              readonly values: readonly ['RESERVED', 'PENDING_PAYMENT', 'EXPIRED'];
             };
             readonly EmailPurpose: {
               readonly kind: 'valueSet';
@@ -2592,6 +2627,13 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                 };
               };
+              readonly expiresAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -2662,6 +2704,7 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly contactPhone: { readonly column: 'contactPhone' };
                 readonly createdAt: { readonly column: 'createdAt' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly id: { readonly column: 'id' };
                 readonly reference: { readonly column: 'reference' };
                 readonly seatCount: { readonly column: 'seatCount' };
@@ -2686,6 +2729,13 @@ type ContractBase = Omit<
               readonly passengerName: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly releasedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
               };
               readonly seatId: {
                 readonly nullable: false;
@@ -2733,6 +2783,7 @@ type ContractBase = Omit<
                 readonly bookingId: { readonly column: 'bookingId' };
                 readonly id: { readonly column: 'id' };
                 readonly passengerName: { readonly column: 'passengerName' };
+                readonly releasedAt: { readonly column: 'releasedAt' };
                 readonly seatId: { readonly column: 'seatId' };
                 readonly seatNumber: { readonly column: 'seatNumber' };
                 readonly tripId: { readonly column: 'tripId' };
@@ -3718,7 +3769,11 @@ type ContractBase = Omit<
         readonly enum: {
           readonly BookingStatus: {
             readonly codecId: 'pg/text@1';
-            readonly members: readonly [{ readonly name: 'RESERVED'; readonly value: 'RESERVED' }];
+            readonly members: readonly [
+              { readonly name: 'RESERVED'; readonly value: 'RESERVED' },
+              { readonly name: 'PENDING_PAYMENT'; readonly value: 'PENDING_PAYMENT' },
+              { readonly name: 'EXPIRED'; readonly value: 'EXPIRED' },
+            ];
           };
           readonly EmailPurpose: {
             readonly codecId: 'pg/text@1';
@@ -3753,6 +3808,8 @@ type ContractBase = Omit<
         readonly enumMemberTypes?: {
           readonly BookingStatus: readonly [
             { readonly name: 'RESERVED'; readonly value: 'RESERVED' },
+            { readonly name: 'PENDING_PAYMENT'; readonly value: 'PENDING_PAYMENT' },
+            { readonly name: 'EXPIRED'; readonly value: 'EXPIRED' },
           ];
           readonly EmailPurpose: readonly [
             { readonly name: 'VERIFY_EMAIL'; readonly value: 'VERIFY_EMAIL' },

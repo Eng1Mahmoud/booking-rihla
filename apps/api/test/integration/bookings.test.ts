@@ -148,8 +148,9 @@ test('reservations enforce ownership, atomic seat uniqueness, price snapshots, t
   );
   assert.equal(created.headers.get('cache-control'), 'no-store');
   assert.match(booking.reference, /^BUS-[A-F0-9]{16}$/);
-  assert.equal(booking.status, 'RESERVED');
-  assert.equal(booking.paymentRequired, false);
+  assert.equal(booking.status, 'PENDING_PAYMENT');
+  assert.equal(booking.paymentRequired, true);
+  assert.ok(Date.parse(booking.expiresAt) > Date.now());
   assert.equal(booking.currency, 'EGP');
   assert.equal(booking.unitPricePiastres, trip.pricePiastres);
   assert.equal(booking.totalPiastres, 2 * trip.pricePiastres);
@@ -239,7 +240,7 @@ test('reservations enforce ownership, atomic seat uniqueness, price snapshots, t
       seatNumber: 1,
       passengerName: 'Duplicate',
     }),
-    (error) => isUniqueViolation(error, 'BookingSeat_tripId_seatId_key'),
+    (error) => isUniqueViolation(error, 'booking_seat_active_unique_225b95a2'),
   );
   await assert.rejects(
     db.orm.public.BookingSeat.create({
@@ -307,7 +308,7 @@ test('reservations enforce ownership, atomic seat uniqueness, price snapshots, t
     );
   assert.equal(
     (await db.orm.public.Booking.where({ id: booking.id }).first())?.status,
-    'RESERVED',
+    'PENDING_PAYMENT',
   );
   assert.equal((await readSeats()).availableSeats, 17);
   const page = await fetch(base + '/bookings?limit=1&offset=0', {
