@@ -1046,7 +1046,7 @@ Existing conservative trip/fleet history guards still apply to all booking recor
 
 ## Paymob TEST provider foundation
 
-The payment-provider transport layer is now implemented for Paymob Egypt and EGP. This replaces the earlier PayPal proposal because the booking amounts are in EGP. This is a provider preparation step, not a working paid checkout: no checkout endpoint, payment-attempt table, payment worker or booking confirmation transition is exposed yet. Signed webhook receipt is implemented separately below. Existing checkout holds still expire as described above. No database migration or dependency installation is needed for this step. The project owner now has a Paymob account and local TEST credentials. An API-key authentication check succeeded; it did not create a payment or verify Auth/Cap capability.
+The payment-provider transport layer is now implemented for Paymob Egypt and EGP. This replaces the earlier PayPal proposal because the booking amounts are in EGP. This is a provider preparation step, not a working paid checkout: no provider checkout endpoint, payment worker or booking confirmation transition is exposed yet. A preparation-only PaymentAttempt table and owner endpoints are described below. Signed webhook receipt is implemented separately below. Existing checkout holds still expire as described above. No database migration or dependency installation is needed for this step. The project owner now has a Paymob account and local TEST credentials. An API-key authentication check succeeded; it did not create a payment or verify Auth/Cap capability.
 
 Files to read:
 
@@ -1097,3 +1097,34 @@ Files: apps/api/src/routes/paymobWebhookRoutes.ts mounts the callback; controlle
 Verification: 173 default tests cover request validation, signature/identity checks, disabled operation, safe errors and data minimization. All 21 PostgreSQL integration tests passed in an isolated database, including migration replay, concurrent redelivery, distinct transaction-state events and unchanged bookings/seats. Compiled JavaScript passed HTTP health, signed receipt and duplicate-storage checks. Migration replay was repeatable; applying the additive migration to development preserved all 18 pre-existing business tables and left the new inbox empty. No real Paymob payment is created. Public HTTPS callback delivery and a real TEST authorization still need verification after the remaining payment flow is implemented.
 
 Official callback behavior and local public-URL requirements: [Paymob transaction callbacks](https://developers.paymob.com/paymob-docs/developers/transaction-callbacks).
+
+## Prepare one payment attempt for a booking
+
+An authenticated passenger can now prepare and retrieve an immutable payment snapshot for their own checkout hold. This feature does not contact Paymob, create an intention/checkout URL, capture funds or confirm a booking. It can be developed/tested without the remaining provider settings. Existing PENDING_PAYMENT holds, expiry cleanup and seat availability are unchanged.
+
+Apply npm run db:migrate, then call:
+
+```http
+POST /api/v1/bookings/<bookingId>/payment-attempt
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+Idempotency-Key: <UUID generated once for this booking>
+
+{}
+```
+
+Only an empty JSON object is accepted. The booking id must be a UUID, there must be no query parameters, and Idempotency-Key must be one UUID (normalized to lowercase). Frontend prices, currency, ownership, status and expiry are rejected. Keep the same key while retrying a request for the same booking.
+
+A first request returns 201 with Location pointing to GET /api/v1/bookings/<bookingId>/payment-attempt. A retry with the same key returns 200 and the same id, amount, createdAt and expiry. A different key for an already-prepared booking returns 409 PAYMENT_ATTEMPT_EXISTS. Keys are scoped to a booking, so another booking may use the same key without retrieving or changing the first one. A database unique constraint on bookingId enforces one preparation snapshot even when requests arrive concurrently.
+
+The data response contains id, bookingId, status, amountPiastres, currency, expiresAt and createdAt. PREPARED means local preparation only; EXPIRED is derived from the persisted deadline on reads, without writes or a worker. There are no secrets, customer details, idempotency keys or checkout links in this response. These statuses do not represent provider authorization or collection. GET returns 404 PAYMENT_ATTEMPT_NOT_FOUND for an owned booking without an attempt. Other passengers and staff receive the same 404 BOOKING_NOT_FOUND as an unknown booking; staff privileges do not bypass ownership.
+
+The service revalidates the active verified user and unrevoked session inside the transaction. It shares booking creation's User -> Session -> Trip -> Route -> Bus lock order, and re-reads the booking after acquiring the Trip lock. It rejects expired holds, less than one full second remaining, legacy/non-pending bookings, departed/cancelled trips, inactive routes/buses and missing/released seat allocations. Amount and expiry come only from the persisted booking. Zero-cost bookings return 409 PAYMENT_NOT_REQUIRED; this step does not define a free-ticket confirmation path. An existing attempt with a changed amount/deadline returns 409 PAYMENT_ATTEMPT_MISMATCH rather than silently replacing the snapshot. Authentication and deadline times are checked again after waiting for locks.
+
+No database lock remains held after the response, and no network request is performed while holding it. An attempt never extends the booking deadline or protects a seat from normal expiry. A delayed POST after expiry returns 409 BOOKING_EXPIRED, including when its original request had succeeded; GET can still retrieve the expired snapshot. The future provider-initiation/capture flow must revalidate ownership, exact expiry and current allocations under the same Trip lock before any external payment operation. Prepared metadata alone is never permission to collect funds.
+
+PaymentAttempt belongs to Booking through a restrictive foreign key to preserve history. Its amount uses BigInt in PostgreSQL and a safe JSON number bounded by the existing maximum booking total; database checks enforce positive EGP amounts, a deadline after creation and the normalized key shape. The additive booking_payment_attempts migration creates only this table, its unique constraint, expiry index and foreign key. Existing business rows are preserved. No provider transaction IDs are invented or webhook events automatically associated in this step.
+
+Code to read: apps/api/src/schemas/paymentAttemptSchema.ts validates the empty body/key; controllers/paymentAttemptController.ts handles HTTP status and owner context; services/paymentAttemptService.ts applies transaction guards, idempotency and serialization; routes/bookingRoutes.ts mounts the two endpoints under the existing authentication middleware. No new package or environment variable is required. Payment cancellation, direct capture/void and manual confirmation endpoints remain unavailable.
+
+Payment preparation verification: all 178 default tests and all 22 PostgreSQL integration tests passed, plus a targeted re-run of the expanded concurrency/authentication checks. Tests cover same/different idempotency keys in parallel, cross-user/staff ownership, exact BigInt totals above int32, expired/subsecond holds, concurrent expiry/reallocation, stale sessions/accounts, unavailable trip parents, missing allocations and database constraints. Compiled JavaScript passed real HTTP reservation, prepare/retry/read and unchanged-booking-state checks in a separate temporary database. TypeScript, lint, formatting and build passed. All migrations replayed and repeated successfully; applying the additive migration to development preserved all 19 pre-existing tables and left PaymentAttempt empty. Temporary databases were removed; no Paymob request or money movement was performed.

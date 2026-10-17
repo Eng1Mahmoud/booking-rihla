@@ -210,6 +210,7 @@ model Booking {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   seats BookingSeat[]
+  paymentAttempt PaymentAttempt?
   @@unique([id, tripId])
   @@index([status, expiresAt, tripId])
   @@check(expression: sql`("status" = 'RESERVED' AND "expiresAt" IS NULL) OR ("status" IN ('PENDING_PAYMENT', 'EXPIRED') AND "expiresAt" IS NOT NULL)`, name: "booking_hold_expiry")
@@ -296,4 +297,20 @@ model PaymentEvent {
   @@index([orderId, receivedAt])
   @@index([transactionId, receivedAt])
   @@check(expression: sql`"eventKey" ~ '^[a-f0-9]{64}$'`, name: "payment_event_key")
+}
+
+// Immutable preparation snapshot. No provider request or collected funds yet.
+model PaymentAttempt {
+  id String @id @default(uuid())
+  bookingId String @unique
+  idempotencyKey String
+  amountPiastres BigInt
+  currency String @default("EGP")
+  expiresAt TimestamptzString
+  createdAt TimestamptzString @default(now())
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@index([expiresAt])
+  @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700 AND currency = 'EGP'`, name: "payment_attempt_amount")
+  @@check(expression: sql`"expiresAt" > "createdAt"`, name: "payment_attempt_expiry")
+  @@check(expression: sql`"idempotencyKey" ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'`, name: "payment_attempt_key")
 }

@@ -1,3 +1,4 @@
+import type { PaymentAttemptService } from './services/paymentAttemptService.ts';
 import {
   paymobWebhookService,
   type PaymobWebhookService,
@@ -103,6 +104,7 @@ export function createApp(
     busTypes?: BusTypeService;
     amenities?: AmenityService;
     paymobWebhook?: PaymobWebhookService;
+    paymentAttempts?: PaymentAttemptService;
   } = {},
 ) {
   const app = express();
@@ -181,6 +183,7 @@ export function createApp(
     createBookingRouter(
       services.bookings ?? bookingService,
       services.sessions ?? sessionService,
+      services.paymentAttempts,
     ),
   );
 

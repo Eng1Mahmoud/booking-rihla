@@ -52,6 +52,10 @@
       "model": "PasswordReset",
       "namespace": "public"
     },
+    "PaymentAttempt": {
+      "model": "PaymentAttempt",
+      "namespace": "public"
+    },
     "PaymentEvent": {
       "model": "PaymentEvent",
       "namespace": "public"
@@ -415,6 +419,22 @@
               }
             },
             "relations": {
+              "paymentAttempt": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "bookingId"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentAttempt",
+                  "namespace": "public"
+                }
+              },
               "seats": {
                 "cardinality": "1:N",
                 "on": {
@@ -1389,6 +1409,104 @@
               },
               "namespaceId": "public",
               "table": "PasswordReset"
+            }
+          },
+          "PaymentAttempt": {
+            "fields": {
+              "amountPiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "bookingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "idempotencyKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "bookingId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amountPiastres": {
+                  "column": "amountPiastres"
+                },
+                "bookingId": {
+                  "column": "bookingId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "idempotencyKey": {
+                  "column": "idempotencyKey"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PaymentAttempt"
             }
           },
           "PaymentEvent": {
@@ -3371,6 +3489,117 @@
                 }
               ]
             },
+            "PaymentAttempt": {
+              "checks": [
+                {
+                  "expression": "\"amountPiastres\" BETWEEN 1 AND 214748364700 AND currency = 'EGP'",
+                  "name": "payment_attempt_amount_751e37b6",
+                  "prefix": "payment_attempt_amount"
+                },
+                {
+                  "expression": "\"expiresAt\" > \"createdAt\"",
+                  "name": "payment_attempt_expiry_ba6ba4ee",
+                  "prefix": "payment_attempt_expiry"
+                },
+                {
+                  "expression": "\"idempotencyKey\" ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'",
+                  "name": "payment_attempt_key_04039cd6",
+                  "prefix": "payment_attempt_key"
+                }
+              ],
+              "columns": {
+                "amountPiastres": {
+                  "codecId": "pg/int8@1",
+                  "dataType": "pg/int8",
+                  "nullable": false
+                },
+                "bookingId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EGP"
+                  },
+                  "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "idempotencyKey": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "bookingId"
+                    ]
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "bookingId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentAttempt"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "PaymentAttempt_expiresAt_idx_6b6b8c10",
+                  "prefix": "PaymentAttempt_expiresAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "bookingId"
+                  ]
+                }
+              ]
+            },
             "PaymentEvent": {
               "checks": [
                 {
@@ -4152,10 +4381,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "da8b04465317f9615abadd3995ecec96a083823ffa6f819181212a28df3e031c"
+    "storageHash": "fb461ba352a14da7f3886e2847c2f326b784549ab529fad87cbc59ea8559cb61"
   },
   "execution": {
-    "executionHash": "1ca7cf07747b16695d74d3d2413f51d28cfcd4024e98f584b3554d29551d6378",
+    "executionHash": "2d2a6d2d7dd888f7a1de9b779e39444d5fefdadc3a40ce165326c93ce3144a4b",
     "mutations": {
       "defaults": [
         {
@@ -4286,6 +4515,17 @@
           },
           "ref": {
             "entry": "PasswordReset",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PaymentAttempt",
             "field": "id",
             "namespace": "public"
           }

@@ -1,3 +1,8 @@
+import { createPaymentAttemptController } from '../controllers/paymentAttemptController.ts';
+import {
+  paymentAttemptService,
+  type PaymentAttemptService,
+} from '../services/paymentAttemptService.ts';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { requireAuth } from '../middlewares/requireAuth.ts';
@@ -8,6 +13,7 @@ import type { SessionService } from '../services/sessionService.ts';
 export function createBookingRouter(
   service: BookingService,
   sessions: SessionService,
+  payments: PaymentAttemptService = paymentAttemptService,
 ) {
   const router = Router();
   const controller = createBookingController(service);
@@ -30,6 +36,9 @@ export function createBookingRouter(
     }),
     controller.create,
   );
+  const paymentController = createPaymentAttemptController(payments);
+  router.post('/:id/payment-attempt', paymentController.prepare);
+  router.get('/:id/payment-attempt', paymentController.get);
   router.get('/', controller.list);
   router.get('/:id', controller.getById);
   // Passenger cancellation is deliberately unavailable: no DELETE/PATCH/cancel route.

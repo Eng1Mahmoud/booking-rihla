@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'da8b04465317f9615abadd3995ecec96a083823ffa6f819181212a28df3e031c'>;
+  StorageHashBase<'fb461ba352a14da7f3886e2847c2f326b784549ab529fad87cbc59ea8559cb61'>;
 export type ExecutionHash =
-  ExecutionHashBase<'1ca7cf07747b16695d74d3d2413f51d28cfcd4024e98f584b3554d29551d6378'>;
+  ExecutionHashBase<'2d2a6d2d7dd888f7a1de9b779e39444d5fefdadc3a40ce165326c93ce3144a4b'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -335,6 +335,15 @@ export type FieldOutputTypes = {
       readonly userId: CodecTypes['pg/text@1']['output'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly PaymentAttempt: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly idempotencyKey: CodecTypes['pg/text@1']['output'];
+    };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -500,6 +509,15 @@ export type FieldInputTypes = {
       readonly sendCount: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PaymentAttempt: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly idempotencyKey: CodecTypes['pg/text@1']['input'];
     };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['input'];
@@ -667,6 +685,15 @@ export type StorageColumnTypes = {
       readonly userId: CodecTypes['pg/text@1']['output'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly PaymentAttempt: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly idempotencyKey: CodecTypes['pg/text@1']['output'];
+    };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -833,6 +860,15 @@ export type StorageColumnInputTypes = {
       readonly userId: CodecTypes['pg/text@1']['input'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
+    readonly PaymentAttempt: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly idempotencyKey: CodecTypes['pg/text@1']['input'];
+    };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
@@ -930,10 +966,11 @@ export namespace Models {
     tripId: CodecTypes['pg/text@1']['output'];
     unitPricePiastres: CodecTypes['pg/int4@1']['output'];
     userId: CodecTypes['pg/text@1']['output'];
+    paymentAttempt: public_PaymentAttempt | null;
     seats: public_BookingSeat[];
     trip: public_Trip;
     user: public_User;
-    readonly [RelationKeys]?: 'seats' | 'trip' | 'user';
+    readonly [RelationKeys]?: 'paymentAttempt' | 'seats' | 'trip' | 'user';
   };
   export type public_BookingSeat = {
     bookingId: CodecTypes['pg/text@1']['output'];
@@ -1029,6 +1066,17 @@ export namespace Models {
     windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     user: public_User;
     readonly [RelationKeys]?: 'user';
+  };
+  export type public_PaymentAttempt = {
+    amountPiastres: CodecTypes['pg/int8@1']['output'];
+    bookingId: CodecTypes['pg/text@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    currency: CodecTypes['pg/text@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    idempotencyKey: CodecTypes['pg/text@1']['output'];
+    booking: public_Booking;
+    readonly [RelationKeys]?: 'booking';
   };
   export type public_PaymentEvent = {
     eventKey: CodecTypes['pg/text@1']['output'];
@@ -1131,6 +1179,7 @@ export declare const models: {
     EmailOutbox: Models.public_EmailOutbox;
     EmailVerification: Models.public_EmailVerification;
     PasswordReset: Models.public_PasswordReset;
+    PaymentAttempt: Models.public_PaymentAttempt;
     PaymentEvent: Models.public_PaymentEvent;
     RefreshToken: Models.public_RefreshToken;
     Route: Models.public_Route;
@@ -2006,6 +2055,81 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly PaymentAttempt: {
+              columns: {
+                readonly amountPiastres: {
+                  readonly dataType: 'pg/int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly bookingId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly currency: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'EGP'>;
+                  };
+                  readonly many: false;
+                };
+                readonly expiresAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly idempotencyKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['bookingId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'PaymentAttempt_expiresAt_idx_6b6b8c10';
+                  readonly prefix: 'PaymentAttempt_expiresAt_idx';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'PaymentAttempt';
+                    readonly columns: readonly ['bookingId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Booking';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly PaymentEvent: {
               columns: {
                 readonly eventKey: {
@@ -2620,6 +2744,10 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PasswordReset';
     };
+    readonly PaymentAttempt: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PaymentAttempt';
+    };
     readonly PaymentEvent: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PaymentEvent';
@@ -2794,6 +2922,18 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly paymentAttempt: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PaymentAttempt';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['bookingId'];
+                };
+              };
               readonly seats: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -3404,6 +3544,71 @@ type ContractBase = Omit<
                 readonly sendCount: { readonly column: 'sendCount' };
                 readonly userId: { readonly column: 'userId' };
                 readonly windowStartedAt: { readonly column: 'windowStartedAt' };
+              };
+            };
+          };
+          readonly PaymentAttempt: {
+            readonly fields: {
+              readonly amountPiastres: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly bookingId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly currency: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly idempotencyKey: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly booking: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Booking';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['bookingId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'PaymentAttempt';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly amountPiastres: { readonly column: 'amountPiastres' };
+                readonly bookingId: { readonly column: 'bookingId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly currency: { readonly column: 'currency' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly id: { readonly column: 'id' };
+                readonly idempotencyKey: { readonly column: 'idempotencyKey' };
               };
             };
           };
@@ -4136,6 +4341,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'PasswordReset';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'PaymentAttempt';
             readonly field: 'id';
             readonly namespace: 'public';
           };
