@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.Ticket",
+    "label": "Create table \"Ticket\"",
+    "summary": "Creates table \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Ticket\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Ticket\"",
+        "sql": "CREATE TABLE \"public\".\"Ticket\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"bookingId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"discardedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"nextAttemptAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"sentAt\" timestamptz,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ticket_mail_attempts_4c896e7d\" CHECK (attempts BETWEEN 0 AND 5)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Ticket\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Ticket.Ticket_bookingId_key",
+    "label": "Add unique constraint on \"Ticket\" (bookingId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Ticket_bookingId_key",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Ticket_bookingId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Ticket_bookingId_key",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Ticket_bookingId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD CONSTRAINT \"Ticket_bookingId_key\" UNIQUE (\"bookingId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Ticket_bookingId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Ticket_bookingId_key",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Ticket.ticket_mail_due_1189e9ab",
+    "label": "Create index \"ticket_mail_due_1189e9ab\" on \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "ticket_mail_due_1189e9ab",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"ticket_mail_due_1189e9ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ticket_mail_due_1189e9ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"ticket_mail_due_1189e9ab\"",
+        "sql": "CREATE INDEX \"ticket_mail_due_1189e9ab\" ON \"public\".\"Ticket\" (\"sentAt\", \"discardedAt\", \"nextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"ticket_mail_due_1189e9ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ticket_mail_due_1189e9ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Ticket.Ticket_bookingId_fkey",
+    "label": "Add foreign key \"Ticket_bookingId_fkey\" on \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Ticket_bookingId_fkey",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Ticket_bookingId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Ticket_bookingId_fkey",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Ticket_bookingId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\"\nADD CONSTRAINT \"Ticket_bookingId_fkey\"\nFOREIGN KEY (\"bookingId\")\nREFERENCES \"public\".\"Booking\" (\"id\")\nON DELETE CASCADE\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Ticket_bookingId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Ticket_bookingId_fkey",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ]
+  }
+]

@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import { ticketEmail } from '../emails/ticketEmail.ts';
+import type { TicketData } from './ticketService.ts';
 import { parseAuthEnv } from '../config/env.ts';
 import { verificationEmail } from '../emails/verificationEmail.ts';
 import {
@@ -13,7 +15,7 @@ export interface AccountMail {
   language: string;
 }
 export type SendAccountMail = (message: AccountMail) => Promise<void>;
-export const sendAccountMail: SendAccountMail = async (message) => {
+function mailTransport() {
   const env = parseAuthEnv(process.env);
   const transport = nodemailer.createTransport({
     host: env.SMTP_HOST,
@@ -28,6 +30,10 @@ export const sendAccountMail: SendAccountMail = async (message) => {
     disableFileAccess: true,
     disableUrlAccess: true,
   });
+  return { env, transport };
+}
+export const sendAccountMail: SendAccountMail = async (message) => {
+  const { env, transport } = mailTransport();
   try {
     await transport.sendMail({
       from: env.SMTP_FROM,
@@ -38,6 +44,25 @@ export const sendAccountMail: SendAccountMail = async (message) => {
         : message.purpose === 'PASSWORD_RESET'
           ? passwordResetEmail(message.code ?? '', message.language)
           : verificationEmail(message.code ?? '', message.language)),
+    });
+  } finally {
+    transport.close();
+  }
+};
+
+export type SendTicketMail = (message: {
+  email: string;
+  language: string;
+  ticket: TicketData;
+}) => Promise<void>;
+export const sendTicketMail: SendTicketMail = async (message) => {
+  const { env, transport } = mailTransport();
+  try {
+    await transport.sendMail({
+      from: env.SMTP_FROM,
+      to: message.email,
+      messageId: '<ticket-' + message.ticket.id + '@bus.local>',
+      ...ticketEmail(message.ticket, message.language),
     });
   } finally {
     transport.close();

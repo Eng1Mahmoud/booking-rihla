@@ -1,3 +1,4 @@
+import { processTicketOutbox } from '../services/ticketOutboxService.ts';
 import 'dotenv/config';
 import { setTimeout } from 'node:timers/promises';
 import { parseAuthEnv } from '../config/env.ts';
@@ -20,7 +21,13 @@ try {
   );
   do {
     try {
-      const result = await processEmailOutbox();
+      const account = await processEmailOutbox();
+      const tickets = await processTicketOutbox();
+      const result = {
+        sent: account.sent + tickets.sent,
+        failed: account.failed + tickets.failed,
+        discarded: account.discarded + tickets.discarded,
+      };
       if (result.sent || result.failed || result.discarded)
         console.log(JSON.stringify(result));
     } catch {

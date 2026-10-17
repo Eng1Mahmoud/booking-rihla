@@ -1,3 +1,8 @@
+import { createTicketController } from '../controllers/ticketController.ts';
+import {
+  ticketService,
+  type TicketService,
+} from '../services/ticketService.ts';
 import { createPaymentCheckoutController } from '../controllers/paymentCheckoutController.ts';
 import {
   paymentCheckoutService,
@@ -20,6 +25,7 @@ export function createBookingRouter(
   sessions: SessionService,
   payments: PaymentAttemptService = paymentAttemptService,
   checkout: PaymentCheckoutService = paymentCheckoutService,
+  tickets: TicketService = ticketService,
 ) {
   const router = Router();
   const controller = createBookingController(service);
@@ -81,6 +87,24 @@ export function createBookingRouter(
         ),
     }),
     checkoutController.get,
+  );
+  router.get(
+    '/:id/ticket',
+    rateLimit({
+      limit: 60,
+      windowMs: 60000,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) =>
+        next(
+          new AppError(
+            429,
+            'RATE_LIMITED',
+            'Too many ticket requests; try again later',
+          ),
+        ),
+    }),
+    createTicketController(tickets),
   );
   router.get('/', controller.list);
   router.get('/:id', controller.getById);

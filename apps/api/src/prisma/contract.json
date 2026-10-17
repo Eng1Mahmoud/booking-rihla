@@ -84,6 +84,10 @@
       "model": "Station",
       "namespace": "public"
     },
+    "Ticket": {
+      "model": "Ticket",
+      "namespace": "public"
+    },
     "Trip": {
       "model": "Trip",
       "namespace": "public"
@@ -524,6 +528,22 @@
                 },
                 "to": {
                   "model": "BookingSeat",
+                  "namespace": "public"
+                }
+              },
+              "ticket": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "bookingId"
+                  ]
+                },
+                "to": {
+                  "model": "Ticket",
                   "namespace": "public"
                 }
               },
@@ -2367,6 +2387,104 @@
               },
               "namespaceId": "public",
               "table": "Station"
+            }
+          },
+          "Ticket": {
+            "fields": {
+              "attempts": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "bookingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "discardedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nextAttemptAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "sentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "bookingId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "attempts": {
+                  "column": "attempts"
+                },
+                "bookingId": {
+                  "column": "bookingId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "discardedAt": {
+                  "column": "discardedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "nextAttemptAt": {
+                  "column": "nextAttemptAt"
+                },
+                "sentAt": {
+                  "column": "sentAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Ticket"
             }
           },
           "Trip": {
@@ -4747,6 +4865,113 @@
               },
               "uniques": []
             },
+            "Ticket": {
+              "checks": [
+                {
+                  "expression": "attempts BETWEEN 0 AND 5",
+                  "name": "ticket_mail_attempts_4c896e7d",
+                  "prefix": "ticket_mail_attempts"
+                }
+              ],
+              "columns": {
+                "attempts": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nullable": false
+                },
+                "bookingId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "discardedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nextAttemptAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "sentAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "bookingId"
+                    ]
+                  },
+                  "onDelete": "cascade",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "bookingId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Ticket"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "sentAt",
+                    "discardedAt",
+                    "nextAttemptAt"
+                  ],
+                  "name": "ticket_mail_due_1189e9ab",
+                  "prefix": "ticket_mail_due",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "bookingId"
+                  ]
+                }
+              ]
+            },
             "Trip": {
               "checks": [
                 {
@@ -5121,10 +5346,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "fbcc5d303193ba19f660a1af9fc04176b313772e5f97b1d607309474009884a0"
+    "storageHash": "2abbdd8d62750563f4be41ca247c30a14b3e79f081ddd45fe30df246fcc975c0"
   },
   "execution": {
-    "executionHash": "1f1ba402c5c4659a6d727f1c3c6235e465296fd239cebf0aa1242cf35528afa6",
+    "executionHash": "9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56",
     "mutations": {
       "defaults": [
         {
@@ -5343,6 +5568,17 @@
           },
           "ref": {
             "entry": "Station",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Ticket",
             "field": "id",
             "namespace": "public"
           }

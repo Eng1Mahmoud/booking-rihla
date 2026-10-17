@@ -1247,3 +1247,34 @@ The query projects only the customer identity needed for an operator and exclude
 This feature adds one composite index on PaymentAttempt(createdAt,id), with no table/row deletion or new dependency. Existing strict TEST checkout flags remain unchanged and disabled locally. Actual merchant Auth/Cap verification and the operator cancellation/refund policy are still required before enabling checkout.
 
 Administrator-payment verification: all 200 Node tests and all 66 PostgreSQL tests passed; the eight-test operator-payment group passed independently. Tests cover live-role/session restrictions, combined relation/reference/state filters, nullable preparation/authorization states, exact references, Cairo 25-hour DST boundaries, tied-time pagination, consistency with passenger status, secret exclusion and unchanged financial/allocation/event history across successful/invalid reads and forbidden mutation attempts. TypeScript, lint, formatting and build passed. Compiled JavaScript returned 401/403/200 for anonymous/passenger/staff access using injected fixtures without database/provider calls. All migrations replayed/repeated in a temporary database that was removed. The one-index development migration applied/repeated and the index was verified; row values/counts across all 22 tables were unchanged. No real Paymob request, financial operation or activation flag change occurred.
+
+## Confirmed-booking tickets and email
+
+A successful, independently verified full capture now commits Booking.CONFIRMED, CAPTURE/SUCCEEDED, completed authorization and one Ticket **in the same database transaction**. The bookingId unique constraint and existing trip/settlement locks prevent duplicate ticket issuance during concurrent or repeated reconciliation. No email is sent inside the payment transaction. Pending, unknown, voided or review payments do not issue tickets. This adds one table/index/constraints; it does not change old financial rows or fabricate tickets for old/manual confirmed fixtures.
+
+Authenticated passengers read their own ticket with:
+
+```http
+GET /api/v1/bookings/<booking-uuid>/ticket
+Authorization: Bearer <access-token>
+```
+
+The API returns data with ticket id, bookingId, booking reference, issuedAt, EGP totalPiastres, passenger names/seat numbers, bilingual origin/destination city/station labels, UTC departure/arrival and qr.payload/qr.imageDataUrl (PNG). The frontend can display the PNG data URL directly. Times in the email use Africa/Cairo. There is one ticket for the entire booking, including all its passengers. No PDF is generated in this feature.
+
+Reads require current authenticated ownership, including when the caller has an administrator role. Missing/other-owner/unissued/unsafe tickets return the same 404 TICKET_NOT_FOUND. Only CONFIRMED bookings with matching successful capture evidence, complete seat allocations and a scheduled trip are returned. Historical journeys can still be read; expired hold timestamps do not invalidate a confirmed booking. Query parameters and ticket creation/update/delete routes are unavailable. Responses use Cache-Control: no-store; reads are bounded to 60 requests per minute/IP after authentication. Reading a ticket does not query Paymob, send mail or alter the booking.
+
+QR payload is BUS-TICKET:v1:<ticket-uuid>; it contains no passenger name, phone, email, provider reference or checkout URL. It is an opaque identifier, **not a secret bearer credential, offline payment proof or check-in authorization**. There is no public QR lookup. The future staff scanner must authenticate, look up current booking/payment/trip state and implement check-in/replay rules. Scanning the current QR with an ordinary phone displays its text identifier.
+
+The existing worker processes both account and ticket email queues:
+
+```powershell
+npm run email:worker
+# Or process one batch of each queue:
+npm run email:flush
+```
+
+Ticket itself stores delivery metadata: sentAt, discardedAt, attempts and nextAttemptAt. It is committed before SMTP work, so failed mail cannot undo a paid booking. Each batch handles up to 20 due tickets. Workers lock and re-read each ticket to avoid concurrent duplicate delivery. Failures back off from 30 seconds, with at most five attempts. Suspended/unverified customers, invalid/unpaid/cancelled-trip bookings and journeys that already departed are discarded from email delivery; the ticket row is retained. Exhausted/discarded mail has no automatic resend endpoint. The owner can still retrieve an otherwise valid ticket through the API.
+
+Arabic/English email includes the reference, stations, Cairo dates/times, passengers/seats and total, with the QR as a PNG attachment. Templates use plain text, so passenger input is never inserted into HTML. Nodemailer uses the existing SMTP settings; local development can receive it in Mailpit. No new secret or environment flag is required. A stable Message-ID helps identify a retry, but SMTP delivery is **at least once**: a crash after SMTP acceptance and before sentAt commits can deliver a duplicate. The Ticket is never duplicated by this situation.
+
+Apply npm run db:migrate before starting the updated API/worker. QR generation uses the [qrcode library's server PNG API](https://github.com/soldair/node-qrcode); TypeScript definitions are a development dependency. Tests exercise real isolated PostgreSQL with a fake payment provider and injected mail sender, including concurrent confirmation, protected reads, no ticket for unresolved payment, retry/backoff, concurrent workers, exhausted delivery and departed/suspended recipients. They do not claim a real Paymob transaction or external email delivery. Checkout/payment configuration remains disabled until merchant verification and operator policy work are complete. Reminder emails, operator cancellations/refunds and staff QR check-in remain separate features.

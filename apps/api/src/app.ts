@@ -1,3 +1,4 @@
+import type { TicketService } from './services/ticketService.ts';
 import {
   adminPaymentService,
   type AdminPaymentService,
@@ -103,6 +104,7 @@ export function createApp(
     sessions?: SessionService;
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
+    tickets?: TicketService;
     adminBookings?: AdminBookingService;
     adminPayments?: AdminPaymentService;
     adminUsers?: AdminUserService;
@@ -193,6 +195,7 @@ export function createApp(
       services.sessions ?? sessionService,
       services.paymentAttempts,
       services.paymentCheckout,
+      services.tickets,
     ),
   );
 

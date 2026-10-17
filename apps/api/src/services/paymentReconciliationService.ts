@@ -352,6 +352,8 @@ export function createPaymentReconciliationService(
           await tx.orm.public.Booking.where({ id: booking.id }).update({
             status: 'CONFIRMED',
           });
+          // Issue exactly once in the same transaction as confirmation. No SMTP here.
+          await tx.orm.public.Ticket.create({ bookingId: booking.id });
           await save('CAPTURE', 'SUCCEEDED');
           await complete();
           return { state: 'SUCCEEDED' };

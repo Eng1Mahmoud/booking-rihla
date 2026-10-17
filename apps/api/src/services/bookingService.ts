@@ -12,7 +12,7 @@ import type {
 } from '../schemas/bookingSchema.ts';
 import type { AuthContext } from './sessionService.ts';
 import type { db as database } from '../prisma/db.ts';
-export function bookingRecords(db: typeof database) {
+export function bookingRecords(db: Pick<typeof database, 'orm'>) {
   return db.orm.public.Booking.include('trip', (trip) =>
     trip.include('route', (route) =>
       route

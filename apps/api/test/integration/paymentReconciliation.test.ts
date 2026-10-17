@@ -1,3 +1,5 @@
+import { processTicketOutbox } from '../../src/services/ticketOutboxService.ts';
+import { ticketEmail } from '../../src/emails/ticketEmail.ts';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
@@ -279,6 +281,119 @@ test('verified payment reconciliation captures once, protects seats and voids la
       const ownData = (await ownRead.json()).data;
       assert.equal(ownData.status, 'CONFIRMED');
       assert.equal(ownData.paymentRequired, false);
+      const issued = await db.orm.public.Ticket.where({
+        bookingId: c.booking.id,
+      }).all();
+      assert.equal(issued.length, 1);
+      assert.equal(issued[0]!.sentAt, null);
+      const url = base + '/bookings/' + c.booking.id + '/ticket';
+      assert.equal((await fetch(url)).status, 401);
+      assert.equal(
+        (
+          await fetch(url, {
+            headers: { Authorization: 'Bearer ' + second.token },
+          })
+        ).status,
+        404,
+      );
+      const staff = await account('ADMIN');
+      assert.equal(
+        (
+          await fetch(url, {
+            headers: { Authorization: 'Bearer ' + staff.token },
+          })
+        ).status,
+        404,
+      );
+      const read = await fetch(url, {
+        headers: { Authorization: 'Bearer ' + first.token },
+      });
+      assert.equal(read.status, 200);
+      assert.equal(read.headers.get('cache-control'), 'no-store');
+      const ticket = (await read.json()).data;
+      assert.equal(ticket.id, issued[0]!.id);
+      assert.equal(ticket.reference, c.booking.reference);
+      assert.equal(ticket.totalPiastres, c.booking.totalPiastres);
+      assert.deepEqual(ticket.passengers, [
+        { name: 'Passenger', seatNumber: seats[0]!.number },
+      ]);
+      assert.equal(ticket.qr.payload, 'BUS-TICKET:v1:' + issued[0]!.id);
+      assert.match(ticket.qr.imageDataUrl, /^data:image\/png;base64,/);
+      assert.deepEqual(
+        Buffer.from(ticket.qr.imageDataUrl.split(',')[1], 'base64').subarray(
+          0,
+          8,
+        ),
+        Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      );
+      for (const field of [
+        'email',
+        'contactPhone',
+        'orderId',
+        'encryptedCheckoutUrl',
+        'idempotencyKey',
+      ])
+        assert.equal(field in ticket, false);
+      const bad = await fetch(url + '?userId=' + first.user.id, {
+        headers: { Authorization: 'Bearer ' + first.token },
+      });
+      assert.equal(bad.status, 400);
+      const fail = await processTicketOutbox(async () => {
+        throw new Error('SMTP private error');
+      });
+      assert.deepEqual(fail, { sent: 0, failed: 1, discarded: 0 });
+      const delayed = (await db.orm.public.Ticket.where({
+        id: ticket.id,
+      }).first())!;
+      assert.equal(delayed.attempts, 1);
+      assert.ok(Date.parse(delayed.nextAttemptAt) > Date.now());
+      let sent = 0;
+      assert.equal(
+        (
+          await processTicketOutbox(async () => {
+            sent++;
+          })
+        ).sent,
+        0,
+      );
+      await db.orm.public.Ticket.where({ id: ticket.id }).update({
+        nextAttemptAt: new Date(0).toISOString(),
+      });
+      await Promise.all([
+        processTicketOutbox(async (message) => {
+          sent++;
+          assert.equal(message.email, first.user.email);
+          assert.equal(message.ticket.id, ticket.id);
+          assert.match(ticketEmail(message.ticket, 'en').text, /Africa\/Cairo/);
+          assert.match(ticketEmail(message.ticket, 'ar').subject, /تذكرة/);
+        }),
+        processTicketOutbox(async () => {
+          sent++;
+        }),
+      ]);
+      assert.equal(sent, 1);
+      assert.ok(
+        (await db.orm.public.Ticket.where({ id: ticket.id }).first())!.sentAt,
+      );
+      await processTicketOutbox(async () => {
+        sent++;
+      });
+      assert.equal(sent, 1);
+      await db.orm.public.Session.where({ id: first.session.id }).update({
+        revokedAt: new Date().toISOString(),
+      });
+      assert.equal(
+        (
+          await fetch(url, {
+            headers: { Authorization: 'Bearer ' + first.token },
+          })
+        ).status,
+        401,
+      );
+      // Restore this test fixture for subsequent payment scenarios only.
+      await db.orm.public.Session.where({ id: first.session.id }).update({
+        revokedAt: null,
+      });
       assert.equal(
         (await db.orm.public.PaymentAuthorization.where({
           id: c.operationId,
@@ -342,6 +457,19 @@ test('verified payment reconciliation captures once, protects seats and voids la
       release();
       await pending;
       onCapture = undefined;
+      assert.equal(
+        (await db.orm.public.Ticket.where({ bookingId: c.booking.id }).all())
+          .length,
+        0,
+      );
+      assert.equal(
+        (
+          await fetch(base + '/bookings/' + c.booking.id + '/ticket', {
+            headers: { Authorization: 'Bearer ' + first.token },
+          })
+        ).status,
+        404,
+      );
       assert.equal((await settlement(c))!.status, 'UNKNOWN');
       assert.equal((await bookingRow(c))!.status, 'PAYMENT_PROCESSING');
       await createPaymentReconciliationService(provider, scope).reconcile(
@@ -788,6 +916,106 @@ test('verified payment reconciliation captures once, protects seats and voids la
         'SUCCEEDED',
       );
       assert.equal(calls.capture, before + 1);
+    },
+  );
+  await t.test(
+    'ticket delivery stops after five failures; unsafe or departed bookings are not mailed',
+    async () => {
+      const pending = await db.orm.public.Ticket.where({
+        sentAt: null,
+        discardedAt: null,
+      }).all();
+      assert.ok(pending.length >= 3);
+      const exhausted = pending[0]!,
+        departed = pending[1]!,
+        unsafe = pending[2]!;
+      // Isolate this outbox batch from other confirmed fixtures.
+      await db.orm.public.Ticket.where({ sentAt: null }).updateAll({
+        nextAttemptAt: '2100-01-01T00:00:00Z',
+      });
+      await db.orm.public.Ticket.where({ id: exhausted.id }).update({
+        attempts: 4,
+        nextAttemptAt: new Date(0).toISOString(),
+      });
+      assert.deepEqual(
+        await processTicketOutbox(async () => {
+          throw new Error('SMTP unavailable');
+        }),
+        { sent: 0, failed: 1, discarded: 0 },
+      );
+      const failed = (await db.orm.public.Ticket.where({
+        id: exhausted.id,
+      }).first())!;
+      assert.equal(failed.attempts, 5);
+      assert.ok(failed.discardedAt);
+      let calls = 0;
+      await processTicketOutbox(async () => {
+        calls++;
+      });
+      assert.equal(calls, 0);
+      const departedBooking = (await db.orm.public.Booking.where({
+        id: departed.bookingId,
+      }).first())!;
+      const originalTrip = (await db.orm.public.Trip.where({
+        id: departedBooking.tripId,
+      }).first())!;
+      await db.orm.public.Trip.where({ id: originalTrip.id }).update({
+        departureAt: '2020-01-01T08:00:00Z',
+        arrivalAt: '2020-01-01T11:00:00Z',
+      });
+      await db.orm.public.Ticket.where({ id: departed.id }).update({
+        nextAttemptAt: new Date(0).toISOString(),
+      });
+      assert.equal(
+        (
+          await processTicketOutbox(async () => {
+            calls++;
+          })
+        ).discarded,
+        1,
+      );
+      await db.orm.public.Trip.where({ id: originalTrip.id }).update({
+        departureAt: originalTrip.departureAt,
+        arrivalAt: originalTrip.arrivalAt,
+      });
+      const unsafeBooking = (await db.orm.public.Booking.where({
+        id: unsafe.bookingId,
+      }).first())!;
+      await db.orm.public.User.where({ id: unsafeBooking.userId }).update({
+        isActive: false,
+      });
+      await db.orm.public.Ticket.where({ id: unsafe.id }).update({
+        nextAttemptAt: new Date(0).toISOString(),
+      });
+      assert.equal(
+        (
+          await processTicketOutbox(async () => {
+            calls++;
+          })
+        ).discarded,
+        1,
+      );
+      await db.orm.public.User.where({ id: unsafeBooking.userId }).update({
+        isActive: true,
+      });
+      assert.equal(calls, 0);
+      const attempt = (await db.orm.public.PaymentAttempt.where({
+        bookingId: unsafe.bookingId,
+      }).first())!;
+      const op = (await db.orm.public.PaymentAuthorization.where({
+        paymentAttemptId: attempt.id,
+      }).first())!;
+      await db.orm.public.PaymentSettlement.where({
+        authorizationId: op.id,
+      }).update({ status: 'REVIEW' });
+      assert.equal(
+        (
+          await fetch(base + '/bookings/' + unsafe.bookingId + '/ticket', {
+            headers: { Authorization: 'Bearer ' + first.token },
+          })
+        ).status,
+        404,
+      );
     },
   );
 });

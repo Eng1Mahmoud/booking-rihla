@@ -212,6 +212,7 @@ model Booking {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   seats BookingSeat[]
+  ticket Ticket?
   paymentAttempt PaymentAttempt?
   @@unique([id, tripId])
   @@index([status, expiresAt, tripId])
@@ -373,4 +374,18 @@ model PaymentSettlement {
  @@index([status, updatedAt])
  @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700`, name: "payment_settlement_amount")
  @@check(expression: sql`"transactionId" ~ '^[1-9][0-9]{0,15}$'`, name: "payment_settlement_transaction")
+}
+
+// Created atomically with verified capture confirmation; also the durable mail queue.
+model Ticket {
+  id String @id @default(uuid())
+  bookingId String @unique
+  createdAt TimestamptzString @default(now())
+  sentAt TimestamptzString?
+  discardedAt TimestamptzString?
+  attempts Int @default(0)
+  nextAttemptAt TimestamptzString @default(now())
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([sentAt, discardedAt, nextAttemptAt], name: "ticket_mail_due")
+  @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "ticket_mail_attempts")
 }
