@@ -16,7 +16,7 @@ export function ticketRecords(db: Pick<typeof database, 'orm'>) {
 type TicketBooking = NonNullable<
   Awaited<ReturnType<ReturnType<typeof ticketRecords>['first']>>
 >;
-export async function serializeTicket(booking: TicketBooking) {
+export function serializeTicketDetails(booking: TicketBooking) {
   const ticket = booking.ticket;
   if (
     !ticket ||
@@ -28,7 +28,6 @@ export async function serializeTicket(booking: TicketBooking) {
     booking.seats.some((seat) => seat.releasedAt)
   )
     return null;
-  const payload = 'BUS-TICKET:v1:' + ticket.id;
   const route = booking.trip.route;
   const origin = route.originStation,
     destination = route.destinationStation;
@@ -62,6 +61,17 @@ export async function serializeTicket(booking: TicketBooking) {
         cityEn: destination.city.nameEn,
       },
     },
+  };
+}
+export type TicketDetails = NonNullable<
+  ReturnType<typeof serializeTicketDetails>
+>;
+export async function serializeTicket(booking: TicketBooking) {
+  const details = serializeTicketDetails(booking);
+  if (!details) return null;
+  const payload = 'BUS-TICKET:v1:' + details.id;
+  return {
+    ...details,
     qr: {
       payload,
       imageDataUrl: await QRCode.toDataURL(payload, {

@@ -1278,3 +1278,28 @@ Ticket itself stores delivery metadata: sentAt, discardedAt, attempts and nextAt
 Arabic/English email includes the reference, stations, Cairo dates/times, passengers/seats and total, with the QR as a PNG attachment. Templates use plain text, so passenger input is never inserted into HTML. Nodemailer uses the existing SMTP settings; local development can receive it in Mailpit. No new secret or environment flag is required. A stable Message-ID helps identify a retry, but SMTP delivery is **at least once**: a crash after SMTP acceptance and before sentAt commits can deliver a duplicate. The Ticket is never duplicated by this situation.
 
 Apply npm run db:migrate before starting the updated API/worker. QR generation uses the [qrcode library's server PNG API](https://github.com/soldair/node-qrcode); TypeScript definitions are a development dependency. Tests exercise real isolated PostgreSQL with a fake payment provider and injected mail sender, including concurrent confirmation, protected reads, no ticket for unresolved payment, retry/backoff, concurrent workers, exhausted delivery and departed/suspended recipients. They do not claim a real Paymob transaction or external email delivery. Checkout/payment configuration remains disabled until merchant verification and operator policy work are complete. Reminder emails, operator cancellations/refunds and staff QR check-in remain separate features.
+
+## Departure reminders
+
+The existing npm run email:worker (or email:flush for one batch) now also handles one reminder per Ticket. No new dependency, environment setting or API route is required. Apply npm run db:migrate before running the updated worker. Keep the worker running to send reminders automatically; no desktop automation or external cron job was created.
+
+A reminder becomes due when the scheduled departure is **24 elapsed hours away**, including the exact boundary. The calculation uses UTC instants, not local calendar-day subtraction, so clock changes do not turn it into a 23/25-hour reminder. Email displays the departure with Africa/Cairo local time. Subject/body say the trip is within the next 24 hours rather than falsely promising exactly 24 hours after a delayed run.
+
+Only tickets issued at least 24 hours before departure qualify. If confirmation/ticket issuance happens inside the final 24 hours, the normal ticket email is sufficient and its redundant reminder is discarded. If the worker was stopped at the due time, it can catch up before departure, but not at or after departure. Existing tickets receive the new metadata defaults and are evaluated by the same eligibility rules; no financial row or ticket identity is recreated.
+
+Ticket has four **independent** reminder fields:
+
+| Field                 | Meaning                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
+| reminderSentAt        | SMTP accepted the reminder and the worker committed success                                        |
+| reminderDiscardedAt   | Reminder is no longer eligible, or delivery attempts were exhausted                                |
+| reminderAttempts      | Number of reminder send attempts, constrained to 0..5                                              |
+| reminderNextAttemptAt | Earliest time another attempt may run; initially now, with the departure window checked separately |
+
+Each batch selects at most 20 due records through booking/trip relations and the reminder index. It locks and re-reads each Ticket before sending, rechecks the clock after taking the lock, and validates current confirmed/full-capture payment evidence, active seat allocations, scheduled trip, and an active verified recipient. Cancelled/departed trips, unconfirmed/unresolved/review payments, invalid allocations and suspended/unverified accounts are discarded without SMTP. A trip moved outside the window would wait for its new window. These checks reuse ticket validation but do not generate another QR PNG for the reminder.
+
+The message uses the recipient's current Arabic/English preference and email and includes booking reference, stations, departure time and passenger seat numbers in plain text. It does not attach another QR or claim another payment. A separate stable Message-ID, departure-reminder-<ticket-id>, distinguishes it from the original ticket. Confirmation-mail fields, ticket id, booking status, payment state and seat ownership remain unchanged when reminders succeed or fail. A failed original ticket email does not automatically block an otherwise eligible reminder.
+
+Concurrent/restarted workers skip committed reminderSentAt/discardedAt records. SMTP failures back off from 30 seconds and stop after five attempts; each retry rechecks eligibility and cannot send after departure. The same at-least-once SMTP limit applies as for ticket email: a crash after SMTP acceptance but before the database success commit can duplicate the message. Stable Message-ID is not a guarantee of recipient-side deduplication. There is no public resend action or additional reminder history table.
+
+Tests cover the exact 24-hour and departure boundaries, offset changes, late confirmations, catch-up, multiple real PostgreSQL workers, restart-safe state, failure backoff/exhaustion, unsafe payments/seats/accounts, and unchanged ticket/payment state. Delivery tests inject a sender; they do not send external mail or perform a real Paymob transaction. Payment gates remain unchanged.

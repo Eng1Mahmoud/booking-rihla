@@ -1,3 +1,5 @@
+import { departureReminderEmail } from '../emails/departureReminderEmail.ts';
+import type { TicketDetails } from './ticketService.ts';
 import nodemailer from 'nodemailer';
 import { ticketEmail } from '../emails/ticketEmail.ts';
 import type { TicketData } from './ticketService.ts';
@@ -63,6 +65,27 @@ export const sendTicketMail: SendTicketMail = async (message) => {
       to: message.email,
       messageId: '<ticket-' + message.ticket.id + '@bus.local>',
       ...ticketEmail(message.ticket, message.language),
+    });
+  } finally {
+    transport.close();
+  }
+};
+
+export type SendDepartureReminderMail = (message: {
+  email: string;
+  language: string;
+  ticket: TicketDetails;
+}) => Promise<void>;
+export const sendDepartureReminderMail: SendDepartureReminderMail = async (
+  message,
+) => {
+  const { env, transport } = mailTransport();
+  try {
+    await transport.sendMail({
+      from: env.SMTP_FROM,
+      to: message.email,
+      messageId: '<departure-reminder-' + message.ticket.id + '@bus.local>',
+      ...departureReminderEmail(message.ticket, message.language),
     });
   } finally {
     transport.close();

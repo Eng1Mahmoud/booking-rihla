@@ -1,0 +1,251 @@
+[
+  {
+    "id": "column.public.Ticket.reminderAttempts",
+    "label": "Add column \"reminderAttempts\" to \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reminderAttempts",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reminderAttempts\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderAttempts"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reminderAttempts\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD COLUMN \"reminderAttempts\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reminderAttempts\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderAttempts"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Ticket.reminderDiscardedAt",
+    "label": "Add column \"reminderDiscardedAt\" to \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reminderDiscardedAt",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reminderDiscardedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderDiscardedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reminderDiscardedAt\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD COLUMN \"reminderDiscardedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reminderDiscardedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderDiscardedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Ticket.reminderNextAttemptAt",
+    "label": "Add column \"reminderNextAttemptAt\" to \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reminderNextAttemptAt",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reminderNextAttemptAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderNextAttemptAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reminderNextAttemptAt\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD COLUMN \"reminderNextAttemptAt\" timestamptz DEFAULT (now()) NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reminderNextAttemptAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderNextAttemptAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Ticket.reminderSentAt",
+    "label": "Add column \"reminderSentAt\" to \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reminderSentAt",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reminderSentAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderSentAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reminderSentAt\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD COLUMN \"reminderSentAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reminderSentAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Ticket",
+          "reminderSentAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Ticket.ticket_reminder_attempts_b04f2be5",
+    "label": "Add check constraint \"ticket_reminder_attempts_b04f2be5\" on \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "ticket_reminder_attempts_b04f2be5",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"ticket_reminder_attempts_b04f2be5\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ticket_reminder_attempts_b04f2be5",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"ticket_reminder_attempts_b04f2be5\"",
+        "sql": "ALTER TABLE \"public\".\"Ticket\" ADD CONSTRAINT \"ticket_reminder_attempts_b04f2be5\" CHECK (\"reminderAttempts\" BETWEEN 0 AND 5)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"ticket_reminder_attempts_b04f2be5\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ticket_reminder_attempts_b04f2be5",
+          "public",
+          "\"public\".\"Ticket\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Ticket.ticket_reminder_due_b7d94b53",
+    "label": "Create index \"ticket_reminder_due_b7d94b53\" on \"Ticket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "ticket_reminder_due_b7d94b53",
+        "table": "Ticket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"ticket_reminder_due_b7d94b53\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ticket_reminder_due_b7d94b53\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"ticket_reminder_due_b7d94b53\"",
+        "sql": "CREATE INDEX \"ticket_reminder_due_b7d94b53\" ON \"public\".\"Ticket\" (\"reminderSentAt\", \"reminderDiscardedAt\", \"reminderNextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"ticket_reminder_due_b7d94b53\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ticket_reminder_due_b7d94b53\""
+        ]
+      }
+    ]
+  }
+]

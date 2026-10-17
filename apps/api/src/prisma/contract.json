@@ -2433,6 +2433,34 @@
                   "kind": "scalar"
                 }
               },
+              "reminderAttempts": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "reminderDiscardedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "reminderNextAttemptAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "reminderSentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "sentAt": {
                 "nullable": true,
                 "type": {
@@ -2478,6 +2506,18 @@
                 },
                 "nextAttemptAt": {
                   "column": "nextAttemptAt"
+                },
+                "reminderAttempts": {
+                  "column": "reminderAttempts"
+                },
+                "reminderDiscardedAt": {
+                  "column": "reminderDiscardedAt"
+                },
+                "reminderNextAttemptAt": {
+                  "column": "reminderNextAttemptAt"
+                },
+                "reminderSentAt": {
+                  "column": "reminderSentAt"
                 },
                 "sentAt": {
                   "column": "sentAt"
@@ -4871,6 +4911,11 @@
                   "expression": "attempts BETWEEN 0 AND 5",
                   "name": "ticket_mail_attempts_4c896e7d",
                   "prefix": "ticket_mail_attempts"
+                },
+                {
+                  "expression": "\"reminderAttempts\" BETWEEN 0 AND 5",
+                  "name": "ticket_reminder_attempts_b04f2be5",
+                  "prefix": "ticket_reminder_attempts"
                 }
               ],
               "columns": {
@@ -4916,6 +4961,34 @@
                   },
                   "nullable": false
                 },
+                "reminderAttempts": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nullable": false
+                },
+                "reminderDiscardedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
+                "reminderNextAttemptAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "reminderSentAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
                 "sentAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
@@ -4956,6 +5029,16 @@
                   ],
                   "name": "ticket_mail_due_1189e9ab",
                   "prefix": "ticket_mail_due",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "reminderSentAt",
+                    "reminderDiscardedAt",
+                    "reminderNextAttemptAt"
+                  ],
+                  "name": "ticket_reminder_due_b7d94b53",
+                  "prefix": "ticket_reminder_due",
                   "unique": false
                 }
               ],
@@ -5346,7 +5429,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2abbdd8d62750563f4be41ca247c30a14b3e79f081ddd45fe30df246fcc975c0"
+    "storageHash": "719446d15f3c134a2cdd5002ecdd9fb327e23ea01ab505ffb7b892d54f14b822"
   },
   "execution": {
     "executionHash": "9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56",

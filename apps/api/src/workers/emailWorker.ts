@@ -1,3 +1,4 @@
+import { processDepartureReminders } from '../services/departureReminderService.ts';
 import { processTicketOutbox } from '../services/ticketOutboxService.ts';
 import 'dotenv/config';
 import { setTimeout } from 'node:timers/promises';
@@ -23,10 +24,11 @@ try {
     try {
       const account = await processEmailOutbox();
       const tickets = await processTicketOutbox();
+      const reminders = await processDepartureReminders();
       const result = {
-        sent: account.sent + tickets.sent,
-        failed: account.failed + tickets.failed,
-        discarded: account.discarded + tickets.discarded,
+        sent: account.sent + tickets.sent + reminders.sent,
+        failed: account.failed + tickets.failed + reminders.failed,
+        discarded: account.discarded + tickets.discarded + reminders.discarded,
       };
       if (result.sent || result.failed || result.discarded)
         console.log(JSON.stringify(result));

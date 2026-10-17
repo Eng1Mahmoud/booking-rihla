@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'2abbdd8d62750563f4be41ca247c30a14b3e79f081ddd45fe30df246fcc975c0'>;
+  StorageHashBase<'719446d15f3c134a2cdd5002ecdd9fb327e23ea01ab505ffb7b892d54f14b822'>;
 export type ExecutionHash =
   ExecutionHashBase<'9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56'>;
 export type ProfileHash =
@@ -414,6 +414,10 @@ export type FieldOutputTypes = {
       readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly reminderAttempts: CodecTypes['pg/int4@1']['output'];
+      readonly reminderDiscardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly reminderNextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly reminderSentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly Trip: {
@@ -623,6 +627,10 @@ export type FieldInputTypes = {
       readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly reminderAttempts: CodecTypes['pg/int4@1']['input'];
+      readonly reminderDiscardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly reminderNextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly reminderSentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly Trip: {
@@ -832,6 +840,10 @@ export type StorageColumnTypes = {
       readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly reminderAttempts: CodecTypes['pg/int4@1']['output'];
+      readonly reminderDiscardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly reminderNextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly reminderSentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly Trip: {
@@ -1041,6 +1053,10 @@ export type StorageColumnInputTypes = {
       readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly reminderAttempts: CodecTypes['pg/int4@1']['input'];
+      readonly reminderDiscardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly reminderNextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly reminderSentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly Trip: {
@@ -1304,6 +1320,10 @@ export namespace Models {
     discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     id: CodecTypes['pg/text@1']['output'];
     nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    reminderAttempts: CodecTypes['pg/int4@1']['output'];
+    reminderDiscardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    reminderNextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    reminderSentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     booking: public_Booking;
     readonly [RelationKeys]?: 'booking';
@@ -2901,6 +2921,35 @@ type ContractBase = Omit<
                   readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
                   readonly many: false;
                 };
+                readonly reminderAttempts: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                  readonly many: false;
+                };
+                readonly reminderDiscardedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly reminderNextAttemptAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly reminderSentAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly sentAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -2915,6 +2964,16 @@ type ContractBase = Omit<
                   readonly name: 'ticket_mail_due_1189e9ab';
                   readonly prefix: 'ticket_mail_due';
                   readonly columns: readonly ['sentAt', 'discardedAt', 'nextAttemptAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'ticket_reminder_due_b7d94b53';
+                  readonly prefix: 'ticket_reminder_due';
+                  readonly columns: readonly [
+                    'reminderSentAt',
+                    'reminderDiscardedAt',
+                    'reminderNextAttemptAt',
+                  ];
                   readonly unique: false;
                 },
               ];
@@ -4657,6 +4716,31 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                 };
               };
+              readonly reminderAttempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly reminderDiscardedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly reminderNextAttemptAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly reminderSentAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
               readonly sentAt: {
                 readonly nullable: true;
                 readonly type: {
@@ -4689,6 +4773,10 @@ type ContractBase = Omit<
                 readonly discardedAt: { readonly column: 'discardedAt' };
                 readonly id: { readonly column: 'id' };
                 readonly nextAttemptAt: { readonly column: 'nextAttemptAt' };
+                readonly reminderAttempts: { readonly column: 'reminderAttempts' };
+                readonly reminderDiscardedAt: { readonly column: 'reminderDiscardedAt' };
+                readonly reminderNextAttemptAt: { readonly column: 'reminderNextAttemptAt' };
+                readonly reminderSentAt: { readonly column: 'reminderSentAt' };
                 readonly sentAt: { readonly column: 'sentAt' };
               };
             };

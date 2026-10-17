@@ -385,7 +385,13 @@ model Ticket {
   discardedAt TimestamptzString?
   attempts Int @default(0)
   nextAttemptAt TimestamptzString @default(now())
+  reminderSentAt TimestamptzString?
+  reminderDiscardedAt TimestamptzString?
+  reminderAttempts Int @default(0)
+  reminderNextAttemptAt TimestamptzString @default(now())
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([reminderSentAt, reminderDiscardedAt, reminderNextAttemptAt], name: "ticket_reminder_due")
+  @@check(expression: sql`"reminderAttempts" BETWEEN 0 AND 5`, name: "ticket_reminder_attempts")
   @@index([sentAt, discardedAt, nextAttemptAt], name: "ticket_mail_due")
   @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "ticket_mail_attempts")
 }
