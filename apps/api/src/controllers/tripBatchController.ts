@@ -31,7 +31,9 @@ export function createTripBatchController(service: TripBatchService) {
       response.json({ data: await service.preview(input(request)) });
     },
     async create(request: Request, response: Response) {
-      response.status(201).json({ data: await service.create(input(request)) });
+      response.status(201).json({
+        data: await service.create(input(request), response.locals.auth),
+      });
     },
   };
 }

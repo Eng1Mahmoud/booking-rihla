@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { Trip } from './tripService.ts';
 import type { BatchDeparture } from '../utils/tripBatchDates.ts';
@@ -23,11 +24,17 @@ type BatchCreated = { timeZone: string; totalTrips: number; trips: Trip[] };
 function processBatch(
   input: TripBatchInput,
   save: false,
+  actor?: AuditActor,
 ): Promise<BatchPreview>;
-function processBatch(input: TripBatchInput, save: true): Promise<BatchCreated>;
+function processBatch(
+  input: TripBatchInput,
+  save: true,
+  actor?: AuditActor,
+): Promise<BatchCreated>;
 async function processBatch(
   input: TripBatchInput,
   save: boolean,
+  actor?: AuditActor,
 ): Promise<BatchPreview | BatchCreated> {
   const departures = buildBatchDepartures(input);
   const { db } = await import('../prisma/db.ts');
@@ -90,6 +97,8 @@ async function processBatch(
         }),
       );
     }
+    for (const trip of created)
+      await recordAudit(tx, actor, 'Trip', trip.id, null, trip);
     return {
       timeZone: cairoTimeZone,
       totalTrips: created.length,
@@ -105,8 +114,8 @@ export const tripBatchService = {
   async preview(input: TripBatchInput) {
     return await processBatch(input, false);
   },
-  async create(input: TripBatchInput) {
-    return await processBatch(input, true);
+  async create(input: TripBatchInput, actor?: AuditActor) {
+    return await processBatch(input, true, actor);
   },
 };
 export type TripBatchService = typeof tripBatchService;

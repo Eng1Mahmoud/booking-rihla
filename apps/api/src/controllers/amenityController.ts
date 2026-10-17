@@ -67,7 +67,7 @@ export function createAmenityController(service: AmenityService) {
           'VALIDATION_ERROR',
           'Provide only code (1-32 uppercase letters/digits/underscores, starting with a letter), nameAr and nameEn (1-100 characters)',
         );
-      const item = await service.create(input.data);
+      const item = await service.create(input.data, response.locals.auth);
       response
         .location('/api/v1/amenities/' + item.id)
         .status(201)
@@ -83,12 +83,17 @@ export function createAmenityController(service: AmenityService) {
           'VALIDATION_ERROR',
           'Provide at least one valid code, nameAr or nameEn; no other fields are allowed',
         );
-      const result = await service.update(itemId, input.data);
+      const result = await service.update(
+        itemId,
+        input.data,
+        response.locals.auth,
+      );
       if (!result) throw missing();
       response.json({ data: result });
     },
     async remove(request: Request, response: Response) {
-      if (!(await service.remove(id(request)))) throw missing();
+      if (!(await service.remove(id(request), response.locals.auth)))
+        throw missing();
       response.status(204).end();
     },
   };

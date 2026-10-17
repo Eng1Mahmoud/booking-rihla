@@ -1,3 +1,4 @@
+import { recordAudit } from './auditWriter.ts';
 import { lockAdministrators } from './administratorLocks.ts';
 import { AppError } from '../errors/AppError.ts';
 import { registerSchema } from '../schemas/authSchema.ts';
@@ -38,6 +39,15 @@ export async function bootstrapSuperAdmin(input: string) {
       userId: user.id,
       revokedAt: null,
     }).updateAll({ revokedAt: new Date().toISOString() });
+    await recordAudit(
+      tx,
+      undefined,
+      'User',
+      user.id,
+      user,
+      { ...user, role: 'SUPER_ADMIN' },
+      'BOOTSTRAP',
+    );
     return { id: user.id, role: 'SUPER_ADMIN' as const, changed: true };
   });
 }

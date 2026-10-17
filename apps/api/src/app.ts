@@ -1,4 +1,9 @@
 import {
+  auditLogService,
+  type AuditLogService,
+} from './services/auditLogService.ts';
+import { createAuditLogRouter } from './routes/auditLogRoutes.ts';
+import {
   administratorService,
   type AdministratorService,
 } from './services/administratorService.ts';
@@ -89,6 +94,7 @@ export function createApp(
     adminBookings?: AdminBookingService;
     adminUsers?: AdminUserService;
     administrators?: AdministratorService;
+    auditLogs?: AuditLogService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
   } = {},
@@ -191,6 +197,11 @@ export function createApp(
       services.administrators ?? administratorService,
       superAdmin,
     ),
+  );
+
+  app.use(
+    '/api/v1/admin/audit-logs',
+    createAuditLogRouter(services.auditLogs ?? auditLogService, superAdmin),
   );
 
   // This runs only if none of the routes above handled the request.

@@ -53,7 +53,7 @@ export function createRouteController(service: RouteService) {
           'Provide distinct originStationId/destinationStationId UUIDs, estimatedDurationMinutes (integer 1-10080), and optional isActive (boolean)',
         );
       }
-      const route = await service.create(input.data);
+      const route = await service.create(input.data, response.locals.auth);
       response
         .location('/api/v1/routes/' + route.id)
         .status(201)
@@ -83,7 +83,11 @@ export function createRouteController(service: RouteService) {
           'Provide at least one valid route field: originStationId/destinationStationId (distinct UUIDs), estimatedDurationMinutes (integer 1-10080), or isActive (boolean)',
         );
       }
-      const route = await service.update(id.data, input.data);
+      const route = await service.update(
+        id.data,
+        input.data,
+        response.locals.auth,
+      );
       if (!route) {
         throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
       }
@@ -98,7 +102,7 @@ export function createRouteController(service: RouteService) {
           'Route id must be a valid UUID',
         );
       }
-      const route = await service.remove(id.data);
+      const route = await service.remove(id.data, response.locals.auth);
       if (!route) {
         throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
       }

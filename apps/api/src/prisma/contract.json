@@ -8,6 +8,10 @@
       "model": "Amenity",
       "namespace": "public"
     },
+    "AuditLog": {
+      "model": "AuditLog",
+      "namespace": "public"
+    },
     "Booking": {
       "model": "Booking",
       "namespace": "public"
@@ -209,6 +213,107 @@
               },
               "namespaceId": "public",
               "table": "Amenity"
+            }
+          },
+          "AuditLog": {
+            "fields": {
+              "action": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "actorId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "actorRole": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "afterJson": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "beforeJson": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "entity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "entityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "action": {
+                  "column": "action"
+                },
+                "actorId": {
+                  "column": "actorId"
+                },
+                "actorRole": {
+                  "column": "actorRole"
+                },
+                "afterJson": {
+                  "column": "afterJson"
+                },
+                "beforeJson": {
+                  "column": "beforeJson"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "entity": {
+                  "column": "entity"
+                },
+                "entityId": {
+                  "column": "entityId"
+                },
+                "id": {
+                  "column": "id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "AuditLog"
             }
           },
           "Booking": {
@@ -2046,6 +2151,98 @@
                 }
               ]
             },
+            "AuditLog": {
+              "columns": {
+                "action": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "actorId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "actorRole": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "afterJson": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "beforeJson": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "entity": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "entityId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "actorId",
+                    "createdAt",
+                    "id"
+                  ],
+                  "name": "AuditLog_actorId_createdAt_id_idx_a358fe34",
+                  "prefix": "AuditLog_actorId_createdAt_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "createdAt",
+                    "id"
+                  ],
+                  "name": "AuditLog_createdAt_id_idx_3855cff1",
+                  "prefix": "AuditLog_createdAt_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "entity",
+                    "entityId",
+                    "createdAt",
+                    "id"
+                  ],
+                  "name": "AuditLog_entity_entityId_createdAt_id_idx_87a5b01a",
+                  "prefix": "AuditLog_entity_entityId_createdAt_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Booking": {
               "checks": [
                 {
@@ -3714,10 +3911,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "073ef5bb5ade4ddc745ab923833f155e136af0e69f7eeace71771c5661ea2b68"
+    "storageHash": "e91f2b659cec7b7d1457a3320ee84afd8f038a4431a0ad26609f6564025a49a9"
   },
   "execution": {
-    "executionHash": "71afedf03253cb1e01ba4c951b7200362b4060d3ba2e2812bc3233e6bc620865",
+    "executionHash": "230848f79ab5653cd953ddc7496e50f7b9fe8ebcfb436eff7cf5443a46674644",
     "mutations": {
       "defaults": [
         {
@@ -3727,6 +3924,17 @@
           },
           "ref": {
             "entry": "Amenity",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "AuditLog",
             "field": "id",
             "namespace": "public"
           }

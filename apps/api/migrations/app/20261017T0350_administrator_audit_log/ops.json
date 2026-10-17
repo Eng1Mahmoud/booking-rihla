@@ -1,0 +1,158 @@
+[
+  {
+    "id": "table.AuditLog",
+    "label": "Create table \"AuditLog\"",
+    "summary": "Creates table \"AuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "AuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"AuditLog\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"AuditLog\"",
+        "sql": "CREATE TABLE \"public\".\"AuditLog\" (\n  \"action\" text NOT NULL,\n  \"actorId\" text,\n  \"actorRole\" text,\n  \"afterJson\" text,\n  \"beforeJson\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"entity\" text NOT NULL,\n  \"entityId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"AuditLog\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.AuditLog.AuditLog_actorId_createdAt_id_idx_a358fe34",
+    "label": "Create index \"AuditLog_actorId_createdAt_id_idx_a358fe34\" on \"AuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "AuditLog_actorId_createdAt_id_idx_a358fe34",
+        "table": "AuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"AuditLog_actorId_createdAt_id_idx_a358fe34\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_actorId_createdAt_id_idx_a358fe34\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"AuditLog_actorId_createdAt_id_idx_a358fe34\"",
+        "sql": "CREATE INDEX \"AuditLog_actorId_createdAt_id_idx_a358fe34\" ON \"public\".\"AuditLog\" (\"actorId\", \"createdAt\", \"id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"AuditLog_actorId_createdAt_id_idx_a358fe34\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_actorId_createdAt_id_idx_a358fe34\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.AuditLog.AuditLog_createdAt_id_idx_3855cff1",
+    "label": "Create index \"AuditLog_createdAt_id_idx_3855cff1\" on \"AuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "AuditLog_createdAt_id_idx_3855cff1",
+        "table": "AuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"AuditLog_createdAt_id_idx_3855cff1\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_createdAt_id_idx_3855cff1\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"AuditLog_createdAt_id_idx_3855cff1\"",
+        "sql": "CREATE INDEX \"AuditLog_createdAt_id_idx_3855cff1\" ON \"public\".\"AuditLog\" (\"createdAt\", \"id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"AuditLog_createdAt_id_idx_3855cff1\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_createdAt_id_idx_3855cff1\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.AuditLog.AuditLog_entity_entityId_createdAt_id_idx_87a5b01a",
+    "label": "Create index \"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\" on \"AuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "AuditLog_entity_entityId_createdAt_id_idx_87a5b01a",
+        "table": "AuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\"",
+        "sql": "CREATE INDEX \"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\" ON \"public\".\"AuditLog\" (\"entity\", \"entityId\", \"createdAt\", \"id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog_entity_entityId_createdAt_id_idx_87a5b01a\""
+        ]
+      }
+    ]
+  }
+]

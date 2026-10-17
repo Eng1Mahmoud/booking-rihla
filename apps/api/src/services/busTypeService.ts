@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isUniqueViolation,
@@ -36,10 +37,17 @@ export const busTypeService = {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.BusType.where({ id }).first();
   },
-  async create(input: FleetMetadataInput): Promise<FleetMetadata> {
+  async create(
+    input: FleetMetadataInput,
+    actor?: AuditActor,
+  ): Promise<FleetMetadata> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.BusType.create(input);
+      return await db.transaction(async (tx) => {
+        const saved = await tx.orm.public.BusType.create(input);
+        await recordAudit(tx, actor, 'BusType', saved.id, null, saved);
+        return saved;
+      });
     } catch (error) {
       writeError(error);
     }
@@ -47,6 +55,7 @@ export const busTypeService = {
   async update(
     id: string,
     input: FleetMetadataUpdate,
+    actor?: AuditActor,
   ): Promise<FleetMetadata | null> {
     const { db } = await import('../prisma/db.ts');
     try {
@@ -72,16 +81,22 @@ export const busTypeService = {
             'BUS_TYPE_HAS_BOOKINGS',
             'Bus type used by a reserved bus cannot change',
           );
-        return await tx.orm.public.BusType.where({ id }).update(input);
+        const saved = await tx.orm.public.BusType.where({ id }).update(input);
+        await recordAudit(tx, actor, 'BusType', id, current, saved);
+        return saved;
       });
     } catch (error) {
       writeError(error);
     }
   },
-  async remove(id: string): Promise<FleetMetadata | null> {
+  async remove(id: string, actor?: AuditActor): Promise<FleetMetadata | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.BusType.where({ id }).delete();
+      return await db.transaction(async (tx) => {
+        const removed = await tx.orm.public.BusType.where({ id }).delete();
+        if (removed) await recordAudit(tx, actor, 'BusType', id, removed, null);
+        return removed;
+      });
     } catch (error) {
       writeError(error);
     }

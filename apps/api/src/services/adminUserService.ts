@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import type { db as database } from '../prisma/db.ts';
 import type {
   AdminUserListQuery,
@@ -54,7 +55,11 @@ export const adminUserService = {
     const user = await passengers(db).where({ id }).first();
     return user ? serializeUser(user) : null;
   },
-  async updateStatus(id: string, input: UpdateUserStatusInput) {
+  async updateStatus(
+    id: string,
+    input: UpdateUserStatusInput,
+    actor?: AuditActor,
+  ) {
     const { db } = await import('../prisma/db.ts');
     const candidate = await passengers(db).where({ id }).first();
     if (!candidate) return null;
@@ -73,7 +78,8 @@ export const adminUserService = {
           .build(),
       );
       // Recheck the role under the row lock; never modify a promoted or deleted account.
-      if (!(await passengers(tx).where({ id }).first())) return null;
+      const before = await passengers(tx).where({ id }).first();
+      if (!before) return null;
       await tx.orm.public.User.where({ id }).update({
         isActive: input.isActive,
       });
@@ -84,6 +90,7 @@ export const adminUserService = {
         }).updateAll({ revokedAt: new Date().toISOString() });
       const user = await passengers(tx).where({ id }).first();
       if (!user) throw new Error('Updated passenger account is missing');
+      await recordAudit(tx, actor, 'User', id, before, user);
       return serializeUser(user);
     });
   },

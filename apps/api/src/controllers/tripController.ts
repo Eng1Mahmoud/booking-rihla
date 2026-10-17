@@ -53,7 +53,7 @@ export function createTripController(service: TripService) {
           'Provide routeId/busId UUIDs, departureAt/arrivalAt with timezone and arrival after departure, pricePiastres (integer 0-2147483647), and optional status SCHEDULED/CANCELLED',
         );
       }
-      const trip = await service.create(input.data);
+      const trip = await service.create(input.data, response.locals.auth);
       response
         .location('/api/v1/trips/' + trip.id)
         .status(201)
@@ -83,7 +83,11 @@ export function createTripController(service: TripService) {
           'Provide at least one supported trip field with valid UUIDs, timezone timestamps (arrival after departure), integer pricePiastres 0-2147483647, or status SCHEDULED/CANCELLED',
         );
       }
-      const trip = await service.update(id.data, input.data);
+      const trip = await service.update(
+        id.data,
+        input.data,
+        response.locals.auth,
+      );
       if (!trip) {
         throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       }
@@ -98,7 +102,7 @@ export function createTripController(service: TripService) {
           'Trip id must be a valid UUID',
         );
       }
-      const trip = await service.remove(id.data);
+      const trip = await service.remove(id.data, response.locals.auth);
       if (!trip) {
         throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       }

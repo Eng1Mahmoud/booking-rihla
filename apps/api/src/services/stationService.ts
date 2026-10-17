@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isForeignKeyViolation,
@@ -30,30 +31,57 @@ export const stationService = {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.Station.where({ id }).first();
   },
-  async create(input: CreateStationInput): Promise<Station> {
+  async create(
+    input: CreateStationInput,
+    actor?: AuditActor,
+  ): Promise<Station> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Station.create(input);
+      return await db.transaction(async (tx) => {
+        const saved = await tx.orm.public.Station.create(input);
+        await recordAudit(tx, actor, 'Station', saved.id, null, saved);
+        return saved;
+      });
     } catch (error) {
       if (isForeignKeyViolation(error))
         throw new AppError(404, 'CITY_NOT_FOUND', 'City not found');
       throw error;
     }
   },
-  async update(id: string, input: UpdateStationInput): Promise<Station | null> {
+  async update(
+    id: string,
+    input: UpdateStationInput,
+    actor?: AuditActor,
+  ): Promise<Station | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Station.where({ id }).update(input);
+      return await db.transaction(async (tx) => {
+        await tx.execute(
+          db.raw
+            .sql`SELECT "id" FROM "public"."Station" WHERE "id" = ${id} FOR UPDATE`
+            .affectedCount()
+            .build(),
+        );
+        const before = await tx.orm.public.Station.where({ id }).first();
+        if (!before) return null;
+        const saved = await tx.orm.public.Station.where({ id }).update(input);
+        await recordAudit(tx, actor, 'Station', id, before, saved);
+        return saved;
+      });
     } catch (error) {
       if (isForeignKeyViolation(error))
         throw new AppError(404, 'CITY_NOT_FOUND', 'City not found');
       throw error;
     }
   },
-  async remove(id: string): Promise<Station | null> {
+  async remove(id: string, actor?: AuditActor): Promise<Station | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Station.where({ id }).delete();
+      return await db.transaction(async (tx) => {
+        const removed = await tx.orm.public.Station.where({ id }).delete();
+        if (removed) await recordAudit(tx, actor, 'Station', id, removed, null);
+        return removed;
+      });
     } catch (error) {
       if (isForeignKeyViolation(error) || isRestrictViolation(error))
         throw new AppError(

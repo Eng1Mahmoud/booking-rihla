@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isUniqueViolation,
@@ -65,15 +66,23 @@ export const routeService = {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.Route.where({ id }).first();
   },
-  async create(input: CreateRouteInput): Promise<Route> {
+  async create(input: CreateRouteInput, actor?: AuditActor): Promise<Route> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Route.create(input);
+      return await db.transaction(async (tx) => {
+        const saved = await tx.orm.public.Route.create(input);
+        await recordAudit(tx, actor, 'Route', saved.id, null, saved);
+        return saved;
+      });
     } catch (error) {
       return handleWriteError(error);
     }
   },
-  async update(id: string, input: UpdateRouteInput): Promise<Route | null> {
+  async update(
+    id: string,
+    input: UpdateRouteInput,
+    actor?: AuditActor,
+  ): Promise<Route | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
@@ -99,16 +108,22 @@ export const routeService = {
             'ROUTE_HAS_TRIPS',
             'A route used by trips cannot change its endpoints; create another route',
           );
-        return await tx.orm.public.Route.where({ id }).update(input);
+        const saved = await tx.orm.public.Route.where({ id }).update(input);
+        await recordAudit(tx, actor, 'Route', id, current, saved);
+        return saved;
       });
     } catch (error) {
       return handleWriteError(error);
     }
   },
-  async remove(id: string): Promise<Route | null> {
+  async remove(id: string, actor?: AuditActor): Promise<Route | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      return await db.orm.public.Route.where({ id }).delete();
+      return await db.transaction(async (tx) => {
+        const removed = await tx.orm.public.Route.where({ id }).delete();
+        if (removed) await recordAudit(tx, actor, 'Route', id, removed, null);
+        return removed;
+      });
     } catch (error) {
       if (isForeignKeyViolation(error) || isRestrictViolation(error))
         throw new AppError(

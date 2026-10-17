@@ -1,3 +1,4 @@
+import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { lockTripParents, scheduledTripsInInterval } from './tripScheduling.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -22,6 +23,7 @@ function serializeTrip(trip: Trip): Trip {
 async function saveTrip(
   input: CreateTripInput | UpdateTripInput,
   id?: string,
+  actor?: AuditActor,
 ): Promise<Trip | null> {
   const { db } = await import('../prisma/db.ts');
   try {
@@ -85,6 +87,7 @@ async function saveTrip(
       const saved = id
         ? await tx.orm.public.Trip.where({ id }).update(input)
         : await tx.orm.public.Trip.create(data);
+      if (saved) await recordAudit(tx, actor, 'Trip', saved.id, current, saved);
       return saved ? serializeTrip(saved) : null;
     });
   } catch (error) {
@@ -134,19 +137,26 @@ export const tripService = {
     const trip = await db.orm.public.Trip.where({ id }).first();
     return trip ? serializeTrip(trip) : null;
   },
-  async create(input: CreateTripInput): Promise<Trip> {
-    const trip = await saveTrip(input);
+  async create(input: CreateTripInput, actor?: AuditActor): Promise<Trip> {
+    const trip = await saveTrip(input, undefined, actor);
     if (!trip) throw new Error('Trip creation returned no row');
     return trip;
   },
-  async update(id: string, input: UpdateTripInput): Promise<Trip | null> {
-    return await saveTrip(input, id);
+  async update(
+    id: string,
+    input: UpdateTripInput,
+    actor?: AuditActor,
+  ): Promise<Trip | null> {
+    return await saveTrip(input, id, actor);
   },
-  async remove(id: string): Promise<Trip | null> {
+  async remove(id: string, actor?: AuditActor): Promise<Trip | null> {
     const { db } = await import('../prisma/db.ts');
     try {
-      const trip = await db.orm.public.Trip.where({ id }).delete();
-      return trip ? serializeTrip(trip) : null;
+      return await db.transaction(async (tx) => {
+        const trip = await tx.orm.public.Trip.where({ id }).delete();
+        if (trip) await recordAudit(tx, actor, 'Trip', id, trip, null);
+        return trip ? serializeTrip(trip) : null;
+      });
     } catch (error) {
       if (isForeignKeyViolation(error) || isRestrictViolation(error))
         throw new AppError(

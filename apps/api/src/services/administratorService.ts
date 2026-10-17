@@ -1,3 +1,4 @@
+import { recordAudit } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { db as database } from '../prisma/db.ts';
 import type { AuthContext } from './sessionService.ts';
@@ -98,6 +99,7 @@ async function changeAdministrator(
       }).updateAll({ revokedAt: new Date().toISOString() });
     const updated = await userRecords(tx).where({ id }).first();
     if (!updated) throw new Error('Updated administrator account is missing');
+    await recordAudit(tx, auth, 'User', id, target, updated);
     return serializeUser(updated);
   });
 }
