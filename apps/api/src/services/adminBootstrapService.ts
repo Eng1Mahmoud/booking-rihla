@@ -1,3 +1,4 @@
+import { lockAdministrators } from './administratorLocks.ts';
 import { AppError } from '../errors/AppError.ts';
 import { registerSchema } from '../schemas/authSchema.ts';
 
@@ -6,12 +7,7 @@ export async function bootstrapSuperAdmin(input: string) {
   const email = registerSchema.shape.email.parse(input);
   const { db } = await import('../prisma/db.ts');
   return await db.transaction(async (tx) => {
-    await tx.execute(
-      db.raw
-        .sql`SELECT pg_advisory_xact_lock(hashtextextended('bus-platform:first-super-admin', 0))`
-        .affectedCount()
-        .build(),
-    );
+    await lockAdministrators(tx, db);
     await tx.execute(
       db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
         .affectedCount()
@@ -25,7 +21,7 @@ export async function bootstrapSuperAdmin(input: string) {
       throw new AppError(
         409,
         'BOOTSTRAP_COMPLETED',
-        'A super admin already exists; use administrator management when available',
+        'A super admin already exists; use administrator management',
       );
     if (!user || !user.emailVerifiedAt || !user.isActive)
       throw new AppError(

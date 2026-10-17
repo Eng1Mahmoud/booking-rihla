@@ -5,8 +5,8 @@ import type {
 } from '../schemas/adminUserSchema.ts';
 
 type Client = Pick<typeof database, 'orm'>;
-function passengers(client: Client) {
-  return client.orm.public.User.where({ role: 'USER' }).select(
+export function userRecords(client: Client) {
+  return client.orm.public.User.select(
     'id',
     'name',
     'email',
@@ -18,10 +18,14 @@ function passengers(client: Client) {
     'createdAt',
   );
 }
-type Passenger = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof passengers>['first']>>
+function passengers(client: Client) {
+  return userRecords(client).where({ role: 'USER' });
+}
+
+type UserRecord = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof userRecords>['first']>>
 >;
-function serializeUser(user: Passenger) {
+export function serializeUser(user: UserRecord) {
   return {
     ...user,
     createdAt: new Date(user.createdAt).toISOString(),

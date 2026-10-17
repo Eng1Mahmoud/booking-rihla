@@ -1,4 +1,9 @@
 import {
+  administratorService,
+  type AdministratorService,
+} from './services/administratorService.ts';
+import { createAdministratorRouter } from './routes/administratorRoutes.ts';
+import {
   adminUserService,
   type AdminUserService,
 } from './services/adminUserService.ts';
@@ -83,6 +88,7 @@ export function createApp(
     bookings?: BookingService;
     adminBookings?: AdminBookingService;
     adminUsers?: AdminUserService;
+    administrators?: AdministratorService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
   } = {},
@@ -92,6 +98,11 @@ export function createApp(
   const admin = [
     requireAuth(services.sessions ?? sessionService),
     requireRole('ADMIN', 'SUPER_ADMIN'),
+  ];
+
+  const superAdmin = [
+    requireAuth(services.sessions ?? sessionService),
+    requireRole('SUPER_ADMIN'),
   ];
 
   app.disable('x-powered-by');
@@ -172,6 +183,14 @@ export function createApp(
   app.use(
     '/api/v1/admin/users',
     createAdminUserRouter(services.adminUsers ?? adminUserService, admin),
+  );
+
+  app.use(
+    '/api/v1/admin/admins',
+    createAdministratorRouter(
+      services.administrators ?? administratorService,
+      superAdmin,
+    ),
   );
 
   // This runs only if none of the routes above handled the request.

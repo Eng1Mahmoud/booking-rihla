@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Passenger account management
+## Current feature: Super-admin administrator management
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -87,7 +87,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Passenger account listing and suspension/activation are now implemented. Next add super-admin-only administrator management, followed by audit logging.
+The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Passenger account listing and suspension/activation are now implemented. Super-admin-only administrator management is now implemented. Audit logging is next.
 
 ## Git workflow
 
@@ -683,7 +683,7 @@ Apply npm run db:migrate before starting the API. The additive migration adds Us
 
 Protected requests require Authorization: Bearer ACCESS_TOKEN. A refresh cookie alone grants no catalog access. No additional session-CSRF header is required for these Bearer-authenticated endpoints. Anonymous/invalid authentication receives 401 UNAUTHENTICATED; an authenticated passenger receives 403 FORBIDDEN. Checks run before controller validation and database mutations, with Cache-Control: no-store on protected responses. HEAD receives the same read authorization. Public CORS preflights remain handled before routers. Route management can expose inactive catalog records, so passengers use the existing filtered search/details endpoints.
 
-The reusable middlewares/requireRole.ts accepts explicit allowed roles: management currently permits ADMIN and SUPER_ADMIN. Future super-admin-only administrator management and refunds will explicitly allow only SUPER_ADMIN. Those administrator-management operations remain later work. Reservation endpoints now enforce passenger ownership separately, including for administrator accounts.
+The reusable middlewares/requireRole.ts accepts explicit allowed roles: management currently permits ADMIN and SUPER_ADMIN. Administrator management now permits only SUPER_ADMIN through the separate /api/v1/admin/admins routes. Refund authorization will be added with payment/refund work. Reservation endpoints now enforce passenger ownership separately, including for administrator accounts.
 
 ### Bootstrap the first super admin
 
@@ -920,7 +920,7 @@ Passenger GET /api/v1/bookings and GET /api/v1/bookings/:id keep their original 
 
 Read apps/api/src/schemas/adminBookingSchema.ts for exact filters, controllers/adminBookingController.ts for validation and HTTP responses, routes/adminBookingRoutes.ts for protected read routes, and services/adminBookingService.ts for queries and safe account projections. bookingService.ts now shares its base booking query and price/trip summary serializer with the operator service, preserving the passenger response. No repository layer is introduced.
 
-Passenger account listing and suspension/activation are now implemented below. Remaining backend work: super-admin administrator management; administrator audit records; seat holds/expiry and sandbox payment states/provider/webhooks; QR tickets, confirmations and reminders; agreed operator cancellation/refunds; dashboard metrics; then readiness/logging, expired-data cleanup, shared rate limits when needed, CI and backend integration verification. Hold duration and operator cancellation/refund policy must be settled before dependent payment work. Passenger cancellation stays disabled. Production provider onboarding/deployment follow in the release phase; the passenger site and dashboard follow backend completion.
+Passenger account listing and suspension/activation are now implemented below. Super-admin administrator management is now implemented below. Remaining backend work: administrator audit records; seat holds/expiry and sandbox payment states/provider/webhooks; QR tickets, confirmations and reminders; agreed operator cancellation/refunds; dashboard metrics; then readiness/logging, expired-data cleanup, shared rate limits when needed, CI and backend integration verification. Hold duration and operator cancellation/refund policy must be settled before dependent payment work. Passenger cancellation stays disabled. Production provider onboarding/deployment follow in the release phase; the passenger site and dashboard follow backend completion.
 
 Administrator booking verification: all 138 default tests and all 16 PostgreSQL integration tests passed, along with strict types, lint, formatting and build. All fourteen migrations applied to an empty temporary database; a second run applied zero. Compiled JavaScript passed real login, reservation, administrator list/detail and passenger-ownership HTTP checks. Applying the new index to development left all compared business rows unchanged. Scoped fixtures and the temporary database were removed.
 
@@ -934,7 +934,7 @@ Apply npm run db:migrate. This feature adds only User(role, createdAt, id) and U
 | GET    | /api/v1/admin/users/:id        | One passenger account                        |
 | PATCH  | /api/v1/admin/users/:id/status | Set the passenger account's isActive boolean |
 
-All routes require a verified active ADMIN or SUPER_ADMIN using a Bearer access token. Role/authentication checks precede validation, and responses use Cache-Control: no-store. The routes only manage role USER: staff accounts never appear in the list, and staff ids return the same 404 USER_NOT_FOUND as missing accounts on detail/status requests, including when called by a super admin. Separate super-admin administrator management will follow. These routes cannot modify roles, profile fields, email, passwords or delete accounts.
+All routes require a verified active ADMIN or SUPER_ADMIN using a Bearer access token. Role/authentication checks precede validation, and responses use Cache-Control: no-store. The routes only manage role USER: staff accounts never appear in the list, and staff ids return the same 404 USER_NOT_FOUND as missing accounts on detail/status requests, including when called by a super admin. Separate administrator management is available to SUPER_ADMIN at /api/v1/admin/admins. These routes cannot modify roles, profile fields, email, passwords or delete accounts.
 
 ### Read passenger accounts
 
@@ -965,3 +965,44 @@ Read apps/api/src/schemas/adminUserSchema.ts for strict request rules, controlle
 PostgreSQL test files run sequentially via npm run test:db (--test-concurrency=1), because first-super-admin bootstrap examines global staff state and must not overlap another file creating staff fixtures. Concurrent login, refresh, reservation and scheduling requests remain explicitly tested inside individual files. This changes test-file execution only, not application request concurrency.
 
 Passenger management verification: all 144 default tests and all 17 PostgreSQL integration tests pass, together with strict types, lint, formatting and build. All fifteen migrations applied to an empty temporary database; repeating migration applied zero. Compiled JavaScript HTTP checks verified account lookup, protected staff targets, suspension, permanent access/refresh-token revocation and successful fresh sign-in after reactivation. Applying the two indexes to development preserved all compared business rows. Scoped fixtures and the temporary database were removed.
+
+## Super-admin administrator management
+
+No migration, package or environment change is needed. This feature uses the existing User roles, active/verified state, Session rows and role/time index. Accounts register and verify through the existing flow; staff management does not create accounts, passwords or verification bypasses.
+
+| Method | Path                            | Result                                                   |
+| ------ | ------------------------------- | -------------------------------------------------------- |
+| GET    | /api/v1/admin/admins            | Paginated ADMIN/SUPER_ADMIN accounts                     |
+| GET    | /api/v1/admin/admins/:id        | One staff account                                        |
+| PATCH  | /api/v1/admin/admins/:id/role   | Assign USER, ADMIN or SUPER_ADMIN to an existing account |
+| PATCH  | /api/v1/admin/admins/:id/status | Suspend/reactivate an existing staff account             |
+
+All endpoints require a verified active SUPER_ADMIN with a valid Bearer token. Ordinary ADMIN and USER accounts receive 403, anonymous callers 401. Checks run before input validation and replies use Cache-Control: no-store. There is no HTTP bootstrap, account creation, password editing, unrestricted profile editing or deletion endpoint.
+
+The staff list accepts optional exact email (trimmed/lowercased), role ADMIN/SUPER_ADMIN, isActive true/false, limit 1-100 (default 20), and offset 0-100000 (default 0). Filters combine with AND. It returns { data: [...], pagination: { limit, offset } } sorted by createdAt descending then id descending. Empty matches return 200 and an empty array. Read/status queries exclude USER accounts; a missing or passenger detail/status target returns 404 ADMINISTRATOR_NOT_FOUND. Staff responses share the selected safe account fields used by passenger management: id, name, email, phone, role, language, isActive, emailVerifiedAt and createdAt. No password, reset/activation code, lockout field or session/token data is exposed.
+
+### Grant or remove a staff role
+
+Select an existing account id, for example from passenger management, and send application/json to PATCH /api/v1/admin/admins/ACCOUNT_UUID/role:
+
+```json
+{ "role": "ADMIN" }
+```
+
+ADMIN grants ordinary management access. SUPER_ADMIN grants administrator-management access as well and can establish a backup super admin. USER removes staff privileges. A role change granting ADMIN/SUPER_ADMIN requires the target to already be active and email-verified; otherwise it returns 409 ACCOUNT_NOT_READY without altering the account. The caller cannot supply a password, email, isActive or other field in this request. A missing role target returns 404 USER_NOT_FOUND.
+
+Changing a role revokes all of the target's existing sessions atomically with the User update; the account must sign in again. This includes a passenger promoted to staff and staff demoted to USER. Names, email, phone, verification, active state, password and existing bookings are preserved. A same-role update on an active account preserves its sessions. A demoted account leaves the staff list and is visible through passenger management again. Self-demotion is permitted only when another qualified super admin remains; the caller's own old session is then invalidated.
+
+### Change staff status and protect the last super admin
+
+PATCH /api/v1/admin/admins/STAFF_UUID/status accepts exactly { "isActive": false } or { "isActive": true }. Suspension revokes every current session. Reactivation requires fresh sign-in; it cannot revive old tokens, verify an email or clear password/login-lockout state. Repeating suspension preserves previously stored revocation timestamps. Staff status cannot be changed through the passenger-account endpoints.
+
+Before demoting or suspending a SUPER_ADMIN, the transaction requires another SUPER_ADMIN whose isActive is true and emailVerifiedAt is set. Inactive and unverified backup accounts do not count. If the change would remove the last such account, the API returns 409 LAST_SUPER_ADMIN without changing the role/status or revoking sessions. Self-suspension is subject to this same rule. The guard concerns account role, active state and email verification; it does not require the other account to currently have a session.
+
+All staff mutations and local bootstrap share one PostgreSQL advisory lock, acquired before the target's email lock, User row lock and Session updates. This serializes last-super-admin checks, including concurrent demotions/suspensions. The service rechecks the caller's current session and SUPER_ADMIN role inside the transaction and again after waiting for the target lock. If another staff operation demotes/revokes that caller first, its waiting request cannot continue under obsolete authority. Passenger suspension uses the same target email/User protocol and rechecks role USER, preventing a competing promotion from producing an inactive newly promoted administrator.
+
+Use the local admin:bootstrap command only to establish the first super admin as documented above. It now shares the staff-mutation lock and still refuses a different target once any SUPER_ADMIN exists. There is no default or permanent admin fixture. As with other management guarantees, direct privileged database changes must follow this protocol; role/status controls are enforced by these service transactions.
+
+Read apps/api/src/schemas/administratorSchema.ts, controllers/administratorController.ts and routes/administratorRoutes.ts for the HTTP contract, services/administratorService.ts for actor revalidation/eligibility/last-super-admin guards, and services/administratorLocks.ts for the lock shared with adminBootstrapService.ts. adminUserService.ts shares the safe account query/serializer while its passenger endpoints retain role USER scoping. Tests cover authorization, promotion/demotion, active/verified eligibility, session revocation, staff suspension/reactivation, protected passenger routes, last-account failures, concurrent self-demotion/self-suspension, cross-demotion with stale actors and promotion versus passenger suspension. Integration fixtures only modify their own accounts; fresh-database verification exercises the last-account cases independently of existing local operators.
+
+Administrator management verification: all 151 default tests and all 18 PostgreSQL integration tests passed, along with strict types, lint, formatting and build. The existing fifteen migrations replayed on an empty temporary database; repeating migration applied zero changes. Compiled JavaScript HTTP checks verified bootstrap, promotion, old-session revocation, transfer to another super admin and rejection of removing the last active verified super admin. Compared development business rows remained unchanged, and scoped fixtures/temporary databases were removed. No new migration or dependency is required.
