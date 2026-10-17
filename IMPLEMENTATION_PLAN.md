@@ -1,6 +1,6 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Bus types and amenities are implemented with protected CRUD, atomic assignments and reservation safeguards. Simple fixed seat templates replace editable physical grids; bus capacity/template changes are blocked after a trip uses the bus. Finite batch trip preview and atomic creation are complete. Administrator booking lists/details are complete with exact filters, safe customer summaries and preserved passenger ownership. Passenger account lists/details and suspension/activation with durable session revocation are complete. Super-admin administrator management is complete with session revocation, actor revalidation and last-active-super-admin protection. Administrator audit logging is complete; expiring ten-minute checkout holds are complete; sandbox payments are next.
+Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Bus types and amenities are implemented with protected CRUD, atomic assignments and reservation safeguards. Simple fixed seat templates replace editable physical grids; bus capacity/template changes are blocked after a trip uses the bus. Finite batch trip preview and atomic creation are complete. Administrator booking lists/details are complete with exact filters, safe customer summaries and preserved passenger ownership. Passenger account lists/details and suspension/activation with durable session revocation are complete. Super-admin administrator management is complete with session revocation, actor revalidation and last-active-super-admin protection. Administrator audit logging is complete; expiring ten-minute checkout holds are complete; the Paymob TEST provider adapter and signed callback verification are implemented; payment persistence and booking integration are next.
 
 ## How we will build
 
@@ -167,6 +167,8 @@ Working result: authorized operators manage the data previously supplied by seed
 
 ## Phase 8 — Seat holds and sandbox payments
 
+Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth/Cap only. The owner does not have a Paymob account yet. The adapter is implemented and tested with deterministic transport fixtures; account activation, exact Auth request fields and remote behavior remain unverified. No payment endpoint, webhook listener, payment persistence or booking confirmation is enabled by the adapter alone. Existing seat-hold behavior remains unchanged until the durable integration is implemented. A timeout is an unknown outcome; never repeat a capture blindly or release a seat while its capture outcome is unknown. Operator cancellation/refund policy still needs agreement before paid-booking activation.
+
 Small steps:
 
 - [x] Use a ten-minute hold capped at departure; passenger cancellation remains disabled.
@@ -174,8 +176,9 @@ Small steps:
 - [x] Replace immediate reservation confirmation with pending payment and a default ten-minute hold.
 - [x] Expose hold expiry times; add lazy expiry and an optional cleanup worker preserving history.
 - [x] Enforce active-seat uniqueness with a partial index while retaining expired seat snapshots.
-- [ ] Define payment and booking transitions, including delayed payment completion after hold expiry.
-- [ ] Add a PaymentProvider interface and PayPal sandbox implementation.
+- [ ] Implement durable payment/booking transitions: late authorization is voided; once capture starts, retain seat allocation until the outcome is reconciled.
+- [x] Add a PaymentProvider interface, Paymob TEST adapter for EGP, strict configuration, HMAC verification and transport tests.
+- [ ] Create a Paymob test account and verify card Auth/Cap capability and actual payloads before connecting paid bookings.
 - [ ] Add create/capture endpoints with server-calculated amounts and idempotency keys.
 - [ ] Persist payment transactions and webhook events.
 - [ ] Verify webhook signatures and process duplicate or out-of-order events safely.

@@ -25,7 +25,8 @@
     "email:flush": "npm run email:flush --workspace @booking-bus/api",
     "admin:bootstrap": "npm run admin:bootstrap --workspace @booking-bus/api --",
     "booking:worker": "npm run booking:worker --workspace @booking-bus/api",
-    "booking:expire": "npm run booking:expire --workspace @booking-bus/api"
+    "booking:expire": "npm run booking:expire --workspace @booking-bus/api",
+    "payment:check": "npm run payment:check --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
