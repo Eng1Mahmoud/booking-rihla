@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'719446d15f3c134a2cdd5002ecdd9fb327e23ea01ab505ffb7b892d54f14b822'>;
+  StorageHashBase<'8835ce0934b203103026e92c12bff6a44b7c38bc33dc452eb35ffd55bf77ba6e'>;
 export type ExecutionHash =
   ExecutionHashBase<'9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56'>;
 export type ProfileHash =
@@ -317,7 +317,7 @@ export type FieldOutputTypes = {
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['output'];
-      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -530,7 +530,7 @@ export type FieldInputTypes = {
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['input'];
-      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -743,7 +743,7 @@ export type StorageColumnTypes = {
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['output'];
-      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -956,7 +956,7 @@ export type StorageColumnInputTypes = {
     };
     readonly EmailVerification: {
       readonly attempts: CodecTypes['pg/int4@1']['input'];
-      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'] | null;
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly resendAfter: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -1197,7 +1197,7 @@ export namespace Models {
   };
   export type public_EmailVerification = {
     attempts: CodecTypes['pg/int4@1']['output'];
-    codeHash: CodecTypes['pg/text@1']['output'];
+    codeHash: CodecTypes['pg/text@1']['output'] | null;
     expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     resendAfter: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -2080,6 +2080,12 @@ type ContractBase = Omit<
                   readonly columns: readonly ['userId'];
                   readonly unique: false;
                 },
+                {
+                  readonly name: 'account_email_expiry_6b6b8c10';
+                  readonly prefix: 'account_email_expiry';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
               ];
               foreignKeys: readonly [
                 {
@@ -2111,7 +2117,7 @@ type ContractBase = Omit<
                 readonly codeHash: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly expiresAt: {
@@ -2157,7 +2163,15 @@ type ContractBase = Omit<
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['userId'] }];
-              indexes: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'verification_code_expiry_8025eaca';
+                  readonly prefix: 'verification_code_expiry';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly where: '"codeHash" IS NOT NULL';
+                  readonly unique: false;
+                },
+              ];
               foreignKeys: readonly [
                 {
                   readonly source: {
@@ -2240,7 +2254,15 @@ type ContractBase = Omit<
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['userId'] }];
-              indexes: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'reset_code_expiry_8025eaca';
+                  readonly prefix: 'reset_code_expiry';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly where: '"codeHash" IS NOT NULL';
+                  readonly unique: false;
+                },
+              ];
               foreignKeys: readonly [
                 {
                   readonly source: {
@@ -2807,6 +2829,12 @@ type ContractBase = Omit<
                   readonly name: 'Session_userId_revokedAt_idx_eae4cbef';
                   readonly prefix: 'Session_userId_revokedAt_idx';
                   readonly columns: readonly ['userId', 'revokedAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'session_expiry_6b6b8c10';
+                  readonly prefix: 'session_expiry';
+                  readonly columns: readonly ['expiresAt'];
                   readonly unique: false;
                 },
               ];
@@ -3973,7 +4001,7 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly codeHash: {
-                readonly nullable: false;
+                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly expiresAt: {

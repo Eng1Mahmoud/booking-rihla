@@ -120,13 +120,14 @@ model User {
 model EmailVerification {
   id String @id @default(uuid())
   userId String @unique
-  codeHash String
+  codeHash String?
   expiresAt TimestamptzString
   attempts Int @default(0)
   resendAfter TimestamptzString
   windowStartedAt TimestamptzString
   sendCount Int @default(1)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([expiresAt], where: sql`"codeHash" IS NOT NULL`, name: "verification_code_expiry")
   @@check(expression: sql`attempts BETWEEN 0 AND 5 AND "sendCount" BETWEEN 1 AND 5`, name: "verification_limits")
 }
 
@@ -148,6 +149,7 @@ model EmailOutbox {
   sentAt TimestamptzString?
   discardedAt TimestamptzString?
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([expiresAt], name: "account_email_expiry")
   @@index([sentAt, discardedAt, nextAttemptAt])
   @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "outbox_attempts")
 }
@@ -160,6 +162,7 @@ model Session {
   revokedAt TimestamptzString?
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   tokens RefreshToken[]
+  @@index([expiresAt], name: "session_expiry")
   @@index([userId, revokedAt])
 }
 
@@ -185,6 +188,7 @@ model PasswordReset {
   windowStartedAt TimestamptzString
   sendCount Int @default(1)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  @@index([expiresAt], where: sql`"codeHash" IS NOT NULL`, name: "reset_code_expiry")
   @@check(expression: sql`attempts BETWEEN 0 AND 5 AND "sendCount" BETWEEN 1 AND 5`, name: "password_reset_limits")
 }
 

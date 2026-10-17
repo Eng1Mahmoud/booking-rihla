@@ -65,6 +65,7 @@ export async function processEmailOutbox(
             if (
               user.emailVerifiedAt ||
               !verification ||
+              !verification.codeHash ||
               verification.attempts >= 5 ||
               Date.parse(verification.expiresAt) <= Date.now()
             )

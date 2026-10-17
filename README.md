@@ -1303,3 +1303,33 @@ The message uses the recipient's current Arabic/English preference and email and
 Concurrent/restarted workers skip committed reminderSentAt/discardedAt records. SMTP failures back off from 30 seconds and stop after five attempts; each retry rechecks eligibility and cannot send after departure. The same at-least-once SMTP limit applies as for ticket email: a crash after SMTP acceptance but before the database success commit can duplicate the message. Stable Message-ID is not a guarantee of recipient-side deduplication. There is no public resend action or additional reminder history table.
 
 Tests cover the exact 24-hour and departure boundaries, offset changes, late confirmations, catch-up, multiple real PostgreSQL workers, restart-safe state, failure backoff/exhaustion, unsafe payments/seats/accounts, and unchanged ticket/payment state. Delivery tests inject a sender; they do not send external mail or perform a real Paymob transaction. Payment gates remain unchanged.
+
+## Authentication data cleanup
+
+Apply npm run db:migrate before running the new cleanup worker. This migration makes EmailVerification.codeHash nullable and adds expiry indexes for verification/reset hashes, account email and sessions. It does not remove any existing data during migration, change booking/payment state or alter session lifetimes. No dependency or environment variable is added.
+
+```powershell
+# Process one bounded batch and exit:
+npm run auth:cleanup
+# Process immediately, then repeat hourly while the process runs:
+npm run auth:cleanup:worker
+```
+
+The cleanup worker is separate from SMTP delivery. It uses the existing DATABASE_URL, closes its database connection on shutdown, and interrupts its hourly wait on SIGINT/SIGTERM. A one-shot failure exits nonzero with a safe message; successful output contains aggregate counts only. No desktop automation, scheduled task or public deletion endpoint is created. The process must be kept running by the application host for periodic cleanup; a large backlog can be drained with repeated one-shot runs.
+
+Each run selects up to 100 candidates **per category**, ordered by expiry/id. The internal service accepts a validated limit of 1..1000 for tests/maintenance, not from a public request. The run captures a single server-time cutoff. Expiry at the cutoff is considered expired; deletion starts at the inclusive boundary of 24 elapsed hours after expiry.
+
+| Data                   | Cleanup behavior                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| EmailVerification      | Clear expired codeHash to null; retain the row/id, attempts, resendAfter, windowStartedAt and sendCount                         |
+| PasswordReset          | Clear an expired codeHash; retain the row and consumption/throttle metadata                                                     |
+| EmailOutbox            | Clear expired encryptedCode; remove the account-mail row only when expiresAt is at least 24 hours old                           |
+| Session / RefreshToken | Remove the Session only when expiresAt is at least 24 hours old; its refresh-token family is deleted by the existing FK cascade |
+
+An expired code cannot authenticate even if cleanup is stopped: request-time validation remains authoritative. Clearing its hash removes an unneeded secret. Verification rows are retained because resend requires the original verificationId; deleting the row would strand an unverified account. Reset rows retain hourly send limits as well. Both are bounded to one row per user, and successful verification/recovery keeps its existing behavior. The verification API and mail worker explicitly reject a null hash, and resend can renew the same id after the cooldown/send window permits it.
+
+Refresh-token rotation leaves used token hashes as replay evidence. Cleanup therefore does **not** delete used tokens based on usedAt, nor individual tokens based only on their own expiry. All tokens of an unexpired or grace-period Session remain, including revoked sessions until their original expiry plus the grace period. Access/refresh authentication still rejects expired/revoked sessions immediately; retention does not extend validity. The final Session deletion is serialized with refresh using the same Session row lock.
+
+Code cleanup takes the same email advisory lock as verification, resend and password recovery, then rechecks expiry/hash before clearing. A concurrently renewed code remains valid. Account-mail cleanup takes only its outbox row lock, matching SMTP processing, and rechecks expiry before update/delete. It never takes the account lock after an outbox lock. Concurrent cleanup runs can select the same candidates safely: only the actual successful change is counted and later runs make progress. Partial progress survives a later error and can be rerun.
+
+Cleanup does not delete users, reservations, seat allocations, payment records/events, tickets, ticket/reminder delivery metadata or audit history. It does not send messages or contact Paymob. Integration tests use isolated PostgreSQL and cover cleared-code resend/recovery, intact send limits, fresh-code/mail preservation, exact retention boundaries, cascade deletion, valid JWT sessions and replay-triggered family revocation after cleanup, bounded batches, concurrent cleanup and renewal. The destructive cleanup command is tested against an isolated test database; migration verification on the development database compares all existing rows without running deletion there.

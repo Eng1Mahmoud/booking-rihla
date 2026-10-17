@@ -1,0 +1,201 @@
+[
+  {
+    "id": "alterNullability.dropNotNull.EmailVerification.codeHash",
+    "label": "Drop NOT NULL on \"EmailVerification\".\"codeHash\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "codeHash",
+        "table": "EmailVerification"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"codeHash\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "EmailVerification",
+          "codeHash"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"codeHash\"",
+        "sql": "ALTER TABLE \"public\".\"EmailVerification\" ALTER COLUMN \"codeHash\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"codeHash\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "EmailVerification",
+          "codeHash",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailOutbox.account_email_expiry_6b6b8c10",
+    "label": "Create index \"account_email_expiry_6b6b8c10\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "account_email_expiry_6b6b8c10",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"account_email_expiry_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"account_email_expiry_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"account_email_expiry_6b6b8c10\"",
+        "sql": "CREATE INDEX \"account_email_expiry_6b6b8c10\" ON \"public\".\"EmailOutbox\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"account_email_expiry_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"account_email_expiry_6b6b8c10\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailVerification.verification_code_expiry_8025eaca",
+    "label": "Create index \"verification_code_expiry_8025eaca\" on \"EmailVerification\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "verification_code_expiry_8025eaca",
+        "table": "EmailVerification"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"verification_code_expiry_8025eaca\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"verification_code_expiry_8025eaca\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"verification_code_expiry_8025eaca\"",
+        "sql": "CREATE INDEX \"verification_code_expiry_8025eaca\" ON \"public\".\"EmailVerification\" (\"expiresAt\") WHERE (\"codeHash\" IS NOT NULL)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"verification_code_expiry_8025eaca\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"verification_code_expiry_8025eaca\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PasswordReset.reset_code_expiry_8025eaca",
+    "label": "Create index \"reset_code_expiry_8025eaca\" on \"PasswordReset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "reset_code_expiry_8025eaca",
+        "table": "PasswordReset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"reset_code_expiry_8025eaca\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reset_code_expiry_8025eaca\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"reset_code_expiry_8025eaca\"",
+        "sql": "CREATE INDEX \"reset_code_expiry_8025eaca\" ON \"public\".\"PasswordReset\" (\"expiresAt\") WHERE (\"codeHash\" IS NOT NULL)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"reset_code_expiry_8025eaca\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reset_code_expiry_8025eaca\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Session.session_expiry_6b6b8c10",
+    "label": "Create index \"session_expiry_6b6b8c10\" on \"Session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "session_expiry_6b6b8c10",
+        "table": "Session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"session_expiry_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"session_expiry_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"session_expiry_6b6b8c10\"",
+        "sql": "CREATE INDEX \"session_expiry_6b6b8c10\" ON \"public\".\"Session\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"session_expiry_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"session_expiry_6b6b8c10\""
+        ]
+      }
+    ]
+  }
+]

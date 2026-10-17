@@ -22,12 +22,15 @@ async function queueVerification(
     id: string;
     windowStartedAt: string;
     sendCount: number;
-    codeHash: string;
+    codeHash: string | null;
   } | null,
 ) {
   const now = Date.now();
   let code = newVerificationCode();
-  while (previous && hashVerificationCode(userId, code) === previous.codeHash)
+  while (
+    previous?.codeHash &&
+    hashVerificationCode(userId, code) === previous.codeHash
+  )
     code = newVerificationCode();
   const sameWindow =
     previous && now - Date.parse(previous.windowStartedAt) < 3600000;
@@ -138,6 +141,7 @@ export const authService = {
       }).first();
       if (
         !challenge ||
+        !challenge.codeHash ||
         challenge.id !== verificationId ||
         challenge.attempts >= 5 ||
         Date.parse(challenge.expiresAt) <= Date.now()

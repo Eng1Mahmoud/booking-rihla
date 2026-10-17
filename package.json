@@ -29,7 +29,9 @@
     "payment:check": "npm run payment:check --workspace @booking-bus/api",
     "payment:setup": "npm run payment:setup --workspace @booking-bus/api",
     "payment:worker": "npm run payment:worker --workspace @booking-bus/api",
-    "payment:reconcile": "npm run payment:reconcile --workspace @booking-bus/api"
+    "payment:reconcile": "npm run payment:reconcile --workspace @booking-bus/api",
+    "auth:cleanup": "npm run auth:cleanup --workspace @booking-bus/api",
+    "auth:cleanup:worker": "npm run auth:cleanup:worker --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

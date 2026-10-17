@@ -1290,7 +1290,7 @@
                 }
               },
               "codeHash": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -3820,6 +3820,14 @@
                   "name": "EmailOutbox_userId_idx_a489d58a",
                   "prefix": "EmailOutbox_userId_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "account_email_expiry_6b6b8c10",
+                  "prefix": "account_email_expiry",
+                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -3850,7 +3858,7 @@
                 "codeHash": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "nullable": false
+                  "nullable": true
                 },
                 "expiresAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -3912,7 +3920,17 @@
                   }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "verification_code_expiry_8025eaca",
+                  "prefix": "verification_code_expiry",
+                  "unique": false,
+                  "where": "\"codeHash\" IS NOT NULL"
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -4014,7 +4032,17 @@
                   }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "reset_code_expiry_8025eaca",
+                  "prefix": "reset_code_expiry",
+                  "unique": false,
+                  "where": "\"codeHash\" IS NOT NULL"
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -4833,6 +4861,14 @@
                   "name": "Session_userId_revokedAt_idx_eae4cbef",
                   "prefix": "Session_userId_revokedAt_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "session_expiry_6b6b8c10",
+                  "prefix": "session_expiry",
+                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -5429,7 +5465,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "719446d15f3c134a2cdd5002ecdd9fb327e23ea01ab505ffb7b892d54f14b822"
+    "storageHash": "8835ce0934b203103026e92c12bff6a44b7c38bc33dc452eb35ffd55bf77ba6e"
   },
   "execution": {
     "executionHash": "9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56",
