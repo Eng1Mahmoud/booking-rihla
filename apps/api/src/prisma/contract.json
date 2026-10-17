@@ -3966,6 +3966,15 @@
                   "name": "PaymentAttempt_expiresAt_idx_6b6b8c10",
                   "prefix": "PaymentAttempt_expiresAt_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "createdAt",
+                    "id"
+                  ],
+                  "name": "payment_attempt_created_3855cff1",
+                  "prefix": "payment_attempt_created",
+                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -5112,7 +5121,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b8d7f500780836e4a8ca32c0d9ba8b900f289c24a57eacef4ef634f4827ee9d3"
+    "storageHash": "fbcc5d303193ba19f660a1af9fc04176b313772e5f97b1d607309474009884a0"
   },
   "execution": {
     "executionHash": "1f1ba402c5c4659a6d727f1c3c6235e465296fd239cebf0aa1242cf35528afa6",

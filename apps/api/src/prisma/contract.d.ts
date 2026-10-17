@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'b8d7f500780836e4a8ca32c0d9ba8b900f289c24a57eacef4ef634f4827ee9d3'>;
+  StorageHashBase<'fbcc5d303193ba19f660a1af9fc04176b313772e5f97b1d607309474009884a0'>;
 export type ExecutionHash =
   ExecutionHashBase<'1f1ba402c5c4659a6d727f1c3c6235e465296fd239cebf0aa1242cf35528afa6'>;
 export type ProfileHash =
@@ -2244,6 +2244,12 @@ type ContractBase = Omit<
                   readonly name: 'PaymentAttempt_expiresAt_idx_6b6b8c10';
                   readonly prefix: 'PaymentAttempt_expiresAt_idx';
                   readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'payment_attempt_created_3855cff1';
+                  readonly prefix: 'payment_attempt_created';
+                  readonly columns: readonly ['createdAt', 'id'];
                   readonly unique: false;
                 },
               ];

@@ -1,3 +1,8 @@
+import {
+  adminPaymentService,
+  type AdminPaymentService,
+} from './services/adminPaymentService.ts';
+import { createAdminPaymentRouter } from './routes/adminPaymentRoutes.ts';
 import type { PaymentCheckoutService } from './services/paymentCheckoutService.ts';
 import type { PaymentAttemptService } from './services/paymentAttemptService.ts';
 import {
@@ -99,6 +104,7 @@ export function createApp(
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
     adminBookings?: AdminBookingService;
+    adminPayments?: AdminPaymentService;
     adminUsers?: AdminUserService;
     administrators?: AdministratorService;
     auditLogs?: AuditLogService;
@@ -194,6 +200,14 @@ export function createApp(
     '/api/v1/admin/bookings',
     createAdminBookingRouter(
       services.adminBookings ?? adminBookingService,
+      admin,
+    ),
+  );
+
+  app.use(
+    '/api/v1/admin/payments',
+    createAdminPaymentRouter(
+      services.adminPayments ?? adminPaymentService,
       admin,
     ),
   );

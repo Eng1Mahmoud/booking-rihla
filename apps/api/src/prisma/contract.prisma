@@ -313,6 +313,7 @@ model PaymentAttempt {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   authorization PaymentAuthorization?
   @@index([expiresAt])
+  @@index([createdAt, id], name: "payment_attempt_created")
   @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700 AND currency = 'EGP'`, name: "payment_attempt_amount")
   @@check(expression: sql`"expiresAt" > "createdAt"`, name: "payment_attempt_expiry")
   @@check(expression: sql`"idempotencyKey" ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'`, name: "payment_attempt_key")

@@ -9,7 +9,7 @@ import { paymobCheckoutUrlSchema } from '../payments/checkoutUrl.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
 import { createPaymentAuthorizationService } from './paymentAuthorizationService.ts';
 import { withPayableBooking } from './payableBooking.ts';
-import { bookingState } from './bookingHoldService.ts';
+import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 import type { AuthContext } from './sessionService.ts';
 import type { db as database } from '../prisma/db.ts';
 
@@ -22,70 +22,11 @@ function paymentRecords(db: typeof database) {
     ),
   );
 }
-type Record = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof paymentRecords>['first']>>
->;
-type PaymentStatus =
-  | 'NOT_STARTED'
-  | 'PREPARED'
-  | 'INITIALIZING'
-  | 'AWAITING_PAYMENT'
-  | 'UNKNOWN'
-  | 'PROCESSING'
-  | 'PAID'
-  | 'VOIDED'
-  | 'FAILED'
-  | 'EXPIRED'
-  | 'REVIEW';
-function view(row: Record) {
-  const now = Date.now(),
-    state = bookingState(row, now),
-    attempt = row.paymentAttempt,
-    operation = attempt?.authorization,
-    settlement = operation?.settlement;
-  const matches =
-    attempt &&
-    attempt.currency === 'EGP' &&
-    attempt.amountPiastres === row.totalPiastres &&
-    row.expiresAt &&
-    Date.parse(attempt.expiresAt) === Date.parse(row.expiresAt);
-  let paymentStatus: PaymentStatus;
-  if (settlement?.status === 'REVIEW') paymentStatus = 'REVIEW';
-  else if (attempt && !matches) paymentStatus = 'UNKNOWN';
-  else if (settlement?.kind === 'CAPTURE' && settlement.status === 'SUCCEEDED')
-    paymentStatus =
-      state === 'CONFIRMED' &&
-      operation?.reconciliationComplete &&
-      settlement.amountPiastres === row.totalPiastres
-        ? 'PAID'
-        : 'UNKNOWN';
-  else if (state === 'CONFIRMED') paymentStatus = 'UNKNOWN';
-  else if (settlement?.kind === 'VOID' && settlement.status === 'SUCCEEDED')
-    paymentStatus = state === 'EXPIRED' ? 'VOIDED' : 'UNKNOWN';
-  else if (settlement || state === 'PAYMENT_PROCESSING')
-    paymentStatus = 'PROCESSING';
-  else if (operation?.status === 'REQUESTING') paymentStatus = 'INITIALIZING';
-  else if (operation?.status === 'UNKNOWN') paymentStatus = 'UNKNOWN';
-  else if (state === 'EXPIRED' || operation?.status === 'EXPIRED')
-    paymentStatus = 'EXPIRED';
-  else if (operation?.status === 'FAILED') paymentStatus = 'FAILED';
-  else if (operation?.status === 'READY') paymentStatus = 'AWAITING_PAYMENT';
-  else paymentStatus = attempt ? 'PREPARED' : 'NOT_STARTED';
-  return {
-    bookingId: row.id,
-    bookingStatus: state,
-    paymentStatus,
-    amountPiastres: Number(row.totalPiastres),
-    currency: 'EGP' as const,
-    expiresAt: row.expiresAt ? new Date(row.expiresAt).toISOString() : null,
-    serverTime: new Date(now).toISOString(),
-  };
-}
 async function getPayment(userId: string, bookingId: string) {
   const { db } = await import('../prisma/db.ts');
   const row = await paymentRecords(db).where({ id: bookingId, userId }).first();
   if (!row) throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
-  return view(row);
+  return serializeBookingPayment(row);
 }
 
 export function createPaymentCheckoutService(dependencies: {
@@ -147,7 +88,7 @@ export function createPaymentCheckoutService(dependencies: {
             'PAYMENT_ATTEMPT_MISMATCH',
             'The payment attempt no longer matches this booking',
           );
-        const data = view(row);
+        const data = serializeBookingPayment(row);
         if (operation.settlement || operation.reconciliationComplete)
           throw new AppError(
             409,
