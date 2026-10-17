@@ -56,6 +56,10 @@
       "model": "PaymentAttempt",
       "namespace": "public"
     },
+    "PaymentAuthorization": {
+      "model": "PaymentAuthorization",
+      "namespace": "public"
+    },
     "PaymentEvent": {
       "model": "PaymentEvent",
       "namespace": "public"
@@ -120,6 +124,31 @@
               {
                 "name": "PASSWORD_CHANGED",
                 "value": "PASSWORD_CHANGED"
+              }
+            ]
+          },
+          "PaymentAuthorizationStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "REQUESTING",
+                "value": "REQUESTING"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "UNKNOWN",
+                "value": "UNKNOWN"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "EXPIRED",
+                "value": "EXPIRED"
               }
             ]
           },
@@ -1464,6 +1493,22 @@
               }
             },
             "relations": {
+              "authorization": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "paymentAttemptId"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentAuthorization",
+                  "namespace": "public"
+                }
+              },
               "booking": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1507,6 +1552,140 @@
               },
               "namespaceId": "public",
               "table": "PaymentAttempt"
+            }
+          },
+          "PaymentAuthorization": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "encryptedCheckoutUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "integrationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "intentionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "orderId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ownerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "paymentAttemptId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "PaymentAuthorizationStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "attempt": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "paymentAttemptId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentAttempt",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "encryptedCheckoutUrl": {
+                  "column": "encryptedCheckoutUrl"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "integrationId": {
+                  "column": "integrationId"
+                },
+                "intentionId": {
+                  "column": "intentionId"
+                },
+                "orderId": {
+                  "column": "orderId"
+                },
+                "ownerId": {
+                  "column": "ownerId"
+                },
+                "paymentAttemptId": {
+                  "column": "paymentAttemptId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PaymentAuthorization"
             }
           },
           "PaymentEvent": {
@@ -3600,6 +3779,158 @@
                 }
               ]
             },
+            "PaymentAuthorization": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('REQUESTING', 'READY', 'UNKNOWN', 'FAILED', 'EXPIRED')",
+                  "name": "PaymentAuthorization_status_check_c1795974",
+                  "prefix": "PaymentAuthorization_status_check"
+                },
+                {
+                  "expression": "(\"status\" = 'READY' AND \"encryptedCheckoutUrl\" IS NOT NULL AND \"intentionId\" IS NOT NULL) OR (\"status\" <> 'READY' AND \"encryptedCheckoutUrl\" IS NULL)",
+                  "name": "payment_authorization_checkout_0fc4d81c",
+                  "prefix": "payment_authorization_checkout"
+                },
+                {
+                  "expression": "(\"intentionId\" IS NULL AND \"orderId\" IS NULL) OR (\"intentionId\" IS NOT NULL AND \"orderId\" IS NOT NULL)",
+                  "name": "payment_authorization_references_e5a362ee",
+                  "prefix": "payment_authorization_references"
+                },
+                {
+                  "expression": "\"integrationId\" ~ '^[1-9][0-9]*$' AND \"ownerId\" ~ '^[1-9][0-9]*$'",
+                  "name": "payment_authorization_scope_37324968",
+                  "prefix": "payment_authorization_scope"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "encryptedCheckoutUrl": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "integrationId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "intentionId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "orderId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "ownerId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "paymentAttemptId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "REQUESTING"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PaymentAuthorizationStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "paymentAttemptId"
+                    ]
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "paymentAttemptId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentAuthorization"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentAttempt"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "status",
+                    "updatedAt"
+                  ],
+                  "name": "PaymentAuthorization_status_updatedAt_idx_29f913bb",
+                  "prefix": "PaymentAuthorization_status_updatedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "paymentAttemptId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "intentionId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "orderId"
+                  ]
+                }
+              ]
+            },
             "PaymentEvent": {
               "checks": [
                 {
@@ -4354,6 +4685,16 @@
                 "PASSWORD_CHANGED"
               ]
             },
+            "PaymentAuthorizationStatus": {
+              "kind": "valueSet",
+              "values": [
+                "REQUESTING",
+                "READY",
+                "UNKNOWN",
+                "FAILED",
+                "EXPIRED"
+              ]
+            },
             "SeatLayout": {
               "kind": "valueSet",
               "values": [
@@ -4381,10 +4722,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "fb461ba352a14da7f3886e2847c2f326b784549ab529fad87cbc59ea8559cb61"
+    "storageHash": "1f485d4ef82f51f46ce5d63f43fa0fb8287111853c6256d46b31b10fc4329d2b"
   },
   "execution": {
-    "executionHash": "2d2a6d2d7dd888f7a1de9b779e39444d5fefdadc3a40ce165326c93ce3144a4b",
+    "executionHash": "11b082e61e451843659ed9866b4e41cb8b1856b2ec1e7720c0ad2df50bfaa9c3",
     "mutations": {
       "defaults": [
         {
@@ -4526,6 +4867,17 @@
           },
           "ref": {
             "entry": "PaymentAttempt",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PaymentAuthorization",
             "field": "id",
             "namespace": "public"
           }

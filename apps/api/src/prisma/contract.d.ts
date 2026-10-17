@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'fb461ba352a14da7f3886e2847c2f326b784549ab529fad87cbc59ea8559cb61'>;
+  StorageHashBase<'1f485d4ef82f51f46ce5d63f43fa0fb8287111853c6256d46b31b10fc4329d2b'>;
 export type ExecutionHash =
-  ExecutionHashBase<'2d2a6d2d7dd888f7a1de9b779e39444d5fefdadc3a40ce165326c93ce3144a4b'>;
+  ExecutionHashBase<'11b082e61e451843659ed9866b4e41cb8b1856b2ec1e7720c0ad2df50bfaa9c3'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -344,6 +344,18 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly idempotencyKey: CodecTypes['pg/text@1']['output'];
     };
+    readonly PaymentAuthorization: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly encryptedCheckoutUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly integrationId: CodecTypes['pg/text@1']['output'];
+      readonly intentionId: CodecTypes['pg/text@1']['output'] | null;
+      readonly orderId: CodecTypes['pg/text@1']['output'] | null;
+      readonly ownerId: CodecTypes['pg/text@1']['output'];
+      readonly paymentAttemptId: CodecTypes['pg/text@1']['output'];
+      readonly status: 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -518,6 +530,18 @@ export type FieldInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly idempotencyKey: CodecTypes['pg/text@1']['input'];
+    };
+    readonly PaymentAuthorization: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly encryptedCheckoutUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly integrationId: CodecTypes['pg/text@1']['input'];
+      readonly intentionId: CodecTypes['pg/text@1']['input'] | null;
+      readonly orderId: CodecTypes['pg/text@1']['input'] | null;
+      readonly ownerId: CodecTypes['pg/text@1']['input'];
+      readonly paymentAttemptId: CodecTypes['pg/text@1']['input'];
+      readonly status: 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['input'];
@@ -694,6 +718,18 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly idempotencyKey: CodecTypes['pg/text@1']['output'];
     };
+    readonly PaymentAuthorization: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly encryptedCheckoutUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly integrationId: CodecTypes['pg/text@1']['output'];
+      readonly intentionId: CodecTypes['pg/text@1']['output'] | null;
+      readonly orderId: CodecTypes['pg/text@1']['output'] | null;
+      readonly ownerId: CodecTypes['pg/text@1']['output'];
+      readonly paymentAttemptId: CodecTypes['pg/text@1']['output'];
+      readonly status: 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -868,6 +904,18 @@ export type StorageColumnInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly idempotencyKey: CodecTypes['pg/text@1']['input'];
+    };
+    readonly PaymentAuthorization: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly encryptedCheckoutUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly integrationId: CodecTypes['pg/text@1']['input'];
+      readonly intentionId: CodecTypes['pg/text@1']['input'] | null;
+      readonly orderId: CodecTypes['pg/text@1']['input'] | null;
+      readonly ownerId: CodecTypes['pg/text@1']['input'];
+      readonly paymentAttemptId: CodecTypes['pg/text@1']['input'];
+      readonly status: 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly PaymentEvent: {
       readonly eventKey: CodecTypes['pg/text@1']['input'];
@@ -1075,8 +1123,23 @@ export namespace Models {
     expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     idempotencyKey: CodecTypes['pg/text@1']['output'];
+    authorization: public_PaymentAuthorization | null;
     booking: public_Booking;
-    readonly [RelationKeys]?: 'booking';
+    readonly [RelationKeys]?: 'authorization' | 'booking';
+  };
+  export type public_PaymentAuthorization = {
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    encryptedCheckoutUrl: CodecTypes['pg/text@1']['output'] | null;
+    id: CodecTypes['pg/text@1']['output'];
+    integrationId: CodecTypes['pg/text@1']['output'];
+    intentionId: CodecTypes['pg/text@1']['output'] | null;
+    orderId: CodecTypes['pg/text@1']['output'] | null;
+    ownerId: CodecTypes['pg/text@1']['output'];
+    paymentAttemptId: CodecTypes['pg/text@1']['output'];
+    status: 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    attempt: public_PaymentAttempt;
+    readonly [RelationKeys]?: 'attempt';
   };
   export type public_PaymentEvent = {
     eventKey: CodecTypes['pg/text@1']['output'];
@@ -1180,6 +1243,7 @@ export declare const models: {
     EmailVerification: Models.public_EmailVerification;
     PasswordReset: Models.public_PasswordReset;
     PaymentAttempt: Models.public_PaymentAttempt;
+    PaymentAuthorization: Models.public_PaymentAuthorization;
     PaymentEvent: Models.public_PaymentEvent;
     RefreshToken: Models.public_RefreshToken;
     Route: Models.public_Route;
@@ -2130,6 +2194,104 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly PaymentAuthorization: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly encryptedCheckoutUrl: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly integrationId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly intentionId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly orderId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly ownerId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly paymentAttemptId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly status: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'REQUESTING'>;
+                  };
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['paymentAttemptId'] },
+                { readonly columns: readonly ['intentionId'] },
+                { readonly columns: readonly ['orderId'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'PaymentAuthorization_status_updatedAt_idx_29f913bb';
+                  readonly prefix: 'PaymentAuthorization_status_updatedAt_idx';
+                  readonly columns: readonly ['status', 'updatedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'PaymentAuthorization';
+                    readonly columns: readonly ['paymentAttemptId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'PaymentAttempt';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly PaymentEvent: {
               columns: {
                 readonly eventKey: {
@@ -2694,6 +2856,10 @@ type ContractBase = Omit<
               readonly kind: 'valueSet';
               readonly values: readonly ['VERIFY_EMAIL', 'PASSWORD_RESET', 'PASSWORD_CHANGED'];
             };
+            readonly PaymentAuthorizationStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['REQUESTING', 'READY', 'UNKNOWN', 'FAILED', 'EXPIRED'];
+            };
             readonly SeatLayout: {
               readonly kind: 'valueSet';
               readonly values: readonly ['STANDARD_2_2'];
@@ -2747,6 +2913,10 @@ type ContractBase = Omit<
     readonly PaymentAttempt: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PaymentAttempt';
+    };
+    readonly PaymentAuthorization: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PaymentAuthorization';
     };
     readonly PaymentEvent: {
       readonly namespace: 'public' & NamespaceId;
@@ -3585,6 +3755,18 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly authorization: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PaymentAuthorization';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['paymentAttemptId'];
+                };
+              };
               readonly booking: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -3609,6 +3791,86 @@ type ContractBase = Omit<
                 readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly id: { readonly column: 'id' };
                 readonly idempotencyKey: { readonly column: 'idempotencyKey' };
+              };
+            };
+          };
+          readonly PaymentAuthorization: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly encryptedCheckoutUrl: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly integrationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly intentionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly orderId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly ownerId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly paymentAttemptId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly attempt: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PaymentAttempt';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['paymentAttemptId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'PaymentAuthorization';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly encryptedCheckoutUrl: { readonly column: 'encryptedCheckoutUrl' };
+                readonly id: { readonly column: 'id' };
+                readonly integrationId: { readonly column: 'integrationId' };
+                readonly intentionId: { readonly column: 'intentionId' };
+                readonly orderId: { readonly column: 'orderId' };
+                readonly ownerId: { readonly column: 'ownerId' };
+                readonly paymentAttemptId: { readonly column: 'paymentAttemptId' };
+                readonly status: { readonly column: 'status' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
           };
@@ -4168,6 +4430,16 @@ type ContractBase = Omit<
               { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
             ];
           };
+          readonly PaymentAuthorizationStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'REQUESTING'; readonly value: 'REQUESTING' },
+              { readonly name: 'READY'; readonly value: 'READY' },
+              { readonly name: 'UNKNOWN'; readonly value: 'UNKNOWN' },
+              { readonly name: 'FAILED'; readonly value: 'FAILED' },
+              { readonly name: 'EXPIRED'; readonly value: 'EXPIRED' },
+            ];
+          };
           readonly SeatLayout: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
@@ -4200,6 +4472,13 @@ type ContractBase = Omit<
             { readonly name: 'VERIFY_EMAIL'; readonly value: 'VERIFY_EMAIL' },
             { readonly name: 'PASSWORD_RESET'; readonly value: 'PASSWORD_RESET' },
             { readonly name: 'PASSWORD_CHANGED'; readonly value: 'PASSWORD_CHANGED' },
+          ];
+          readonly PaymentAuthorizationStatus: readonly [
+            { readonly name: 'REQUESTING'; readonly value: 'REQUESTING' },
+            { readonly name: 'READY'; readonly value: 'READY' },
+            { readonly name: 'UNKNOWN'; readonly value: 'UNKNOWN' },
+            { readonly name: 'FAILED'; readonly value: 'FAILED' },
+            { readonly name: 'EXPIRED'; readonly value: 'EXPIRED' },
           ];
           readonly SeatLayout: readonly [
             { readonly name: 'STANDARD_2_2'; readonly value: 'STANDARD_2_2' },
@@ -4349,6 +4628,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'PaymentAttempt';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'PaymentAuthorization';
             readonly field: 'id';
             readonly namespace: 'public';
           };

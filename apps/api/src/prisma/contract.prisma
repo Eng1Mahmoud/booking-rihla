@@ -309,8 +309,35 @@ model PaymentAttempt {
   expiresAt TimestamptzString
   createdAt TimestamptzString @default(now())
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  authorization PaymentAuthorization?
   @@index([expiresAt])
   @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700 AND currency = 'EGP'`, name: "payment_attempt_amount")
   @@check(expression: sql`"expiresAt" > "createdAt"`, name: "payment_attempt_expiry")
   @@check(expression: sql`"idempotencyKey" ~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'`, name: "payment_attempt_key")
+}
+
+// Durable send-once intention creation. READY means checkout created, never paid.
+enum PaymentAuthorizationStatus {
+  REQUESTING
+  READY
+  UNKNOWN
+  FAILED
+  EXPIRED
+}
+model PaymentAuthorization {
+  id String @id @default(uuid())
+  paymentAttemptId String @unique
+  status PaymentAuthorizationStatus @default(REQUESTING)
+  integrationId String
+  ownerId String
+  intentionId String? @unique
+  orderId String? @unique
+  encryptedCheckoutUrl String?
+  createdAt TimestamptzString @default(now())
+  updatedAt TimestamptzString @default(now())
+  attempt PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@index([status, updatedAt])
+  @@check(expression: sql`"integrationId" ~ '^[1-9][0-9]*$' AND "ownerId" ~ '^[1-9][0-9]*$'`, name: "payment_authorization_scope")
+  @@check(expression: sql`("intentionId" IS NULL AND "orderId" IS NULL) OR ("intentionId" IS NOT NULL AND "orderId" IS NOT NULL)`, name: "payment_authorization_references")
+  @@check(expression: sql`("status" = 'READY' AND "encryptedCheckoutUrl" IS NOT NULL AND "intentionId" IS NOT NULL) OR ("status" <> 'READY' AND "encryptedCheckoutUrl" IS NULL)`, name: "payment_authorization_checkout")
 }

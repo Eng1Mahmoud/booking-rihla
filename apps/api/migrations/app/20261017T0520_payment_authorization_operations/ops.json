@@ -1,0 +1,248 @@
+[
+  {
+    "id": "table.PaymentAuthorization",
+    "label": "Create table \"PaymentAuthorization\"",
+    "summary": "Creates table \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentAuthorization\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"PaymentAuthorization\"",
+        "sql": "CREATE TABLE \"public\".\"PaymentAuthorization\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"encryptedCheckoutUrl\" text,\n  \"id\" text NOT NULL,\n  \"integrationId\" text NOT NULL,\n  \"intentionId\" text,\n  \"orderId\" text,\n  \"ownerId\" text NOT NULL,\n  \"paymentAttemptId\" text NOT NULL,\n  \"status\" text DEFAULT 'REQUESTING' NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"PaymentAuthorization_status_check_c1795974\" CHECK (\"status\" IN ('REQUESTING', 'READY', 'UNKNOWN', 'FAILED', 'EXPIRED')),\n  CONSTRAINT \"payment_authorization_checkout_0fc4d81c\" CHECK ((\"status\" = 'READY' AND \"encryptedCheckoutUrl\" IS NOT NULL AND \"intentionId\" IS NOT NULL) OR (\"status\" <> 'READY' AND \"encryptedCheckoutUrl\" IS NULL)),\n  CONSTRAINT \"payment_authorization_references_e5a362ee\" CHECK ((\"intentionId\" IS NULL AND \"orderId\" IS NULL) OR (\"intentionId\" IS NOT NULL AND \"orderId\" IS NOT NULL)),\n  CONSTRAINT \"payment_authorization_scope_37324968\" CHECK (\"integrationId\" ~ '^[1-9][0-9]*$' AND \"ownerId\" ~ '^[1-9][0-9]*$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentAuthorization\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentAuthorization.PaymentAuthorization_paymentAttemptId_key",
+    "label": "Add unique constraint on \"PaymentAuthorization\" (paymentAttemptId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentAuthorization_paymentAttemptId_key",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_paymentAttemptId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentAuthorization_paymentAttemptId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD CONSTRAINT \"PaymentAuthorization_paymentAttemptId_key\" UNIQUE (\"paymentAttemptId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentAuthorization_paymentAttemptId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentAuthorization.PaymentAuthorization_intentionId_key",
+    "label": "Add unique constraint on \"PaymentAuthorization\" (intentionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentAuthorization_intentionId_key",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_intentionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_intentionId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentAuthorization_intentionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD CONSTRAINT \"PaymentAuthorization_intentionId_key\" UNIQUE (\"intentionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentAuthorization_intentionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_intentionId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentAuthorization.PaymentAuthorization_orderId_key",
+    "label": "Add unique constraint on \"PaymentAuthorization\" (orderId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentAuthorization_orderId_key",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_orderId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_orderId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentAuthorization_orderId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" ADD CONSTRAINT \"PaymentAuthorization_orderId_key\" UNIQUE (\"orderId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentAuthorization_orderId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_orderId_key",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentAuthorization.PaymentAuthorization_status_updatedAt_idx_29f913bb",
+    "label": "Create index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" on \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentAuthorization_status_updatedAt_idx_29f913bb",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\"",
+        "sql": "CREATE INDEX \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" ON \"public\".\"PaymentAuthorization\" (\"status\", \"updatedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.PaymentAuthorization.PaymentAuthorization_paymentAttemptId_fkey",
+    "label": "Add foreign key \"PaymentAuthorization_paymentAttemptId_fkey\" on \"PaymentAuthorization\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PaymentAuthorization_paymentAttemptId_fkey",
+        "table": "PaymentAuthorization"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"PaymentAuthorization_paymentAttemptId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_fkey",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"PaymentAuthorization_paymentAttemptId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\"\nADD CONSTRAINT \"PaymentAuthorization_paymentAttemptId_fkey\"\nFOREIGN KEY (\"paymentAttemptId\")\nREFERENCES \"public\".\"PaymentAttempt\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"PaymentAuthorization_paymentAttemptId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_fkey",
+          "public",
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  }
+]

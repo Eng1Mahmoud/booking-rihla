@@ -8,6 +8,7 @@ import { PaymentProviderError } from '../src/payments/paymentProvider.ts';
 import { verifyPaymobCallback } from '../src/payments/paymobHmac.ts';
 const environment = {
   PAYMOB_ENABLED: 'true',
+  PAYMENT_CHECKOUT_SECRET: 'ab'.repeat(32),
   PAYMOB_SECRET_KEY: 'sk_test_private_fixture',
   PAYMOB_PUBLIC_KEY: 'pk_test_fixture',
   PAYMOB_API_KEY: 'private_api_fixture',
@@ -408,6 +409,11 @@ test('configuration check runs without a database or network, never prints crede
   for (const [overrides, status, expected] of [
     [{ PAYMOB_ENABLED: 'false' }, 0, /disabled/],
     [environment, 0, /no payment request was sent/],
+    [
+      { ...environment, PAYMENT_CHECKOUT_SECRET: '' },
+      1,
+      /PAYMENT_CHECKOUT_SECRET/,
+    ],
     [
       { ...environment, PAYMOB_SECRET_KEY: 'sk_live_private' },
       1,
