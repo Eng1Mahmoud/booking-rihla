@@ -1,4 +1,9 @@
 import {
+  paymobWebhookService,
+  type PaymobWebhookService,
+} from './services/paymobWebhookService.ts';
+import { createPaymobWebhookRouter } from './routes/paymobWebhookRoutes.ts';
+import {
   auditLogService,
   type AuditLogService,
 } from './services/auditLogService.ts';
@@ -97,6 +102,7 @@ export function createApp(
     auditLogs?: AuditLogService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
+    paymobWebhook?: PaymobWebhookService;
   } = {},
 ) {
   const app = express();
@@ -202,6 +208,11 @@ export function createApp(
   app.use(
     '/api/v1/admin/audit-logs',
     createAuditLogRouter(services.auditLogs ?? auditLogService, superAdmin),
+  );
+
+  app.use(
+    '/api/v1/payments/paymob',
+    createPaymobWebhookRouter(services.paymobWebhook ?? paymobWebhookService),
   );
 
   // This runs only if none of the routes above handled the request.

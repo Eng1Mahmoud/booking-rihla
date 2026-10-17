@@ -1,0 +1,161 @@
+[
+  {
+    "id": "table.PaymentEvent",
+    "label": "Create table \"PaymentEvent\"",
+    "summary": "Creates table \"PaymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"PaymentEvent\"",
+        "sql": "CREATE TABLE \"public\".\"PaymentEvent\" (\n  \"eventKey\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"integrationId\" text NOT NULL,\n  \"orderId\" text NOT NULL,\n  \"ownerId\" text NOT NULL,\n  \"receivedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"signedJson\" text NOT NULL,\n  \"transactionId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"payment_event_key_ae079da6\" CHECK (\"eventKey\" ~ '^[a-f0-9]{64}$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentEvent.PaymentEvent_eventKey_key",
+    "label": "Add unique constraint on \"PaymentEvent\" (eventKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentEvent_eventKey_key",
+        "table": "PaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentEvent_eventKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentEvent_eventKey_key",
+          "public",
+          "\"public\".\"PaymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentEvent_eventKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentEvent\" ADD CONSTRAINT \"PaymentEvent_eventKey_key\" UNIQUE (\"eventKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentEvent_eventKey_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentEvent_eventKey_key",
+          "public",
+          "\"public\".\"PaymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentEvent.PaymentEvent_orderId_receivedAt_idx_55bc2573",
+    "label": "Create index \"PaymentEvent_orderId_receivedAt_idx_55bc2573\" on \"PaymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentEvent_orderId_receivedAt_idx_55bc2573",
+        "table": "PaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentEvent_orderId_receivedAt_idx_55bc2573\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent_orderId_receivedAt_idx_55bc2573\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"PaymentEvent_orderId_receivedAt_idx_55bc2573\"",
+        "sql": "CREATE INDEX \"PaymentEvent_orderId_receivedAt_idx_55bc2573\" ON \"public\".\"PaymentEvent\" (\"orderId\", \"receivedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentEvent_orderId_receivedAt_idx_55bc2573\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent_orderId_receivedAt_idx_55bc2573\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentEvent.PaymentEvent_transactionId_receivedAt_idx_3c0be1e7",
+    "label": "Create index \"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\" on \"PaymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentEvent_transactionId_receivedAt_idx_3c0be1e7",
+        "table": "PaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\"",
+        "sql": "CREATE INDEX \"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\" ON \"public\".\"PaymentEvent\" (\"transactionId\", \"receivedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentEvent_transactionId_receivedAt_idx_3c0be1e7\""
+        ]
+      }
+    ]
+  }
+]

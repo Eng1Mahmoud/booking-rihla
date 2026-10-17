@@ -167,7 +167,7 @@ Working result: authorized operators manage the data previously supplied by seed
 
 ## Phase 8 — Seat holds and sandbox payments
 
-Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth/Cap only. The owner now has a Paymob account and local TEST credentials; API-key authentication succeeded without creating a payment. A local payment:setup check supports preparation without an existing transaction or owner id. The adapter is implemented and tested with deterministic transport fixtures; account activation, exact Auth request fields and remote behavior remain unverified. No payment endpoint, webhook listener, payment persistence or booking confirmation is enabled by the adapter alone. Existing seat-hold behavior remains unchanged until the durable integration is implemented. A timeout is an unknown outcome; never repeat a capture blindly or release a seat while its capture outcome is unknown. Operator cancellation/refund policy still needs agreement before paid-booking activation.
+Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth/Cap only. The owner now has a Paymob account and local TEST credentials; API-key authentication succeeded without creating a payment. A local payment:setup check supports preparation without an existing transaction or owner id. The adapter is implemented and tested with deterministic transport fixtures; account activation, exact Auth request fields and remote behavior remain unverified. An opt-in webhook listener now persists signature-valid, integration-scoped events without changing bookings. Checkout endpoints, payment attempts, inquiry/reconciliation and paid booking confirmation remain pending. Existing seat-hold behavior remains unchanged until the durable integration is implemented. A timeout is an unknown outcome; never repeat a capture blindly or release a seat while its capture outcome is unknown. Operator cancellation/refund policy still needs agreement before paid-booking activation.
 
 Small steps:
 
@@ -178,10 +178,12 @@ Small steps:
 - [x] Enforce active-seat uniqueness with a partial index while retaining expired seat snapshots.
 - [ ] Implement durable payment/booking transitions: late authorization is voided; once capture starts, retain seat allocation until the outcome is reconciled.
 - [x] Add a PaymentProvider interface, Paymob TEST adapter for EGP, strict configuration, HMAC verification and transport tests.
-- [ ] Create a Paymob test account and verify card Auth/Cap capability and actual payloads before connecting paid bookings.
+- [x] Create a Paymob account and add local TEST credentials; verify API-key authentication without payment.
+- [ ] Verify card Auth/Cap capability and actual payloads before connecting paid bookings.
 - [ ] Add create/capture endpoints with server-calculated amounts and idempotency keys.
-- [ ] Persist payment transactions and webhook events.
-- [ ] Verify webhook signatures and process duplicate or out-of-order events safely.
+- [x] Persist signed webhook receipts with atomic deduplication, configured integration/currency checks and optional initial owner filtering; no booking mutations.
+- [ ] Persist payment attempts/operations and reconcile received events through authenticated inquiry.
+- [ ] Process duplicate or out-of-order events safely through durable payment/booking transitions.
 - [ ] Confirm bookings only after verified payment success; handle failure and cancellation.
 - [ ] Expose checkout/payment-result data and admin payment lists with provider references.
 - [x] Test expiry boundaries, concurrent holds, reallocation/cleanup races, history preservation and departure caps.
@@ -329,4 +331,4 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; simple fixed seat templates and trip guards are complete; finite batch trip preview and atomic creation are complete; administrator booking lists/details are complete; passenger account management with session revocation is complete; super-admin administrator management is complete; audit logging is complete; seat holds and sandbox payments are next.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; simple fixed seat templates and trip guards are complete; finite batch trip preview and atomic creation are complete; administrator booking lists/details are complete; passenger account management with session revocation is complete; super-admin administrator management is complete; audit logging, expiring seat holds, the Paymob TEST adapter and durable signed webhook receipt are complete; payment-attempt persistence and booking/payment reconciliation are next.

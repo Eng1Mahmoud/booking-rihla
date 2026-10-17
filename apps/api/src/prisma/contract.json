@@ -52,6 +52,10 @@
       "model": "PasswordReset",
       "namespace": "public"
     },
+    "PaymentEvent": {
+      "model": "PaymentEvent",
+      "namespace": "public"
+    },
     "RefreshToken": {
       "model": "RefreshToken",
       "namespace": "public"
@@ -1385,6 +1389,97 @@
               },
               "namespaceId": "public",
               "table": "PasswordReset"
+            }
+          },
+          "PaymentEvent": {
+            "fields": {
+              "eventKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "integrationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "orderId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ownerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "receivedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "signedJson": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "transactionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "eventKey": {
+                  "column": "eventKey"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "integrationId": {
+                  "column": "integrationId"
+                },
+                "orderId": {
+                  "column": "orderId"
+                },
+                "ownerId": {
+                  "column": "ownerId"
+                },
+                "receivedAt": {
+                  "column": "receivedAt"
+                },
+                "signedJson": {
+                  "column": "signedJson"
+                },
+                "transactionId": {
+                  "column": "transactionId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PaymentEvent"
             }
           },
           "RefreshToken": {
@@ -3276,6 +3371,94 @@
                 }
               ]
             },
+            "PaymentEvent": {
+              "checks": [
+                {
+                  "expression": "\"eventKey\" ~ '^[a-f0-9]{64}$'",
+                  "name": "payment_event_key_ae079da6",
+                  "prefix": "payment_event_key"
+                }
+              ],
+              "columns": {
+                "eventKey": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "integrationId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "orderId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "ownerId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "receivedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "signedJson": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "transactionId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "orderId",
+                    "receivedAt"
+                  ],
+                  "name": "PaymentEvent_orderId_receivedAt_idx_55bc2573",
+                  "prefix": "PaymentEvent_orderId_receivedAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "transactionId",
+                    "receivedAt"
+                  ],
+                  "name": "PaymentEvent_transactionId_receivedAt_idx_3c0be1e7",
+                  "prefix": "PaymentEvent_transactionId_receivedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "eventKey"
+                  ]
+                }
+              ]
+            },
             "RefreshToken": {
               "columns": {
                 "createdAt": {
@@ -3969,10 +4152,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "dd4d1d64f1070080d436320e9e83fc6b050ec149e6243827f8885359a8c19148"
+    "storageHash": "da8b04465317f9615abadd3995ecec96a083823ffa6f819181212a28df3e031c"
   },
   "execution": {
-    "executionHash": "230848f79ab5653cd953ddc7496e50f7b9fe8ebcfb436eff7cf5443a46674644",
+    "executionHash": "1ca7cf07747b16695d74d3d2413f51d28cfcd4024e98f584b3554d29551d6378",
     "mutations": {
       "defaults": [
         {
@@ -4103,6 +4286,17 @@
           },
           "ref": {
             "entry": "PasswordReset",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PaymentEvent",
             "field": "id",
             "namespace": "public"
           }

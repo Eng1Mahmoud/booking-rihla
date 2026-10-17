@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'dd4d1d64f1070080d436320e9e83fc6b050ec149e6243827f8885359a8c19148'>;
+  StorageHashBase<'da8b04465317f9615abadd3995ecec96a083823ffa6f819181212a28df3e031c'>;
 export type ExecutionHash =
-  ExecutionHashBase<'230848f79ab5653cd953ddc7496e50f7b9fe8ebcfb436eff7cf5443a46674644'>;
+  ExecutionHashBase<'1ca7cf07747b16695d74d3d2413f51d28cfcd4024e98f584b3554d29551d6378'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -335,6 +335,16 @@ export type FieldOutputTypes = {
       readonly userId: CodecTypes['pg/text@1']['output'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly PaymentEvent: {
+      readonly eventKey: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly integrationId: CodecTypes['pg/text@1']['output'];
+      readonly orderId: CodecTypes['pg/text@1']['output'];
+      readonly ownerId: CodecTypes['pg/text@1']['output'];
+      readonly receivedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly signedJson: CodecTypes['pg/text@1']['output'];
+      readonly transactionId: CodecTypes['pg/text@1']['output'];
+    };
     readonly RefreshToken: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -490,6 +500,16 @@ export type FieldInputTypes = {
       readonly sendCount: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PaymentEvent: {
+      readonly eventKey: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly integrationId: CodecTypes['pg/text@1']['input'];
+      readonly orderId: CodecTypes['pg/text@1']['input'];
+      readonly ownerId: CodecTypes['pg/text@1']['input'];
+      readonly receivedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly signedJson: CodecTypes['pg/text@1']['input'];
+      readonly transactionId: CodecTypes['pg/text@1']['input'];
     };
     readonly RefreshToken: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -647,6 +667,16 @@ export type StorageColumnTypes = {
       readonly userId: CodecTypes['pg/text@1']['output'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly PaymentEvent: {
+      readonly eventKey: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly integrationId: CodecTypes['pg/text@1']['output'];
+      readonly orderId: CodecTypes['pg/text@1']['output'];
+      readonly ownerId: CodecTypes['pg/text@1']['output'];
+      readonly receivedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly signedJson: CodecTypes['pg/text@1']['output'];
+      readonly transactionId: CodecTypes['pg/text@1']['output'];
+    };
     readonly RefreshToken: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -802,6 +832,16 @@ export type StorageColumnInputTypes = {
       readonly sendCount: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
       readonly windowStartedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PaymentEvent: {
+      readonly eventKey: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly integrationId: CodecTypes['pg/text@1']['input'];
+      readonly orderId: CodecTypes['pg/text@1']['input'];
+      readonly ownerId: CodecTypes['pg/text@1']['input'];
+      readonly receivedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly signedJson: CodecTypes['pg/text@1']['input'];
+      readonly transactionId: CodecTypes['pg/text@1']['input'];
     };
     readonly RefreshToken: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -990,6 +1030,17 @@ export namespace Models {
     user: public_User;
     readonly [RelationKeys]?: 'user';
   };
+  export type public_PaymentEvent = {
+    eventKey: CodecTypes['pg/text@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    integrationId: CodecTypes['pg/text@1']['output'];
+    orderId: CodecTypes['pg/text@1']['output'];
+    ownerId: CodecTypes['pg/text@1']['output'];
+    receivedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    signedJson: CodecTypes['pg/text@1']['output'];
+    transactionId: CodecTypes['pg/text@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
   export type public_RefreshToken = {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -1080,6 +1131,7 @@ export declare const models: {
     EmailOutbox: Models.public_EmailOutbox;
     EmailVerification: Models.public_EmailVerification;
     PasswordReset: Models.public_PasswordReset;
+    PaymentEvent: Models.public_PaymentEvent;
     RefreshToken: Models.public_RefreshToken;
     Route: Models.public_Route;
     Session: Models.public_Session;
@@ -1954,6 +2006,76 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly PaymentEvent: {
+              columns: {
+                readonly eventKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly integrationId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly orderId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly ownerId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly receivedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly signedJson: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly transactionId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['eventKey'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'PaymentEvent_orderId_receivedAt_idx_55bc2573';
+                  readonly prefix: 'PaymentEvent_orderId_receivedAt_idx';
+                  readonly columns: readonly ['orderId', 'receivedAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'PaymentEvent_transactionId_receivedAt_idx_3c0be1e7';
+                  readonly prefix: 'PaymentEvent_transactionId_receivedAt_idx';
+                  readonly columns: readonly ['transactionId', 'receivedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [];
+            };
             readonly RefreshToken: {
               columns: {
                 readonly createdAt: {
@@ -2497,6 +2619,10 @@ type ContractBase = Omit<
     readonly PasswordReset: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PasswordReset';
+    };
+    readonly PaymentEvent: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PaymentEvent';
     };
     readonly RefreshToken: {
       readonly namespace: 'public' & NamespaceId;
@@ -3281,6 +3407,60 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly PaymentEvent: {
+            readonly fields: {
+              readonly eventKey: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly integrationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly orderId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly ownerId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly receivedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly signedJson: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly transactionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'PaymentEvent';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly eventKey: { readonly column: 'eventKey' };
+                readonly id: { readonly column: 'id' };
+                readonly integrationId: { readonly column: 'integrationId' };
+                readonly orderId: { readonly column: 'orderId' };
+                readonly ownerId: { readonly column: 'ownerId' };
+                readonly receivedAt: { readonly column: 'receivedAt' };
+                readonly signedJson: { readonly column: 'signedJson' };
+                readonly transactionId: { readonly column: 'transactionId' };
+              };
+            };
+          };
           readonly RefreshToken: {
             readonly fields: {
               readonly createdAt: {
@@ -3956,6 +4136,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'PasswordReset';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'PaymentEvent';
             readonly field: 'id';
             readonly namespace: 'public';
           };

@@ -281,3 +281,19 @@ model AuditLog {
   @@index([actorId, createdAt, id])
   @@index([entity, entityId, createdAt, id])
 }
+
+// Durable receipt only. Signed callbacks require authenticated inquiry and a
+// matching payment attempt before they can affect bookings or seat allocations.
+model PaymentEvent {
+  id String @id @default(uuid())
+  eventKey String @unique
+  transactionId String
+  orderId String
+  integrationId String
+  ownerId String
+  signedJson String
+  receivedAt TimestamptzString @default(now())
+  @@index([orderId, receivedAt])
+  @@index([transactionId, receivedAt])
+  @@check(expression: sql`"eventKey" ~ '^[a-f0-9]{64}$'`, name: "payment_event_key")
+}

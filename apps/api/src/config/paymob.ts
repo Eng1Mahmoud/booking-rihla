@@ -65,3 +65,37 @@ export function inspectPaymobSetup(environment: NodeJS.ProcessEnv) {
     remainingSettings: readiness.success ? [] : fields(readiness.error.issues),
   };
 }
+
+// Receiving signed events is separate from enabling checkout or trusting a payment.
+const webhookSchema = schema
+  .pick({
+    PAYMOB_HMAC_SECRET: true,
+    PAYMOB_INTEGRATION_ID: true,
+  })
+  .extend({
+    PAYMOB_OWNER_ID: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      positiveId.optional(),
+    ),
+  });
+export type PaymobWebhookConfig = z.infer<typeof webhookSchema>;
+export function parsePaymobWebhookEnv(
+  environment: NodeJS.ProcessEnv,
+): PaymobWebhookConfig | null {
+  if (
+    environment['PAYMOB_WEBHOOK_ENABLED'] === undefined ||
+    environment['PAYMOB_WEBHOOK_ENABLED'] === 'false'
+  )
+    return null;
+  if (environment['PAYMOB_WEBHOOK_ENABLED'] !== 'true')
+    throw new Error('Invalid webhook configuration: PAYMOB_WEBHOOK_ENABLED');
+  const result = webhookSchema.safeParse(environment);
+  if (!result.success)
+    throw new Error(
+      'Invalid webhook configuration: ' +
+        [
+          ...new Set(result.error.issues.map((issue) => issue.path.join('.'))),
+        ].join(', '),
+    );
+  return result.data;
+}
