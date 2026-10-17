@@ -1,3 +1,8 @@
+import {
+  adminStatisticsService,
+  type AdminStatisticsService,
+} from './services/adminStatisticsService.ts';
+import { createAdminStatisticsRouter } from './routes/adminStatisticsRoutes.ts';
 import type { TicketService } from './services/ticketService.ts';
 import {
   adminPaymentService,
@@ -107,6 +112,7 @@ export function createApp(
     tickets?: TicketService;
     adminBookings?: AdminBookingService;
     adminPayments?: AdminPaymentService;
+    adminStatistics?: AdminStatisticsService;
     adminUsers?: AdminUserService;
     administrators?: AdministratorService;
     auditLogs?: AuditLogService;
@@ -203,6 +209,14 @@ export function createApp(
     '/api/v1/admin/bookings',
     createAdminBookingRouter(
       services.adminBookings ?? adminBookingService,
+      admin,
+    ),
+  );
+
+  app.use(
+    '/api/v1/admin/statistics',
+    createAdminStatisticsRouter(
+      services.adminStatistics ?? adminStatisticsService,
       admin,
     ),
   );
