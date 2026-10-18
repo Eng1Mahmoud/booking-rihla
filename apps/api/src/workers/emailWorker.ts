@@ -1,3 +1,4 @@
+import { processBookingNotices } from '../services/bookingNoticeService.ts';
 import { processDepartureReminders } from '../services/departureReminderService.ts';
 import { processTicketOutbox } from '../services/ticketOutboxService.ts';
 import 'dotenv/config';
@@ -22,13 +23,19 @@ try {
   );
   do {
     try {
+      const notices = await processBookingNotices();
       const account = await processEmailOutbox();
       const tickets = await processTicketOutbox();
       const reminders = await processDepartureReminders();
       const result = {
-        sent: account.sent + tickets.sent + reminders.sent,
-        failed: account.failed + tickets.failed + reminders.failed,
-        discarded: account.discarded + tickets.discarded + reminders.discarded,
+        sent: account.sent + tickets.sent + reminders.sent + notices.sent,
+        failed:
+          account.failed + tickets.failed + reminders.failed + notices.failed,
+        discarded:
+          account.discarded +
+          tickets.discarded +
+          reminders.discarded +
+          notices.discarded,
       };
       if (result.sent || result.failed || result.discarded)
         console.log(JSON.stringify(result));

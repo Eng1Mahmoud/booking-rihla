@@ -44,6 +44,13 @@ const transactionSchema = z.object({
   is_refunded: z.boolean(),
   is_standalone_payment: z.boolean(),
   is_live: z.literal(false),
+  refunded_amount_cents: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(Number.MAX_SAFE_INTEGER)
+    .nullish(),
+  parent_transaction: numericId.nullish(),
   captured_amount: z
     .number()
     .int()
@@ -126,6 +133,13 @@ export function createPaymobProvider(
       standalone: t.is_standalone_payment,
       live: t.is_live,
       capturedPiastres: t.captured_amount ?? 0,
+      refundedPiastres:
+        t.refunded_amount_cents === null && !t.is_refunded
+          ? 0
+          : (t.refunded_amount_cents ?? undefined),
+      parentTransactionId: t.parent_transaction
+        ? String(t.parent_transaction)
+        : undefined,
     };
   }
   async function authToken() {
@@ -182,6 +196,14 @@ export function createPaymobProvider(
         orderId: String(result.intention_order_id),
         checkoutUrl: checkout.href,
       };
+    },
+    async refund(id, amountPiastres) {
+      transactionId.parse(id);
+      amount.parse(amountPiastres);
+      await request('/api/acceptance/void_refund/refund', 'POST', {
+        transaction_id: Number(id),
+        amount_cents: amountPiastres,
+      });
     },
     async capture(id, amountPiastres) {
       transactionId.parse(id);

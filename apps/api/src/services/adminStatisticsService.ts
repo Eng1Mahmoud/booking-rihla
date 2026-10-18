@@ -17,7 +17,7 @@ export const adminStatisticsService = {
             AND "departureAt" < ${end}::timestamptz
         ), bookings AS (
           SELECT b."id", b."tripId",
-            CASE WHEN b."status" = 'PENDING_PAYMENT'
+            CASE WHEN t.status = 'CANCELLED' THEN 'CANCELLED' WHEN b."status" = 'PENDING_PAYMENT'
               AND b."expiresAt" <= ${serverTime}::timestamptz
               THEN 'EXPIRED' ELSE b."status"::text END AS state
           FROM "public"."Booking" b JOIN trips t ON t."id" = b."tripId"
@@ -41,7 +41,8 @@ export const adminStatisticsService = {
             count(*) FILTER (WHERE state = 'PENDING_PAYMENT') AS "pendingPayment",
             count(*) FILTER (WHERE state = 'PAYMENT_PROCESSING') AS "paymentProcessing",
             count(*) FILTER (WHERE state = 'CONFIRMED') AS confirmed,
-            count(*) FILTER (WHERE state = 'EXPIRED') AS expired
+            count(*) FILTER (WHERE state = 'EXPIRED') AS expired,
+            count(*) FILTER (WHERE state = 'CANCELLED') AS cancelled
           FROM bookings
         ), seat_counts AS (
           SELECT (SELECT count(*) FROM trips t

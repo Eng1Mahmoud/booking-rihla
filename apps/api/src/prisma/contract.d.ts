@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'8835ce0934b203103026e92c12bff6a44b7c38bc33dc452eb35ffd55bf77ba6e'>;
+  StorageHashBase<'e9343db78436ad4bd7a9e4f1495e0c342692dffacf19eafb0faedf97cc93cef5'>;
 export type ExecutionHash =
-  ExecutionHashBase<'9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56'>;
+  ExecutionHashBase<'45ffebf5a278ee6ecfb7f539c63b2a84fca9712201cf789ffa2bd57d3aa1d3c4'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -265,6 +265,16 @@ export type FieldOutputTypes = {
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
+    readonly BookingNotice: {
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly purpose: 'TRIP_CANCELLED' | 'REFUND_SUCCEEDED';
+      readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
     readonly BookingSeat: {
       readonly bookingId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -387,6 +397,16 @@ export type FieldOutputTypes = {
       readonly tokenHash: CodecTypes['pg/text@1']['output'];
       readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
+    readonly Refund: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly requestedBy: CodecTypes['pg/text@1']['output'] | null;
+      readonly status: 'PENDING' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+      readonly transactionId: CodecTypes['pg/text@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly Route: {
       readonly destinationStationId: CodecTypes['pg/text@1']['output'];
       readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
@@ -423,6 +443,8 @@ export type FieldOutputTypes = {
     readonly Trip: {
       readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly cancellationReason: CodecTypes['pg/text@1']['output'] | null;
+      readonly cancelledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly pricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -478,6 +500,16 @@ export type FieldInputTypes = {
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
+    readonly BookingNotice: {
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly purpose: 'TRIP_CANCELLED' | 'REFUND_SUCCEEDED';
+      readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+    };
     readonly BookingSeat: {
       readonly bookingId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
@@ -600,6 +632,16 @@ export type FieldInputTypes = {
       readonly tokenHash: CodecTypes['pg/text@1']['input'];
       readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
+    readonly Refund: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly requestedBy: CodecTypes['pg/text@1']['input'] | null;
+      readonly status: 'PENDING' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+      readonly transactionId: CodecTypes['pg/text@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
     readonly Route: {
       readonly destinationStationId: CodecTypes['pg/text@1']['input'];
       readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['input'];
@@ -636,6 +678,8 @@ export type FieldInputTypes = {
     readonly Trip: {
       readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly cancellationReason: CodecTypes['pg/text@1']['input'] | null;
+      readonly cancelledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly departureAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly pricePiastres: CodecTypes['pg/int4@1']['input'];
@@ -690,6 +734,16 @@ export type StorageColumnTypes = {
       readonly tripId: CodecTypes['pg/text@1']['output'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
+    };
+    readonly BookingNotice: {
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly purpose: 'TRIP_CANCELLED' | 'REFUND_SUCCEEDED';
+      readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly BookingSeat: {
       readonly bookingId: CodecTypes['pg/text@1']['output'];
@@ -813,6 +867,16 @@ export type StorageColumnTypes = {
       readonly tokenHash: CodecTypes['pg/text@1']['output'];
       readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
+    readonly Refund: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['output'];
+      readonly bookingId: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly requestedBy: CodecTypes['pg/text@1']['output'] | null;
+      readonly status: 'PENDING' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+      readonly transactionId: CodecTypes['pg/text@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly Route: {
       readonly destinationStationId: CodecTypes['pg/text@1']['output'];
       readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
@@ -849,6 +913,8 @@ export type StorageColumnTypes = {
     readonly Trip: {
       readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly busId: CodecTypes['pg/text@1']['output'];
+      readonly cancellationReason: CodecTypes['pg/text@1']['output'] | null;
+      readonly cancelledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly pricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -903,6 +969,16 @@ export type StorageColumnInputTypes = {
       readonly tripId: CodecTypes['pg/text@1']['input'];
       readonly unitPricePiastres: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
+    };
+    readonly BookingNotice: {
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly discardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly purpose: 'TRIP_CANCELLED' | 'REFUND_SUCCEEDED';
+      readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly BookingSeat: {
       readonly bookingId: CodecTypes['pg/text@1']['input'];
@@ -1026,6 +1102,16 @@ export type StorageColumnInputTypes = {
       readonly tokenHash: CodecTypes['pg/text@1']['input'];
       readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
+    readonly Refund: {
+      readonly amountPiastres: CodecTypes['pg/int8@1']['input'];
+      readonly bookingId: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly requestedBy: CodecTypes['pg/text@1']['input'] | null;
+      readonly status: 'PENDING' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+      readonly transactionId: CodecTypes['pg/text@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
     readonly Route: {
       readonly destinationStationId: CodecTypes['pg/text@1']['input'];
       readonly estimatedDurationMinutes: CodecTypes['pg/int4@1']['input'];
@@ -1062,6 +1148,8 @@ export type StorageColumnInputTypes = {
     readonly Trip: {
       readonly arrivalAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly busId: CodecTypes['pg/text@1']['input'];
+      readonly cancellationReason: CodecTypes['pg/text@1']['input'] | null;
+      readonly cancelledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly departureAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly pricePiastres: CodecTypes['pg/int4@1']['input'];
@@ -1118,12 +1206,27 @@ export namespace Models {
     tripId: CodecTypes['pg/text@1']['output'];
     unitPricePiastres: CodecTypes['pg/int4@1']['output'];
     userId: CodecTypes['pg/text@1']['output'];
+    notices: public_BookingNotice[];
     paymentAttempt: public_PaymentAttempt | null;
+    refund: public_Refund | null;
     seats: public_BookingSeat[];
     ticket: public_Ticket | null;
     trip: public_Trip;
     user: public_User;
-    readonly [RelationKeys]?: 'paymentAttempt' | 'seats' | 'ticket' | 'trip' | 'user';
+    readonly [RelationKeys]?:
+      'notices' | 'paymentAttempt' | 'refund' | 'seats' | 'ticket' | 'trip' | 'user';
+  };
+  export type public_BookingNotice = {
+    attempts: CodecTypes['pg/int4@1']['output'];
+    bookingId: CodecTypes['pg/text@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    discardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    id: CodecTypes['pg/text@1']['output'];
+    nextAttemptAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    purpose: 'TRIP_CANCELLED' | 'REFUND_SUCCEEDED';
+    sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    booking: public_Booking;
+    readonly [RelationKeys]?: 'booking';
   };
   export type public_BookingSeat = {
     bookingId: CodecTypes['pg/text@1']['output'];
@@ -1282,6 +1385,18 @@ export namespace Models {
     session: public_Session;
     readonly [RelationKeys]?: 'session';
   };
+  export type public_Refund = {
+    amountPiastres: CodecTypes['pg/int8@1']['output'];
+    bookingId: CodecTypes['pg/text@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    requestedBy: CodecTypes['pg/text@1']['output'] | null;
+    status: 'PENDING' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+    transactionId: CodecTypes['pg/text@1']['output'] | null;
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    booking: public_Booking;
+    readonly [RelationKeys]?: 'booking';
+  };
   export type public_Route = {
     destinationStationId: CodecTypes['pg/text@1']['output'];
     estimatedDurationMinutes: CodecTypes['pg/int4@1']['output'];
@@ -1331,6 +1446,8 @@ export namespace Models {
   export type public_Trip = {
     arrivalAt: CodecTypes['pg/timestamptz-string@1']['output'];
     busId: CodecTypes['pg/text@1']['output'];
+    cancellationReason: CodecTypes['pg/text@1']['output'] | null;
+    cancelledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     departureAt: CodecTypes['pg/timestamptz-string@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     pricePiastres: CodecTypes['pg/int4@1']['output'];
@@ -1368,6 +1485,7 @@ export declare const models: {
     Amenity: Models.public_Amenity;
     AuditLog: Models.public_AuditLog;
     Booking: Models.public_Booking;
+    BookingNotice: Models.public_BookingNotice;
     BookingSeat: Models.public_BookingSeat;
     Bus: Models.public_Bus;
     BusAmenity: Models.public_BusAmenity;
@@ -1382,6 +1500,7 @@ export declare const models: {
     PaymentEvent: Models.public_PaymentEvent;
     PaymentSettlement: Models.public_PaymentSettlement;
     RefreshToken: Models.public_RefreshToken;
+    Refund: Models.public_Refund;
     Route: Models.public_Route;
     Session: Models.public_Session;
     Station: Models.public_Station;
@@ -1656,6 +1775,94 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'Trip';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly BookingNotice: {
+              columns: {
+                readonly attempts: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                  readonly many: false;
+                };
+                readonly bookingId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly discardedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nextAttemptAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly purpose: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly sentAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['bookingId', 'purpose'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'BookingNotice_bookingId_idx_17848f4a';
+                  readonly prefix: 'BookingNotice_bookingId_idx';
+                  readonly columns: readonly ['bookingId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab';
+                  readonly prefix: 'BookingNotice_sentAt_discardedAt_nextAttemptAt_idx';
+                  readonly columns: readonly ['sentAt', 'discardedAt', 'nextAttemptAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BookingNotice';
+                    readonly columns: readonly ['bookingId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Booking';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -2700,6 +2907,91 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly Refund: {
+              columns: {
+                readonly amountPiastres: {
+                  readonly dataType: 'pg/int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly bookingId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly requestedBy: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly status: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
+                  };
+                  readonly many: false;
+                };
+                readonly transactionId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['bookingId'] },
+                { readonly columns: readonly ['transactionId'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'Refund_status_updatedAt_idx_29f913bb';
+                  readonly prefix: 'Refund_status_updatedAt_idx';
+                  readonly columns: readonly ['status', 'updatedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Refund';
+                    readonly columns: readonly ['bookingId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Booking';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Route: {
               columns: {
                 readonly destinationStationId: {
@@ -3034,6 +3326,18 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly cancellationReason: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly cancelledAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly departureAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -3242,6 +3546,10 @@ type ContractBase = Omit<
             };
           };
           readonly valueSet: {
+            readonly BookingNoticePurpose: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['TRIP_CANCELLED', 'REFUND_SUCCEEDED'];
+            };
             readonly BookingStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly [
@@ -3267,6 +3575,10 @@ type ContractBase = Omit<
             readonly PaymentSettlementStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW'];
+            };
+            readonly RefundStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['PENDING', 'REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW'];
             };
             readonly SeatLayout: {
               readonly kind: 'valueSet';
@@ -3294,6 +3606,10 @@ type ContractBase = Omit<
     readonly Amenity: { readonly namespace: 'public' & NamespaceId; readonly model: 'Amenity' };
     readonly AuditLog: { readonly namespace: 'public' & NamespaceId; readonly model: 'AuditLog' };
     readonly Booking: { readonly namespace: 'public' & NamespaceId; readonly model: 'Booking' };
+    readonly BookingNotice: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'BookingNotice';
+    };
     readonly BookingSeat: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'BookingSeat';
@@ -3338,6 +3654,7 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'RefreshToken';
     };
+    readonly Refund: { readonly namespace: 'public' & NamespaceId; readonly model: 'Refund' };
     readonly Route: { readonly namespace: 'public' & NamespaceId; readonly model: 'Route' };
     readonly Session: { readonly namespace: 'public' & NamespaceId; readonly model: 'Session' };
     readonly Station: { readonly namespace: 'public' & NamespaceId; readonly model: 'Station' };
@@ -3505,10 +3822,33 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly notices: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BookingNotice';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['bookingId'];
+                };
+              };
               readonly paymentAttempt: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
                   readonly model: 'PaymentAttempt';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['bookingId'];
+                };
+              };
+              readonly refund: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Refund';
                 };
                 readonly cardinality: '1:1';
                 readonly nullable: true;
@@ -3574,6 +3914,82 @@ type ContractBase = Omit<
                 readonly tripId: { readonly column: 'tripId' };
                 readonly unitPricePiastres: { readonly column: 'unitPricePiastres' };
                 readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
+          readonly BookingNotice: {
+            readonly fields: {
+              readonly attempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly bookingId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly discardedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nextAttemptAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly purpose: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly sentAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly booking: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Booking';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['bookingId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'BookingNotice';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly attempts: { readonly column: 'attempts' };
+                readonly bookingId: { readonly column: 'bookingId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly discardedAt: { readonly column: 'discardedAt' };
+                readonly id: { readonly column: 'id' };
+                readonly nextAttemptAt: { readonly column: 'nextAttemptAt' };
+                readonly purpose: { readonly column: 'purpose' };
+                readonly sentAt: { readonly column: 'sentAt' };
               };
             };
           };
@@ -4511,6 +4927,76 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Refund: {
+            readonly fields: {
+              readonly amountPiastres: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly bookingId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly requestedBy: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly transactionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly booking: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Booking';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['bookingId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Refund';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly amountPiastres: { readonly column: 'amountPiastres' };
+                readonly bookingId: { readonly column: 'bookingId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly requestedBy: { readonly column: 'requestedBy' };
+                readonly status: { readonly column: 'status' };
+                readonly transactionId: { readonly column: 'transactionId' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly Route: {
             readonly fields: {
               readonly destinationStationId: {
@@ -4822,6 +5308,17 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly cancellationReason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly cancelledAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
               readonly departureAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -4886,6 +5383,8 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly arrivalAt: { readonly column: 'arrivalAt' };
                 readonly busId: { readonly column: 'busId' };
+                readonly cancellationReason: { readonly column: 'cancellationReason' };
+                readonly cancelledAt: { readonly column: 'cancelledAt' };
                 readonly departureAt: { readonly column: 'departureAt' };
                 readonly id: { readonly column: 'id' };
                 readonly pricePiastres: { readonly column: 'pricePiastres' };
@@ -5034,6 +5533,13 @@ type ContractBase = Omit<
           };
         };
         readonly enum: {
+          readonly BookingNoticePurpose: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'TRIP_CANCELLED'; readonly value: 'TRIP_CANCELLED' },
+              { readonly name: 'REFUND_SUCCEEDED'; readonly value: 'REFUND_SUCCEEDED' },
+            ];
+          };
           readonly BookingStatus: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
@@ -5078,6 +5584,16 @@ type ContractBase = Omit<
               { readonly name: 'REVIEW'; readonly value: 'REVIEW' },
             ];
           };
+          readonly RefundStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'PENDING'; readonly value: 'PENDING' },
+              { readonly name: 'REQUESTED'; readonly value: 'REQUESTED' },
+              { readonly name: 'UNKNOWN'; readonly value: 'UNKNOWN' },
+              { readonly name: 'SUCCEEDED'; readonly value: 'SUCCEEDED' },
+              { readonly name: 'REVIEW'; readonly value: 'REVIEW' },
+            ];
+          };
           readonly SeatLayout: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
@@ -5101,6 +5617,10 @@ type ContractBase = Omit<
           };
         };
         readonly enumMemberTypes?: {
+          readonly BookingNoticePurpose: readonly [
+            { readonly name: 'TRIP_CANCELLED'; readonly value: 'TRIP_CANCELLED' },
+            { readonly name: 'REFUND_SUCCEEDED'; readonly value: 'REFUND_SUCCEEDED' },
+          ];
           readonly BookingStatus: readonly [
             { readonly name: 'RESERVED'; readonly value: 'RESERVED' },
             { readonly name: 'PENDING_PAYMENT'; readonly value: 'PENDING_PAYMENT' },
@@ -5125,6 +5645,13 @@ type ContractBase = Omit<
             { readonly name: 'VOID'; readonly value: 'VOID' },
           ];
           readonly PaymentSettlementStatus: readonly [
+            { readonly name: 'REQUESTED'; readonly value: 'REQUESTED' },
+            { readonly name: 'UNKNOWN'; readonly value: 'UNKNOWN' },
+            { readonly name: 'SUCCEEDED'; readonly value: 'SUCCEEDED' },
+            { readonly name: 'REVIEW'; readonly value: 'REVIEW' },
+          ];
+          readonly RefundStatus: readonly [
+            { readonly name: 'PENDING'; readonly value: 'PENDING' },
             { readonly name: 'REQUESTED'; readonly value: 'REQUESTED' },
             { readonly name: 'UNKNOWN'; readonly value: 'UNKNOWN' },
             { readonly name: 'SUCCEEDED'; readonly value: 'SUCCEEDED' },
@@ -5198,6 +5725,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'Booking';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'BookingNotice';
             readonly field: 'id';
             readonly namespace: 'public';
           };
@@ -5310,6 +5845,14 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'RefreshToken';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Refund';
             readonly field: 'id';
             readonly namespace: 'public';
           };

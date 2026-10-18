@@ -26,6 +26,8 @@ export interface PaymentTransaction {
   standalone: boolean;
   live: boolean;
   capturedPiastres: number;
+  refundedPiastres?: number;
+  parentTransactionId?: string;
 }
 // Transport operations only: payment services must persist intent/operation
 // identifiers, enforce ownership and seat locks, and reconcile uncertain outcomes.
@@ -36,6 +38,7 @@ export interface PaymentProvider {
     orderId: string;
     checkoutUrl: string;
   }>;
+  refund(transactionId: string, amountPiastres: number): Promise<void>;
   capture(transactionId: string, amountPiastres: number): Promise<void>;
   voidAuthorization(transactionId: string): Promise<void>;
   getTransaction(transactionId: string): Promise<PaymentTransaction>;

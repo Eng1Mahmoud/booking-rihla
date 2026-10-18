@@ -58,6 +58,13 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
+  console.error(
+    JSON.stringify({
+      event: 'unhandled_request_error',
+      requestId: response.locals.requestId,
+      code: 'INTERNAL_SERVER_ERROR',
+    }),
+  );
   // Never expose unexpected errors, stack traces, or server details to clients.
   response.status(500).json({
     error: {

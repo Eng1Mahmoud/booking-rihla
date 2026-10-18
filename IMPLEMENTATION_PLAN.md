@@ -1,12 +1,12 @@
 # Bus Booking Platform — Implementation Roadmap
 
-Status: Registration and email activation are bound to the originating verification id. Verified active accounts can sign in with short-lived JWT access tokens and rotating HttpOnly refresh cookies. Durable login lockout, session revocation/replay detection, current-user and device/all-device logout APIs, CSRF/origin checks and credentialed CORS are tested. Password recovery, single-use codes, session revocation and password-change notices are complete. USER, ADMIN and SUPER_ADMIN roles now protect catalog management using current database roles. A local command bootstraps the first verified super admin. The reservation MVP is implemented with transactional seats, server-calculated totals, ownership and live availability. Passenger cancellation is disabled. Bus types and amenities are implemented with protected CRUD, atomic assignments and reservation safeguards. Simple fixed seat templates replace editable physical grids; bus capacity/template changes are blocked after a trip uses the bus. Finite batch trip preview and atomic creation are complete. Administrator booking lists/details are complete with exact filters, safe customer summaries and preserved passenger ownership. Passenger account lists/details and suspension/activation with durable session revocation are complete. Super-admin administrator management is complete with session revocation, actor revalidation and last-active-super-admin protection. Administrator audit logging is complete; expiring ten-minute checkout holds are complete; the Paymob TEST provider adapter and signed callback verification are implemented; payment persistence, reconciliation, reference recovery and gated owned checkout/status APIs are complete. TEST merchant verification and policy agreement remain before activation; administrator payment lists/details are complete; confirmed-payment tickets with owner-only reads, QR images and durable Arabic/English email delivery are complete; departure reminders are complete; operator cancellation/refunds remain.
+Status: Backend implementation is ready for local passenger-site/dashboard integration. Operator cancellation/full-refund policy is approved and implemented with durable notices, guarded TEST refund issuance/inquiry, request logs, PostgreSQL readiness and graceful shutdown. Actual Paymob merchant Auth/Capture/refund verification remains external and disabled. Automated tests and GitHub Actions billing troubleshooting are deferred by the owner.
 
 ## How we will build
 
 Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. The owner authorizes committing and pushing each completed feature after its checks; finish and publish it before starting the next feature. Production publication and real-money operations still need explicit approval. A phase is complete only when its working result can be demonstrated.
 
-This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions. Confirmed owner decision: passengers cannot cancel bookings; no passenger cancellation endpoint or frontend action is planned. Operator cancellation and refunds require a separate policy decision.
+This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions. Confirmed owner decision: passengers cannot cancel bookings; no passenger cancellation endpoint or frontend action is planned. Approved on 2026-10-18: company cancellation requires a full refund; only Super Admin may issue it. Passengers cannot cancel.
 
 ### Milestones
 
@@ -172,7 +172,7 @@ Confirmed technical direction: use Paymob in EGP, initially TEST cards with Auth
 Small steps:
 
 - [x] Use a ten-minute hold capped at departure; passenger cancellation remains disabled.
-- [ ] Agree on operator cancellation/refund rules before implementing paid bookings.
+- [x] Agree on operator cancellation/refund rules before implementing paid bookings.
 - [x] Replace immediate reservation confirmation with pending payment and a default ten-minute hold.
 - [x] Expose hold expiry times; add lazy expiry and an optional cleanup worker preserving history.
 - [x] Enforce active-seat uniqueness with a partial index while retaining expired seat snapshots.
@@ -202,11 +202,11 @@ Small steps:
 
 - [x] Add in-app and emailed tickets with booking references and QR codes.
 - [x] Add booking confirmation and payment receipt emails (combined with the ticket: reference and paid amount; not a tax invoice).
-- [ ] Apply the agreed operator cancellation/refund policy; keep passenger cancellation unavailable.
-- [ ] Persist refund records; implement provider refunds, retries, and reconciliation without double refunds.
-- [ ] Restrict refund issuance to super admins as described in the role requirements.
-- [ ] Add trip cancellation, affected-passenger notifications, and appropriate refund processing.
-- [ ] Add cancellation, trip cancellation, and refund emails in Arabic and English.
+- [x] Apply the agreed operator cancellation/refund policy; keep passenger cancellation unavailable.
+- [x] Persist refund records; implement provider refunds, retries, and reconciliation without double refunds.
+- [x] Restrict refund issuance to super admins as described in the role requirements.
+- [x] Add trip cancellation, affected-passenger notifications, and appropriate refund processing.
+- [x] Add cancellation, trip cancellation, and refund emails in Arabic and English.
 - [x] Add departure reminders for trips departing in 24 hours, without duplicate reminder records or normal concurrent sends.
 - [x] Add scheduled cleanup of expired code secrets, expired account mail and old session/token families while preserving verification identity, resend throttles and replay detection.
 - [ ] Use Redis/BullMQ for queued work as required; preserve the transactional email outbox.
@@ -225,7 +225,7 @@ Complete this before creating apps/web or apps/admin:
 - [x] Add read-only settlement counts and verified gross-capture amounts with a defined Cairo last-update date basis.
 - [ ] Add refund, fee, payout and net-revenue reporting after their persisted data and policy are defined.
 - [x] Add backend CI checks for formatting, lint, TypeScript and build without secrets/services.
-- [ ] Complete deployment/API configuration handoff for frontend work.
+- [x] Complete deployment/API configuration handoff for frontend work.
 - [ ] Resolve outstanding backend defects and push the completed feature commits.
 
 Working result: the agreed backend scope works through HTTP and repeatable tests, ready for frontend integration. Production provider onboarding remains part of release preparation.
@@ -363,3 +363,11 @@ Administrator payment statistics are complete: protected GET /admin/payments/sta
 Backend CI is implemented in .github/workflows/ci.yml: push/pull_request/manual triggers, read-only repository permission, pinned checkout/setup-node release commits, Node 24.18.0 on Ubuntu 24.04, npm download caching, npm ci followed by format/lint/typecheck/build. The job has a 15-minute timeout and cancels superseded same-ref runs. No automated tests, database/migrations, secrets, workers, provider calls or deployment are added. Branch protection is not changed.
 
 Request identifiers are implemented: server-generated UUIDs in X-Request-ID, installed before CORS and JSON parsing, available through response.locals.requestId and exposed to allowed browser origins. GitHub Actions billing troubleshooting is deferred at the owner's request; the workflow remains in place. No automated test files are added.
+
+## Backend integration handoff — 2026-10-18
+
+Completed: privacy-preserving correlated request/error logs; bounded PostgreSQL readiness and graceful HTTP/Prisma shutdown; super-admin future-trip cancellation with immutable history, serialized seat release, unpaid-hold expiry, durable full-refund entitlement and bilingual notices; super-admin refund list/detail/statistics/issue/inquiry APIs; an opt-in TEST inquiry worker; exact full-refund confirmation, send-once claims and uncertain/partial-outcome isolation; passenger/operator CANCELLED/REFUNDED read consistency; cancelled-booking statistics; root README frontend/session/payment contracts and run instructions. No new dependency, test file or LIVE operation was added. Refund retries mean inquiry retries, never automatic resending of an uncertain financial POST.
+
+Verification: fresh isolated migration replay and demo seed; real local PostgreSQL service/HTTP checks with local fake provider transport; concurrent cancellation and single refund issuance; exact full success and notice delivery; timeout/no resend; partial-refund review; live super-admin revalidation; unresolved capture rejection; report consistency and persisted mail retry. The additive migration was applied to the development database without deleting existing data. PostgreSQL-backed outboxes remain sufficient; Redis/BullMQ is deferred until a real scaling need exists.
+
+Backend code can support starting apps/web then apps/admin. Remaining external prerequisites are merchant-specific TEST OWNER_ID, Auth/Capture capability, HTTPS notification/return URLs and real sandbox payment/refund verification. Local credential format checks are not remote payment verification; activation flags remain unchanged/disabled. GitHub Actions billing and automated regression suites remain deferred by explicit instruction. Fees/payout/net-revenue reporting requires actual provider accounting data and remains later release work; the implemented refund report returns unknown accounting fields as null. Production deployment/real-money readiness is not claimed.

@@ -29,8 +29,16 @@ const fields = {
     'arrivalAt',
     'pricePiastres',
     'status',
+    'cancelledAt',
   ],
   User: ['role', 'isActive'],
+  Refund: [
+    'bookingId',
+    'amountPiastres',
+    'status',
+    'transactionId',
+    'requestedBy',
+  ],
 } as const;
 export type AuditEntity = keyof typeof fields;
 function snapshot(entity: AuditEntity, row: object | null): string | null {
@@ -46,10 +54,12 @@ function snapshot(entity: AuditEntity, row: object | null): string | null {
             key,
             Array.isArray(value)
               ? [...value].sort()
-              : (key === 'departureAt' || key === 'arrivalAt') &&
-                  typeof value === 'string'
-                ? new Date(value).toISOString()
-                : value,
+              : typeof value === 'bigint'
+                ? value.toString()
+                : (key === 'departureAt' || key === 'arrivalAt') &&
+                    typeof value === 'string'
+                  ? new Date(value).toISOString()
+                  : value,
           ];
         }),
     ),

@@ -12,7 +12,10 @@ import type {
   TripListQuery,
 } from '../schemas/tripSchema.ts';
 
-export type Trip = CreateTripInput & { id: string };
+export type Trip = CreateTripInput & {
+  id: string;
+  cancelledAt?: string | null;
+};
 function serializeTrip(trip: Trip): Trip {
   return {
     ...trip,
@@ -38,6 +41,12 @@ async function saveTrip(
         );
         current = await tx.orm.public.Trip.where({ id }).first();
         if (!current) return null;
+        if (current.cancelledAt)
+          throw new AppError(
+            409,
+            'TRIP_CANCELLED',
+            'An operator-cancelled trip cannot be changed',
+          );
         if (Date.parse(current.departureAt) <= Date.now())
           throw new AppError(
             409,
@@ -153,6 +162,19 @@ export const tripService = {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
+        await tx.execute(
+          db.raw
+            .sql`SELECT "id" FROM "public"."Trip" WHERE "id" = ${id} FOR UPDATE`
+            .affectedCount()
+            .build(),
+        );
+        const current = await tx.orm.public.Trip.where({ id }).first();
+        if (current?.cancelledAt)
+          throw new AppError(
+            409,
+            'TRIP_CANCELLED',
+            'Operator cancellation history must be retained',
+          );
         const trip = await tx.orm.public.Trip.where({ id }).delete();
         if (trip) await recordAudit(tx, actor, 'Trip', id, trip, null);
         return trip ? serializeTrip(trip) : null;

@@ -3,7 +3,37 @@ import { parseEnv } from './config/env.ts';
 
 const env = parseEnv(process.env);
 const app = createApp(env.CORS_ORIGINS);
-
-app.listen(env.PORT, '127.0.0.1', () => {
-  console.log(`API running at http://127.0.0.1:${env.PORT}`);
+const server = app.listen(env.PORT, '127.0.0.1', () => {
+  console.log(JSON.stringify({ event: 'server_started', port: env.PORT }));
+});
+let stopping = false;
+function shutdown() {
+  if (stopping) return;
+  stopping = true;
+  app.locals.stopping = true;
+  console.log(JSON.stringify({ event: 'server_stopping' }));
+  const deadline = setTimeout(() => {
+    console.error(JSON.stringify({ event: 'shutdown_timeout' }));
+    server.closeAllConnections();
+    process.exit(1);
+  }, 15000);
+  deadline.unref();
+  server.close(async (error) => {
+    try {
+      const { db } = await import('./prisma/db.ts');
+      await db.close();
+      process.exitCode = error ? 1 : 0;
+    } catch {
+      process.exitCode = 1;
+      console.error(JSON.stringify({ event: 'database_close_failed' }));
+    } finally {
+      clearTimeout(deadline);
+    }
+  });
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+server.on('error', () => {
+  console.error(JSON.stringify({ event: 'server_start_failed' }));
+  process.exitCode = 1;
 });

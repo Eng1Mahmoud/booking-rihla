@@ -16,11 +16,13 @@ import type { db as database } from '../prisma/db.ts';
 // One query loads the owner's booking and its payment evidence. GET has no
 // provider dependency and never decrypts a URL or changes financial state.
 function paymentRecords(db: typeof database) {
-  return db.orm.public.Booking.include('paymentAttempt', (attempt) =>
-    attempt.include('authorization', (operation) =>
-      operation.include('settlement'),
-    ),
-  );
+  return db.orm.public.Booking.include('refund')
+    .include('trip')
+    .include('paymentAttempt', (attempt) =>
+      attempt.include('authorization', (operation) =>
+        operation.include('settlement'),
+      ),
+    );
 }
 async function getPayment(userId: string, bookingId: string) {
   const { db } = await import('../prisma/db.ts');

@@ -76,6 +76,8 @@ model Trip {
   arrivalAt TimestamptzString
   pricePiastres Int
   status TripStatus @default(SCHEDULED)
+  cancelledAt TimestamptzString?
+  cancellationReason String?
   bookings Booking[]
   route Route @relation(fields: [routeId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   bus Bus @relation(fields: [busId], references: [id], onDelete: Restrict, onUpdate: Restrict)
@@ -218,6 +220,8 @@ model Booking {
   seats BookingSeat[]
   ticket Ticket?
   paymentAttempt PaymentAttempt?
+  refund Refund?
+  notices BookingNotice[]
   @@unique([id, tripId])
   @@index([status, expiresAt, tripId])
   @@check(expression: sql`("status" = 'RESERVED' AND "expiresAt" IS NULL) OR ("status" IN ('PENDING_PAYMENT', 'PAYMENT_PROCESSING', 'CONFIRMED', 'EXPIRED') AND "expiresAt" IS NOT NULL)`, name: "booking_hold_expiry")
@@ -398,4 +402,45 @@ model Ticket {
   @@check(expression: sql`"reminderAttempts" BETWEEN 0 AND 5`, name: "ticket_reminder_attempts")
   @@index([sentAt, discardedAt, nextAttemptAt], name: "ticket_mail_due")
   @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "ticket_mail_attempts")
+}
+
+// Full operator-cancellation refunds only. Claims are never blindly resent.
+enum RefundStatus {
+  PENDING
+  REQUESTED
+  UNKNOWN
+  SUCCEEDED
+  REVIEW
+}
+model Refund {
+  id String @id @default(uuid())
+  bookingId String @unique
+  amountPiastres BigInt
+  status RefundStatus @default(PENDING)
+  transactionId String? @unique
+  requestedBy String?
+  createdAt TimestamptzString @default(now())
+  updatedAt TimestamptzString @default(now())
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@index([status, updatedAt])
+  @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700`, name: "refund_amount")
+  @@check(expression: sql`"transactionId" IS NULL OR "transactionId" ~ '^[1-9][0-9]{0,15}$'`, name: "refund_transaction")
+}
+enum BookingNoticePurpose {
+  TRIP_CANCELLED
+  REFUND_SUCCEEDED
+}
+model BookingNotice {
+  id String @id @default(uuid())
+  bookingId String
+  purpose BookingNoticePurpose
+  createdAt TimestamptzString @default(now())
+  nextAttemptAt TimestamptzString @default(now())
+  attempts Int @default(0)
+  sentAt TimestamptzString?
+  discardedAt TimestamptzString?
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([bookingId, purpose])
+  @@index([sentAt, discardedAt, nextAttemptAt])
+  @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "booking_notice_attempts")
 }

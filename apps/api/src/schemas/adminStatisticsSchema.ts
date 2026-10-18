@@ -26,6 +26,7 @@ export const statisticsCountsSchema = z.strictObject({
     paymentProcessing: count,
     confirmed: count,
     expired: count,
+    cancelled: count,
   }),
   seats: z.strictObject({
     total: count,

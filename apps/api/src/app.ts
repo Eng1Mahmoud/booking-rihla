@@ -1,3 +1,9 @@
+import { createOperationRouter } from './routes/operationRoutes.ts';
+import { requestLogger } from './middlewares/requestLogger.ts';
+import {
+  readinessService,
+  type ReadinessService,
+} from './services/readinessService.ts';
 import { requestId } from './middlewares/requestId.ts';
 import type { AdminPaymentStatisticsService } from './services/adminPaymentStatisticsService.ts';
 import {
@@ -99,6 +105,7 @@ import { createPasswordResetRouter } from './routes/passwordResetRoutes.ts';
 export function createApp(
   corsOrigins: string[],
   services: {
+    readiness?: ReadinessService;
     cities?: CityService;
     stations?: StationService;
     buses?: BusService;
@@ -140,6 +147,7 @@ export function createApp(
 
   app.disable('x-powered-by');
   app.use(requestId);
+  app.use(requestLogger);
   app.use(helmet());
   app.use(
     cors({
@@ -149,6 +157,20 @@ export function createApp(
     }),
   );
   app.use(express.json({ limit: '100kb' }));
+
+  app.get('/api/v1/ready', async (_request, response) => {
+    response.setHeader('Cache-Control', 'no-store');
+    if (app.locals.stopping) {
+      response.status(503).json({ status: 'not_ready' });
+      return;
+    }
+    try {
+      await (services.readiness ?? readinessService).check();
+      response.json({ status: 'ready' });
+    } catch {
+      response.status(503).json({ status: 'not_ready' });
+    }
+  });
 
   app.get('/api/v1/health', (_request, response) => {
     response.json({ status: 'ok' });
@@ -192,6 +214,8 @@ export function createApp(
     '/api/v1/amenities',
     createAmenityRouter(services.amenities ?? amenityService, admin),
   );
+
+  app.use('/api/v1/admin', createOperationRouter(superAdmin));
 
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
   app.use(

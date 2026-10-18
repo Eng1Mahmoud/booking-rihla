@@ -16,6 +16,10 @@
       "model": "Booking",
       "namespace": "public"
     },
+    "BookingNotice": {
+      "model": "BookingNotice",
+      "namespace": "public"
+    },
     "BookingSeat": {
       "model": "BookingSeat",
       "namespace": "public"
@@ -72,6 +76,10 @@
       "model": "RefreshToken",
       "namespace": "public"
     },
+    "Refund": {
+      "model": "Refund",
+      "namespace": "public"
+    },
     "Route": {
       "model": "Route",
       "namespace": "public"
@@ -101,6 +109,19 @@
     "namespaces": {
       "public": {
         "enum": {
+          "BookingNoticePurpose": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "TRIP_CANCELLED",
+                "value": "TRIP_CANCELLED"
+              },
+              {
+                "name": "REFUND_SUCCEEDED",
+                "value": "REFUND_SUCCEEDED"
+              }
+            ]
+          },
           "BookingStatus": {
             "codecId": "pg/text@1",
             "members": [
@@ -184,6 +205,31 @@
           "PaymentSettlementStatus": {
             "codecId": "pg/text@1",
             "members": [
+              {
+                "name": "REQUESTED",
+                "value": "REQUESTED"
+              },
+              {
+                "name": "UNKNOWN",
+                "value": "UNKNOWN"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "REVIEW",
+                "value": "REVIEW"
+              }
+            ]
+          },
+          "RefundStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PENDING",
+                "value": "PENDING"
+              },
               {
                 "name": "REQUESTED",
                 "value": "REQUESTED"
@@ -498,6 +544,21 @@
               }
             },
             "relations": {
+              "notices": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "bookingId"
+                  ]
+                },
+                "to": {
+                  "model": "BookingNotice",
+                  "namespace": "public"
+                }
+              },
               "paymentAttempt": {
                 "cardinality": "1:1",
                 "nullable": true,
@@ -511,6 +572,22 @@
                 },
                 "to": {
                   "model": "PaymentAttempt",
+                  "namespace": "public"
+                }
+              },
+              "refund": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "bookingId"
+                  ]
+                },
+                "to": {
+                  "model": "Refund",
                   "namespace": "public"
                 }
               },
@@ -618,6 +695,120 @@
               },
               "namespaceId": "public",
               "table": "Booking"
+            }
+          },
+          "BookingNotice": {
+            "fields": {
+              "attempts": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "bookingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "discardedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "nextAttemptAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "purpose": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BookingNoticePurpose",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "sentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "bookingId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "attempts": {
+                  "column": "attempts"
+                },
+                "bookingId": {
+                  "column": "bookingId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "discardedAt": {
+                  "column": "discardedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "nextAttemptAt": {
+                  "column": "nextAttemptAt"
+                },
+                "purpose": {
+                  "column": "purpose"
+                },
+                "sentAt": {
+                  "column": "sentAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "BookingNotice"
             }
           },
           "BookingSeat": {
@@ -2089,6 +2280,120 @@
               "table": "RefreshToken"
             }
           },
+          "Refund": {
+            "fields": {
+              "amountPiastres": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "bookingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedBy": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "RefundStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "transactionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "bookingId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amountPiastres": {
+                  "column": "amountPiastres"
+                },
+                "bookingId": {
+                  "column": "bookingId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "requestedBy": {
+                  "column": "requestedBy"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "transactionId": {
+                  "column": "transactionId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Refund"
+            }
+          },
           "Route": {
             "fields": {
               "destinationStationId": {
@@ -2543,6 +2848,20 @@
                   "kind": "scalar"
                 }
               },
+              "cancellationReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "cancelledAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "departureAt": {
                 "nullable": false,
                 "type": {
@@ -2641,6 +2960,12 @@
                 },
                 "busId": {
                   "column": "busId"
+                },
+                "cancellationReason": {
+                  "column": "cancellationReason"
+                },
+                "cancelledAt": {
+                  "column": "cancelledAt"
                 },
                 "departureAt": {
                   "column": "departureAt"
@@ -3222,6 +3547,136 @@
                   "columns": [
                     "id",
                     "tripId"
+                  ]
+                }
+              ]
+            },
+            "BookingNotice": {
+              "checks": [
+                {
+                  "expression": "\"purpose\" IN ('TRIP_CANCELLED', 'REFUND_SUCCEEDED')",
+                  "name": "BookingNotice_purpose_check_698cbb9f",
+                  "prefix": "BookingNotice_purpose_check"
+                },
+                {
+                  "expression": "attempts BETWEEN 0 AND 5",
+                  "name": "booking_notice_attempts_4c896e7d",
+                  "prefix": "booking_notice_attempts"
+                }
+              ],
+              "columns": {
+                "attempts": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nullable": false
+                },
+                "bookingId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "discardedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "nextAttemptAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "purpose": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BookingNoticePurpose",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "sentAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "BookingNotice_bookingId_idx_17848f4a"
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "bookingId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BookingNotice"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "bookingId"
+                  ],
+                  "name": "BookingNotice_bookingId_idx_17848f4a",
+                  "prefix": "BookingNotice_bookingId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sentAt",
+                    "discardedAt",
+                    "nextAttemptAt"
+                  ],
+                  "name": "BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab",
+                  "prefix": "BookingNotice_sentAt_discardedAt_nextAttemptAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "bookingId",
+                    "purpose"
                   ]
                 }
               ]
@@ -4669,6 +5124,138 @@
                 }
               ]
             },
+            "Refund": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('PENDING', 'REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW')",
+                  "name": "Refund_status_check_d12710e0",
+                  "prefix": "Refund_status_check"
+                },
+                {
+                  "expression": "\"amountPiastres\" BETWEEN 1 AND 214748364700",
+                  "name": "refund_amount_8155a401",
+                  "prefix": "refund_amount"
+                },
+                {
+                  "expression": "\"transactionId\" IS NULL OR \"transactionId\" ~ '^[1-9][0-9]{0,15}$'",
+                  "name": "refund_transaction_8d4c9e2d",
+                  "prefix": "refund_transaction"
+                }
+              ],
+              "columns": {
+                "amountPiastres": {
+                  "codecId": "pg/int8@1",
+                  "dataType": "pg/int8",
+                  "nullable": false
+                },
+                "bookingId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "requestedBy": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "RefundStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "transactionId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "unique": [
+                      "bookingId"
+                    ]
+                  },
+                  "onDelete": "restrict",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "bookingId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Refund"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Booking"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "status",
+                    "updatedAt"
+                  ],
+                  "name": "Refund_status_updatedAt_idx_29f913bb",
+                  "prefix": "Refund_status_updatedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "bookingId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "transactionId"
+                  ]
+                }
+              ]
+            },
             "Route": {
               "checks": [
                 {
@@ -5120,6 +5707,16 @@
                   "dataType": "pg/text",
                   "nullable": false
                 },
+                "cancellationReason": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "cancelledAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
                 "departureAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "dataType": "pg/timestamptz",
@@ -5394,6 +5991,13 @@
             }
           },
           "valueSet": {
+            "BookingNoticePurpose": {
+              "kind": "valueSet",
+              "values": [
+                "TRIP_CANCELLED",
+                "REFUND_SUCCEEDED"
+              ]
+            },
             "BookingStatus": {
               "kind": "valueSet",
               "values": [
@@ -5438,6 +6042,16 @@
                 "REVIEW"
               ]
             },
+            "RefundStatus": {
+              "kind": "valueSet",
+              "values": [
+                "PENDING",
+                "REQUESTED",
+                "UNKNOWN",
+                "SUCCEEDED",
+                "REVIEW"
+              ]
+            },
             "SeatLayout": {
               "kind": "valueSet",
               "values": [
@@ -5465,10 +6079,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8835ce0934b203103026e92c12bff6a44b7c38bc33dc452eb35ffd55bf77ba6e"
+    "storageHash": "e9343db78436ad4bd7a9e4f1495e0c342692dffacf19eafb0faedf97cc93cef5"
   },
   "execution": {
-    "executionHash": "9129ecb606d0e5f6545396edbe04a51a78186441cd343c38efaf6d586e44ca56",
+    "executionHash": "45ffebf5a278ee6ecfb7f539c63b2a84fca9712201cf789ffa2bd57d3aa1d3c4",
     "mutations": {
       "defaults": [
         {
@@ -5500,6 +6114,17 @@
           },
           "ref": {
             "entry": "Booking",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "BookingNotice",
             "field": "id",
             "namespace": "public"
           }
@@ -5654,6 +6279,17 @@
           },
           "ref": {
             "entry": "RefreshToken",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Refund",
             "field": "id",
             "namespace": "public"
           }

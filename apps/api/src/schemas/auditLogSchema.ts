@@ -13,6 +13,7 @@ export const auditLogQuerySchema = paginationQuerySchema
         'Amenity',
         'Trip',
         'User',
+        'Refund',
       ])
       .optional(),
     entityId: z.uuid().optional(),

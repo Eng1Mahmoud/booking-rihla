@@ -1,0 +1,491 @@
+[
+  {
+    "id": "table.BookingNotice",
+    "label": "Create table \"BookingNotice\"",
+    "summary": "Creates table \"BookingNotice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "BookingNotice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"BookingNotice\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"BookingNotice\"",
+        "sql": "CREATE TABLE \"public\".\"BookingNotice\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"bookingId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"discardedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"nextAttemptAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"purpose\" text NOT NULL,\n  \"sentAt\" timestamptz,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"BookingNotice_purpose_check_698cbb9f\" CHECK (\"purpose\" IN ('TRIP_CANCELLED', 'REFUND_SUCCEEDED')),\n  CONSTRAINT \"booking_notice_attempts_4c896e7d\" CHECK (attempts BETWEEN 0 AND 5)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"BookingNotice\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Refund",
+    "label": "Create table \"Refund\"",
+    "summary": "Creates table \"Refund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Refund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Refund\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Refund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Refund\"",
+        "sql": "CREATE TABLE \"public\".\"Refund\" (\n  \"amountPiastres\" int8 NOT NULL,\n  \"bookingId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"requestedBy\" text,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"transactionId\" text,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Refund_status_check_d12710e0\" CHECK (\"status\" IN ('PENDING', 'REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW')),\n  CONSTRAINT \"refund_amount_8155a401\" CHECK (\"amountPiastres\" BETWEEN 1 AND 214748364700),\n  CONSTRAINT \"refund_transaction_8d4c9e2d\" CHECK (\"transactionId\" IS NULL OR \"transactionId\" ~ '^[1-9][0-9]{0,15}$')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Refund\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Refund\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Trip.cancellationReason",
+    "label": "Add column \"cancellationReason\" to \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cancellationReason",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cancellationReason\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Trip",
+          "cancellationReason"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cancellationReason\"",
+        "sql": "ALTER TABLE \"public\".\"Trip\" ADD COLUMN \"cancellationReason\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cancellationReason\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Trip",
+          "cancellationReason"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Trip.cancelledAt",
+    "label": "Add column \"cancelledAt\" to \"Trip\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cancelledAt",
+        "table": "Trip"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cancelledAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Trip",
+          "cancelledAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cancelledAt\"",
+        "sql": "ALTER TABLE \"public\".\"Trip\" ADD COLUMN \"cancelledAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cancelledAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Trip",
+          "cancelledAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.BookingNotice.BookingNotice_bookingId_purpose_key",
+    "label": "Add unique constraint on \"BookingNotice\" (bookingId, purpose)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "BookingNotice_bookingId_purpose_key",
+        "table": "BookingNotice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"BookingNotice_bookingId_purpose_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingNotice_bookingId_purpose_key",
+          "public",
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"BookingNotice_bookingId_purpose_key\"",
+        "sql": "ALTER TABLE \"public\".\"BookingNotice\" ADD CONSTRAINT \"BookingNotice_bookingId_purpose_key\" UNIQUE (\"bookingId\", \"purpose\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"BookingNotice_bookingId_purpose_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingNotice_bookingId_purpose_key",
+          "public",
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Refund.Refund_bookingId_key",
+    "label": "Add unique constraint on \"Refund\" (bookingId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Refund_bookingId_key",
+        "table": "Refund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Refund_bookingId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_bookingId_key",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Refund_bookingId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Refund\" ADD CONSTRAINT \"Refund_bookingId_key\" UNIQUE (\"bookingId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Refund_bookingId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_bookingId_key",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Refund.Refund_transactionId_key",
+    "label": "Add unique constraint on \"Refund\" (transactionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Refund_transactionId_key",
+        "table": "Refund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Refund_transactionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_transactionId_key",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Refund_transactionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Refund\" ADD CONSTRAINT \"Refund_transactionId_key\" UNIQUE (\"transactionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Refund_transactionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_transactionId_key",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingNotice.BookingNotice_bookingId_idx_17848f4a",
+    "label": "Create index \"BookingNotice_bookingId_idx_17848f4a\" on \"BookingNotice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BookingNotice_bookingId_idx_17848f4a",
+        "table": "BookingNotice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BookingNotice_bookingId_idx_17848f4a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice_bookingId_idx_17848f4a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BookingNotice_bookingId_idx_17848f4a\"",
+        "sql": "CREATE INDEX \"BookingNotice_bookingId_idx_17848f4a\" ON \"public\".\"BookingNotice\" (\"bookingId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BookingNotice_bookingId_idx_17848f4a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice_bookingId_idx_17848f4a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingNotice.BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab",
+    "label": "Create index \"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" on \"BookingNotice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab",
+        "table": "BookingNotice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\"",
+        "sql": "CREATE INDEX \"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" ON \"public\".\"BookingNotice\" (\"sentAt\", \"discardedAt\", \"nextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingNotice_sentAt_discardedAt_nextAttemptAt_idx_1189e9ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Refund.Refund_status_updatedAt_idx_29f913bb",
+    "label": "Create index \"Refund_status_updatedAt_idx_29f913bb\" on \"Refund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Refund_status_updatedAt_idx_29f913bb",
+        "table": "Refund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Refund_status_updatedAt_idx_29f913bb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Refund_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Refund_status_updatedAt_idx_29f913bb\"",
+        "sql": "CREATE INDEX \"Refund_status_updatedAt_idx_29f913bb\" ON \"public\".\"Refund\" (\"status\", \"updatedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Refund_status_updatedAt_idx_29f913bb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Refund_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BookingNotice.BookingNotice_bookingId_fkey",
+    "label": "Add foreign key \"BookingNotice_bookingId_fkey\" on \"BookingNotice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BookingNotice_bookingId_fkey",
+        "table": "BookingNotice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BookingNotice_bookingId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingNotice_bookingId_fkey",
+          "public",
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BookingNotice_bookingId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BookingNotice\"\nADD CONSTRAINT \"BookingNotice_bookingId_fkey\"\nFOREIGN KEY (\"bookingId\")\nREFERENCES \"public\".\"Booking\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BookingNotice_bookingId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingNotice_bookingId_fkey",
+          "public",
+          "\"public\".\"BookingNotice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Refund.Refund_bookingId_fkey",
+    "label": "Add foreign key \"Refund_bookingId_fkey\" on \"Refund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Refund_bookingId_fkey",
+        "table": "Refund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Refund_bookingId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_bookingId_fkey",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Refund_bookingId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Refund\"\nADD CONSTRAINT \"Refund_bookingId_fkey\"\nFOREIGN KEY (\"bookingId\")\nREFERENCES \"public\".\"Booking\" (\"id\")\nON DELETE RESTRICT\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Refund_bookingId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Refund_bookingId_fkey",
+          "public",
+          "\"public\".\"Refund\""
+        ]
+      }
+    ]
+  }
+]

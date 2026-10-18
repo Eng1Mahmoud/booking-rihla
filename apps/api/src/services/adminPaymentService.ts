@@ -13,6 +13,8 @@ function paymentRecords(db: typeof database) {
         'expiresAt',
         'totalPiastres',
       )
+      .include('refund')
+      .include('trip', (trip) => trip.select('status'))
       .include('user', (user) => user.select('id', 'name', 'email')),
   ).include('authorization', (operation) =>
     operation
@@ -48,6 +50,7 @@ function serialize(row: PaymentRecord) {
     customer: booking.user,
     bookingStatus: status.bookingStatus,
     paymentStatus: status.paymentStatus,
+    refundStatus: status.refundStatus,
     requiresReview: settlement?.status === 'REVIEW',
     amountPiastres: Number(row.amountPiastres),
     bookingTotalPiastres: Number(booking.totalPiastres),

@@ -22,7 +22,9 @@
     "payment:worker": "node --env-file-if-exists=.env src/workers/paymentWorker.ts",
     "payment:reconcile": "node --env-file-if-exists=.env src/workers/paymentWorker.ts --once",
     "auth:cleanup": "node --env-file-if-exists=.env src/workers/authCleanupWorker.ts --once",
-    "auth:cleanup:worker": "node --env-file-if-exists=.env src/workers/authCleanupWorker.ts"
+    "auth:cleanup:worker": "node --env-file-if-exists=.env src/workers/authCleanupWorker.ts",
+    "refund:worker": "node --env-file-if-exists=.env src/workers/refundWorker.ts",
+    "refund:reconcile": "node --env-file-if-exists=.env src/workers/refundWorker.ts --once"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",

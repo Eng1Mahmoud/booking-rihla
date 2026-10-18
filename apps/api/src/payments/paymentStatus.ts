@@ -2,6 +2,8 @@ import { bookingState } from '../services/bookingHoldService.ts';
 // Minimal shared input: neither operator reads nor status serialization need a
 // checkout secret, raw event, customer credentials or provider network request.
 type PaymentStatusInput = {
+  refund?: { status: string; amountPiastres: bigint } | null;
+  trip?: { status: string } | null;
   id: string;
   status: Parameters<typeof bookingState>[0]['status'];
   totalPiastres: bigint;
@@ -29,6 +31,7 @@ type PaymentStatus =
   | 'UNKNOWN'
   | 'PROCESSING'
   | 'PAID'
+  | 'REFUNDED'
   | 'VOIDED'
   | 'FAILED'
   | 'EXPIRED'
@@ -69,8 +72,14 @@ export function serializeBookingPayment(row: PaymentStatusInput) {
   else paymentStatus = attempt ? 'PREPARED' : 'NOT_STARTED';
   return {
     bookingId: row.id,
-    bookingStatus: state,
-    paymentStatus,
+    bookingStatus: row.trip?.status === 'CANCELLED' ? 'CANCELLED' : state,
+    paymentStatus:
+      row.refund?.status === 'SUCCEEDED' &&
+      row.refund.amountPiastres === row.totalPiastres &&
+      paymentStatus === 'PAID'
+        ? 'REFUNDED'
+        : paymentStatus,
+    refundStatus: row.refund?.status ?? null,
     amountPiastres: Number(row.totalPiastres),
     currency: 'EGP' as const,
     expiresAt: row.expiresAt ? new Date(row.expiresAt).toISOString() : null,

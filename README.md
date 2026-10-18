@@ -88,7 +88,7 @@ References: [Express setup](https://expressjs.com/en/starter/installing/), [Node
 
 ## Next feature
 
-The reservation MVP is complete: authenticated seat reservations, server-priced totals, passenger ownership and current availability, without payment or passenger cancellation. Bus types and amenities are now implemented. Fixed seat templates now replace editable database grids. Batch trip preview and creation are now implemented. Administrator booking lists/details are now implemented. Passenger account listing and suspension/activation are now implemented. Super-admin-only administrator management is now implemented. Administrator audit logging and expiring checkout seat holds are now implemented.
+The backend implementation is ready for local frontend integration. Begin the passenger website, followed by the administration dashboard. Paymob checkout/refunds remain disabled pending the account-specific TEST setup and verification listed in the backend handoff below. GitHub Actions billing troubleshooting and automated test code are deferred at the owner's request. Production operations require separate approval.
 
 ## Git workflow
 
@@ -1383,3 +1383,52 @@ Official references: [workflow syntax](https://docs.github.com/en/actions/refere
 ## Request identifiers
 
 Every API request receives a server-generated UUID in the X-Request-ID response header, including errors and CORS preflight responses. Browser clients on allowed origins can read this header. Middleware stores the identifier in response.locals.requestId for future logging. Caller-supplied identifiers are not trusted. This identifier is for troubleshooting, not authentication. No request bodies, tokens or personal data are logged by this feature.
+
+## Backend handoff — 2026-10-18
+
+The local API base is http://127.0.0.1:4000/api/v1. Run npm ci, start PostgreSQL/Mailpit with docker compose up -d --wait, apply npm run db:migrate, and seed with npm run db:seed. On a fresh checkout only, copy the root and API .env.example files to their respective .env files and set local secrets; never overwrite an existing .env. The API DATABASE_URL must match the root PostgreSQL settings. Start npm run dev. Use the same hostname consistently for browser/API local development because localhost and 127.0.0.1 differ for cookies and CORS.
+
+Start npm run email:worker in another terminal for account codes, tickets, departure reminders and operator/refund notifications. npm run booking:worker releases expired holds. npm run auth:cleanup:worker performs bounded account/session cleanup. npm run payment:worker and npm run refund:worker are opt-in TEST provider inquiry workers; they require the corresponding verified local configuration. Workers are separate processes, not automatically started by the API. Redis/BullMQ is not required for the existing PostgreSQL-backed outboxes.
+
+### Browser integration contract
+
+- Public reads: GET /cities, GET /stations, GET /trips/search, GET /trips/:id/details and GET /trips/:id/seats. Search accepts travelDate plus one originCityId/originStationId and one destinationCityId/destinationStationId, with limit/offset pagination. Travel dates use Africa/Cairo; API timestamps are ISO instants with a timezone.
+- Accounts: POST /auth/register, /auth/verify-email, /auth/resend-verification, /auth/login, /auth/refresh, /auth/logout, /auth/logout-all, /auth/forgot-password and /auth/reset-password; GET /auth/me. Keep the returned verificationId for verification/resend. Passwords are 12-128 characters, phones use international format, and language is ar/en.
+- Login, refresh and logout requests use credentials: include, JSON Content-Type, and X-CSRF-Protection: 1. Origins must match CORS_ORIGINS exactly. Keep short-lived access tokens in memory, send Authorization: Bearer <accessToken> on protected reads/writes, and restore the session with the HttpOnly refresh cookie. Production cookies require HTTPS and a same-site web/API deployment; unrelated cross-site hosting needs an explicit cookie/CSRF design change.
+- Booking: POST /bookings with tripId, contactPhone and passengers [{seatId, name}]. Prices and totals come from the server. GET /bookings and GET /bookings/:id only expose the current owner's records. There is no passenger cancellation route. A pending payment hold lasts at most ten minutes and ends no later than departure.
+- Payment: POST/GET /bookings/:id/payment-attempt, POST /bookings/:id/checkout and GET /bookings/:id/payment. Payment preparation uses an Idempotency-Key UUID. Use expiresAt and serverTime for the countdown, refresh availability after a conflict, and treat PAYMENT_PROCESSING/UNKNOWN as unresolved. Browser redirects are not payment confirmation. A disabled provider returns 503 PAYMENT_UNAVAILABLE; the website must display this state rather than claim payment succeeded.
+- Tickets: GET /bookings/:id/ticket only returns a currently valid, paid and confirmed ticket. A cancelled trip invalidates its ticket. QR contents are opaque identifiers, not boarding authorization.
+- Operator APIs: existing city/station, fleet, amenities, routes and trip management; /trips/batch/preview and /trips/batch; protected /admin/bookings, /admin/payments, /admin/users, /admin/statistics and /admin/payments/statistics. Super-admin administrator and audit APIs retain their existing restrictions.
+- Errors use {error: {code, message}}. Read X-Request-ID from response headers for troubleshooting. Success payloads normally use {data}, and paginated lists include pagination. Handle 401 (session), 403 (role), 409 (state/seat conflict), 429 (rate limit) and 503 (unavailable service).
+- Money uses integer piastres, currency EGP. Refund/report amounts are exact decimal strings of piastres to avoid aggregate rounding; convert for display only. Booking states can now expose CANCELLED; payment state can expose REFUNDED. Cancellation is derived from trip state while original confirmed payment history remains persisted.
+
+### Operator cancellation and full refunds
+
+The approved policy is no passenger cancellation, full refund if the company cancels a trip, and Super Admin issuance of refunds. This initial implementation also restricts trip cancellation to Super Admin. Endpoints are:
+
+| Method | Path relative to /api/v1     | Behavior                                                               |
+| ------ | ---------------------------- | ---------------------------------------------------------------------- |
+| POST   | /admin/trips/:id/cancel      | JSON {reason}, 5-500 characters; cancel a future trip atomically       |
+| GET    | /admin/refunds               | Paginated safe refund records                                          |
+| GET    | /admin/refunds/statistics    | Lifetime verified-refund counts and exact gross refunded sum           |
+| GET    | /admin/refunds/:id           | Safe refund state/details                                              |
+| POST   | /admin/refunds/:id/issue     | Claim and send one full TEST refund; returns 202, not proof of success |
+| POST   | /admin/refunds/:id/reconcile | Read authenticated provider evidence; never send another refund        |
+
+Cancellation serializes on the Trip row, preserves history, releases seat allocations, expires unpaid holds and creates exactly one PENDING refund for each verified paid booking. It creates durable Arabic/English notices. Repeating cancellation does not create duplicate refunds/notices. Operator-cancelled trips cannot be reactivated, edited or deleted. In-flight/unknown payment authorizations and review cases block cancellation with PAYMENTS_UNRESOLVED; reconcile those before retrying. After departure this endpoint rejects cancellation. This conservative restriction avoids cancelling while a capture may still be completing; it is not a live automated mass-refund system.
+
+Refund transitions are PENDING -> REQUESTED -> UNKNOWN/SUCCEEDED/REVIEW. PENDING means money is owed, not returned. The service revalidates the current super-admin account/session, verifies TEST/EGP/merchant/order/amount and capture-parent linkage, commits a unique send claim, then contacts Paymob. Repeated requests, worker restarts and timeouts never resend a claimed refund. Inquiries may be repeated. A full matching refunded amount is required for SUCCEEDED; partial/inconsistent evidence goes to REVIEW. A crash between claim and provider send can leave UNKNOWN indefinitely; manual provider investigation is required, never a blind automatic refund retry. The current API deliberately has no endpoint to mark a refund successful without provider evidence or clear a REVIEW claim for resending.
+
+GET booking details exposes the owner's refund id/status/amount; operator payment reads show REFUNDED after confirmed full refund. Original confirmed booking/payment records remain available for financial history. Refund totals use the current verified state over all time, not a bank ledger or a provider settlement date. Fees and payouts are unknown/null; no net-revenue or bank-payout claim is made without those external records.
+
+The email worker delivers TRIP_CANCELLED and REFUND_SUCCEEDED independently, with up to five attempts and exponential backoff. A verified owner receives financial notices even if their app account is suspended. SMTP is at least once after a crash. A cancellation notice says a refund is due; only the separate verified-success notice says money was refunded. Failed delivery never reverses cancellation or financial state.
+
+Set PAYMOB_REFUNDS_ENABLED=true only after verifying account-specific TEST refund support. This does not enable checkout or LIVE payments. Refund transport follows the [official Paymob advanced payment actions](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/blob/main/skills/paymob-integration/references/advanced-features.md). Actual remote Auth/Capture/refund payload behavior remains unverified for this merchant account.
+
+### Operational checks and remaining external setup
+
+GET /health checks the HTTP process; GET /ready probes PostgreSQL and returns {status: ready} or 503 {status: not_ready}, with no connection details. The readiness probe has a statement timeout and a bounded response wait and shares concurrent work to avoid accumulating connection probes. It does not certify worker delivery or provider availability. Requests log one JSON event containing requestId, method, status, durationMs and aborted; queries, bodies, credentials, IP addresses and user data are omitted. Unexpected errors log a generic correlated error event. SIGINT/SIGTERM stop HTTP acceptance, drain requests and close Prisma, with a 15-second forced-shutdown deadline.
+
+Local payment:setup currently reports valid credential formats but missing PAYMOB_OWNER_ID, PAYMOB_AUTH_CAPTURE_ENABLED, PAYMOB_NOTIFICATION_URL and PAYMOB_RETURN_URL. The provider remains disabled. These values/account capabilities and a reachable HTTPS webhook cannot be invented from code. Complete Paymob TEST merchant setup and verify Auth/Capture/refund with actual sandbox transactions before enabling checkout/refunds; do not use real cards or LIVE credentials for this educational integration. Frontend account/search/seat/booking and dashboard development can proceed with the documented disabled-payment state.
+
+Verification performed without adding persistent automated test code: TypeScript/ESLint/build, full migration replay and demo seed in an isolated database, HTTP health/readiness/refund authorization, concurrent cancellation and refund issuance with a local fake provider, single send despite repeated calls, exact refund confirmation, seat release, status consistency, notices and retry persistence. Edge checks cover unresolved capture cancellation rejection, timeout without resend, partial refund review and live-role revocation. No real Paymob financial request was sent. Automated regression coverage and GitHub Actions billing remain deferred; production deployment, LIVE onboarding, backups and operational approval belong to the later release phase.

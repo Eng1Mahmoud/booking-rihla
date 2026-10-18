@@ -13,7 +13,7 @@ import type {
 import type { AuthContext } from './sessionService.ts';
 import type { db as database } from '../prisma/db.ts';
 export function bookingRecords(db: Pick<typeof database, 'orm'>) {
-  return db.orm.public.Booking.include('trip', (trip) =>
+  return db.orm.public.Booking.include('refund').include('trip', (trip) =>
     trip.include('route', (route) =>
       route
         .include('originStation', (station) => station.include('city'))
@@ -38,10 +38,18 @@ export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
   return {
     id: booking.id,
     reference: booking.reference,
-    status,
-    paymentRequired: status === 'PENDING_PAYMENT',
+    status: booking.trip.status === 'CANCELLED' ? 'CANCELLED' : status,
+    paymentRequired:
+      booking.trip.status === 'SCHEDULED' && status === 'PENDING_PAYMENT',
     expiresAt: booking.expiresAt
       ? new Date(booking.expiresAt).toISOString()
+      : null,
+    refund: booking.refund
+      ? {
+          id: booking.refund.id,
+          status: booking.refund.status,
+          amountPiastres: booking.refund.amountPiastres.toString(),
+        }
       : null,
     currency: 'EGP',
     contactPhone: booking.contactPhone,
@@ -53,6 +61,8 @@ export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
     trip: {
       id: booking.trip.id,
       busId: booking.trip.busId,
+      status: booking.trip.status,
+      cancelledAt: booking.trip.cancelledAt,
       departureAt: new Date(booking.trip.departureAt).toISOString(),
       arrivalAt: new Date(booking.trip.arrivalAt).toISOString(),
       route: booking.trip.route,
