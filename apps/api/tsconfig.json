@@ -12,5 +12,5 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "prisma.config.ts"]
+  "include": ["src/**/*.ts", "prisma.config.ts"]
 }

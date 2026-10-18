@@ -13,11 +13,7 @@ export default defineConfig(
     ],
   },
   {
-    files: [
-      'apps/api/src/**/*.ts',
-      'apps/api/test/**/*.ts',
-      'apps/api/prisma.config.ts',
-    ],
+    files: ['apps/api/src/**/*.ts', 'apps/api/prisma.config.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

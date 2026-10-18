@@ -2,7 +2,7 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
-## Current feature: Super-admin administrator management
+## Current backend status
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
 
@@ -51,20 +51,23 @@ The API workspace commands load its own optional `.env` file using Node's built-
 
 Blank values are invalid. Invalid settings stop startup and identify the affected field without dumping environment values.
 
+## Current validation policy
+
+At the owner's request, automated test files and test scripts were removed on 2026-10-18. New features currently use TypeScript, ESLint, formatting and build checks without adding test code. Historical verification notes below describe checks completed before removal; they are not a runnable suite in this checkout. Tests can be restored from Git commit 0099df6. Keep createApp service overrides, provider/mail interfaces and separated services so automated tests can be added later.
+
 ## Verify and build
 
 ```sh
 npm run format:check
 npm run lint
 npm run typecheck
-npm test
 npm run build
 npm start
 ```
 
-Stop the development server before `npm start`; both use the configured port. `npm start` runs the compiled JavaScript produced by `npm run build` and loads the same optional environment file. HTTP tests choose an available port automatically.
+Stop the development server before `npm start`; both use the configured port. `npm start` runs the compiled JavaScript produced by `npm run build` and loads the same optional environment file.
 
-Application code and tests are TypeScript. The compiler checks both, but only application code goes into `apps/api/dist`. Build output is generated locally and excluded from Git.
+Application code is TypeScript. The compiler checks API source and configuration; only application code goes into `apps/api/dist`. Build output is generated locally and excluded from Git.
 
 ## Understand the code
 
@@ -75,9 +78,7 @@ Read these files in order:
 3. `apps/api/src/config/env.ts`: defines the Zod rules. `parseEnv` validates environment strings, applies defaults, converts the port to a number, and returns typed settings. It does not read files or start the server.
 4. `apps/api/src/server.ts`: passes `process.env` to `parseEnv`, creates the app with the validated CORS origins, then starts it on the validated port. Invalid configuration fails before listening.
 5. `apps/api/src/app.ts`: exports createApp(corsOrigins), which creates Express, configures middleware, and defines HTTP responses. A GET request to `/api/v1/health` returns JSON with status 200. Unknown paths receive JSON with status 404.
-6. `apps/api/test/env.test.ts`: checks defaults, valid values, invalid values, safe errors, and failed startup.
-7. `apps/api/test/health.test.ts`: starts a real HTTP server and checks its public responses with Node's built-in test runner.
-8. `apps/api/tsconfig.json`: Node types and strict checking for both source and tests, automatically discovered by the editor. `tsconfig.build.json`: compiles only source files to `dist`.
+6. `apps/api/tsconfig.json`: Node types and strict checking for source and Prisma configuration, automatically discovered by the editor. `tsconfig.build.json`: compiles only source files to `dist`.
 
 Startup flow: optional environment file → process.env → parseEnv → app.listen.
 
@@ -91,13 +92,13 @@ The reservation MVP is complete: authenticated seat reservations, server-priced 
 
 ## Git workflow
 
-Group related implementation, validation, tests, migrations, and usage notes into one feature commit. Finish the feature, verify it, explain the result, commit, and push under the owner's standing instruction before starting the next. Finish the backend before the passenger website, then build the dashboard. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
+Group related implementation, validation, migrations, and usage notes into one feature commit. Finish the feature, verify it, explain the result, commit, and push under the owner's standing instruction before starting the next. Finish the backend before the passenger website, then build the dashboard. Never commit `.env`, dependencies, or build output. The safe `.env.example` is committed so other developers know which settings exist. Git author identity is configured locally for this repository.
 
 The owner has authorized pushing each completed feature after its checks. Production publication and real-money operations require separate explicit approval.
 
 ## Linting
 
-Run npm run lint from the repository root. ESLint checks API source and TypeScript tests using recommended JavaScript and TypeScript rules. Intentionally unused function parameters may start with an underscore. The command reports problems without changing files, and fails on any errors or warnings. Generated output, dependencies, and coverage are excluded. The tool configuration is eslint.config.mjs; application code remains TypeScript.
+Run npm run lint from the repository root. ESLint checks API source and Prisma configuration using recommended JavaScript and TypeScript rules. Intentionally unused function parameters may start with an underscore. The command reports problems without changing files, and fails on any errors or warnings. Generated output, dependencies, and coverage are excluded. The tool configuration is eslint.config.mjs; application code remains TypeScript.
 
 ## Formatting
 
@@ -260,13 +261,6 @@ List responses contain data and pagination (limit and offset). Limits range from
 
 City follows a simple layered structure: routes/cityRoutes.ts maps endpoints, controllers/cityController.ts validates HTTP inputs and sends responses, services/cityService.ts returns plain data using Prisma, and schemas/citySchema.ts defines validation. There is no separate repository layer. createApp accepts optional cities/stations/buses/routes/trips service overrides for isolated HTTP tests. Express 5 forwards rejected route promises to the centralized error handler.
 
-```sh
-npm test
-npm run test:db
-```
-
-The default suite uses in-memory City/Station services and needs no database. test:db is an opt-in real PostgreSQL test: it creates a uniquely named temporary city through HTTP, checks persistence/list/detail, and deletes only its own row afterward. Run it against a development database after applying migrations.
-
 Verification also recreated City from the baseline in a new temporary database, reran migrations, exercised real HTTP operations there, and removed that temporary database. No existing development data was removed.
 
 ## Backend structure
@@ -306,8 +300,6 @@ Example body (replace CITY_UUID with an id returned by the cities API):
 A nonexistent city on create/move returns 404 CITY_NOT_FOUND. A missing station returns 404 STATION_NOT_FOUND. Deleting a city that still has stations returns 409 CITY_HAS_STATIONS; remove or move its stations first. The foreign key enforces these rules atomically, including callers that bypass HTTP validation. Other unexpected failures keep the generic 500 response. These management writes require an authenticated ADMIN or SUPER_ADMIN; station lookups remain public.
 
 The feature follows routes/stationRoutes.ts -> controllers/stationController.ts -> services/stationService.ts -> Prisma. schemas/stationSchema.ts validates Station requests, schemas/paginationSchema.ts shares pagination rules, and utils/databaseErrors.ts identifies PostgreSQL constraint codes without exposing raw error messages. No repository layer is added.
-
-npm run test:db exercises both City and Station CRUD, moving/filtering stations, rejecting orphan writes, and blocking City deletion while stations exist. It creates uniquely scoped data and removes only its own rows. Both migrations and these tests also passed in a fresh temporary database; the existing local Cairo record was preserved. No demo station is added automatically.
 
 ## Bus and numbered-seat API
 
@@ -370,8 +362,6 @@ The database enforces directed uniqueness, distinct endpoints, duration bounds, 
 Deleting either station used by a route returns 409 STATION_HAS_ROUTES; delete its routes first. ON DELETE/UPDATE RESTRICT also protects writes that bypass HTTP. Route deletion maps dependent-record restrictions to 409 ROUTE_IN_USE when later modules add references. Every Route management endpoint requires an authenticated ADMIN or SUPER_ADMIN.
 
 The implementation follows routes/routeRoutes.ts -> controllers/routeController.ts -> services/routeService.ts -> Prisma, with schemas/routeSchema.ts for validation. Single-row writes rely on database constraints atomically rather than a separate read-before-write check. No extra runtime dependencies or architectural layers are introduced.
-
-npm test includes HTTP validation, responses, filters, partial updates and safe errors without requiring PostgreSQL. npm run test:db also verifies persistence, reverse directions, combined filtering/pagination, concurrent duplicate creation, failed-edit rollback, duration bounds, orphan rejection and station deletion restrictions in PostgreSQL. Tests remove only their own scoped rows.
 
 Verification also applied all four migrations to a fresh temporary PostgreSQL database, reran them without changes, ran all four integration tests, exercised the compiled API route list, verified test cleanup, and removed that temporary database. Existing development data was preserved.
 
@@ -827,8 +817,6 @@ Booking input stays simple: tripId, contactPhone and passengers with seatId/name
 
 Read schemas/busSchema.ts for allowed template values, services/busService.ts for stable seats and trip guards, services/tripDetailsService.ts for seat availability, services/tripSearchService.ts for passenger bus data, and prisma/contract.prisma for the nullable field and database enum constraint. These paths are under apps/api/src. No separate layout controller, service or schema is needed.
 
-Tests cover template validation/defaults, preserved seat ids, public responses, unknown database values, no-op updates, rollback, historical-trip guards, concurrent trip creation/template changes, and real reservations on a configured bus without layoutId. Run the default checks and npm run test:db as described above.
-
 Verification: all 126 default tests and all 14 PostgreSQL integration tests pass, together with TypeScript checks, lint, formatting and build. In an isolated temporary database, the first twelve migrations were replayed, a legacy layout plus a real linked reservation were inserted, and the thirteenth migration preserved the bus, seat, trip, user and booking rows exactly while removing only obsolete layout data. Re-running migrations applied zero changes. The temporary database was removed. Development data was also compared before/after its migration, and compiled JavaScript passed real HTTP health and passenger-seat checks.
 
 ## Batch trip preview and creation
@@ -961,8 +949,6 @@ Reactivation is separate from email verification, password recovery and timed lo
 Status writes take the same email advisory lock as login/reset/logout-all, then lock the target User row and revoke Session rows in User -> Session order. They recheck role USER under the row lock so promotion/deletion cannot turn a passenger operation into a staff edit. Login either completes before suspension and its session is revoked, or sees the inactive account and fails. A concurrent refresh cannot leave a session usable after suspension commits. Booking transactions already lock the user before its session: a reservation completes before suspension or fails after it; completed reservations are retained.
 
 Read apps/api/src/schemas/adminUserSchema.ts for strict request rules, controllers/adminUserController.ts and routes/adminUserRoutes.ts for the protected HTTP API, and services/adminUserService.ts for safe projections, filtering, locks and atomic revocation. Existing sessionService.ts enforces active/verified accounts and revoked sessions on login, refresh and authenticated requests. Tests cover multiple devices, reactivation without token revival, protected staff accounts, exact filters, pagination, pending email verification, booking preservation and concurrent login/refresh/reservation requests.
-
-PostgreSQL test files run sequentially via npm run test:db (--test-concurrency=1), because first-super-admin bootstrap examines global staff state and must not overlap another file creating staff fixtures. Concurrent login, refresh, reservation and scheduling requests remain explicitly tested inside individual files. This changes test-file execution only, not application request concurrency.
 
 Passenger management verification: all 144 default tests and all 17 PostgreSQL integration tests pass, together with strict types, lint, formatting and build. All fifteen migrations applied to an empty temporary database; repeating migration applied zero. Compiled JavaScript HTTP checks verified account lookup, protected staff targets, suspension, permanent access/refresh-token revocation and successful fresh sign-in after reactivation. Applying the two indexes to development preserved all compared business rows. Scoped fixtures and the temporary database were removed.
 
