@@ -224,7 +224,8 @@ Complete this before creating apps/web or apps/admin:
 - [x] Expose defined administrator travel-day booking, upcoming/departed-trip and allocation-occupancy metrics.
 - [x] Add read-only settlement counts and verified gross-capture amounts with a defined Cairo last-update date basis.
 - [ ] Add refund, fee, payout and net-revenue reporting after their persisted data and policy are defined.
-- [ ] Add backend CI checks and document deployment/API configuration for frontend work.
+- [x] Add backend CI checks for formatting, lint, TypeScript and build without secrets/services.
+- [ ] Complete deployment/API configuration handoff for frontend work.
 - [ ] Resolve outstanding backend defects and push the completed feature commits.
 
 Working result: the agreed backend scope works through HTTP and repeatable tests, ready for frontend integration. Production provider onboarding remains part of release preparation.
@@ -269,7 +270,8 @@ Small steps:
 - [ ] Add Playwright coverage for registration, verification, search, seats, payment, and tickets.
 - [ ] Review authorization bypass, booking ownership, rate limits, and sensitive error/log output.
 - [ ] Review indexes, pagination, retry behavior, health/readiness checks, and worker failures.
-- [ ] Add CI for linting, type checks, relevant tests, and dependency auditing.
+- [x] Add GitHub Actions for clean npm installation, formatting, lint, type checks and API build.
+- [ ] Add automated test coverage to CI when the owner resumes testing; dependency auditing remains separate.
 - [ ] Write environment setup, architecture, deployment, backup, restore, and troubleshooting instructions.
 
 Working result: the critical user flows and failure cases pass repeatable checks in CI.
@@ -357,3 +359,5 @@ Administrator operational statistics are complete: protected GET /admin/statisti
 The owner requested removal of all automated test files and commands and no new test code for subsequent features for now. This instruction overrides earlier test-suite requirements in the roadmap until the owner chooses to resume testing. Continue TypeScript, ESLint, formatting and build checks. Keep Route -> Controller -> Service separation, createApp service overrides and payment/mail interfaces so tests can be added later. The former suite is recoverable from Git commit 0099df6; do not rewrite Git history. Historical completed-test notes remain records of past validation, not available commands. Future testing/CI coverage tasks remain deferred.
 
 Administrator payment statistics are complete: protected GET /admin/payments/statistics accepts a strict optional Cairo date and reports settlement outcomes by their current last-updated day. Confirmed captured sums require completed reconciliation, a confirmed booking and exact EGP/amount/expiry snapshots; voids and unresolved/review records do not add money. Aggregate amounts stay exact strings, and inconsistent records are flagged read-only. The report exposes its SETTLEMENT_LAST_UPDATED_AT date basis and does not claim a provider capture timestamp, historical ledger, refunds, fees, payouts or net revenue. No schema/dependency/payment-activation change or automated test code is introduced. Current checks use TypeScript, lint, formatting, build and a manual read-only report invocation; full behavioral test coverage remains deferred at the owner's request.
+
+Backend CI is implemented in .github/workflows/ci.yml: push/pull_request/manual triggers, read-only repository permission, pinned checkout/setup-node release commits, Node 24.18.0 on Ubuntu 24.04, npm download caching, npm ci followed by format/lint/typecheck/build. The job has a 15-minute timeout and cancels superseded same-ref runs. No automated tests, database/migrations, secrets, workers, provider calls or deployment are added. Branch protection is not changed.

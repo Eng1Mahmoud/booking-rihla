@@ -1361,3 +1361,21 @@ The five state counts partition total. Money is summed in PostgreSQL before conv
 One parameterized PostgreSQL statement returns only aggregates from one snapshot. It does not load customer details, credentials, checkout links or raw callbacks. The report performs no capture/void/refund, provider inquiry, mail delivery, booking update or schema migration. Current local payment integration is still TEST-only behind its existing gates; these numbers are recorded gross captures, not proof of commercial revenue, fees, refunds, reversals or bank payouts.
 
 Implementation follows adminPaymentRoutes -> adminPaymentStatisticsController -> adminPaymentStatisticsService with a strict Zod query/result schema. The static /statistics route is registered before /:id. createApp accepts an optional adminPaymentStatistics service override for future tests, just as the other features do. No automated test files are included under the owner's current workflow.
+
+## GitHub Actions: Backend CI
+
+The workflow in [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on pushes, pull requests and manual dispatch from the repository's Actions tab. Its `API quality` job uses Ubuntu 24.04 and Node.js 24.18.0, then runs these root commands in order:
+
+1. `npm ci`: install the exact dependency tree from the committed package-lock.json.
+2. `npm run format:check`: report formatting differences without changing files.
+3. `npm run lint`: check source and Prisma configuration with ESLint.
+4. `npm run typecheck`: check TypeScript without emitting JavaScript.
+5. `npm run build`: compile the API into the runner's temporary apps/api/dist.
+
+A failed step fails the job; subsequent steps are skipped. Each job has a 15-minute limit. A new run cancels an older in-progress run on the same workflow/ref. npm's download cache is keyed by package-lock.json; node_modules and dist are not uploaded as project artifacts. Checkout/setup-node are pinned to verified release commits with readable version comments. When updating an action, update its hash and comment together after verifying the official release.
+
+No repository secrets, local .env files, database service, mail service or Paymob configuration are required. The job does not start the API/workers, apply migrations, seed data, run automated tests or deploy anything. Existing generated Prisma contract files are committed, so type checking/build do not need database generation. Future tests can be added as an explicit step when the owner resumes testing.
+
+Open [GitHub Actions](https://github.com/Eng1Mahmoud/bus-booking-platform/actions) and select **Backend CI** to inspect each step. The workflow reports success/failure; requiring it before merging would need a separate branch-protection/ruleset setting, which is not changed here.
+
+Official references: [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [setup-node](https://github.com/actions/setup-node), [checkout](https://github.com/actions/checkout).
