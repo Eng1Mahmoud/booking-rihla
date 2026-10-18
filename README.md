@@ -1379,3 +1379,7 @@ No repository secrets, local .env files, database service, mail service or Paymo
 Open [GitHub Actions](https://github.com/Eng1Mahmoud/bus-booking-platform/actions) and select **Backend CI** to inspect each step. The workflow reports success/failure; requiring it before merging would need a separate branch-protection/ruleset setting, which is not changed here.
 
 Official references: [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [setup-node](https://github.com/actions/setup-node), [checkout](https://github.com/actions/checkout).
+
+## Request identifiers
+
+Every API request receives a server-generated UUID in the X-Request-ID response header, including errors and CORS preflight responses. Browser clients on allowed origins can read this header. Middleware stores the identifier in response.locals.requestId for future logging. Caller-supplied identifiers are not trusted. This identifier is for troubleshooting, not authentication. No request bodies, tokens or personal data are logged by this feature.

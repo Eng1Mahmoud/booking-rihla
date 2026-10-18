@@ -1,3 +1,4 @@
+import { requestId } from './middlewares/requestId.ts';
 import type { AdminPaymentStatisticsService } from './services/adminPaymentStatisticsService.ts';
 import {
   adminStatisticsService,
@@ -138,8 +139,15 @@ export function createApp(
   ];
 
   app.disable('x-powered-by');
+  app.use(requestId);
   app.use(helmet());
-  app.use(cors({ origin: corsOrigins, credentials: true }));
+  app.use(
+    cors({
+      origin: corsOrigins,
+      credentials: true,
+      exposedHeaders: ['X-Request-ID'],
+    }),
+  );
   app.use(express.json({ limit: '100kb' }));
 
   app.get('/api/v1/health', (_request, response) => {
