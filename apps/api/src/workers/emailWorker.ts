@@ -6,11 +6,14 @@ import { setTimeout } from 'node:timers/promises';
 import { parseAuthEnv } from '../config/env.ts';
 import { processEmailOutbox } from '../services/emailOutboxService.ts';
 let stopping = false;
+const stop = new AbortController();
 process.once('SIGINT', () => {
   stopping = true;
+  stop.abort();
 });
 process.once('SIGTERM', () => {
   stopping = true;
+  stop.abort();
 });
 let close: (() => Promise<void>) | undefined;
 try {
@@ -46,7 +49,7 @@ try {
       if (once) process.exitCode = 1;
     }
     if (once || stopping) break;
-    await setTimeout(2000);
+    await setTimeout(2000, undefined, { signal: stop.signal }).catch(() => {});
   } while (!stopping);
 } catch {
   console.error('Email worker could not start; check configuration');

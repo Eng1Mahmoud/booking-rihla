@@ -1432,3 +1432,78 @@ GET /health checks the HTTP process; GET /ready probes PostgreSQL and returns {s
 Local payment:setup currently reports valid credential formats but missing PAYMOB_OWNER_ID, PAYMOB_AUTH_CAPTURE_ENABLED, PAYMOB_NOTIFICATION_URL and PAYMOB_RETURN_URL. The provider remains disabled. These values/account capabilities and a reachable HTTPS webhook cannot be invented from code. Complete Paymob TEST merchant setup and verify Auth/Capture/refund with actual sandbox transactions before enabling checkout/refunds; do not use real cards or LIVE credentials for this educational integration. Frontend account/search/seat/booking and dashboard development can proceed with the documented disabled-payment state.
 
 Verification performed without adding persistent automated test code: TypeScript/ESLint/build, full migration replay and demo seed in an isolated database, HTTP health/readiness/refund authorization, concurrent cancellation and refund issuance with a local fake provider, single send despite repeated calls, exact refund confirmation, seat release, status consistency, notices and retry persistence. Edge checks cover unresolved capture cancellation rejection, timeout without resend, partial refund review and live-role revocation. No real Paymob financial request was sent. Automated regression coverage and GitHub Actions billing remain deferred; production deployment, LIVE onboarding, backups and operational approval belong to the later release phase.
+
+## Deployment preparation and local recovery tools
+
+Dockerfile now has separate build, migrations and runtime targets. The final image runs compiled JavaScript as the non-root node user, without the CLI/build dependencies. Its readiness health check uses /api/v1/ready. .dockerignore allows only the package manifests, API source/compiler settings and migration artifacts into the build context; environment files, dependency folders, Git history, build output and backups are excluded.
+
+compose.production.yaml is separate from development compose.yaml. It uses its own project/volume, keeps PostgreSQL unpublished, exposes the API on host loopback only, and runs the email/booking/auth workers separately. Payment/refund workers are explicit profiles, not enabled by default. Application containers are read-only with temporary /tmp storage, no added capabilities, bounded Docker logs and restart policies. Worker sleeps now interrupt promptly on shutdown; an in-flight batch/SMTP operation may still exceed the container grace period and require safe at-least-once recovery.
+
+These files prepare deployment; they do not provision a host, publish a site, obtain a TLS certificate or activate LIVE payments. The provider adapter still accepts TEST credentials only. A commercial launch needs provider LIVE implementation/onboarding and a deployment review rather than just changing flags.
+
+### Configure and start on an approved server
+
+Fresh setup only: copy root production.env.example to production.env and apps/api/production.env.example to apps/api/production.env. Choose new independent authentication secrets, set PostgreSQL credentials and the matching container DATABASE_URL (host postgres), HTTPS CORS origins and the real SMTP configuration. Keep all Paymob flags false while learning. Neither production.env file is committed. Keep development and production databases separate.
+
+```sh
+docker compose --env-file production.env -f compose.production.yaml config --quiet
+docker compose --env-file production.env -f compose.production.yaml build api migrate
+docker compose --env-file production.env -f compose.production.yaml up -d --wait postgres
+docker compose --env-file production.env -f compose.production.yaml run --rm migrate
+docker compose --env-file production.env -f compose.production.yaml up -d --wait api email-worker booking-worker auth-worker
+```
+
+Migrations are an explicit one-shot deployment step and are not run by each API replica. Do not run the demo seed in production. After a backup, apply additive migrations and check readiness before routing traffic. Keep a previously verified image tag for rollback; application rollback is only safe while its database contract remains compatible. Never roll back a schema by dropping financial/history tables.
+
+The API validates production startup before listening: database settings, HTTPS browser origins, independent auth secrets and TLS SMTP must be present; invalid payment activation is rejected. HOST defaults to 127.0.0.1 locally and is overridden to 0.0.0.0 inside containers. TRUST_PROXY_HOPS defaults to 0. Set it to 1 only when exactly one trusted reverse proxy is the only route to the API. Do not publish the container port to all interfaces and blindly trust forwarded headers. Set SMTP_SECURE=true for implicit TLS or SMTP_REQUIRE_TLS=true for mandatory STARTTLS, according to your SMTP provider.
+
+After a domain/server is chosen, terminate HTTPS at the trusted proxy and forward only to the loopback API port. Keep web/admin/API on the same site for the existing Strict refresh cookie. DNS, certificates, real SMTP delivery and external uptime alerts are host/account tasks; none was claimed as verified by this local preparation.
+
+### Backup and restore
+
+These are host commands requiring Node.js and Docker Compose. They use PostgreSQL tools inside the running postgres service, without passing a password in shell arguments. Backups contain sensitive account/payment history: restrict filesystem access, encrypt copies stored off-host and set a retention policy. The tool does not encrypt a dump or schedule/ship backups automatically. backups/ and production.env are ignored by Git and excluded from images.
+
+```sh
+# Development: choose a fresh output filename; existing backups are never overwritten.
+npm run db:backup -- --compose compose.yaml --env-file .env --file backups/bus-2026-10-18.dump
+npm run db:restore -- --compose compose.yaml --env-file .env --file backups/bus-2026-10-18.dump --target restore_bus_20261018
+
+# Production: select the production Compose configuration explicitly.
+npm run db:backup -- --compose compose.production.yaml --env-file production.env --file backups/bus-production-2026-10-18.dump
+npm run db:restore -- --compose compose.production.yaml --env-file production.env --file backups/bus-production-2026-10-18.dump --target restore_bus_20261018
+```
+
+Restore always creates a new database whose name begins with restore_. It refuses an existing target and never uses --clean or overwrites the application database. pg_restore runs in one transaction and fails on errors. Verify readiness, table counts and financial/seat state in the restored copy before putting the application into maintenance and switching DATABASE_URL. Resume payment workers only after provider reconciliation; old unknown operations must never be resent because a backup was restored. Restore only your own trusted backups. Failed backups retain a .partial file, which must not be treated as a completed archive.
+
+A local pg_dump/pg_restore round trip was verified against a new restore_backend_preparation database: row counts matched across all 28 application/migration tables before the copy was used for isolated manual review checks. The original database was not modified by restoration.
+
+### Operational checks and manual financial review
+
+npm run ops:status prints aggregate overdue-mail, payment-review, uncertain-refund and pending-refund counts. Exit code 0 means no listed attention conditions, 1 means operator action is needed, and 2 means the database report is unavailable. It contains no customer data or secrets and sends no provider request. For containers:
+
+```sh
+docker compose --env-file production.env -f compose.production.yaml ps
+docker compose --env-file production.env -f compose.production.yaml logs --tail 100 api email-worker booking-worker auth-worker
+docker compose --env-file production.env -f compose.production.yaml run --rm --no-deps api node dist/scripts/operationsStatus.js
+```
+
+Use host monitoring to check /health, /ready, container restarts and the operations command, and route alerts to a channel chosen by the operator. The operations snapshot is not a worker heartbeat, SMTP delivery receipt, external uptime monitor or bank reconciliation. Durable mail attempts exhausted at five still require operator investigation; a crash can duplicate SMTP delivery, as documented above.
+
+The super-admin POST /admin/refunds/:id/reconcile now also rechecks a REVIEW record using fresh authenticated provider evidence, records the reviewer in the audit log, and only advances it when the exact full refund is proven. Automatic workers continue to leave REVIEW for a human. This endpoint cannot resend money, accept a browser-provided success flag or clear a review merely because the operator clicked it. Manual verification covered a partial refund followed by verified full completion with no second refund POST.
+
+### First Paymob setup: account capability comes before activation
+
+1. Keep PAYMOB_ENABLED, PAYMOB_CHECKOUT_ENABLED and PAYMOB_REFUNDS_ENABLED false. TEST means sandbox transactions with provider test cards; it is not permission to use real card details or collect real money.
+2. In the Paymob dashboard, open Developers -> Payment Integrations and identify the TEST card Integration ID. It must belong to your account and match the TEST secret key and EGP. Local payment:setup checks format, not account permissions.
+3. Ask Paymob to confirm Auth/Capture and full refunds for that TEST integration and the exact Intention API authorization fields. AUTH means a temporary bank authorization; CAPTURE collects it after our seat checks; VOID releases an uncollected authorization; REFUND returns money already captured. PAYMOB_AUTH_CAPTURE_ENABLED=true is our confirmation flag, not a switch that enables the account remotely.
+4. Paymob needs a public HTTPS notification URL to call our webhook. localhost is private to your computer. A temporary development tunnel can provide an address later, with explicit approval to expose the API; buying a domain is not necessary just to understand the flow. The return URL is the browser's checkout-result page, which we will implement in the website.
+5. Establish PAYMOB_OWNER_ID from an authenticated TEST transaction's owner field or direct Paymob confirmation; a merchant/profile ID is not interchangeable. Do not invent it to satisfy configuration validation.
+6. Only after those prerequisites, run a complete controlled sandbox flow: create intention -> provider checkout -> verified authorization -> server capture -> fresh inquiry -> one confirmed ticket; then operator cancellation -> one full refund -> fresh inquiry -> refund notice. Verify expired authorization/void behavior too. Passing local fake-provider checks is not this merchant verification.
+
+Message to copy into Paymob support (do not include secret keys):
+
+> I am developing an educational bus-booking app in Egypt. Please confirm TEST card payments in EGP with Authorization/Capture and full refunds for my TEST Integration ID. For the Intention API, which authorization fields must this integration use? How can I obtain the transaction owner ID before my first transaction? Please confirm the TEST capture, void, refund and inquiry endpoints and sandbox prerequisites.
+
+Official references: [create an intention](https://developers.paymob.com/paymob-docs/intention-apis/create-intention), [Paymob payment actions](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/blob/main/skills/paymob-integration/references/advanced-features.md), [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/), [PostgreSQL restore](https://www.postgresql.org/docs/18/app-pgrestore.html).
+
+Container verification completed locally with ignored temporary configuration: the runtime image hashed a password successfully as uid 1000, contained no local .env or Prisma CLI, and ran with a read-only root filesystem. The separate migration image replayed all 27 migrations against a fresh isolated PostgreSQL database. The API returned ready with a request ID; its database had no published host port; the operations snapshot returned ok; API/email/booking/auth processes all stopped with exit code 0. Verification containers/network/volume and the temporary restored database were removed; the development database and local backup file were retained. This does not verify public HTTPS, real SMTP delivery or Paymob merchant capability.

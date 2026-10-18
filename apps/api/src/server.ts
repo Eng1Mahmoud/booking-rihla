@@ -1,9 +1,12 @@
+import { validateProductionEnv } from './config/production.ts';
 import { createApp } from './app.ts';
 import { parseEnv } from './config/env.ts';
 
 const env = parseEnv(process.env);
+validateProductionEnv(process.env);
 const app = createApp(env.CORS_ORIGINS);
-const server = app.listen(env.PORT, '127.0.0.1', () => {
+app.set('trust proxy', env.TRUST_PROXY_HOPS);
+const server = app.listen(env.PORT, env.HOST, () => {
   console.log(JSON.stringify({ event: 'server_started', port: env.PORT }));
 });
 let stopping = false;

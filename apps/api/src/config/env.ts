@@ -12,6 +12,8 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
+  HOST: z.enum(['127.0.0.1', '0.0.0.0', '::1', '::']).default('127.0.0.1'),
+  TRUST_PROXY_HOPS: z.enum(['0', '1']).default('0').transform(Number),
   PORT: z
     .string()
     .regex(/^\d+$/, 'Must contain only digits')
@@ -52,6 +54,10 @@ const authEnvSchema = z
       .default('1025')
       .transform(Number)
       .pipe(z.number().int().min(1).max(65535)),
+    SMTP_REQUIRE_TLS: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
     SMTP_SECURE: z
       .enum(['true', 'false'])
       .default('false')

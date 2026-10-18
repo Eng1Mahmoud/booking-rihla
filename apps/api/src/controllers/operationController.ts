@@ -68,7 +68,10 @@ export const operationController = {
       throw new AppError(404, 'REFUND_NOT_FOUND', 'Refund not found');
     response.setHeader('Cache-Control', 'no-store');
     response.json({
-      data: await configuredRefundService().reconcile(refundId),
+      data: await configuredRefundService().review(
+        response.locals.auth,
+        refundId,
+      ),
     });
   },
   async issueRefund(request: Request, response: Response) {

@@ -79,7 +79,11 @@ export function createRefundService(
   >,
   scope: { integrationId: number; ownerId: number },
 ) {
-  async function reconcile(id: string) {
+  async function reconcile(
+    id: string,
+    allowReview = false,
+    actor?: AuthContext,
+  ) {
     const { db } = await import('../prisma/db.ts');
     const row = await records(db).where({ id }).first();
     if (
@@ -87,7 +91,7 @@ export function createRefundService(
       !row.transactionId ||
       row.status === 'PENDING' ||
       row.status === 'SUCCEEDED' ||
-      row.status === 'REVIEW'
+      (row.status === 'REVIEW' && !allowReview)
     )
       return row ? serializeRefund(row) : null;
     let remote: PaymentTransaction;
@@ -100,6 +104,7 @@ export function createRefundService(
       return serializeRefund(row);
     }
     return db.transaction(async (tx) => {
+      if (actor) await requireFinancialActor(tx, db, actor);
       await tx.execute(
         db.raw
           .sql`SELECT "id" FROM "public"."Refund" WHERE "id" = ${id} FOR UPDATE`
@@ -108,7 +113,10 @@ export function createRefundService(
       );
       const current = await records(tx).where({ id }).first();
       if (!current) return null;
-      if (current.status === 'SUCCEEDED' || current.status === 'REVIEW')
+      if (
+        current.status === 'SUCCEEDED' ||
+        (current.status === 'REVIEW' && !allowReview)
+      )
         return serializeRefund(current);
       let status: 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW' = 'UNKNOWN';
       if (
@@ -125,6 +133,8 @@ export function createRefundService(
         status = 'SUCCEEDED';
       else if ((remote.refundedPiastres ?? 0) > 0 || remote.refunded)
         status = 'REVIEW';
+      if (current.status === 'REVIEW' && status !== 'SUCCEEDED')
+        status = 'REVIEW';
       const saved = await tx.orm.public.Refund.where({ id }).update({
         status,
         updatedAt: new Date().toISOString(),
@@ -134,12 +144,18 @@ export function createRefundService(
           bookingId: current.bookingId,
           purpose: 'REFUND_SUCCEEDED',
         });
-      await recordAudit(tx, undefined, 'Refund', id, current, saved);
+      await recordAudit(tx, actor, 'Refund', id, current, saved);
       return saved ? serializeRefund(saved) : null;
     });
   }
   return {
     reconcile,
+    async review(auth: AuthContext, id: string) {
+      const { db } = await import('../prisma/db.ts');
+      await db.transaction((tx) => requireFinancialActor(tx, db, auth));
+      // Re-read authenticated evidence; no resending or manual success override.
+      return reconcile(id, true, auth);
+    },
     async issue(auth: AuthContext, id: string) {
       const { db } = await import('../prisma/db.ts');
       // Authorization precedes provider I/O, including for direct service callers.

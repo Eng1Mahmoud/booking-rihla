@@ -283,8 +283,8 @@ Small steps:
 - [ ] Verify current provider availability and merchant requirements; select an Egyptian payment provider.
 - [ ] Implement the chosen provider through PaymentProvider and verify its supported methods, webhooks, and refunds.
 - [ ] Keep PayPal sandbox as a development/test option where useful.
-- [ ] Add production multi-stage Docker builds, non-root containers, health checks, and `.dockerignore`.
-- [ ] Separate development and production Compose configuration; keep database and Redis private.
+- [x] Add production multi-stage Docker builds, non-root containers, health checks, and `.dockerignore`.
+- [x] Separate development and production Compose configuration; keep PostgreSQL private (Redis is not required).
 - [ ] Configure HTTPS, production secrets, secure cookies, explicit CORS, SMTP, and worker execution.
 - [ ] Use production migration deployment, durable volumes, backups, and a tested restore process.
 - [ ] Configure monitoring and logs, payment reconciliation, and incident/rollback procedures.
@@ -371,3 +371,15 @@ Completed: privacy-preserving correlated request/error logs; bounded PostgreSQL 
 Verification: fresh isolated migration replay and demo seed; real local PostgreSQL service/HTTP checks with local fake provider transport; concurrent cancellation and single refund issuance; exact full success and notice delivery; timeout/no resend; partial-refund review; live super-admin revalidation; unresolved capture rejection; report consistency and persisted mail retry. The additive migration was applied to the development database without deleting existing data. PostgreSQL-backed outboxes remain sufficient; Redis/BullMQ is deferred until a real scaling need exists.
 
 Backend code can support starting apps/web then apps/admin. Remaining external prerequisites are merchant-specific TEST OWNER_ID, Auth/Capture capability, HTTPS notification/return URLs and real sandbox payment/refund verification. Local credential format checks are not remote payment verification; activation flags remain unchanged/disabled. GitHub Actions billing and automated regression suites remain deferred by explicit instruction. Fees/payout/net-revenue reporting requires actual provider accounting data and remains later release work; the implemented refund report returns unknown accounting fields as null. Production deployment/real-money readiness is not claimed.
+
+## Deployment/recovery preparation — 2026-10-18
+
+Added multi-stage non-root API/migration Docker targets and an allowlisted build context; independent production Compose with private PostgreSQL, loopback API publishing, explicit migration service and separate worker/payment profiles; production startup checks for database/HTTPS origins/independent secrets/TLS SMTP; configurable bind host and narrowly configurable proxy hops; cancellable worker sleeps; safe host-side custom-format PostgreSQL backups and new-database-only restores; private aggregate operational checks; a super-admin fresh-evidence review path with actor audit and no money resend; beginner Paymob setup instructions and an unsent support-message template. No host/domain was provisioned or application published. No TEST or LIVE payment was initiated.
+
+Verified backup/restore row-count equality across all 28 application/migration tables in a separate restored database. Verified production configuration rejection paths and preserved local defaults. Reviewed a partial-refund record with a fake transport: automatic inquiry kept REVIEW; a current super admin could confirm fresh exact full-refund evidence, audit the action and send no additional refund. Local operations snapshot reported no attention conditions.
+
+Remaining external gates: account-specific Paymob TEST Auth/Capture/refund/owner confirmation; reachable HTTPS webhook and browser result page; real sandbox loop verification; selected host/domain/SMTP provider; off-host encrypted backup storage, alert delivery and production approval. These are not prerequisites for coding the local passenger site/dashboard and are not marked complete by preparing configuration files. Automated test code and GitHub Actions billing remain explicitly deferred.
+
+Container smoke verification passed: non-root uid 1000 and native Argon2; runtime without .env/Prisma CLI; read-only API root filesystem; private PostgreSQL; all 27 migrations replayed with the non-root migration image; API ready and correlated HTTP headers; operational report ok; API and three default workers shut down with exit 0. Isolated resources were removed after verification. No public service or provider payment was created.
+
+Owner steering: Paymob Auth/Capture capability is unknown, so defer provider activation and real sandbox financial verification. Keep all payment activation flags disabled and proceed to passenger website features; this external gate no longer delays local frontend development. Do not switch to direct-sale charging without a new agreed payment design.

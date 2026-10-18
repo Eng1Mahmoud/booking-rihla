@@ -1,11 +1,14 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { configuredRefundService } from '../services/refundService.ts';
 let stopping = false;
+const stop = new AbortController();
 process.once('SIGINT', () => {
   stopping = true;
+  stop.abort();
 });
 process.once('SIGTERM', () => {
   stopping = true;
+  stop.abort();
 });
 const once = process.argv.includes('--once');
 let close: (() => Promise<void>) | undefined;
@@ -30,7 +33,7 @@ try {
       }
     }
     if (once || stopping) break;
-    await delay(30000);
+    await delay(30000, undefined, { signal: stop.signal }).catch(() => {});
   } while (!stopping);
 } catch {
   console.error('Refund worker unavailable; check TEST configuration');

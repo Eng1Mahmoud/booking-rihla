@@ -24,7 +24,10 @@
     "auth:cleanup": "node --env-file-if-exists=.env src/workers/authCleanupWorker.ts --once",
     "auth:cleanup:worker": "node --env-file-if-exists=.env src/workers/authCleanupWorker.ts",
     "refund:worker": "node --env-file-if-exists=.env src/workers/refundWorker.ts",
-    "refund:reconcile": "node --env-file-if-exists=.env src/workers/refundWorker.ts --once"
+    "refund:reconcile": "node --env-file-if-exists=.env src/workers/refundWorker.ts --once",
+    "db:backup": "node src/scripts/databaseArchive.ts backup",
+    "db:restore": "node src/scripts/databaseArchive.ts restore",
+    "ops:status": "node --env-file-if-exists=.env src/scripts/operationsStatus.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",
