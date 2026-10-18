@@ -222,7 +222,8 @@ Complete this before creating apps/web or apps/admin:
 - [ ] Verify fresh database setup, seeds, indexes, pagination, readiness, logs, and background workers.
 - [ ] Confirm email/ticket/notification APIs and Arabic/English templates.
 - [x] Expose defined administrator travel-day booking, upcoming/departed-trip and allocation-occupancy metrics.
-- [ ] Add financial payment/revenue/refund metrics after their reporting semantics are finalized.
+- [x] Add read-only settlement counts and verified gross-capture amounts with a defined Cairo last-update date basis.
+- [ ] Add refund, fee, payout and net-revenue reporting after their persisted data and policy are defined.
 - [ ] Add backend CI checks and document deployment/API configuration for frontend work.
 - [ ] Resolve outstanding backend defects and push the completed feature commits.
 
@@ -354,3 +355,5 @@ Administrator operational statistics are complete: protected GET /admin/statisti
 ## Current learning workflow — 2026-10-18
 
 The owner requested removal of all automated test files and commands and no new test code for subsequent features for now. This instruction overrides earlier test-suite requirements in the roadmap until the owner chooses to resume testing. Continue TypeScript, ESLint, formatting and build checks. Keep Route -> Controller -> Service separation, createApp service overrides and payment/mail interfaces so tests can be added later. The former suite is recoverable from Git commit 0099df6; do not rewrite Git history. Historical completed-test notes remain records of past validation, not available commands. Future testing/CI coverage tasks remain deferred.
+
+Administrator payment statistics are complete: protected GET /admin/payments/statistics accepts a strict optional Cairo date and reports settlement outcomes by their current last-updated day. Confirmed captured sums require completed reconciliation, a confirmed booking and exact EGP/amount/expiry snapshots; voids and unresolved/review records do not add money. Aggregate amounts stay exact strings, and inconsistent records are flagged read-only. The report exposes its SETTLEMENT_LAST_UPDATED_AT date basis and does not claim a provider capture timestamp, historical ledger, refunds, fees, payouts or net revenue. No schema/dependency/payment-activation change or automated test code is introduced. Current checks use TypeScript, lint, formatting, build and a manual read-only report invocation; full behavioral test coverage remains deferred at the owner's request.

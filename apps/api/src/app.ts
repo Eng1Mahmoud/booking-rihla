@@ -1,3 +1,4 @@
+import type { AdminPaymentStatisticsService } from './services/adminPaymentStatisticsService.ts';
 import {
   adminStatisticsService,
   type AdminStatisticsService,
@@ -112,6 +113,7 @@ export function createApp(
     tickets?: TicketService;
     adminBookings?: AdminBookingService;
     adminPayments?: AdminPaymentService;
+    adminPaymentStatistics?: AdminPaymentStatisticsService;
     adminStatistics?: AdminStatisticsService;
     adminUsers?: AdminUserService;
     administrators?: AdministratorService;
@@ -226,6 +228,7 @@ export function createApp(
     createAdminPaymentRouter(
       services.adminPayments ?? adminPaymentService,
       admin,
+      services.adminPaymentStatistics,
     ),
   );
 
