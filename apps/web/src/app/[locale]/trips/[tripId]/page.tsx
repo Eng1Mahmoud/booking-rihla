@@ -2,11 +2,11 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BusFront, ArrowLeft, MapPin } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { ApiResponseError } from '@/lib/server/backend';
-import { getSeats, getTrip } from '@/features/trips/api';
-import { displayName, formatDate, formatTime } from '@/features/trips/format';
-import { cairoDate } from '@/features/trips/search';
-import { SeatBooking } from '@/features/seats/components/seat-booking';
+import { ApiResponseError } from '@/shared/lib/server/backend';
+import { getSeats, getTrip } from '@/features/trips/api/trips.server';
+import { displayName, formatDate, formatTime } from '@/shared/lib/format';
+import { cairoDate } from '@/features/trips/schemas/searchSchema';
+import { SeatBooking } from '@/features/seats/components/SeatBooking';
 export default async function TripPage({
   params,
 }: {

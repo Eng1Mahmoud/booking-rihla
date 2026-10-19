@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { TicketView } from '@/features/tickets/components/ticket-view';
+import { TicketView } from '@/features/tickets/components/TicketView';
 export default async function TicketPage({
   params,
 }: {

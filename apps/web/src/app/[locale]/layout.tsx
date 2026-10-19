@@ -2,14 +2,14 @@ import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@/app/globals.css';
-import { AppProviders } from '@/providers/app-providers';
+import { AppProviders } from '@/app/providers';
 import type { Metadata } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { SiteHeader } from '@/components/layout/site-header';
-import { SiteFooter } from '@/components/layout/site-footer';
+import { SiteHeader } from '@/shared/components/SiteHeader';
+import { SiteFooter } from '@/shared/components/SiteFooter';
 export const metadata: Metadata = {
   title: 'Rihla | Bus booking',
   description: 'Find a bus trip and choose your seat.',

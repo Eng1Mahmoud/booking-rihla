@@ -1,4 +1,4 @@
-import { BookingHistory } from '@/features/bookings/components/booking-history';
+import { BookingHistory } from '@/features/bookings/components/BookingHistory';
 export default function BookingsPage() {
   return (
     <div className="container-shell page-space">

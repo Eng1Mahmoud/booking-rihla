@@ -1,0 +1,14 @@
+export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+};
+export type LoginInput = { email: string; password: string };
+export type RegisterInput = LoginInput & {
+  name: string;
+  phone: string;
+  language: string;
+};

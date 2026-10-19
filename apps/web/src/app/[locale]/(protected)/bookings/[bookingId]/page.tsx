@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { BookingDetail } from '@/features/bookings/components/booking-detail';
+import { BookingDetail } from '@/features/bookings/components/BookingDetail';
 export default async function BookingPage({
   params,
 }: {

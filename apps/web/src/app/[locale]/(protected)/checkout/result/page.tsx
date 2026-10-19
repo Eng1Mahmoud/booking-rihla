@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { PaymentResult } from '@/features/bookings/components/payment-result';
+import { PaymentResult } from '@/features/bookings/components/PaymentResult';
 export const metadata = {
   referrer: 'no-referrer' as const,
   robots: { index: false, follow: false },

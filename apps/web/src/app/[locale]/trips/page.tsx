@@ -1,16 +1,16 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { searchTrips } from '@/features/trips/api';
-import { getSearchCatalog } from '@/features/trips/api';
-import { TripSearchForm } from '@/features/trips/components/trip-search-form';
-import { TripCard } from '@/features/trips/components/trip-card';
+import { searchTrips } from '@/features/trips/api/trips.server';
+import { getSearchCatalog } from '@/features/trips/api/trips.server';
+import { TripSearchForm } from '@/features/trips/components/TripSearchForm';
+import { TripCard } from '@/features/trips/components/TripCard';
 import {
   searchSchema,
   searchHref,
   cairoDate,
   addDays,
-} from '@/features/trips/search';
-import { displayName } from '@/features/trips/format';
+} from '@/features/trips/schemas/searchSchema';
+import { displayName } from '@/shared/lib/format';
 export default async function TripsPage({
   params,
   searchParams,

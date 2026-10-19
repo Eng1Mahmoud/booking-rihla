@@ -1408,10 +1408,40 @@ The passenger website now sends browser requests to one allowlisted Next.js Rout
 
 Login and refresh responses are transformed into HttpOnly, host-only cookies. Access expires after 15 minutes; refresh uses the existing backend session expiry. Production cookie names use the __Host- prefix and Secure; SameSite=Lax permits the browser's return from payment checkout. No access/refresh token is returned by the website as JSON, stored in Zustand or persisted in browser storage. The backend's existing refresh cookie remains Strict and auth-path scoped; Next.js forwards only the known refresh credential to the fixed backend, rather than browser cookies wholesale.
 
-The shared browserRequest helper coordinates recovery after a private 401, checks whether another tab already refreshed, calls the same-origin refresh endpoint and retries the original request once. The token exchange and cookie writes happen only on the Next.js server. Web Locks coordinate refresh/login/logout across tabs in modern secure-context browsers; a shared promise coalesces concurrent recovery within a tab. This avoids depending on in-memory coordination in a particular Next.js server instance. Browsers without Web Locks retain within-tab coordination only. Forbidden 403, network failures, 429 and backend outages do not trigger token refresh or automatic logout. Failed/uncertain mutations are not retried for network errors. Confirmed invalid refresh credentials clear cookies/session/private query cache. TanStack Query keeps server data; Zustand keeps user/UI state only.
+The shared apiClient coordinates recovery after a private 401, checks whether another tab already refreshed, calls the same-origin refresh endpoint and retries the original request once. The token exchange and cookie writes happen only on the Next.js server. Web Locks coordinate refresh/login/logout across tabs in modern secure-context browsers; a shared promise coalesces concurrent recovery within a tab. This avoids depending on in-memory coordination in a particular Next.js server instance. Browsers without Web Locks retain within-tab coordination only. Forbidden 403, network failures, 429 and backend outages do not trigger token refresh or automatic logout. Failed/uncertain mutations are not retried for network errors. Confirmed invalid refresh credentials clear cookies/session/private query cache. TanStack Query keeps server data, including the single current-user query; Zustand keeps seat-selection client state.
 
-proxy.ts delegates route rules to src/middleware/authMiddleware.ts and routes.ts, following the separation used in the portfolio project. Account, bookings and checkout result share a protected layout and RequireAuth; guests redirect to the locale's login with a validated internal returnTo. Query parameters are preserved; seat IDs can survive sign-in and are rechecked against current availability. Expired access with a refresh cookie is resolved by the shared session flow. API /auth/me verifies JWT signature, expiry, live session and current database role before the website trusts the role, without sharing the signing secret with Next.js. JWT now contains role; the backend continues to enforce the current database role immediately after a role change. Dashboard rules are prepared for ADMIN/SUPER_ADMIN and sensitive SUPER_ADMIN areas; dashboard screens are still a later phase. A signed-in role mismatch redirects to /forbidden, without logging the user out.
+proxy.ts applies the shared/config/routes.ts role rules directly. Account, bookings and checkout result share a protected layout and RequireAuth; guests redirect to the locale's login with a validated internal returnTo. Query parameters are preserved; seat IDs can survive sign-in and are rechecked against current availability. Expired access with a refresh cookie is resolved by the shared session flow. API /auth/me verifies JWT signature, expiry, live session and current database role before the website trusts the role, without sharing the signing secret with Next.js. JWT now contains role; the backend continues to enforce the current database role immediately after a role change. Dashboard rules are prepared for ADMIN/SUPER_ADMIN and sensitive SUPER_ADMIN areas; dashboard screens are still a later phase. A signed-in role mismatch redirects to /forbidden, without logging the user out.
 
 Configure API_BASE_URL and SITE_ORIGIN independently for each deployed website/dashboard. SITE_ORIGIN must be the public HTTPS origin, and that origin must appear in the backend CORS_ORIGINS. The browser needs no NEXT_PUBLIC_API_BASE_URL. All mutations require the custom CSRF header, JSON and a matching Origin; cross-site requests are rejected. Tokens and arbitrary client Authorization/Cookie headers are not passed through to the backend. The dashboard will own a separate first-party session on its own domain; shared sign-on is not implemented. Existing development sessions from the old browser-token flow may require signing in again.
 
 Before public deployment, configure trusted ingress and client-address handling for the selected hosting topology: current Express IP-based limits otherwise see the BFF server as a shared client. Do not trust arbitrary forwarded IP headers or relax the backend rate limits blindly. The current backend replay detection/rotation is unchanged; no distributed server refresh cache, token replay grace period or extra auth library was introduced.
+
+### Website source structure
+
+The website follows the feature organization in the owner's al-baraka-frontend reference (https://github.com/Eng1Mahmoud/al-baraka-frontend/tree/master/src), adapted to the existing TypeScript/fetch/HttpOnly setup:
+
+```text
+src/
+  app/                         Routes, layouts and providers.tsx
+    [locale]/(auth)/           Login and password recovery pages
+    [locale]/(protected)/      Account, bookings and checkout result
+    api/backend/[...path]/     Shared server gateway
+  features/
+    auth/                      api, hooks, components, schemas, types, lib
+    bookings/                  api, hooks, components, types, lib
+    trips/                     api, hooks, components, schemas, types
+    seats/                     components, store, lib
+    tickets/                   api, hooks, components, types
+    account/                   Account components using the auth query
+  shared/
+    components/                Site header/footer and shared navigation
+    config/                    Role routes and gateway allowlist
+    lib/                       apiClient, queryClient, format, server helpers
+  i18n/                        Locale routing and messages configuration
+  messages/                    Arabic and English copy
+  proxy.ts                     Page redirects and verified role checks
+```
+
+Components render forms/screens and call feature hooks; feature API files own request paths/bodies; hooks own TanStack Query queries/mutations and invalidation. Query keys are centralized in shared/lib/queryClient.ts. Server-only trip/catalog reads use trips.server.ts, separately from browser trips.api.ts, to keep credentials/server configuration out of client bundles. Only folders with actual implementations are created. Component filenames use PascalCase as in the reference.
+
+Authentication uses useCurrentUser/useLogin/useLogout in features/auth/hooks/useAuth.ts. There is no custom SessionProvider, auth Context, duplicate user Zustand store, generation counter or BroadcastChannel synchronization. The shared current-user query refreshes on window focus; another tab's session changes are discovered on focus or authenticated requests, rather than broadcast immediately. AuthSessionSync handles confirmed authentication expiry by clearing the private query cache. Zustand remains for seat selection. The gateway, refresh coordination, signature/session/current-role checks, returnTo validation, payment Idempotency-Key and uncertain-result handling are retained. The reference's token-returning/logging login behavior is not copied: website tokens remain HttpOnly and absent from JSON/browser state.

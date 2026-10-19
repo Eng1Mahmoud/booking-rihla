@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { apiRoute } from '@/lib/api-routes';
-import { fetchBackend } from '@/lib/server/backend';
+import { apiRoute } from '@/shared/config/apiRoutes';
+import { fetchBackend } from '@/shared/lib/server/backend';
 import {
   readAuthCookies,
   saveAuthCookies,
   clearAuthCookies,
   backendRefreshCookie,
-} from '@/lib/server/auth-cookies';
+} from '@/shared/lib/server/authCookies';
 export const runtime = 'nodejs';
 const tokensSchema = z.object({
   data: z.object({
