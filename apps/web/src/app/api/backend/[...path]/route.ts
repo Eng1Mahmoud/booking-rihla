@@ -5,7 +5,6 @@ import {
   readAuthCookies,
   saveAuthCookies,
   clearAuthCookies,
-  backendRefreshCookie,
 } from '@/shared/lib/apiServer';
 export const runtime = 'nodejs';
 const tokensSchema = z.object({
@@ -95,7 +94,8 @@ async function forwardRequest(
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
     if (access && !refreshing) headers.Authorization = 'Bearer ' + access;
     if (refresh && (refreshing || loggingOut))
-      headers.Cookie = backendRefreshCookie(refresh);
+      headers.Cookie =
+        'bus_refresh=' + refresh + '; __Secure-bus_refresh=' + refresh;
     const upstream = await fetchBackend(
       path,
       { method: request.method, headers, body },
