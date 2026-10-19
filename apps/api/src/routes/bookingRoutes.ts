@@ -19,7 +19,10 @@ import { requireAuth } from '../middlewares/requireAuth.ts';
 import { AppError } from '../errors/AppError.ts';
 import { createBookingController } from '../controllers/bookingController.ts';
 import type { BookingService } from '../services/bookingService.ts';
-import type { SessionService } from '../services/sessionService.ts';
+import type {
+  SessionService,
+  AuthContext,
+} from '../services/sessionService.ts';
 export function createBookingRouter(
   service: BookingService,
   sessions: SessionService,
@@ -52,6 +55,26 @@ export function createBookingRouter(
   router.post('/:id/payment-attempt', paymentController.prepare);
   router.get('/:id/payment-attempt', paymentController.get);
   const checkoutController = createPaymentCheckoutController(checkout);
+  router.post(
+    '/:id/payment/refresh',
+    rateLimit({
+      limit: 6,
+      windowMs: 60000,
+      keyGenerator: (_request, response) =>
+        (response.locals['auth'] as AuthContext).user.id,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_request, _response, next) =>
+        next(
+          new AppError(
+            429,
+            'RATE_LIMITED',
+            'Wait before checking payment again',
+          ),
+        ),
+    }),
+    checkoutController.refresh,
+  );
   router.post(
     '/:id/checkout',
     rateLimit({

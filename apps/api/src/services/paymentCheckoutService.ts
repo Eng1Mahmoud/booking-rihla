@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { configuredPaymentReconciliation } from './paymentReconciliationService.ts';
 import { AppError } from '../errors/AppError.ts';
 import { parsePaymobCheckoutEnv } from '../config/paymob.ts';
 import {
@@ -116,7 +117,35 @@ export function createPaymentCheckoutService(dependencies: {
     },
   };
 }
+// Explicit owner-triggered inquiry; GET status stays provider-free.
+async function refreshPayment(userId: string, bookingId: string) {
+  const { db } = await import('../prisma/db.ts');
+  const row = await paymentRecords(db).where({ id: bookingId, userId }).first();
+  if (!row) throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
+  const current = serializeBookingPayment(row);
+  const operation = row.paymentAttempt?.paymentSession;
+  if (
+    !operation ||
+    operation.reconciliationComplete ||
+    ['PAID', 'REFUNDED', 'REFUND_REQUIRED', 'REVIEW'].includes(
+      current.paymentStatus,
+    )
+  )
+    return current;
+  const reconciliation = configuredPaymentReconciliation();
+  if (!reconciliation)
+    throw new AppError(
+      503,
+      'PAYMENT_UNAVAILABLE',
+      'Payment verification is unavailable',
+    );
+  // Reuse exact scope/amount/EGP verification and transactional seat/ticket checks.
+  // Never create an Intention, capture money or issue a refund here.
+  await reconciliation.reconcile(operation.id);
+  return getPayment(userId, bookingId);
+}
 export const paymentCheckoutService = {
+  refresh: refreshPayment,
   get: getPayment,
   async start(auth: AuthContext, bookingId: string) {
     const config = parsePaymobCheckoutEnv(process.env);

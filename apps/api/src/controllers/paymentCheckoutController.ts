@@ -24,6 +24,25 @@ export function createPaymentCheckoutController(
   service: PaymentCheckoutService,
 ) {
   return {
+    async refresh(request: Request, response: Response) {
+      const bookingId = id(request);
+      if (!request.is('application/json'))
+        throw new AppError(
+          415,
+          'UNSUPPORTED_MEDIA_TYPE',
+          'Content-Type must be application/json',
+        );
+      if (!paymentAttemptBodySchema.safeParse(request.body).success)
+        throw new AppError(
+          400,
+          'VALIDATION_ERROR',
+          'Provide an empty JSON object',
+        );
+      const auth = response.locals['auth'] as AuthContext;
+      response.set('Cache-Control', 'no-store').json({
+        data: await service.refresh(auth.user.id, bookingId),
+      });
+    },
     async start(request: Request, response: Response) {
       if (!request.is('application/json'))
         throw new AppError(

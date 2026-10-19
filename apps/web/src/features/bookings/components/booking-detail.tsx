@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useSession } from '@/providers/session-provider';
@@ -31,6 +31,8 @@ export function BookingDetail({
   const t = useTranslations('Booking');
   const resultText = useTranslations('PaymentResult');
   const { user, status, request } = useSession();
+  const queryClient = useQueryClient();
+  const immediateCheck = useRef('');
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -79,6 +81,45 @@ export function BookingDetail({
           : 5000
         : false,
   });
+  useEffect(() => {
+    if (
+      !afterCheckout ||
+      status !== 'signed-in' ||
+      !user ||
+      !query.isFetchedAfterMount ||
+      !query.data
+    )
+      return;
+    if (
+      !['waiting', 'processing', 'expired'].includes(
+        paymentOutcome(query.data.payment),
+      )
+    )
+      return;
+    const key = user.id + ':' + bookingId;
+    if (immediateCheck.current === key) return;
+    immediateCheck.current = key;
+    // One inquiry on return, independent of the background-worker interval.
+    void request('bookings/' + bookingId + '/payment/refresh', {
+      method: 'POST',
+      body: '{}',
+    })
+      .catch(() => undefined)
+      .then(() =>
+        queryClient.invalidateQueries({
+          queryKey: ['owned-booking', user.id, bookingId],
+        }),
+      );
+  }, [
+    afterCheckout,
+    status,
+    user,
+    bookingId,
+    request,
+    queryClient,
+    query.isFetchedAfterMount,
+    query.data,
+  ]);
   useEffect(() => {
     if (afterCheckout) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
