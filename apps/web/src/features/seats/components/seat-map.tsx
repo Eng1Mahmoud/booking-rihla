@@ -54,7 +54,7 @@ export function SeatMap({
               </div>
               {centerFacilities && (
                 <div className="driver second-driver">
-                  <SeatIcon />
+                  <SteeringWheel />
                   <span>{t('secondDriver')}</span>
                 </div>
               )}
