@@ -4,6 +4,7 @@ import { UserRound, LogOut } from 'lucide-react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useSession } from '@/providers/session-provider';
 import { errorMessage } from '@/lib/browser-api';
+import { safeReturnPath } from '@/features/auth/safe-return-path';
 import { useState } from 'react';
 export function AccountNav() {
   const { user, status, logout } = useSession();
@@ -46,14 +47,20 @@ export function AccountNav() {
         </>
       ) : (
         <Link
-          href={'/login?returnTo=' + encodeURIComponent(pathname)}
+          href={
+            '/login?returnTo=' + encodeURIComponent(safeReturnPath(pathname))
+          }
           className="nav-account"
           aria-label={t('login')}
           onClick={(event) => {
             event.preventDefault();
+            const destination =
+              pathname === '/login'
+                ? new URLSearchParams(window.location.search).get('returnTo')
+                : pathname + window.location.search + window.location.hash;
             router.push(
               '/login?returnTo=' +
-                encodeURIComponent(pathname + window.location.search),
+                encodeURIComponent(safeReturnPath(destination)),
             );
           }}
         >

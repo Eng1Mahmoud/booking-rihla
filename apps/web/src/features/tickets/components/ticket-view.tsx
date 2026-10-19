@@ -3,7 +3,6 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useSession } from '@/providers/session-provider';
-import { AuthForm } from '@/features/auth/components/auth-form';
 import { BrowserApiError, errorMessage } from '@/lib/browser-api';
 import { formatDate, formatTime, formatPrice } from '@/features/trips/format';
 import { Link } from '@/i18n/navigation';
@@ -33,13 +32,7 @@ export function TicketView({ bookingId }: { bookingId: string }) {
   );
   if (status === 'loading')
     return <p className="loading-state">{t('loading')}</p>;
-  if (status === 'guest')
-    return (
-      <section className="panel auth-required">
-        <p>{t('signIn')}</p>
-        <AuthForm returnTo={'/bookings/' + bookingId + '/ticket'} />
-      </section>
-    );
+  if (status === 'guest') return null;
   if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
   if (query.isError) {
     const unavailable =

@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
 import { useSession } from '@/providers/session-provider';
 import type { SessionUser } from '@/stores/session-store';
-import { AuthForm } from '@/features/auth/components/auth-form';
 import { errorMessage } from '@/lib/browser-api';
 import { AccountNavigation } from './account-navigation';
 
@@ -39,14 +38,7 @@ export function AccountProfile() {
         {t('loading')}
       </p>
     );
-  if (status === 'guest')
-    return (
-      <div className="panel auth-required">
-        <h1>{t('title')}</h1>
-        <p>{t('signIn')}</p>
-        <AuthForm returnTo="/account" />
-      </div>
-    );
+  if (status === 'guest') return null;
   return (
     <>
       <AccountNavigation />

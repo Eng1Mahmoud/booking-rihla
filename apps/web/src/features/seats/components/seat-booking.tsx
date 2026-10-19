@@ -10,12 +10,14 @@ import { useRouter, Link } from '@/i18n/navigation';
 import {
   browserRequest,
   BrowserApiError,
+  isUncertainRequestError,
   errorMessage,
 } from '@/lib/browser-api';
 import { formatPrice } from '@/features/trips/format';
 import type { SeatList, Trip } from '@/features/trips/types';
 import type { Booking } from '@/features/bookings/types';
-import { AuthForm } from '@/features/auth/components/auth-form';
+import { RequireAuth } from '@/features/auth/components/require-auth';
+import { useSearchParams } from 'next/navigation';
 import { PassengerForm } from './passenger-form';
 import { SeatMap } from './seat-map';
 export function SeatBooking({
@@ -30,10 +32,23 @@ export function SeatBooking({
   const router = useRouter();
   const queryClient = useQueryClient();
   const summaryRef = useRef<HTMLElement>(null);
-  const [store] = useState(createBookingStore);
+  const searchParams = useSearchParams();
+  const [store] = useState(() => {
+    const store = createBookingStore();
+    const ids = (searchParams.get('seats') ?? '')
+      .split(',')
+      .slice(0, initialSeats.seats.length);
+    for (const seat of initialSeats.seats) {
+      if (seat.isAvailable && ids.includes(seat.id))
+        store.getState().toggle(seat.id);
+    }
+    return store;
+  });
   const selectedIds = useStore(store, (state) => state.selectedIds);
   const { user, status, request } = useSession();
-  const [phase, setPhase] = useState<'select' | 'details'>('select');
+  const [phase, setPhase] = useState<'select' | 'details'>(
+    store.getState().selectedIds.length ? 'details' : 'select',
+  );
   useEffect(() => {
     if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
       summaryRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -94,7 +109,7 @@ export function SeatBooking({
       });
       router.push('/bookings/' + result.data.id);
     } catch (cause) {
-      if (cause instanceof BrowserApiError && cause.code === 'NETWORK_ERROR') {
+      if (isUncertainRequestError(cause)) {
         setUncertain(true);
         setError(t('uncertain'));
         return;
@@ -199,23 +214,25 @@ export function SeatBooking({
             </button>
             <p className="summary-note">{t('notReserved')}</p>
           </>
-        ) : user ? (
-          <PassengerForm
-            key={user.id}
-            seats={selected}
-            user={user}
-            disabled={!selected.length || query.isError}
-            onReserve={reserve}
-          />
         ) : (
-          <div className="inline-auth">
-            <p className="muted text-sm mb-5">{t('loginNote')}</p>
-            <AuthForm
-              onSuccess={() => {
-                void query.refetch();
-              }}
-            />
-          </div>
+          <RequireAuth
+            returnTo={
+              '/trips/' +
+              trip.id +
+              '?seats=' +
+              encodeURIComponent(selectedIds.join(','))
+            }
+          >
+            {user && (
+              <PassengerForm
+                key={user.id}
+                seats={selected}
+                user={user}
+                disabled={!selected.length || query.isError}
+                onReserve={reserve}
+              />
+            )}
+          </RequireAuth>
         )}
       </aside>
       {phase === 'select' && (

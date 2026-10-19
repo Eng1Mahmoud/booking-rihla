@@ -1,12 +1,18 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect } from 'react';
+import { useSession } from '@/providers/session-provider';
 import { AuthForm } from './auth-form';
 import { safeReturnPath } from '../safe-return-path';
 export function LoginScreen({ returnTo }: { returnTo: string }) {
-  const router = useRouter();
+  const locale = useLocale();
+  const { status } = useSession();
   const t = useTranslations('Auth');
   const safe = safeReturnPath(returnTo);
+  useEffect(() => {
+    if (status === 'signed-in')
+      window.location.replace('/' + locale + (safe === '/' ? '' : safe));
+  }, [status, locale, safe]);
   return (
     <section className="auth-screen">
       <div className="auth-intro">
@@ -14,7 +20,7 @@ export function LoginScreen({ returnTo }: { returnTo: string }) {
         <p>{t('welcomeText')}</p>
       </div>
       <div className="panel p-7 sm:p-9">
-        <AuthForm onSuccess={() => router.replace(safe)} returnTo={safe} />
+        <AuthForm returnTo={safe} />
       </div>
     </section>
   );

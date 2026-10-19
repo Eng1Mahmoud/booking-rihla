@@ -141,7 +141,13 @@
     "welcomeText": "Choose your seat, follow your booking and review your journey details whenever you need.",
     "logout": "Sign out",
     "account": "My account",
-    "forgotPassword": "Forgot your password?"
+    "forgotPassword": "Forgot your password?",
+    "checkingSession": "Checking your session…",
+    "sessionUnavailable": "Your session could not be checked right now. Please try again.",
+    "retrySession": "Try again",
+    "forbiddenTitle": "You do not have access to this page",
+    "forbiddenText": "You are signed in, but your account role cannot access this page.",
+    "backHome": "Back to home"
   },
   "Booking": {
     "loading": "Loading your booking…",

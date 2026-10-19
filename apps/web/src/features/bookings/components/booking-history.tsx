@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/providers/session-provider';
-import { AuthForm } from '@/features/auth/components/auth-form';
 import { Link } from '@/i18n/navigation';
 import { errorMessage } from '@/lib/browser-api';
 import { displayName, formatDate, formatPrice } from '@/features/trips/format';
@@ -23,13 +22,7 @@ export function BookingHistory() {
   });
   if (status === 'loading')
     return <p className="loading-state">{t('loading')}</p>;
-  if (status === 'guest')
-    return (
-      <div className="panel auth-required">
-        <p>{t('signIn')}</p>
-        <AuthForm returnTo="/bookings" />
-      </div>
-    );
+  if (status === 'guest') return null;
   if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
   if (query.isError)
     return (

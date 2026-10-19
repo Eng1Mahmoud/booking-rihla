@@ -57,7 +57,7 @@ async function issueTokens(
   });
   return {
     user: publicUser(user),
-    accessToken: await signAccessToken(user.id, session.id),
+    accessToken: await signAccessToken(user.id, session.id, user.role),
     expiresIn: accessLifetimeSeconds,
     refreshToken,
     refreshExpiresAt: new Date(session.expiresAt).toISOString(),

@@ -1,3 +1,5 @@
+import { apiRoute } from './api-routes';
+export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
 export class BrowserApiError extends Error {
   constructor(
     public readonly status: number,
@@ -6,40 +8,113 @@ export class BrowserApiError extends Error {
     super(code);
   }
 }
-export async function browserRequest<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const base =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1';
-  let response: Response;
+export function isUncertainRequestError(error: unknown) {
+  return (
+    error instanceof BrowserApiError &&
+    (error.code === 'NETWORK_ERROR' || error.status >= 500)
+  );
+}
+async function fetchBrowser(path: string, options: RequestInit = {}) {
   try {
-    response = await fetch(base.replace(/\/$/, '') + '/' + path, {
+    return await fetch('/api/backend/' + path, {
       ...options,
       cache: 'no-store',
-      credentials: 'include',
+      credentials: 'same-origin',
       headers: {
+        ...options.headers,
         'Content-Type': 'application/json',
         'X-CSRF-Protection': '1',
-        ...options.headers,
       },
-      signal: options.signal ?? AbortSignal.timeout(15000),
+      signal: options.signal ?? AbortSignal.timeout(25000),
     });
   } catch {
     throw new BrowserApiError(0, 'NETWORK_ERROR');
   }
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null);
-    throw new BrowserApiError(
-      response.status,
-      payload?.error?.code ?? 'REQUEST_FAILED',
-    );
+}
+async function withSessionLock(action: () => Promise<void>) {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    await navigator.locks.request('bus-auth-refresh', async () => {
+      await action();
+    });
+  } else {
+    await action();
   }
+}
+async function send(path: string, options: RequestInit = {}) {
+  if (!['auth/login', 'auth/logout', 'auth/logout-all'].includes(path))
+    return fetchBrowser(path, options);
+  let response!: Response;
+  // A concurrent refresh must finish before login/logout can replace the shared cookies.
+  await withSessionLock(async () => {
+    response = await fetchBrowser(path, options);
+  });
+  return response;
+}
+async function failure(response: Response) {
+  const body = await response.json().catch(() => null);
+  return new BrowserApiError(
+    response.status,
+    body?.error?.code ?? 'REQUEST_FAILED',
+  );
+}
+function expired() {
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+}
+let refreshInFlight: Promise<void> | null = null;
+async function recoverSession() {
+  if (refreshInFlight) return refreshInFlight;
+  const recover = async () => {
+    // Another tab may have refreshed while we waited for the browser-wide lock.
+    const current = await send('auth/me');
+    if (current.ok) return;
+    if (current.status !== 401) throw await failure(current);
+    const response = await send('auth/refresh', { method: 'POST', body: '{}' });
+    if (!response.ok) {
+      if (response.status === 401) expired();
+      throw await failure(response);
+    }
+  };
+  refreshInFlight = withSessionLock(recover).finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+export async function browserRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  let response = await send(path, options);
+  const route = apiRoute(path.split('?')[0], options.method ?? 'GET');
+  // Only authentication rejection permits a replay: no retries for 403, network failures or unknown payment outcomes.
+  if (
+    response.status === 401 &&
+    route &&
+    !route.public &&
+    !['auth/refresh', 'auth/logout'].includes(path)
+  ) {
+    await recoverSession();
+    response = await send(path, options);
+    if (response.status === 401) expired();
+  }
+  if (!response.ok) throw await failure(response);
   return response.status === 204
     ? (undefined as T)
     : ((await response.json()) as T);
 }
 const errors: Record<string, [string, string]> = {
+  UPSTREAM_UNAVAILABLE: [
+    'تعذر الاتصال بالخادم. حاول مجددًا.',
+    'The server could not be reached. Please try again.',
+  ],
+  UPSTREAM_ERROR: [
+    'تعذر معالجة رد الخادم. حاول مجددًا.',
+    'The server response could not be processed. Try again.',
+  ],
+  FORBIDDEN: [
+    'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
+    'You do not have permission to perform this action.',
+  ],
   NETWORK_ERROR: [
     'تعذر الاتصال. تحقق من اتصالك ثم أعد المحاولة.',
     'Could not connect. Check your connection and try again.',

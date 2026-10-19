@@ -6,6 +6,7 @@ import { CheckCircle2, KeyRound } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import {
   BrowserApiError,
+  isUncertainRequestError,
   browserRequest,
   errorMessage,
 } from '@/lib/browser-api';
@@ -130,7 +131,7 @@ export function PasswordRecovery({
       setStep('done');
     } catch (cause) {
       setErrorMessage(
-        cause instanceof BrowserApiError && cause.code === 'NETWORK_ERROR'
+        isUncertainRequestError(cause)
           ? t('uncertain')
           : errorMessage(cause, locale),
       );

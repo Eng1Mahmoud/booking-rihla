@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { z } from 'zod';
 import { parseSessionEnv } from '../config/env.ts';
+import { userRoleSchema, type UserRole } from '../schemas/authSchema.ts';
 export const accessLifetimeSeconds = 900;
 export const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000;
 function key() {
@@ -13,8 +14,12 @@ export function newRefreshToken() {
 export function hashRefreshToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
 }
-export async function signAccessToken(userId: string, sessionId: string) {
-  return await new SignJWT({ sid: sessionId, tokenUse: 'access' })
+export async function signAccessToken(
+  userId: string,
+  sessionId: string,
+  role: UserRole,
+) {
+  return await new SignJWT({ sid: sessionId, role, tokenUse: 'access' })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(userId)
     .setIssuer('bus-booking')
@@ -36,8 +41,13 @@ export async function readAccessToken(token: string) {
   if (
     !z.uuid().safeParse(payload.sub).success ||
     !z.uuid().safeParse(payload.sid).success ||
-    payload.tokenUse !== 'access'
+    payload.tokenUse !== 'access' ||
+    !userRoleSchema.safeParse(payload.role).success
   )
     throw new Error('Invalid access token claims');
-  return { userId: payload.sub!, sessionId: payload.sid as string };
+  return {
+    userId: payload.sub!,
+    sessionId: payload.sid as string,
+    role: userRoleSchema.parse(payload.role),
+  };
 }

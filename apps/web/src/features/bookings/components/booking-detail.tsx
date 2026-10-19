@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useSession } from '@/providers/session-provider';
-import { AuthForm } from '@/features/auth/components/auth-form';
 import {
   browserRequest,
   errorMessage,
@@ -132,19 +131,7 @@ export function BookingDetail({
     ) : (
       <p className="loading-state">{t('loading')}</p>
     );
-  if (status === 'guest')
-    return (
-      <div className="panel auth-required">
-        <p>{t('signIn')}</p>
-        <AuthForm
-          returnTo={
-            afterCheckout
-              ? '/checkout/result?bookingId=' + bookingId
-              : '/bookings/' + bookingId
-          }
-        />
-      </div>
-    );
+  if (status === 'guest') return null;
   if (query.isPending || (afterCheckout && !query.isFetchedAfterMount))
     return afterCheckout ? (
       checkingResult
