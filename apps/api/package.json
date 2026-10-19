@@ -27,7 +27,8 @@
     "refund:reconcile": "node --env-file-if-exists=.env src/workers/refundWorker.ts --once",
     "db:backup": "node src/scripts/databaseArchive.ts backup",
     "db:restore": "node src/scripts/databaseArchive.ts restore",
-    "ops:status": "node --env-file-if-exists=.env src/scripts/operationsStatus.ts"
+    "ops:status": "node --env-file-if-exists=.env src/scripts/operationsStatus.ts",
+    "payment:proxy": "node --env-file-if-exists=.env src/scripts/paymobTunnel.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",

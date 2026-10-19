@@ -1,3 +1,4 @@
+import { parsePaymobCheckoutEnv } from './config/paymob.ts';
 import { createOperationRouter } from './routes/operationRoutes.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
 import {
@@ -217,6 +218,18 @@ export function createApp(
 
   app.use('/api/v1/admin', createOperationRouter(superAdmin));
 
+  // Public capability only; no keys, account ids, URLs or provider calls.
+  app.get('/api/v1/payments/availability', (_request, response) => {
+    let checkoutEnabled = false;
+    try {
+      checkoutEnabled = parsePaymobCheckoutEnv(process.env) !== null;
+    } catch {
+      /* Keep checkout closed for invalid settings. */
+    }
+    response
+      .set('Cache-Control', 'no-store')
+      .json({ data: { checkoutEnabled } });
+  });
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
   app.use(
     '/api/v1/auth',

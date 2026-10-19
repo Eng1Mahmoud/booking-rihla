@@ -34,7 +34,8 @@
     "refund:reconcile": "npm run refund:reconcile --workspace @booking-bus/api",
     "db:backup": "npm run db:backup --workspace @booking-bus/api --",
     "db:restore": "npm run db:restore --workspace @booking-bus/api --",
-    "ops:status": "npm run ops:status --workspace @booking-bus/api"
+    "ops:status": "npm run ops:status --workspace @booking-bus/api",
+    "payment:proxy": "npm run payment:proxy --workspace @booking-bus/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
