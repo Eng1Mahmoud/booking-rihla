@@ -1,6 +1,8 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { Check } from 'lucide-react';
+import { Check, DoorOpen, Toilet } from 'lucide-react';
+import { useId } from 'react';
+import { seatPosition } from '../seat-layout';
 import type { Seat, SeatList } from '@/features/trips/types';
 import { SeatIcon, SteeringWheel } from './seat-icon';
 export function SeatMap({
@@ -16,6 +18,15 @@ export function SeatMap({
 }) {
   const t = useTranslations('Seats');
   const physical = layout === 'STANDARD_2_2';
+  const centerFacilities =
+    physical &&
+    seats.length === 44 &&
+    new Set(seats.map((seat) => seat.number)).size === 44 &&
+    seats.every(
+      (seat) =>
+        Number.isInteger(seat.number) && seat.number >= 1 && seat.number <= 44,
+    );
+  const descriptionId = useId();
   const selected = new Set(selectedIds);
   return (
     <>
@@ -41,19 +52,37 @@ export function SeatMap({
               <span>{t('driver')}</span>
             </div>
             <span className="bus-front-label">{t('front')}</span>
-            <span className="bus-door">{t('door')}</span>
+            <span className="bus-door">
+              <DoorOpen size={16} aria-hidden="true" />
+              {t('frontDoor')}
+            </span>
           </div>
         )}
         <div
           className={physical ? 'seat-grid' : 'seat-grid seat-grid-numbered'}
         >
+          {centerFacilities && (
+            <>
+              <div
+                className="bus-facility bus-wc"
+                style={{ gridColumn: '4 / span 2', gridRow: 5 }}
+              >
+                <Toilet size={23} aria-hidden="true" />
+                <span>{t('toilet')}</span>
+              </div>
+              <div
+                className="bus-facility bus-middle-door"
+                style={{ gridColumn: '4 / span 2', gridRow: 6 }}
+              >
+                <DoorOpen size={23} aria-hidden="true" />
+                <span>{t('middleDoor')}</span>
+              </div>
+            </>
+          )}
           {seats.map((seat) => {
             const isSelected = selected.has(seat.id);
             const position = physical
-              ? {
-                  gridColumn: [1, 2, 4, 5][(seat.number - 1) % 4],
-                  gridRow: Math.floor((seat.number - 1) / 4) + 1,
-                }
+              ? seatPosition(seat.number, centerFacilities)
               : undefined;
             return (
               <button
@@ -70,14 +99,20 @@ export function SeatMap({
                 }
                 disabled={!seat.isAvailable}
                 aria-pressed={isSelected}
-                aria-label={t('seatLabel', {
-                  number: seat.number,
-                  status: isSelected
-                    ? t('selected')
-                    : seat.isAvailable
-                      ? t('available')
-                      : t('unavailable'),
-                })}
+                aria-describedby={descriptionId}
+                aria-label={
+                  t('seatLabel', {
+                    number: seat.number,
+                    status: isSelected
+                      ? t('selected')
+                      : seat.isAvailable
+                        ? t('available')
+                        : t('unavailable'),
+                  }) +
+                  (centerFacilities && seat.number >= 17 && seat.number <= 20
+                    ? ', ' + t(seat.number <= 18 ? 'wcRow' : 'middleDoorRow')
+                    : '')
+                }
                 onClick={() => onToggle(seat.id)}
               >
                 <SeatIcon />
@@ -89,8 +124,10 @@ export function SeatMap({
         </div>
         {physical && <div className="bus-rear" />}
       </div>
-      <p className="seat-footnote">
-        {physical ? t('layoutNote') : t('numberedOnly')}
+      <p className="seat-footnote" id={descriptionId}>
+        {physical
+          ? t(centerFacilities ? 'facilitiesLayoutNote' : 'layoutNote')
+          : t('numberedOnly')}
       </p>
     </>
   );

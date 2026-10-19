@@ -106,7 +106,13 @@
     "uncertain": "We could not confirm the request result. Check My bookings before trying again to avoid creating an additional reservation.",
     "myBookings": "Check my bookings",
     "nameRequired": "Enter the passenger name.",
-    "numberedOnly": "This view shows seat numbers and availability only; physical positions are not defined for this bus."
+    "numberedOnly": "This view shows seat numbers and availability only; physical positions are not defined for this bus.",
+    "frontDoor": "Front door",
+    "middleDoor": "Middle door",
+    "toilet": "WC",
+    "wcRow": "In the WC row",
+    "middleDoorRow": "In the middle-door row",
+    "facilitiesLayoutNote": "The front is at the top. The WC is opposite seats 17–18, followed by the middle door opposite 19–20. Seat positions stay the same in both languages."
   },
   "Auth": {
     "loginTitle": "Welcome back",

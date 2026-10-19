@@ -1744,3 +1744,46 @@ html[dir='ltr'] .hero-shade {
     padding-top: 20px;
   }
 }
+
+.bus-door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.bus-facility {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  height: 64px;
+  color: #526b7e;
+  font-size: 11px;
+  text-align: center;
+}
+.bus-wc {
+  border: 1px solid #d1dde7;
+  border-radius: 6px;
+  background: #eef3f7;
+}
+.bus-middle-door {
+  position: relative;
+  border-block: 2px solid #c4d3df;
+}
+.bus-middle-door::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 8px;
+  border-inline: 1px solid #c4d3df;
+}
+@media (max-width: 767px) {
+  .bus-facility {
+    height: 61px;
+    font-size: 10px;
+  }
+}
