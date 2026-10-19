@@ -409,23 +409,26 @@ Implementation follows routes/tripRoutes.ts -> controllers/tripController.ts -> 
 
 Trip verification applied all five migrations to a fresh temporary database, confirmed that a second migration run applied nothing, passed all five integration tests there, and exercised compiled JavaScript Trip creation/listing with timezone normalization. The temporary database was removed. The complete default HTTP suite has 70 passing tests; type checking, lint, formatting and build pass.
 
-## Demo seed data
+## Egyptian development catalog
 
-From the repository root, with local PostgreSQL running and apps/api/.env configured:
+With PostgreSQL running and apps/api/.env configured:
 
 ```sh
 npm run db:migrate
 npm run db:seed
-npm run dev
 ```
 
-The seed command creates a separate demo catalog with 3 cities (Cairo, Alexandria, Hurghada), 3 stations, 3 directed routes, 3 buses, 60 seats and 9 scheduled trips. Each route has one 09:00 Cairo departure on each of the next three calendar days. Cairo/Alexandria trips cost 25000 piastres; Cairo/Hurghada costs 50000. Output contains actual UUIDs and travel dates for copying into requests. Existing user-created cities, including the learning Cairo row, are preserved; matching city names are not merged because names are not unique.
+The catalog contains 7 cities, 17 stations, 18 directed routes and 36 buses with 44 seats in the STANDARD_2_2 layout. It schedules morning/evening departures for 14 Cairo calendar days (504 trips). Past departures on the first day are excluded by the passenger API. Prices, fleet, times and amenities are development examples, not BlueBus's commercial inventory. City and station names were checked against the public [BlueBus station directory](https://bluebus.com.eg/stations) on 2026-10-19.
 
-Fixture ids and demo plates are stable. Repeated runs for the same dates preserve matching records and do not create duplicates. A later-day run adds only missing departures for its new three-day window; it never deletes older trips. If an operator edited a demo record, including cancelling a departure, the command fails and rolls back instead of resetting it. It does not delete or overwrite ordinary records. Resolve conflicts manually or use a separate development database; there is no destructive reset command.
+Stable ids make ordinary seed runs insert missing rows without duplicating or overwriting existing catalog rows. All writes run in one transaction and seed commands share an advisory lock. Production seeding is disabled.
 
-All seed writes share a transaction. Concurrent seed commands serialize on a PostgreSQL advisory lock. New departures also lock their route/bus, recheck their data, and reject an existing overlapping schedule. Demo seeding is disabled when NODE_ENV=production. Keep NODE_ENV appropriate for the database you configured; never use production credentials for local demo data. Errors avoid printing connection secrets. db:seed uses the API workspace's environment and closes its connection.
+Explicitly clear **all application data**, including accounts, bookings, payments and catalog rows, then create the Egyptian catalog:
 
-Implementation: scripts/demoData.ts describes the fixtures and stable ids, scripts/demoSeed.ts inserts/checks them, and scripts/seed.ts is the command entry point. Tests use a separate random fixture namespace to avoid touching normal demo data.
+```sh
+npm run db:seed -- --reset-local-data
+```
+
+This destructive command is restricted to a non-production database named bus_platform on a loopback address. It preserves the Prisma contract/migration schema. It creates no backup. Run it only when deliberately replacing local data. Implementation: scripts/egyptCatalog.ts, scripts/seedEgyptCatalog.ts and scripts/seed.ts.
 
 ## Passenger trip search
 
@@ -1346,3 +1349,27 @@ The owner approved a temporary Cloudflare HTTPS tunnel. Its local proxy exposed 
 Real-provider checks uncovered two issues fixed before handoff: normalize PostgreSQL timestamp strings to ISO before input validation; and reject new checkout creation when fewer than Paymob's minimum 60 seconds remain. The temporary tunnel is for development only; each later session needs a new reachable HTTPS URL. Local checks do not prove production/LIVE readiness. Authenticated inquiry reported is_3d_secure=true, and the successful sandbox card completed without an OTP challenge. No separate declined-card/OTP challenge was produced; those account-specific provider simulations remain unverified while their backend rejection paths are checked locally.
 
 Actual provider expiry was verified separately: Paymob displayed Link has expired for a short-lived TEST Intention; the API returned 409 BOOKING_EXPIRED. All 28 migrations replayed in a fresh isolated database; a second migration run applied zero. Final manual regression included 12 scenario groups. The migration was applied to development after a private backup. Temporary verification databases were removed, synthetic users were disabled and their sessions revoked, test trips closed with financial/audit history preserved, and the tunnel stopped. Local payment activation flags were returned to false. Starting another TEST session requires a new reachable HTTPS address and explicit local activation.
+
+## Passenger website (local development)
+
+The passenger frontend lives in apps/web. Run these commands in separate terminals from the repository root:
+
+```powershell
+npm run dev
+npm run dev:web
+npm run email:worker
+```
+
+Open http://localhost:3000/ar (or /en). Keep Docker PostgreSQL/Mailpit running. The email worker delivers registration verification codes to local Mailpit at http://localhost:8025. All previous accounts were removed by the owner-requested local reset; register a new account and verify its email before booking.
+
+The website supports city/station search, trip results, a physical 2+2 seat map, multi-seat selection, login/registration/email verification, passenger details, a ten-minute server-side seat hold, booking history and owned booking/payment status. Seat availability refreshes periodically and is rechecked before reservation. A seat conflict is handled from the API; selection does not reserve a seat.
+
+NEXT_PUBLIC_API_BASE_URL is the browser API address (default http://localhost:4000/api/v1). API_BASE_URL is the server-only API address (default http://127.0.0.1:4000/api/v1). Configure apps/web/.env.local when overriding them. Use localhost consistently for the browser and its API cookies, and include its exact origin in API CORS_ORIGINS.
+
+The payment action checks GET /payments/availability before allowing checkout. This endpoint reports local configuration only, not live provider health. With checkout disabled the server returns PAYMENT_UNAVAILABLE. No browser calculation confirms payment or issues a ticket. Account passwords/tokens and passenger names are not persisted in browser storage.
+
+### Temporary local Paymob TEST ingress
+
+Run `npm run payment:proxy` beside the API on port 4000 and website on localhost:3000. The development-only proxy binds 127.0.0.1:4010 and allows only POST /api/v1/payments/paymob/webhook and GET /api/v1/payments/paymob/return; other routes return 404. The return redirects to the local bookings page and ignores callback query values. Only the authenticated payment inquiry can confirm a booking.
+
+Forward a temporary HTTPS tunnel to this restricted proxy, verify reachability, and update PAYMOB_NOTIFICATION_URL and PAYMOB_RETURN_URL in apps/api/.env with its current HTTPS address. Temporary addresses expire when their tunnel ends and may change. Keep credentials local. Validate with `npm run payment:check`, keep `npm run payment:worker` and `npm run refund:worker` running, and restart the API after changing environment settings. Enable the existing TEST checkout, provider, webhook, reconciliation and refund flags only while this configuration is ready. Set them back to false when ending the experiment. Do not extend an expired booking: select seats again if its hold has elapsed.

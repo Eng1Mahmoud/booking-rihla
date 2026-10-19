@@ -217,21 +217,220 @@ Complete this before creating apps/web or apps/admin:
 
 Working result: the agreed backend scope works through HTTP and repeatable tests, ready for frontend integration. Production provider onboarding remains part of release preparation.
 
-## Phase 11 — Passenger website
+## Phase 11 — Passenger website: proposed implementation plan
 
-Feature batches, each completed and pushed before the next:
+Planning update — 2026-10-19. The owner requested discussion of tooling, feature-based structure, reusable components, visual direction and pages before implementation. This proposal is pending that discussion; it does not authorize treating the visual design as approved. Build apps/web first and apps/admin afterward. Do not scaffold applications or install dependencies as part of this planning update.
 
-- [ ] Create apps/web with Next.js, an API client, and shared Zod schemas where needed.
-- [ ] Add mobile layouts, Arabic default, English coverage, RTL logical spacing, light/dark themes, and consistent shadcn/ui components.
-- [ ] Add search, results, trip details and accessible physical seat selection using code-defined templates and numbered seats; preserve the physical LTR grid in Arabic and submit seatId, with loading/empty/error states.
-- [ ] Add registration, verification/resend, login, session restoration, account, and password recovery using react-hook-form and Zod.
-- [ ] Add passenger details, server-priced summaries, reservations, booking references, and confirmation.
-- [ ] Add checkout, hold countdown/expiry, and payment success/failure/cancellation handling.
-- [ ] Add ticket/QR views, upcoming/past/operator-cancelled bookings and details; expose no passenger cancellation action.
-- [ ] Introduce TanStack Query for server data and Zustand only for client state that needs it.
-- [ ] Check keyboard operation, focus, screen-reader labels, contrast, responsive layouts, and full Arabic/English flows.
+### Proposed tools
 
-Working result: the passenger website uses the completed backend end to end. Begin the dashboard afterward.
+| Tool                                                            | Responsibility                                                                                      | Adoption                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Next.js App Router + React + TypeScript                         | Routing, layouts, public-page server rendering and interactive client components                    | Foundation                    |
+| Tailwind CSS                                                    | Responsive styling, logical RTL spacing and design tokens                                           | Foundation                    |
+| shadcn/ui                                                       | Editable UI primitives such as buttons, fields, dialogs and sheets, styled with our identity        | Add components when needed    |
+| next-intl                                                       | Arabic/English messages, locale routes and direction                                                | Foundation                    |
+| TanStack Query                                                  | Interactive server state: seat availability, owned bookings, payment polling and cache invalidation | First interactive API feature |
+| Zustand                                                         | Explicit global client state: session state in memory, booking draft and cross-component UI state   | Owner-selected frontend tool  |
+| React Hook Form + Zod                                           | Form state and browser validation, with server validation remaining authoritative                   | First account forms           |
+| Native fetch                                                    | Small typed API transport with normalized errors, cancellation and explicit retry rules             | Foundation                    |
+| Lucide React                                                    | Consistent icons; preserve physical seat orientation in RTL                                         | As needed                     |
+| Intl                                                            | Cairo date/time, durations and EGP display                                                          | Foundation                    |
+| Existing npm workspaces, ESLint, Prettier and TypeScript checks | Repository workflow and verification                                                                | Extend existing configuration |
+
+Install current compatible stable versions at implementation time and preserve exact resolved versions in package-lock.json. Continue npm rather than adding another package manager. Owner decision: use Zustand for global client state. Keep small focused stores for authentication/session state in memory and the booking draft (tripId/selected seatIds), plus cross-component UI state only where needed. useState/useReducer still handle component-local state; React Hook Form owns form state; TanStack Query owns fetched server data. Do not copy API query results into Zustand. A selected seat in the store is a draft, never a reservation. Revalidate against the backend before creating a hold. Clear draft state after completion, expiry, logout or an incompatible trip change as appropriate. Do not persist access/refresh tokens, passwords, verification codes, passenger/contact information or checkout URLs in browser storage. If search/theme preferences are persisted, use a narrow allowlist and handle hydration deliberately. Create scoped store instances through a client provider when integrating with Next.js; avoid request-specific mutable server-module singletons and do not read or mutate client stores from Server Components.
+
+Public search/details use Server Components where useful. TanStack Query owns live interactive reads; do not create two independent caches for the same data. Query strings hold search/date/page state so reload/back/share work. Seat/payment reads must remain fresh rather than being statically cached. Browser access tokens stay in memory; refresh tokens remain in the backend HttpOnly cookie. The API client coordinates refresh and does not blindly repeat booking/checkout/refund writes after an uncertain response. Coordinate refresh across tabs before declaring session integration complete. Keep database and Paymob secrets exclusively in the backend.
+
+### Feature-based source structure
+
+```text
+apps/
+  api/                              # Existing backend
+  web/
+    public/
+    src/
+      app/
+        [locale]/
+          layout.tsx
+          (public)/
+            page.tsx
+            trips/page.tsx
+            trips/[tripId]/page.tsx
+          (auth)/
+            login/page.tsx
+            register/page.tsx
+            verify-email/page.tsx
+            forgot-password/page.tsx
+            reset-password/page.tsx
+          (account)/
+            account/page.tsx
+            account/payments/page.tsx
+            bookings/page.tsx
+            bookings/[bookingId]/page.tsx
+            bookings/[bookingId]/ticket/page.tsx
+          checkout/[bookingId]/page.tsx
+          checkout/result/page.tsx
+      features/
+        auth/
+          api.ts
+          schemas.ts
+          types.ts
+          components/
+          hooks/
+        trips/
+        seats/
+        checkout/
+        bookings/
+        tickets/
+        account/
+      components/
+        ui/                         # shadcn primitives
+        layout/                     # Header, footer, navigation
+        shared/                     # Cross-feature states and small widgets
+      lib/
+        api-client.ts
+        api-error.ts
+        formatters.ts
+        env.ts
+      i18n/
+      messages/
+        ar.json
+        en.json
+      stores/
+        auth-store.ts               # In-memory session state
+        booking-store.ts            # Draft trip/seat selection; no server-data cache
+      providers/
+        app-providers.tsx
+```
+
+Create files/directories only when the feature uses them. page.tsx composes a feature screen; business UI, data access, hooks and validation stay in that feature. Example: TripCard belongs to features/trips/components; Button belongs to components/ui; formatMoney belongs to lib. Features depend on shared primitives/utilities, which do not import features. Keep cross-feature imports small and explicit. Route groups organize layouts and do not appear in URLs. Actual links have /ar or /en locale prefixes.
+
+### Reuse rules
+
+- One field primitive and validation-message style for forms; domain-specific forms stay with their feature.
+- Reuse CitySelect, TripSearchForm, TripCard, JourneySummary, SeatMap, SeatLegend, HoldCountdown, BookingStatusBadge and MoneyDisplay where their semantics match.
+- Shared loading, empty, error, retry and pagination patterns; accessible focus and feedback as part of every feature.
+- Prefer composition and clear props; avoid a single configurable component for unrelated page types or a hook for every function.
+- Reuse contracts and pure functions, not backend ORM objects or server-only modules in the browser.
+- Start shared code inside apps/web. When apps/admin becomes the second actual consumer, extract proven primitives/tokens to packages/ui and browser-safe contracts/formatters to a small package if warranted. At that point extend workspaces to packages/*. Neither app imports another app's source.
+
+### Passenger pages and scope
+
+All paths below are relative to /ar or /en.
+
+| Page               | Route                                 | Required behavior                                                                                                                  |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Home               | /                                     | City/date search, clear booking entry, actual data and a compact explanation of the booking steps                                  |
+| Search results     | /trips                                | Origin, destination, date, server-supported pagination, departure/arrival, price, type/amenities and actionable empty/error states |
+| Trip and seats     | /trips/[tripId]                       | Stations/times, numbered physical seat layout, available/unavailable/selected states, selected-seat summary                        |
+| Registration       | /register                             | Name/email/phone/password and inline validation                                                                                    |
+| Email verification | /verify-email                         | Six-digit code, resend cooldown and retained verificationId                                                                        |
+| Login              | /login                                | Session creation and safe return to the intended booking flow                                                                      |
+| Password recovery  | /forgot-password, /reset-password     | Existing code-based backend recovery flow, expiry and resend/error handling                                                        |
+| Account            | /account                              | Current account information and session actions already supported by the API                                                       |
+| Checkout           | /checkout/[bookingId]                 | Passenger/contact details, server price, remaining hold and explicit Paymob handoff                                                |
+| Payment result     | /checkout/result                      | Fetch authoritative owned payment status; waiting/success/expiry/failure/refund/review, never trust provider redirect query values |
+| My bookings        | /bookings                             | Upcoming, past, expired and operator-cancelled bookings with bounded pagination                                                    |
+| Booking details    | /bookings/[bookingId]                 | Passengers, route, state, paid amount, refund information and ticket link; no passenger cancellation                               |
+| Ticket             | /bookings/[bookingId]/ticket          | Existing backend ticket/QR, status and accessible presentation                                                                     |
+| Help and policies  | /help, /terms, /privacy               | Publish when owner-approved content exists; explain no passenger cancellation and full refund if operator cancels                  |
+| System states      | not-found.tsx, error.tsx, loading.tsx | Safe recovery actions, pending UI and correct missing-resource behavior                                                            |
+
+Do not expose profile editing, password-changing while logged in, downloads, advanced filters or totals that the existing API does not provide. Confirm any new API requirement before adding its UI. Search currently exposes bus capacity, not live available-seat totals for every result card; show live availability on trip details without introducing a request per result card. MVP is one-way, account-required booking; round trips, guest checkout, coupons and loyalty remain later work.
+
+The fixed STANDARD_2_2 template determines physical positioning from numbers. Keep the seat map LTR in both languages so aisle/window/driver positions never flip. Submit seatId, not the display number. Refresh availability before creating the hold; only a successful backend booking response reserves seats. After login, revalidate a prior selection because another passenger may have booked it. The backend price and expiresAt/serverTime govern totals and countdown; never persist a checkout URL or treat a client countdown as authority.
+
+### Passenger account area and activity history
+
+Owner addition — 2026-10-19: provide a clear passenger account interface for booking history and payment/refund activity. Use shared account navigation: account details, my bookings, payments/refunds and logout. On desktop use a compact account navigation beside the content; on mobile use an accessible compact menu/tabs and readable activity cards. Share statuses, money/date formatting, pagination and loading/empty/error UI with the rest of the passenger site.
+
+- /bookings: existing owned booking-history page with booking reference, journey, Cairo departure date/time, total and current booking state. Provide upcoming/past/expired/operator-cancelled views using accurate API-supported filtering; add backend filters if necessary rather than filtering one fetched page and presenting it as the complete history. Each entry links to booking details and an issued valid ticket.
+- /account/payments: protected payment/refund history showing reference, booking link, recorded date/time, server amount in EGP, payment state and refund state/amount where present. Clearly distinguish pending/failed/expired attempts from paid transactions and owed refunds from completed refunds. Users cannot cancel bookings or initiate their own refunds here.
+- Current backend supports owned bookings and per-booking payment-status reads, but has no complete passenger-wide payment-history endpoint. Add a dedicated authenticated, paginated own-payment activity endpoint before connecting this page; proposed GET /api/v1/account/payments. Scope exclusively from the authenticated user, never a client-selected userId. Return explicit safe customer-facing fields and stable pagination; no checkout links, raw webhook payloads, account/integration identifiers, credentials or other passengers' data.
+- Payment history is customer-facing business activity: one record per payment attempt, with linked refund state, not a raw list of duplicate provider callbacks. Display refund details explicitly, and do not invent fees, bank payout timestamps or unsupported accounting totals. If a combined payment/refund timeline is desired, define its record types and pagination in the API contract before implementation.
+- Deliver the account shell and booking history in the account/booking batches, then complete real payment/refund history in W5. This customer account area is part of apps/web; the staff dashboard remains the following phase.
+
+### Visual direction — BlueBus reference, simplified premium execution
+
+Owner choice — 2026-10-19: use https://bluebus.com.eg/ as the reference, with a simpler premium design and a deliberate visual identity. This replaces the earlier navy/teal/sand proposal. Tooling and feature-based structure remain proposals under discussion.
+
+Observed reference: navy navigation, travel photography, a prominent white origin/destination/date search panel, trip browsing and numbered physical seat selection. The live homepage also includes a carousel, long marketing sections, route directories, app promotion and a notification request. Use the booking clarity and blue/white travel language as inspiration. Our page map follows our supported backend: one-way account-based booking, direct TEST card payments and no passenger cancellation. Reference UI is not evidence that our backend supports its extra features.
+
+Public browser walkthrough on 2026-10-19: a homepage Cairo-to-Alexandria route link opened /ticketing with changeable origin, destination and date, nearby-day controls, trip results and a "My Trips" summary. A result exposed departure, stations, bus class, price and an available-seat count. "Choose a Seat" opened a modal with an availability legend, numbered 2+2 physical seating separated by an aisle, front-of-bus orientation, a selected-seat summary and total price. Clicking an available seat while signed out opened a registration/login/guest dialog; no account, checkout or payment was completed. These are observed public UI behaviors, not evidence of BlueBus internals or of later checkout behavior.
+
+Our implementation will show the trip context beside the seat map, keep a clear seat legend and a server-priced selection summary, and return a signed-out passenger to the same trip after login. We will require an account because our API does not support guest checkout. The search and results should be simpler than the reference, with no unsupported round-trip switch or unverified available-seat totals on every result. The passenger account area will provide our own booking and payment history; BlueBus's private history was not inspected.
+
+| Token      | Proposed value | Role                                                     |
+| ---------- | -------------- | -------------------------------------------------------- |
+| Navy       | #082D4F        | Header, headings and strong text                         |
+| Ocean blue | #087FAE        | Primary actions and selected seats; verify text contrast |
+| Mist       | #F6F8FB        | Page canvas                                              |
+| White      | #FFFFFF        | Main surfaces and search panel                           |
+| Slate      | #546578        | Secondary text                                           |
+| Border     | #DCE4EC        | Restrained separators and field boundaries               |
+
+Add semantic error/success/waiting colors only where their meaning is needed, with text/icons and checked contrast. Use blue consistently for an actionable selection; an unavailable seat should be quiet and clearly disabled rather than making most of the bus visually alarming. Preserve the physical LTR seat map in Arabic. IBM Plex Sans Arabic with matching Latin text remains the initial type proposal; compare actual Arabic numerals, dates, prices and form labels before confirming it. Prefer readable 16px body text, an 8px-based spacing scale, moderate corners and restrained shadows.
+
+Premium is expressed through typography, alignment, image quality, generous useful spacing and predictable interactions. It is not a collection of decorations. Use one properly licensed travel/bus photograph if a suitable asset exists; do not reuse BlueBus assets, logo or copy. Keep the initial name/logo neutral until the owner provides the brand. Use a static hero, concise booking-focused copy and an obvious search panel above the fold. Home needs only the booking entry, a compact explanation of the supported booking steps and a useful footer initially. Add destination content only when it can be supported with actual project data.
+
+Desktop homepage wireframe, mirrored for Arabic reading order:
+
+```text
+[Brand]                    [My bookings] [Language] [Account]
+[One travel photograph + short booking headline]
+[Origin] [Destination] [Travel date]                  [Search]
+[Choose trip] -> [Choose seat] -> [Complete payment]
+[Help] [Policies] [Footer]
+```
+
+Desktop results wireframe:
+
+```text
+[Brand]                    [My bookings] [Language] [Account]
+[Origin] [Destination] [Date]                         [Search]
+[Route and selected date]
+[Departure -- duration -- Arrival / stations] [Price]
+[Bus class and actual amenities]              [View seats]
+[Next trip row]
+[Pagination]
+```
+
+Trip/seat selection wireframe:
+
+```text
+[Route, stations, departure and arrival]
+[Front / driver]
+[1][2]  aisle  [3][4]           [Journey summary]
+[5][6]  aisle  [7][8]           [Selected seats / total]
+[Clear seat-state legend]       [Continue]
+```
+
+On mobile, stack fields and trip information, keep the seat map usable at normal zoom and show a sticky total/action without hiding content. Use a full page or accessible sheet for seats according to viewport. Account and payment screens use the same calm visual language. The dashboard later shares typography, tokens and primitives but gets an operational table/form layout rather than the passenger hero.
+
+Before implementation, review three representative views together: home/search, results and physical seat selection. Check actual Arabic/English content at desktop/mobile sizes, hierarchy, contrast, focus, form errors and selected/unavailable seat states. Revise the shared tokens/components before building all pages. Establish semantic light/dark tokens in the foundation, with the default light appearance following the reference and equivalent contrast checks for dark mode.
+
+Design exclusions for the initial passenger site: notification permission prompts on entry, automatic carousels, invented counters/reviews/trust badges, repeated decorative cards, large gradients/glass effects, unnecessary motion, unsupported round-trip controls and oversized marketing copy. Every visible action must lead to a working supported flow. shadcn supplies editable primitives, not the final site layout or an unchanged dashboard template.
+
+### Delivery batches
+
+| Batch                     | Deliverable                                                                                              | Completion check                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| W0 — Direction            | Discuss tools, design, page map, structure and API limitations                                           | Owner feedback incorporated; this document remains the single root plan                                                                |
+| W1 — Foundation           | apps/web, feature boundaries, Arabic/English, design tokens/themes, application layout and API transport | Responsive shell, functional locale/theme switch, clear unavailable-API state; no dummy actions                                        |
+| W2 — Trip discovery       | Home search, real results, details and read-only physical seat map                                       | Correct Cairo date, working URL filters/pagination, loading/empty/error states and mobile layout                                       |
+| W3 — Accounts             | Registration, verify/resend, login, recovery, session restoration and account reads                      | Real local API/Mailpit flow; ownership errors, expiry, refresh/logout and return-to-trip behavior                                      |
+| W4 — Booking              | Interactive seat selection, passenger/contact input, hold creation and server-priced summary             | Concurrent seat conflict handled, selection revalidated after login, countdown matches server and expiry recovery works                |
+| W5 — Payment and tickets  | TEST Paymob handoff/result, booking list/details, own payment/refund history and ticket/QR               | Reload/return/unknown/expiry/refund states reflect backend; repeat clicks never duplicate money operations                             |
+| W6 — Passenger completion | Complete Arabic/English, mobile/desktop, accessibility, polish and API integration gaps                  | Full search -> seats -> login -> hold -> TEST payment -> ticket journey; operator cancellation/refund visible without passenger cancel |
+| D1 onward — Dashboard     | apps/admin, shared-code extraction and role-aware management features                                    | Start only after passenger integration is complete                                                                                     |
+
+Each batch is a coherent reviewable commit: explain its files and flow in Arabic, then follow the owner's current Git instructions. Run TypeScript, ESLint, formatting, production build and manual browser verification for the touched feature. Add no automated test files under the current owner instruction; preserve pure functions, API boundaries and injectable dependencies so tests can be added later. Keep .env, .next, dist and local artifacts ignored. Frontend implementation began on 2026-10-19 in apps/web: localized foundation, public city search, live trip results and read-only seat details. Account, booking and payment UI remain subsequent batches.
+
+### REA role
+
+The owner ran REA setup for Codex and restarted it on 2026-10-19. REA 6.7.0 is now connected in Codex: its 207 tools are listed and binary_session responds with the live server identity. The public BlueBus walkthrough above was completed through the browser UI; any future REA browser investigation needs an available loopback Chrome DevTools endpoint. Native decompilation engines are not required for this website reference. REA is suitable for a specifically chosen reference application's observable behavior or shipped artifacts, not ordinary source-project architecture. For a selected reference we may inspect public search/seat UX, document observations, then implement our own design against our own API. Registration changes or analysis of unrelated applications are outside this planning step. Do not run diagnostics/setup merely to design the folder structure. Reference analysis can also use the existing browser tools if REA is not connected. Never import another site's assets, hidden APIs or source as a dependency of this application.
+
+Reference docs: [Next.js server/client components](https://nextjs.org/docs/app/getting-started/server-and-client-components), [shadcn RTL](https://ui.shadcn.com/docs/rtl), [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview), [next-intl routing](https://next-intl.dev/docs/routing/setup).
 
 ## Phase 12 — Administration dashboard
 
@@ -372,3 +571,15 @@ Container smoke verification passed: non-root uid 1000 and native Argon2; runtim
 Owner steering — 2026-10-19: finish Paymob before frontend; remove Auth/Capture and use TEST direct card payments. Complete real-provider verification before starting apps/web. A temporary restricted HTTPS tunnel was approved. Actual TEST card success, callback/inquiry confirmation, ticket issuance and full refund passed. A stable HTTPS URL is still required for future sessions/deployment; sandbox decline/OTP scenarios need provider simulation support.
 
 Payment handoff: the core TEST card/payment/refund path is verified and has no remaining Auth/Capture dependency. Provider-specific decline/OTP simulations are additional coverage, not a prerequisite to build the frontend. Stable HTTPS, production onboarding/LIVE support and operational deployment remain release work. Temporary payment flags and tunnel were disabled after verification.
+
+Frontend state decision — 2026-10-19: Zustand is explicitly selected by the owner for global client state, replacing the earlier proposal to defer a state library. Preserve the separation between Zustand client state, TanStack Query server state and React Hook Form form state. Zustand does not authorize or reserve a seat; backend ownership, price, hold and payment status remain authoritative. See [Zustand Next.js guidance](https://zustand.docs.pmnd.rs/learn/guides/nextjs).
+
+Frontend delivery — 2026-10-19: replaced the initial visual draft with a photographic Egyptian travel layout, local IBM Plex Sans Arabic, station-aware search, date navigation, reusable trip cards and a physical LTR seat map with actual chair icons. Added memory-only Zustand session and seat selection state, TanStack Query availability refresh, registration/verification/login, passenger details, API-backed temporary reservation, owned booking history/detail, server-time countdown and TEST-gated checkout handoff. UI selection and login were checked in the browser, and HTTP verification confirmed a 600 EGP two-seat hold and rejection of a second claim. Temporary verification rows were removed afterward. W3 password recovery/account completion and W5 payment result/ticket/own refund activity still require their scheduled frontend batches. Nothing is pushed without the owner's review.
+
+Owner-directed local data replacement — 2026-10-19: no backup was created. All prior public application rows (including accounts, reservations, payment evidence and old catalog) were removed from the verified loopback development database bus_platform. Prisma metadata was retained. Replaced with 7 Egyptian cities, 17 public station names, 36 44-seat buses and 504 development departures across 14 days. Times/fares/fleet are examples, not BlueBus commercial data. The owner removed the local backups folder; it was not re-created.
+
+### Passenger website completion priority — 2026-10-19
+
+The owner reports that the website TEST checkout succeeded. This is user-reported checkout success; independently verify backend confirmation and ticket availability in the next payment/ticket batch before treating the entire website payment journey as complete.
+
+Finish passenger functionality before the dedicated visual/UX polish pass. Next: complete authoritative payment-result handling and the owned ticket/QR page, then password recovery, the account area/session actions, paginated own payment/refund activity with its missing authenticated backend endpoint, booking-history filters supported across the full dataset, and system/help/policy pages (policy text requires owner approval before publication). Keep Arabic/English and basic usability working within each feature; defer minor visual refinement and the comprehensive responsive/accessibility/UX review until functionality is complete. Start the staff dashboard afterward. Deliver cohesive feature batches and keep the existing review-before-push rule. Do not add automated test files under the current owner instruction.
