@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { routeInfo, protectedRoute } from '@/shared/config/routes';
+import { routeInfo, protectedRoute } from '@/middleware/roleRoutes';
 import { usePathname } from '@/i18n/navigation';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 export function RequireAuth({

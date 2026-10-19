@@ -1,4 +1,4 @@
-import { routeInfo } from '@/shared/config/routes';
+import { routeInfo } from '@/middleware/roleRoutes';
 export function safeReturnPath(value: unknown) {
   if (
     typeof value !== 'string' ||
