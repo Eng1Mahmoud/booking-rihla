@@ -1376,6 +1376,12 @@ Forward a temporary HTTPS tunnel to this restricted proxy, verify reachability, 
 
 ### Passenger payment result and ticket
 
-After checkout, the local TEST proxy returns to /ar/checkout/result. That page links to My bookings because the configured provider return URL is shared: it does not guess a booking from provider query values. /ar/checkout/result?bookingId=<UUID> can display the signed-in owner's authoritative booking/payment result directly; success=true and other callback status values are ignored.
+New TEST checkout sessions return directly to the website /ar/checkout/result?bookingId=<UUID>. The API supplies the owned booking id. Legacy tunnel-based return URLs without an id still link to My bookings. Provider callback success values are ignored.
 
 A paid, confirmed booking exposes View ticket, opening /ar/bookings/<UUID>/ticket (also available in /en). The protected API supplies the journey, passengers, seats, paid total and PNG QR. Missing, unpaid, cancelled or inaccessible tickets show an unavailable state. Ticket status is rechecked on focus and every 30 seconds while visible; it is a current status display, not an offline validity or boarding guarantee. Payment states distinguish pending verification, failure, expiry, review and full refunds. Do not repeat a payment while its result is unknown.
+
+### Direct browser return during local TEST payments
+
+PAYMOB_RETURN_URL is now the passenger website result URL, for example http://localhost:3000/ar/checkout/result in local development, or https://your-website.example/ar/checkout/result in production. The API appends bookingId from the authenticated, server-owned booking when creating each new Intention. Paymob redirects the browser there directly, independently of the webhook tunnel. The page reads the owned booking/payment API; provider success flags are ignored.
+
+HTTP return URLs are permitted only for loopback hosts in development/test; production return URLs and all notification URLs require HTTPS. Localhost works only when the payment browser is on the same development computer. Keep the HTTPS webhook tunnel and payment inquiry worker available during TEST verification. Existing Intentions retain their original redirect URLs; do not recreate or repay a completed or uncertain payment just to change its return URL.

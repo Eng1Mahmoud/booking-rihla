@@ -21,6 +21,25 @@ const schema = z.object({
   PAYMOB_NOTIFICATION_URL: secureUrl,
   PAYMOB_RETURN_URL: secureUrl,
 });
+// Browser redirects may use loopback HTTP during local TEST development only.
+const localReturnUrl = z.url().refine((value) => {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  if (url.username || url.password || url.hash || url.search) return false;
+  return (
+    url.protocol === 'https:' ||
+    (url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))
+  );
+});
+function paymentSchema(environment: NodeJS.ProcessEnv) {
+  const local =
+    environment['NODE_ENV'] === undefined ||
+    ['development', 'test'].includes(environment['NODE_ENV']);
+  return schema.extend({
+    PAYMOB_RETURN_URL: local ? localReturnUrl : secureUrl,
+  });
+}
 export type PaymobConfig = z.infer<typeof schema>;
 export function parsePaymobEnv(
   environment: NodeJS.ProcessEnv,
@@ -32,7 +51,7 @@ export function parsePaymobEnv(
     return null;
   if (environment['PAYMOB_ENABLED'] !== 'true')
     throw new Error('Invalid payment configuration: PAYMOB_ENABLED');
-  const result = schema.safeParse(environment);
+  const result = paymentSchema(environment).safeParse(environment);
   if (!result.success)
     throw new Error(
       'Invalid payment configuration: ' +
@@ -54,7 +73,7 @@ export function inspectPaymobSetup(environment: NodeJS.ProcessEnv) {
       PAYMOB_INTEGRATION_ID: true,
     })
     .safeParse(environment);
-  const readiness = schema.safeParse(environment);
+  const readiness = paymentSchema(environment).safeParse(environment);
   const fields = (issues: z.core.$ZodIssue[]) => [
     ...new Set(issues.map((issue) => issue.path.join('.'))),
   ];

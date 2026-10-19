@@ -127,6 +127,7 @@ export function createPaymentSessionService(dependencies: {
           return {
             operation,
             input: {
+              bookingId,
               reference: operation.id,
               amountPiastres: Number(attempt.amountPiastres),
               expiresAt: new Date(attempt.expiresAt).toISOString(),

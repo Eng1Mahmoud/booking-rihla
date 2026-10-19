@@ -1,5 +1,6 @@
 // All amounts are integer piastres. Only the booking service may choose them.
 export interface PaymentInput {
+  bookingId: string;
   reference: string;
   amountPiastres: number;
   expiresAt: string;

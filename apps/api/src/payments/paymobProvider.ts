@@ -56,6 +56,7 @@ const transactionSchema = z.object({
   parent_transaction: numericId.nullish(),
 });
 const inputSchema = z.object({
+  bookingId: z.uuid(),
   reference: z.string().min(1).max(100),
   amountPiastres: amount,
   expiresAt: z.iso.datetime({ offset: true }),
@@ -78,6 +79,7 @@ export function createPaymobProvider(
       Object.entries(config).map(([key, value]) => [key, String(value)]),
     ),
     PAYMOB_ENABLED: 'true',
+    NODE_ENV: process.env['NODE_ENV'],
   })!;
   async function request(
     path: string,
@@ -168,6 +170,9 @@ export function createPaymobProvider(
       // Respect the provider minimum without ever extending a local hold.
       if (remaining < paymobMinimumCheckoutSeconds || remainingMs > 600000)
         throw new PaymentProviderError();
+      // The server chooses the booking. Browser callback flags are not evidence.
+      const returnUrl = new URL(config.PAYMOB_RETURN_URL);
+      returnUrl.searchParams.set('bookingId', input.bookingId);
       const raw = await request('/v1/intention/', 'POST', {
         amount: input.amountPiastres,
         currency: 'EGP',
@@ -184,7 +189,7 @@ export function createPaymobProvider(
           phone_number: input.customer.phone,
         },
         notification_url: config.PAYMOB_NOTIFICATION_URL,
-        redirection_url: config.PAYMOB_RETURN_URL,
+        redirection_url: returnUrl.href,
       });
       const parsed = intentionSchema.safeParse(raw);
       if (!parsed.success)
