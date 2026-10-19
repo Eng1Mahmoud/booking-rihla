@@ -820,7 +820,7 @@ html[dir='ltr'] .hero-shade {
   position: relative;
 }
 .bus-front {
-  height: 82px;
+  height: 110px;
   position: relative;
   border-top: 4px solid #dce8ef;
   border-radius: 28px 28px 0 0;
@@ -845,7 +845,11 @@ html[dir='ltr'] .hero-shade {
 .bus-front-label {
   font-size: 9px;
   color: #8498aa;
-  margin-top: 18px;
+  position: absolute;
+  left: 50%;
+  top: 66px;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 .bus-door {
   display: block;
@@ -1786,4 +1790,24 @@ html[dir='ltr'] .hero-shade {
     height: 61px;
     font-size: 10px;
   }
+}
+
+.bus-crew {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+.bus-crew .driver {
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bus-front .bus-door {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin-bottom: 0;
 }

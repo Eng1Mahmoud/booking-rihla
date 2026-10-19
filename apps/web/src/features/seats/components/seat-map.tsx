@@ -47,9 +47,17 @@ export function SeatMap({
       <div className={physical ? 'bus-shell' : 'numbered-seats'} dir="ltr">
         {physical && (
           <div className="bus-front">
-            <div className="driver">
-              <SteeringWheel />
-              <span>{t('driver')}</span>
+            <div className="bus-crew">
+              <div className="driver">
+                <SteeringWheel />
+                <span>{t('driver')}</span>
+              </div>
+              {centerFacilities && (
+                <div className="driver second-driver">
+                  <SeatIcon />
+                  <span>{t('secondDriver')}</span>
+                </div>
+              )}
             </div>
             <span className="bus-front-label">{t('front')}</span>
             <span className="bus-door">
