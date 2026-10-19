@@ -1,4 +1,6 @@
+// Used by AuthSessionSync to clear the user and private query cache.
 export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
+// One error shape for HTTP failures in both server and browser code.
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -49,28 +51,27 @@ async function sendRequest(path: string, options: RequestInit = {}) {
     throw new ApiError(0, 'NETWORK_ERROR');
   }
 }
-async function withSessionLock(action: () => Promise<void>) {
+// Serialize cookie changes across browser tabs when Web Locks are available.
+async function withSessionLock<T>(action: () => Promise<T>): Promise<T> {
   if (typeof navigator !== 'undefined' && navigator.locks) {
-    await navigator.locks.request('bus-auth-refresh', async () => {
-      await action();
-    });
-  } else {
-    await action();
+    return navigator.locks.request('bus-auth-refresh', action);
   }
+  return action();
 }
-async function send(path: string, options: RequestInit = {}) {
-  if (
-    typeof window === 'undefined' ||
-    !['auth/login', 'auth/logout', 'auth/logout-all'].includes(path)
-  )
-    return sendRequest(path, options);
-  let response!: Response;
-  // A concurrent refresh must finish before login/logout can replace the shared cookies.
-  await withSessionLock(async () => {
-    response = await sendRequest(path, options);
-  });
-  return response;
+
+// Login/logout must wait for any running refresh before changing cookies.
+function send(path: string, options: RequestInit = {}) {
+  const changesSession = [
+    'auth/login',
+    'auth/logout',
+    'auth/logout-all',
+  ].includes(path);
+  if (typeof window !== 'undefined' && changesSession) {
+    return withSessionLock(() => sendRequest(path, options));
+  }
+  return sendRequest(path, options);
 }
+
 async function failure(response: Response) {
   const body = await response.json().catch(() => null);
   return new ApiError(response.status, body?.error?.code ?? 'REQUEST_FAILED');
@@ -79,25 +80,32 @@ function expired() {
   if (typeof window !== 'undefined')
     window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
 }
+// Recheck first: another browser tab may already have refreshed the cookies.
+async function refreshSession() {
+  const current = await sendRequest('auth/me');
+  if (current.ok) return;
+  if (current.status !== 401) throw await failure(current);
+
+  const response = await sendRequest('auth/refresh', {
+    method: 'POST',
+    body: '{}',
+  });
+  if (!response.ok) {
+    if (response.status === 401) expired();
+    throw await failure(response);
+  }
+}
+
+// Concurrent requests in this tab share one refresh operation.
 let refreshInFlight: Promise<void> | null = null;
-async function recoverSession() {
-  if (refreshInFlight) return refreshInFlight;
-  const recover = async () => {
-    // Another tab may have refreshed while we waited for the browser-wide lock.
-    const current = await send('auth/me');
-    if (current.ok) return;
-    if (current.status !== 401) throw await failure(current);
-    const response = await send('auth/refresh', { method: 'POST', body: '{}' });
-    if (!response.ok) {
-      if (response.status === 401) expired();
-      throw await failure(response);
-    }
-  };
-  refreshInFlight = withSessionLock(recover).finally(() => {
+function recoverSession() {
+  refreshInFlight ??= withSessionLock(refreshSession).finally(() => {
     refreshInFlight = null;
   });
   return refreshInFlight;
 }
+
+// Parse JSON and retry once only when an expired browser session causes a 401.
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response = await send(path, options);
   const endpoint = path.split('?')[0].toLowerCase();
@@ -117,6 +125,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ? (undefined as T)
     : ((await response.json()) as T);
 }
+// Display messages only; they do not control requests or session recovery.
 const errors: Record<string, [string, string]> = {
   UPSTREAM_UNAVAILABLE: [
     'تعذر الاتصال بالخادم. حاول مجددًا.',
@@ -190,6 +199,7 @@ export function errorMessage(error: unknown, locale: string) {
   );
 }
 
+// Feature API files use these methods; request() handles their shared behavior.
 export const apiClient = {
   get: <T>(path: string, options: RequestInit = {}) =>
     request<T>(path, options),
