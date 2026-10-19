@@ -1926,3 +1926,85 @@ html[dir='ltr'] .hero-shade {
   color: var(--muted);
   line-height: 1.9;
 }
+
+.account-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.account-tabs a {
+  padding: 12px 4px;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+}
+.account-tabs a[aria-current='page'] {
+  color: var(--navy);
+  border-bottom-color: var(--ocean);
+  font-weight: 600;
+}
+.account-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.account-panel {
+  padding: 28px;
+}
+.account-panel > svg {
+  color: var(--ocean);
+  margin-bottom: 14px;
+}
+.account-panel h2 {
+  font-size: 21px;
+  margin-bottom: 20px;
+}
+.account-panel p {
+  line-height: 1.9;
+}
+.account-details {
+  margin: 0;
+}
+.account-details > div {
+  padding-block: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.account-details > div:last-child {
+  border: 0;
+  padding-bottom: 0;
+}
+.account-details dt {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.account-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.account-actions {
+  display: grid;
+  justify-items: start;
+  gap: 18px;
+  margin-top: 24px;
+}
+.account-confirm {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+.account-confirm p {
+  margin-bottom: 16px;
+}
+.account-confirm .text-button {
+  margin-inline-start: 18px;
+}
+@media (max-width: 767px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-panel {
+    padding: 22px;
+  }
+}

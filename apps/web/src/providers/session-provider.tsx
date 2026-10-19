@@ -22,6 +22,7 @@ type ContextValue = {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearSession: () => void;
+  logoutAll: () => Promise<void>;
   request: <T>(path: string, options?: RequestInit) => Promise<T>;
 };
 const SessionContext = createContext<ContextValue | null>(null);
@@ -101,9 +102,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     [refresh, store],
   );
+  const logoutAll = useCallback(async () => {
+    await request('auth/logout-all', { method: 'POST', body: '{}' });
+    clearSession();
+  }, [request, clearSession]);
   return (
     <SessionContext.Provider
-      value={{ store, login, logout, request, clearSession }}
+      value={{ store, login, logout, logoutAll, request, clearSession }}
     >
       {children}
     </SessionContext.Provider>
@@ -117,6 +122,7 @@ export function useSession() {
     ...state,
     login: context.login,
     logout: context.logout,
+    logoutAll: context.logoutAll,
     clearSession: context.clearSession,
     request: context.request,
   };

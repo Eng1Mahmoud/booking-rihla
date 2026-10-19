@@ -18,7 +18,7 @@ export function AccountNav() {
       {status === 'signed-in' ? (
         <>
           <Link
-            href="/bookings"
+            href="/account"
             className="nav-account"
             aria-label={t('account')}
           >

@@ -1395,3 +1395,9 @@ After checkout, the website can POST an empty JSON object to /bookings/<UUID>/pa
 Use Forgot password on the login form, or /ar/forgot-password (/en also supported). Enter the account email to request a six-digit code. The same form then accepts the code and a matching new password of 12–128 characters. /ar/reset-password supports entering an already received code directly. Codes last ten minutes; requesting a new one replaces the old code, with the existing backend resend/attempt limits enforced. Generic request messages do not disclose whether an account exists.
 
 Keep the local email worker running and read development messages in Mailpit. Passwords and codes stay in form memory and are cleared after success; no automatic login follows a reset. Existing account sessions are revoked by the API, and the website clears its local session/cache before offering sign-in with the new password. A validated internal returnTo preserves the prior destination; email/code/password values are never carried in that URL.
+
+### Passenger account
+
+/ar/account and /en/account show the signed-in passenger's name, email and phone from authenticated GET /auth/me. Shared account navigation links the profile and booking history. Guests see sign-in with a return path to their account.
+
+Sign out ends the current session. Sign out of all devices asks for confirmation and calls authenticated POST /auth/logout-all, including the current session. Successful logout clears the memory-only session and TanStack Query cache. Errors remain visible without pretending the request succeeded. Profile editing and a device inventory are not currently supported.

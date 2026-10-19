@@ -140,7 +140,7 @@
     "welcome": "All your journeys. One account.",
     "welcomeText": "Choose your seat, follow your booking and review your journey details whenever you need.",
     "logout": "Sign out",
-    "account": "My account and bookings",
+    "account": "My account",
     "forgotPassword": "Forgot your password?"
   },
   "Booking": {
@@ -295,5 +295,25 @@
     "successTitle": "Password changed",
     "successNote": "Sign in with your new password. Previous sessions for this account have been revoked.",
     "uncertain": "We could not confirm the request result. Try signing in with your new password before requesting another reset."
+  },
+  "Account": {
+    "navigation": "Your account",
+    "title": "My account",
+    "bookings": "My bookings",
+    "profile": "Personal details",
+    "name": "Name",
+    "email": "Email address",
+    "phone": "Phone number",
+    "sessions": "Sign-in and sessions",
+    "sessionHint": "Using a shared device? Sign out when you finish. You can also end all your signed-in sessions, including this one.",
+    "logout": "Sign out of this device",
+    "logoutAll": "Sign out of all devices",
+    "confirm": "This will sign you out everywhere, including this device. You will need to sign in again to view your bookings.",
+    "confirmAction": "Yes, sign out everywhere",
+    "cancel": "Cancel",
+    "working": "Signing out…",
+    "loading": "Loading your account…",
+    "signIn": "Sign in to view your account.",
+    "retry": "Try again"
   }
 }

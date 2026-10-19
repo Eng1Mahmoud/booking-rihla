@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { errorMessage } from '@/lib/browser-api';
 import { displayName, formatDate, formatPrice } from '@/features/trips/format';
 import type { Booking } from '../types';
+import { AccountNavigation } from '@/features/account/components/account-navigation';
 export function BookingHistory() {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
@@ -41,6 +42,7 @@ export function BookingHistory() {
     );
   return (
     <>
+      <AccountNavigation />
       <div className="section-heading">
         <h1>{t('myBookings')}</h1>
         <Link href="/" className="text-button">
