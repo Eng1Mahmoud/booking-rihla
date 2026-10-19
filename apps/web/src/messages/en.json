@@ -241,7 +241,9 @@
         "title": "The operator cancelled this trip",
         "note": "The ticket is no longer valid. Any full refund due is shown separately below."
       }
-    }
+    },
+    "checkingTitle": "Checking your payment result",
+    "checkingNote": "We are checking the latest booking status. The result and ticket will appear automatically after server confirmation. Do not pay again while verification is pending."
   },
   "Ticket": {
     "title": "Your ticket",

@@ -20,16 +20,23 @@ import { Link } from '@/i18n/navigation';
 import type { Booking, BookingPayment } from '../types';
 import { isPaymentPending, paymentOutcome } from '../payment-state';
 import { PaymentStatus } from './payment-status';
-export function BookingDetail({ bookingId }: { bookingId: string }) {
+export function BookingDetail({
+  bookingId,
+  afterCheckout = false,
+}: {
+  bookingId: string;
+  afterCheckout?: boolean;
+}) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
+  const resultText = useTranslations('PaymentResult');
   const { user, status, request } = useSession();
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const availability = useQuery({
     queryKey: ['checkout-availability'],
-    enabled: status === 'signed-in',
+    enabled: status === 'signed-in' && !afterCheckout,
     retry: false,
     staleTime: 5000,
     refetchInterval: 15000,
@@ -42,31 +49,54 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
   });
   const query = useQuery({
     queryKey: ['owned-booking', user?.id, bookingId],
+    staleTime: 0,
+    refetchOnMount: 'always',
     enabled: status === 'signed-in',
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const [booking, payment] = await Promise.all([
-        request<{ data: Booking }>('bookings/' + bookingId),
-        request<{ data: BookingPayment }>('bookings/' + bookingId + '/payment'),
+        request<{ data: Booking }>('bookings/' + bookingId, { signal }),
+        request<{ data: BookingPayment }>(
+          'bookings/' + bookingId + '/payment',
+          { signal },
+        ),
       ]);
       return { booking: booking.data, payment: payment.data };
     },
     retry: false,
     refetchInterval: (q) =>
       q.state.data &&
-      (q.state.data.booking.paymentRequired ||
+      ((afterCheckout &&
+        ['waiting', 'processing'].includes(
+          paymentOutcome(q.state.data.payment),
+        )) ||
+        q.state.data.booking.paymentRequired ||
         isPaymentPending(q.state.data.payment.paymentStatus) ||
         ['PENDING', 'REQUESTED', 'UNKNOWN'].includes(
           q.state.data.payment.refundStatus ?? '',
         ))
-        ? 5000
+        ? afterCheckout
+          ? 3000
+          : 5000
         : false,
   });
   useEffect(() => {
+    if (afterCheckout) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [afterCheckout]);
+  const checkingResult = (
+    <section className="panel result-entry" role="status">
+      <Clock size={26} aria-hidden="true" />
+      <h2>{resultText('checkingTitle')}</h2>
+      <p>{resultText('checkingNote')}</p>
+    </section>
+  );
   if (status === 'loading')
-    return <p className="loading-state">{t('loading')}</p>;
+    return afterCheckout ? (
+      checkingResult
+    ) : (
+      <p className="loading-state">{t('loading')}</p>
+    );
   if (status === 'guest')
     return (
       <div className="panel auth-required">
@@ -74,7 +104,12 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         <AuthForm />
       </div>
     );
-  if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
+  if (query.isPending || (afterCheckout && !query.isFetchedAfterMount))
+    return afterCheckout ? (
+      checkingResult
+    ) : (
+      <p className="loading-state">{t('loading')}</p>
+    );
   if (query.isError)
     return (
       <div className="notice" role="alert">
@@ -103,7 +138,32 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       )
     : 0;
   const outcome = paymentOutcome(payment);
+  // A return from checkout never offers another charge while verification is pending.
+  if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
+    return (
+      <section className="panel result-entry" role="status">
+        <Clock size={26} aria-hidden="true" />
+        <h2>{resultText('checkingTitle')}</h2>
+        <p>{resultText('checkingNote')}</p>
+        <p>
+          {t('reference')} <bdi>{booking.reference}</bdi>
+        </p>
+        <button
+          type="button"
+          className="button-secondary"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          {t('refresh')}
+        </button>
+        <Link href="/bookings" className="text-button">
+          {t('myBookings')}
+        </Link>
+      </section>
+    );
+  }
   const canPay =
+    !afterCheckout &&
     availability.data?.checkoutEnabled === true &&
     booking.paymentRequired &&
     seconds > 0 &&
@@ -201,13 +261,13 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
           ) : (
             <Clock size={21} />
           )}
-          <strong>{t('statuses.' + booking.status)}</strong>
+          <strong>{t('statuses.' + payment.bookingStatus)}</strong>
         </div>
         <div className="summary-total">
           <span>{t('total')}</span>
           <strong>{formatPrice(booking.totalPiastres, locale)}</strong>
         </div>
-        {booking.paymentRequired && seconds > 0 && (
+        {!afterCheckout && booking.paymentRequired && seconds > 0 && (
           <div className="hold-timer" role="timer">
             <Clock size={20} />
             <span>{t('remaining')}</span>

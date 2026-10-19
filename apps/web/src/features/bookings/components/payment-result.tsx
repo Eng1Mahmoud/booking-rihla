@@ -11,7 +11,7 @@ export function PaymentResult({ bookingId }: { bookingId?: string }) {
       </div>
       <p className="muted mb-6">{t('note')}</p>
       {bookingId ? (
-        <BookingDetail bookingId={bookingId} />
+        <BookingDetail key={bookingId} bookingId={bookingId} afterCheckout />
       ) : (
         <section className="panel result-entry">
           <p>{t('chooseBooking')}</p>
