@@ -7,13 +7,19 @@ export default defineConfig(
   {
     ignores: [
       '**/node_modules/**',
+      '**/.next/**',
       '**/dist/**',
       '**/coverage/**',
       'apps/api/src/prisma/contract.d.ts',
     ],
   },
   {
-    files: ['apps/api/src/**/*.ts', 'apps/api/prisma.config.ts'],
+    files: [
+      'apps/api/src/**/*.ts',
+      'apps/api/prisma.config.ts',
+      'apps/web/src/**/*.ts',
+      'apps/web/src/**/*.tsx',
+    ],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

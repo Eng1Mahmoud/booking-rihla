@@ -12,7 +12,7 @@
     "build": "npm run build --workspace @booking-bus/api",
     "start": "npm run start --workspace @booking-bus/api",
     "typecheck": "npm run typecheck --workspace @booking-bus/api",
-    "lint": "eslint apps/api/src apps/api/prisma.config.ts --max-warnings=0",
+    "lint": "eslint apps/api/src apps/api/prisma.config.ts apps/web/src --max-warnings=0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "contract:emit": "npm run contract:emit --workspace @booking-bus/api",
@@ -35,6 +35,10 @@
     "db:backup": "npm run db:backup --workspace @booking-bus/api --",
     "db:restore": "npm run db:restore --workspace @booking-bus/api --",
     "ops:status": "npm run ops:status --workspace @booking-bus/api",
+    "dev:web": "npm run dev --workspace @booking-bus/web",
+    "build:web": "npm run build --workspace @booking-bus/web",
+    "typecheck:web": "npm run typecheck --workspace @booking-bus/web",
+    "lint:web": "npm run lint --workspace @booking-bus/web",
     "payment:proxy": "npm run payment:proxy --workspace @booking-bus/api"
   },
   "devDependencies": {

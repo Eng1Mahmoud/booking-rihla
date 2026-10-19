@@ -13,3 +13,5 @@ apps/api/migrations/snapshots/**/contract.json
 apps/api/migrations/snapshots/**/contract.d.ts
 apps/api/migrations/app/**/ops.json
 apps/api/migrations/app/**/migration.json
+
+apps/web/next-env.d.ts
