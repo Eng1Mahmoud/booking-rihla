@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { apiRoute } from '@/shared/config/apiRoutes';
 import {
   fetchBackend,
   readAuthCookies,
@@ -40,8 +39,8 @@ async function forwardRequest(
   if (segments.some((part) => !/^[a-zA-Z0-9-]+$/.test(part)))
     return error(404, 'NOT_FOUND');
   const path = segments.join('/');
-  const route = apiRoute(path, request.method);
-  if (!route) return error(404, 'NOT_FOUND');
+  // Express routes are case-insensitive; token responses must always be handled here.
+  const authPath = path.toLowerCase();
   // All browser calls use our custom header; cross-origin callers cannot send it without a preflight.
   if (request.headers.get('X-CSRF-Protection') !== '1')
     return error(403, 'CSRF_REJECTED');
@@ -59,15 +58,12 @@ async function forwardRequest(
   )
     return error(403, 'CSRF_REJECTED');
   const { access, refresh } = readAuthCookies(request);
-  const refreshing = path === 'auth/refresh';
-  const loggingOut = path === 'auth/logout' || path === 'auth/logout-all';
+  const refreshing = authPath === 'auth/refresh';
+  const loggingOut =
+    authPath === 'auth/logout' || authPath === 'auth/logout-all';
   if ((refreshing || loggingOut) && refresh && !/^[a-f0-9]{64}$/.test(refresh))
     return cleared(error(401, 'UNAUTHENTICATED'));
   if (refreshing && !refresh) return cleared(error(401, 'UNAUTHENTICATED'));
-  if (!route.public && !refreshing && !loggingOut && !access)
-    return error(401, 'UNAUTHENTICATED');
-  if (path === 'auth/logout-all' && !access)
-    return error(401, 'UNAUTHENTICATED');
   let body: string | undefined;
   if (request.method !== 'GET') {
     if (Number(request.headers.get('content-length') ?? 0) > 102400)
@@ -97,8 +93,7 @@ async function forwardRequest(
     };
     const idempotencyKey = request.headers.get('Idempotency-Key');
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    if (access && !route.public && !refreshing)
-      headers.Authorization = 'Bearer ' + access;
+    if (access && !refreshing) headers.Authorization = 'Bearer ' + access;
     if (refresh && (refreshing || loggingOut))
       headers.Cookie = backendRefreshCookie(refresh);
     const upstream = await fetchBackend(
@@ -106,7 +101,7 @@ async function forwardRequest(
       { method: request.method, headers, body },
       request.nextUrl.search,
     );
-    if ((path === 'auth/login' || refreshing) && upstream.ok) {
+    if ((authPath === 'auth/login' || refreshing) && upstream.ok) {
       const parsed = tokensSchema.safeParse(await upstream.json());
       const cookie = upstream.headers
         .getSetCookie()
@@ -149,7 +144,7 @@ async function forwardRequest(
     if (
       (refreshing && upstream.status === 401) ||
       (loggingOut && upstream.ok) ||
-      (path === 'auth/reset-password' && upstream.ok)
+      (authPath === 'auth/reset-password' && upstream.ok)
     )
       clearAuthCookies(response);
     return response;

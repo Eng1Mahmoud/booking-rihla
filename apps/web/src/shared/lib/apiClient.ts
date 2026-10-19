@@ -1,4 +1,3 @@
-import { apiRoute } from '@/shared/config/apiRoutes';
 export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
 export class BrowserApiError extends Error {
   constructor(
@@ -85,14 +84,14 @@ async function browserRequest<T>(
   options: RequestInit = {},
 ): Promise<T> {
   let response = await send(path, options);
-  const route = apiRoute(path.split('?')[0], options.method ?? 'GET');
+  const endpoint = path.split('?')[0].toLowerCase();
+  // Credential/code failures are not expired-session failures.
+  const canRefresh =
+    !endpoint.startsWith('auth/') ||
+    endpoint === 'auth/me' ||
+    endpoint === 'auth/logout-all';
   // Only authentication rejection permits a replay: no retries for 403, network failures or unknown payment outcomes.
-  if (
-    response.status === 401 &&
-    route &&
-    !route.public &&
-    !['auth/refresh', 'auth/logout'].includes(path)
-  ) {
+  if (response.status === 401 && canRefresh) {
     await recoverSession();
     response = await send(path, options);
     if (response.status === 401) expired();
