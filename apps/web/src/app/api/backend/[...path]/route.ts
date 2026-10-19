@@ -96,11 +96,11 @@ async function forwardRequest(
     if (refresh && (refreshing || loggingOut))
       headers.Cookie =
         'bus_refresh=' + refresh + '; __Secure-bus_refresh=' + refresh;
-    const upstream = await fetchBackend(
-      path,
-      { method: request.method, headers, body },
-      request.nextUrl.search,
-    );
+    const upstream = await fetchBackend(path + request.nextUrl.search, {
+      method: request.method,
+      headers,
+      body,
+    });
     if ((authPath === 'auth/login' || refreshing) && upstream.ok) {
       const parsed = tokensSchema.safeParse(await upstream.json());
       const cookie = upstream.headers
