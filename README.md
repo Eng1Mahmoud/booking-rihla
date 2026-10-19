@@ -1364,7 +1364,7 @@ Open http://localhost:3000/ar (or /en). Keep Docker PostgreSQL/Mailpit running. 
 
 The website supports city/station search, trip results, a physical 2+2 seat map, multi-seat selection, login/registration/email verification, passenger details, a ten-minute server-side seat hold, booking history and owned booking/payment status. Seat availability refreshes periodically and is rechecked before reservation. A seat conflict is handled from the API; selection does not reserve a seat.
 
-NEXT_PUBLIC_API_BASE_URL is the browser API address (default http://localhost:4000/api/v1). API_BASE_URL is the server-only API address (default http://127.0.0.1:4000/api/v1). Configure apps/web/.env.local when overriding them. Use localhost consistently for the browser and its API cookies, and include its exact origin in API CORS_ORIGINS.
+Browser requests use the same-origin /api/backend gateway. API_BASE_URL is the server-only backend address (default http://127.0.0.1:4000/api/v1); SITE_ORIGIN is the website origin. Configure apps/web/.env.local when overriding them, and include the website origin in API CORS_ORIGINS.
 
 The payment action checks GET /payments/availability before allowing checkout. This endpoint reports local configuration only, not live provider health. With checkout disabled the server returns PAYMENT_UNAVAILABLE. No browser calculation confirms payment or issues a ticket. Account passwords/tokens and passenger names are not persisted in browser storage.
 

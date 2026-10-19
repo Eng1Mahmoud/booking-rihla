@@ -1,4 +1,6 @@
-import { apiGet } from '@/lib/api';
+import { apiGet } from '@/lib/server/backend';
+import type { Trip, SeatList } from './types';
+import type { Search } from './search';
 export type City = { id: string; nameAr: string; nameEn: string };
 export type Station = City & { cityId: string };
 async function listCatalog<T>(path: string): Promise<T[]> {
@@ -19,6 +21,25 @@ export async function getSearchCatalog() {
   ]);
   return { cities, stations };
 }
-export async function getCities() {
-  return listCatalog<City>('cities');
+
+export async function searchTrips(search: Search): Promise<Trip[]> {
+  const query = new URLSearchParams({
+    travelDate: search.travelDate,
+    limit: '21',
+    offset: String(search.offset),
+  });
+  for (const key of [
+    'originCityId',
+    'originStationId',
+    'destinationCityId',
+    'destinationStationId',
+  ] as const)
+    if (search[key]) query.set(key, search[key]);
+  return (await apiGet<{ data: Trip[] }>('trips/search?' + query)).data;
+}
+export async function getTrip(id: string): Promise<Trip> {
+  return (await apiGet<{ data: Trip }>('trips/' + id + '/details')).data;
+}
+export async function getSeats(id: string): Promise<SeatList> {
+  return (await apiGet<{ data: SeatList }>('trips/' + id + '/seats')).data;
 }

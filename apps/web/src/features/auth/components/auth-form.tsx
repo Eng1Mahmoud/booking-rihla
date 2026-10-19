@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Link, usePathname } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { safeReturnPath } from '../safe-return-path';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,14 +14,7 @@ type Values = {
   password: string;
   code: string;
 };
-export function AuthForm({
-  onSuccess,
-  returnTo,
-}: {
-  onSuccess?: () => void;
-  returnTo?: string;
-}) {
-  const pathname = usePathname();
+export function AuthForm({ returnTo }: { returnTo: string }) {
   const locale = useLocale();
   const t = useTranslations('Auth');
   const { login } = useSession();
@@ -55,7 +48,6 @@ export function AuthForm({
       if (mode === 'login') {
         await login(values.email.trim().toLowerCase(), values.password);
         reset();
-        onSuccess?.();
         return;
       }
       const schema = z.object({
@@ -234,7 +226,7 @@ export function AuthForm({
           <Link
             href={
               '/forgot-password?returnTo=' +
-              encodeURIComponent(safeReturnPath(returnTo ?? pathname))
+              encodeURIComponent(safeReturnPath(returnTo))
             }
             className="text-button"
           >

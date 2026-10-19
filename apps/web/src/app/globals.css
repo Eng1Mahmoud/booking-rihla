@@ -1024,10 +1024,6 @@ html[dir='ltr'] .hero-shade {
   font-size: 15px;
   font-weight: 500;
 }
-.inline-auth {
-  padding-top: 15px;
-  border-top: 1px solid var(--border);
-}
 .mobile-selection-bar {
   display: none;
 }
@@ -1074,16 +1070,6 @@ html[dir='ltr'] .hero-shade {
   border-bottom-color: var(--ocean);
   color: var(--ocean);
   font-weight: 600;
-}
-.auth-required {
-  max-width: 460px;
-  padding: 30px;
-  margin: 30px auto;
-}
-.auth-required > p {
-  color: var(--muted);
-  font-size: 13px;
-  margin-bottom: 25px;
 }
 .booking-detail-layout {
   display: grid;
@@ -1632,9 +1618,6 @@ html[dir='ltr'] .hero-shade {
   }
   .section-heading h1 {
     font-size: 26px;
-  }
-  .auth-required {
-    padding: 23px;
   }
   .empty-state {
     padding: 38px 20px;

@@ -101,7 +101,6 @@
     "holdNote": "After confirmation, your seats are held for 10 minutes to complete payment. Passengers cannot cancel bookings.",
     "reserve": "Reserve seats temporarily",
     "reserving": "Reserving seats…",
-    "loginNote": "Sign in or create an account to complete your booking. We will keep your selection here.",
     "conflict": "A selected seat is no longer available. Choose another seat.",
     "uncertain": "We could not confirm the request result. Check My bookings before trying again to avoid creating an additional reservation.",
     "myBookings": "Check my bookings",
@@ -151,7 +150,6 @@
   },
   "Booking": {
     "loading": "Loading your booking…",
-    "signIn": "Sign in to view your bookings.",
     "refresh": "Refresh status",
     "reference": "Booking reference",
     "passengers": "Passengers and seats",
@@ -256,7 +254,6 @@
   "Ticket": {
     "title": "Your ticket",
     "loading": "Loading your ticket…",
-    "signIn": "Sign in to view your ticket.",
     "back": "Back to booking",
     "confirmed": "Paid and confirmed",
     "reference": "Booking reference",
@@ -319,7 +316,6 @@
     "cancel": "Cancel",
     "working": "Signing out…",
     "loading": "Loading your account…",
-    "signIn": "Sign in to view your account.",
     "retry": "Try again"
   }
 }
