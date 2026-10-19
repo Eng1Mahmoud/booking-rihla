@@ -37,7 +37,7 @@ export function TicketView({ bookingId }: { bookingId: string }) {
     return (
       <section className="panel auth-required">
         <p>{t('signIn')}</p>
-        <AuthForm />
+        <AuthForm returnTo={'/bookings/' + bookingId + '/ticket'} />
       </section>
     );
   if (query.isPending) return <p className="loading-state">{t('loading')}</p>;

@@ -44,6 +44,10 @@ const errors: Record<string, [string, string]> = {
     'تعذر الاتصال. تحقق من اتصالك ثم أعد المحاولة.',
     'Could not connect. Check your connection and try again.',
   ],
+  INVALID_RESET_CODE: [
+    'رمز الاستعادة غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا عند الحاجة.',
+    'The recovery code is invalid or expired. Request a new code if needed.',
+  ],
   INVALID_CREDENTIALS: [
     'تعذر تسجيل الدخول. راجع البريد وكلمة المرور وتأكد من تفعيل البريد.',
     'Could not sign in. Check your credentials and verify your email.',

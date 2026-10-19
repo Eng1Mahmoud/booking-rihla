@@ -21,6 +21,7 @@ type ContextValue = {
   store: SessionStore;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  clearSession: () => void;
   request: <T>(path: string, options?: RequestInit) => Promise<T>;
 };
 const SessionContext = createContext<ContextValue | null>(null);
@@ -53,6 +54,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  const clearSession = useCallback(() => {
+    generation.current += 1;
+    queryClient.clear();
+    store.getState().setSession(null);
+  }, [store, queryClient]);
   const login = useCallback(
     async (email: string, password: string) => {
       if (inFlight.current) await inFlight.current;
@@ -96,7 +102,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [refresh, store],
   );
   return (
-    <SessionContext.Provider value={{ store, login, logout, request }}>
+    <SessionContext.Provider
+      value={{ store, login, logout, request, clearSession }}
+    >
       {children}
     </SessionContext.Provider>
   );
@@ -109,6 +117,7 @@ export function useSession() {
     ...state,
     login: context.login,
     logout: context.logout,
+    clearSession: context.clearSession,
     request: context.request,
   };
 }

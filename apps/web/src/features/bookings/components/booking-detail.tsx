@@ -136,7 +136,13 @@ export function BookingDetail({
     return (
       <div className="panel auth-required">
         <p>{t('signIn')}</p>
-        <AuthForm />
+        <AuthForm
+          returnTo={
+            afterCheckout
+              ? '/checkout/result?bookingId=' + bookingId
+              : '/bookings/' + bookingId
+          }
+        />
       </div>
     );
   if (query.isPending || (afterCheckout && !query.isFetchedAfterMount))

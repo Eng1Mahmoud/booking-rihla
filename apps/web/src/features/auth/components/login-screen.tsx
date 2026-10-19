@@ -2,17 +2,11 @@
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { AuthForm } from './auth-form';
+import { safeReturnPath } from '../safe-return-path';
 export function LoginScreen({ returnTo }: { returnTo: string }) {
   const router = useRouter();
   const t = useTranslations('Auth');
-  let safe = '/';
-  try {
-    const candidate = new URL(returnTo, 'https://rihla.invalid');
-    if (candidate.origin === 'https://rihla.invalid')
-      safe = candidate.pathname + candidate.search + candidate.hash;
-  } catch {
-    /* Use home for an invalid return path. */
-  }
+  const safe = safeReturnPath(returnTo);
   return (
     <section className="auth-screen">
       <div className="auth-intro">
@@ -20,7 +14,7 @@ export function LoginScreen({ returnTo }: { returnTo: string }) {
         <p>{t('welcomeText')}</p>
       </div>
       <div className="panel p-7 sm:p-9">
-        <AuthForm onSuccess={() => router.replace(safe)} />
+        <AuthForm onSuccess={() => router.replace(safe)} returnTo={safe} />
       </div>
     </section>
   );

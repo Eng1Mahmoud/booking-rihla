@@ -26,7 +26,7 @@ export function BookingHistory() {
     return (
       <div className="panel auth-required">
         <p>{t('signIn')}</p>
-        <AuthForm />
+        <AuthForm returnTo="/bookings" />
       </div>
     );
   if (query.isPending) return <p className="loading-state">{t('loading')}</p>;

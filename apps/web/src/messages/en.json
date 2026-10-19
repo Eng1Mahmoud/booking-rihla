@@ -140,7 +140,8 @@
     "welcome": "All your journeys. One account.",
     "welcomeText": "Choose your seat, follow your booking and review your journey details whenever you need.",
     "logout": "Sign out",
-    "account": "My account and bookings"
+    "account": "My account and bookings",
+    "forgotPassword": "Forgot your password?"
   },
   "Booking": {
     "loading": "Loading your booking…",
@@ -267,5 +268,32 @@
     "unavailable": "No valid ticket is available",
     "unavailableNote": "A ticket is available only for a paid, confirmed booking on a trip that has not been cancelled. Open your booking to check its status.",
     "error": "Could not load your ticket"
+  },
+  "Recovery": {
+    "introTitle": "Get back to your account",
+    "introText": "Use your account email to set a new password and return to your bookings.",
+    "requestTitle": "Forgot your password?",
+    "requestNote": "Enter your account email to request a recovery code.",
+    "resetTitle": "Set a new password",
+    "resetNote": "Enter the six-digit code. It expires after ten minutes; use the most recent code you requested.",
+    "email": "Email",
+    "code": "Recovery code",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordHint": "12–128 characters. Avoid unintended spaces.",
+    "invalidEmail": "Enter a valid email address.",
+    "invalidCode": "Enter the six-digit code.",
+    "mismatch": "The passwords do not match.",
+    "send": "Send recovery code",
+    "save": "Save new password",
+    "working": "Submitting…",
+    "requested": "If recovery is available for this account, an email with a code will arrive. Check your inbox and spam folder.",
+    "resend": "Request a new code",
+    "resendAfter": "Request a new code in {seconds} seconds",
+    "haveCode": "Already have a code?",
+    "backLogin": "Back to sign in",
+    "successTitle": "Password changed",
+    "successNote": "Sign in with your new password. Previous sessions for this account have been revoked.",
+    "uncertain": "We could not confirm the request result. Try signing in with your new password before requesting another reset."
   }
 }

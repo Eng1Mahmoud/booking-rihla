@@ -1898,3 +1898,31 @@ html[dir='ltr'] .hero-shade {
     animation: none;
   }
 }
+
+.recovery-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.field .field-error {
+  color: #a52b36;
+}
+.recovery-success {
+  display: grid;
+  gap: 24px;
+}
+.recovery-success svg {
+  color: #237848;
+  margin-bottom: 16px;
+}
+.recovery-success h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+.recovery-success p {
+  color: var(--muted);
+  line-height: 1.9;
+}

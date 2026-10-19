@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { Link, usePathname } from '@/i18n/navigation';
+import { safeReturnPath } from '../safe-return-path';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useLocale, useTranslations } from 'next-intl';
@@ -12,7 +14,14 @@ type Values = {
   password: string;
   code: string;
 };
-export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
+export function AuthForm({
+  onSuccess,
+  returnTo,
+}: {
+  onSuccess?: () => void;
+  returnTo?: string;
+}) {
+  const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations('Auth');
   const { login } = useSession();
@@ -221,6 +230,17 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
                 ? t('login')
                 : t('register')}
         </button>
+        {mode === 'login' && (
+          <Link
+            href={
+              '/forgot-password?returnTo=' +
+              encodeURIComponent(safeReturnPath(returnTo ?? pathname))
+            }
+            className="text-button"
+          >
+            {t('forgotPassword')}
+          </Link>
+        )}
         {mode === 'verify' && (
           <>
             <button
