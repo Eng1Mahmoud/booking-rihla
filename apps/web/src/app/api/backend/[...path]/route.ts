@@ -34,22 +34,6 @@ function errorResponse(status: number, code: string, clearSession = false) {
   return response;
 }
 
-// Only our website may make cookie-authenticated browser requests.
-function isAllowedRequest(request: NextRequest, websiteOrigin: string) {
-  const origin = request.headers.get('origin');
-  if (request.headers.get('X-CSRF-Protection') !== '1') return false;
-  if (origin && origin !== websiteOrigin) return false;
-  if (request.headers.get('sec-fetch-site') === 'cross-site') return false;
-
-  if (request.method !== 'GET') {
-    return Boolean(
-      origin &&
-      request.headers.get('content-type')?.startsWith('application/json'),
-    );
-  }
-  return true;
-}
-
 // Read the body in chunks so the 100KB limit also works without Content-Length.
 async function readBody(request: NextRequest) {
   if (request.method === 'GET') return undefined;
@@ -74,72 +58,31 @@ async function readBody(request: NextRequest) {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-// Login/refresh: keep tokens in HttpOnly cookies and return only the user as JSON.
-async function sessionResponse(upstream: Response) {
-  const parsed = tokensSchema.safeParse(await upstream.json());
-  const cookie = upstream.headers
-    .getSetCookie()
-    .find((value) => /^(bus_refresh|__Secure-bus_refresh)=/.test(value));
-  const refreshToken = cookie?.split(';')[0].split('=')[1];
-  const expires = cookie?.match(/;\s*Expires=([^;]+)/i)?.[1];
-  if (
-    !parsed.success ||
-    !refreshToken ||
-    !/^[a-f0-9]{64}$/.test(refreshToken) ||
-    !expires ||
-    Number.isNaN(Date.parse(expires))
-  ) {
-    return errorResponse(502, 'UPSTREAM_ERROR');
-  }
-
-  const response = NextResponse.json(
-    { data: { user: parsed.data.data.user } },
-    { headers: { 'Cache-Control': 'private, no-store' } },
-  );
-  saveAuthCookies(response, {
-    ...parsed.data.data,
-    refreshToken,
-    refreshExpiresAt: new Date(expires),
-  });
-  return response;
-}
-
-// Other endpoints: preserve the backend body/status without forwarding its cookies.
-async function backendResponse(upstream: Response) {
-  const response = new NextResponse(
-    upstream.status === 204 ? null : await upstream.arrayBuffer(),
-    {
-      status: upstream.status,
-      headers: {
-        'Content-Type':
-          upstream.headers.get('content-type') ?? 'application/json',
-        'Cache-Control': 'private, no-store',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    },
-  );
-  const retryAfter = upstream.headers.get('retry-after');
-  if (retryAfter) response.headers.set('Retry-After', retryAfter);
-  return response;
-}
-
 // Every /api/backend/... request enters here, regardless of its HTTP method.
 async function forwardRequest(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {
-  // 1. Read the path and reject cross-site requests before reading cookies/body.
+  // Read the path and reject cross-site requests.
   const { path: segments } = await context.params;
   if (segments.some((part) => !/^[a-zA-Z0-9-]+$/.test(part))) {
     return errorResponse(404, 'NOT_FOUND');
   }
   const path = segments.join('/');
   const websiteOrigin = process.env.SITE_ORIGIN ?? request.nextUrl.origin;
-  if (!isAllowedRequest(request, websiteOrigin)) {
+  const origin = request.headers.get('origin');
+  if (
+    request.headers.get('X-CSRF-Protection') !== '1' ||
+    (origin && origin !== websiteOrigin) ||
+    request.headers.get('sec-fetch-site') === 'cross-site' ||
+    (request.method !== 'GET' &&
+      (!origin ||
+        !request.headers.get('content-type')?.startsWith('application/json')))
+  ) {
     return errorResponse(403, 'CSRF_REJECTED');
   }
 
-  // 2. Read website cookies; Express auth paths are case-insensitive.
+  // Read cookies; auth path checks match Express case-insensitive routing.
   const authPath = path.toLowerCase();
   const refreshing = authPath === 'auth/refresh';
   const loggingOut =
@@ -154,7 +97,7 @@ async function forwardRequest(
   }
 
   try {
-    // 3. Forward only our headers and credentials to the fixed backend address.
+    // Forward the request with our own credentials and headers.
     const body = await readBody(request);
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -174,11 +117,49 @@ async function forwardRequest(
       body,
     });
 
-    // 4. Save login/refresh tokens, or return the normal backend response.
+    // Login/refresh returns user JSON and stores tokens only in HttpOnly cookies.
     if ((authPath === 'auth/login' || refreshing) && upstream.ok) {
-      return await sessionResponse(upstream);
+      const parsed = tokensSchema.safeParse(await upstream.json());
+      const cookie = upstream.headers
+        .getSetCookie()
+        .find((value) => /^(bus_refresh|__Secure-bus_refresh)=/.test(value));
+      const refreshToken = cookie?.split(';')[0].split('=')[1];
+      const expires = cookie?.match(/;\s*Expires=([^;]+)/i)?.[1];
+      if (
+        !parsed.success ||
+        !refreshToken ||
+        !/^[a-f0-9]{64}$/.test(refreshToken) ||
+        !expires ||
+        Number.isNaN(Date.parse(expires))
+      ) {
+        return errorResponse(502, 'UPSTREAM_ERROR');
+      }
+
+      const response = NextResponse.json(
+        { data: { user: parsed.data.data.user } },
+        { headers: { 'Cache-Control': 'private, no-store' } },
+      );
+      saveAuthCookies(response, {
+        ...parsed.data.data,
+        refreshToken,
+        refreshExpiresAt: new Date(expires),
+      });
+      return response;
     }
-    const response = await backendResponse(upstream);
+    const response = new NextResponse(
+      upstream.status === 204 ? null : await upstream.arrayBuffer(),
+      {
+        status: upstream.status,
+        headers: {
+          'Content-Type':
+            upstream.headers.get('content-type') ?? 'application/json',
+          'Cache-Control': 'private, no-store',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      },
+    );
+    const retryAfter = upstream.headers.get('retry-after');
+    if (retryAfter) response.headers.set('Retry-After', retryAfter);
     if (
       (refreshing && upstream.status === 401) ||
       (loggingOut && upstream.ok) ||

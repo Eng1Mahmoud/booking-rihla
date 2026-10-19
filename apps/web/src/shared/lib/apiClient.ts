@@ -32,26 +32,7 @@ export function fetchBackend(path: string, options: RequestInit = {}) {
   });
 }
 
-async function sendRequest(path: string, options: RequestInit = {}) {
-  try {
-    // Server pages read public data directly; browsers use the HttpOnly gateway.
-    if (typeof window === 'undefined') return await fetchBackend(path, options);
-    return await fetch('/api/backend/' + path, {
-      ...options,
-      cache: 'no-store',
-      credentials: 'same-origin',
-      headers: {
-        ...options.headers,
-        'Content-Type': 'application/json',
-        'X-CSRF-Protection': '1',
-      },
-      signal: options.signal ?? AbortSignal.timeout(25000),
-    });
-  } catch {
-    throw new ApiError(0, 'NETWORK_ERROR');
-  }
-}
-// Serialize cookie changes across browser tabs when Web Locks are available.
+// Coordinate refresh/login/logout across browser tabs.
 async function withSessionLock<T>(action: () => Promise<T>): Promise<T> {
   if (typeof navigator !== 'undefined' && navigator.locks) {
     return navigator.locks.request('bus-auth-refresh', action);
@@ -59,54 +40,64 @@ async function withSessionLock<T>(action: () => Promise<T>): Promise<T> {
   return action();
 }
 
-// Login/logout must wait for any running refresh before changing cookies.
-function send(path: string, options: RequestInit = {}) {
-  const changesSession = [
-    'auth/login',
-    'auth/logout',
-    'auth/logout-all',
-  ].includes(path);
-  if (typeof window !== 'undefined' && changesSession) {
-    return withSessionLock(() => sendRequest(path, options));
+// One sender: direct backend calls on the server, gateway calls in the browser.
+async function send(path: string, options: RequestInit = {}) {
+  const perform = () => {
+    if (typeof window === 'undefined') return fetchBackend(path, options);
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-CSRF-Protection', '1');
+    return fetch('/api/backend/' + path, {
+      ...options,
+      headers,
+      cache: 'no-store',
+      credentials: 'same-origin',
+      signal: options.signal ?? AbortSignal.timeout(25000),
+    });
+  };
+  try {
+    if (
+      typeof window !== 'undefined' &&
+      ['auth/login', 'auth/logout', 'auth/logout-all'].includes(path)
+    ) {
+      return await withSessionLock(perform);
+    }
+    return await perform();
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR');
   }
-  return sendRequest(path, options);
 }
 
 async function failure(response: Response) {
   const body = await response.json().catch(() => null);
   return new ApiError(response.status, body?.error?.code ?? 'REQUEST_FAILED');
 }
-function expired() {
-  if (typeof window !== 'undefined')
-    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
-}
-// Recheck first: another browser tab may already have refreshed the cookies.
-async function refreshSession() {
-  const current = await sendRequest('auth/me');
-  if (current.ok) return;
-  if (current.status !== 401) throw await failure(current);
-
-  const response = await sendRequest('auth/refresh', {
-    method: 'POST',
-    body: '{}',
-  });
-  if (!response.ok) {
-    if (response.status === 401) expired();
-    throw await failure(response);
-  }
-}
-
-// Concurrent requests in this tab share one refresh operation.
+// All failed requests in this tab wait for the same refresh.
 let refreshInFlight: Promise<void> | null = null;
 function recoverSession() {
-  refreshInFlight ??= withSessionLock(refreshSession).finally(() => {
+  refreshInFlight ??= withSessionLock(async () => {
+    // Another tab may already have refreshed while this one waited.
+    let response = await send('auth/me');
+    if (response.ok) return;
+    if (response.status === 401) {
+      response = await send('auth/refresh', { method: 'POST', body: '{}' });
+      if (response.status === 401)
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+    }
+    if (!response.ok) throw await failure(response);
+  }).finally(() => {
     refreshInFlight = null;
   });
   return refreshInFlight;
 }
 
 // Parse JSON and retry once only when an expired browser session causes a 401.
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  body?: unknown,
+): Promise<T> {
+  if (body !== undefined) options = { ...options, body: JSON.stringify(body) };
   let response = await send(path, options);
   const endpoint = path.split('?')[0].toLowerCase();
   // Credential/code failures are not expired-session failures.
@@ -118,7 +109,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (typeof window !== 'undefined' && response.status === 401 && canRefresh) {
     await recoverSession();
     response = await send(path, options);
-    if (response.status === 401) expired();
+    if (response.status === 401)
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   if (!response.ok) throw await failure(response);
   return response.status === 204
@@ -204,23 +196,11 @@ export const apiClient = {
   get: <T>(path: string, options: RequestInit = {}) =>
     request<T>(path, options),
   post: <T>(path: string, body: unknown = {}, options: RequestInit = {}) =>
-    request<T>(path, {
-      ...options,
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+    request<T>(path, { ...options, method: 'POST' }, body),
   patch: <T>(path: string, body: unknown, options: RequestInit = {}) =>
-    request<T>(path, {
-      ...options,
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    }),
+    request<T>(path, { ...options, method: 'PATCH' }, body),
   put: <T>(path: string, body: unknown, options: RequestInit = {}) =>
-    request<T>(path, {
-      ...options,
-      method: 'PUT',
-      body: JSON.stringify(body),
-    }),
+    request<T>(path, { ...options, method: 'PUT' }, body),
   delete: <T>(path: string, options: RequestInit = {}) =>
     request<T>(path, { ...options, method: 'DELETE' }),
 };
