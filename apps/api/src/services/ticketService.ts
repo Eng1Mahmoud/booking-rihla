@@ -8,8 +8,8 @@ export function ticketRecords(db: Pick<typeof database, 'orm'>) {
     .include('ticket')
     .include('seats', (seats) => seats.orderBy((seat) => seat.seatNumber.asc()))
     .include('paymentAttempt', (attempt) =>
-      attempt.include('authorization', (authorization) =>
-        authorization.include('settlement'),
+      attempt.include('paymentSession', (session) =>
+        session.include('settlement'),
       ),
     );
 }

@@ -16,7 +16,7 @@ function paymentRecords(db: typeof database) {
       .include('refund')
       .include('trip', (trip) => trip.select('status'))
       .include('user', (user) => user.select('id', 'name', 'email')),
-  ).include('authorization', (operation) =>
+  ).include('paymentSession', (operation) =>
     operation
       .select(
         'id',
@@ -38,7 +38,7 @@ type PaymentRecord = NonNullable<
 >;
 function serialize(row: PaymentRecord) {
   const booking = row.booking,
-    operation = row.authorization,
+    operation = row.paymentSession,
     settlement = operation?.settlement;
   if (!booking?.user) throw new Error('Payment booking relation missing');
   const status = serializeBookingPayment({ ...booking, paymentAttempt: row });
@@ -59,7 +59,7 @@ function serialize(row: PaymentRecord) {
     bookingExpiresAt: status.expiresAt,
     createdAt: new Date(row.createdAt).toISOString(),
     serverTime: status.serverTime,
-    authorization: operation
+    paymentSession: operation
       ? {
           id: operation.id,
           status: operation.status,
@@ -98,7 +98,7 @@ export const adminPaymentService = {
     orderId,
     intentionId,
     transactionId,
-    authorizationStatus,
+    sessionStatus,
     settlementStatus,
     settlementKind,
     createdDate,
@@ -115,17 +115,17 @@ export const adminPaymentService = {
       );
     if (email)
       query = query.where((p) => p.booking.some((b) => b.user.some({ email })));
-    if (orderId || intentionId || authorizationStatus)
+    if (orderId || intentionId || sessionStatus)
       query = query.where((p) =>
-        p.authorization.some({
+        p.paymentSession.some({
           ...(orderId ? { orderId } : {}),
           ...(intentionId ? { intentionId } : {}),
-          ...(authorizationStatus ? { status: authorizationStatus } : {}),
+          ...(sessionStatus ? { status: sessionStatus } : {}),
         }),
       );
     if (transactionId || settlementStatus || settlementKind)
       query = query.where((p) =>
-        p.authorization.some((a) =>
+        p.paymentSession.some((a) =>
           a.settlement.some({
             ...(transactionId ? { transactionId } : {}),
             ...(settlementStatus ? { status: settlementStatus } : {}),

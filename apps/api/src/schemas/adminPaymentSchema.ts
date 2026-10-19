@@ -17,13 +17,13 @@ export const adminPaymentListQuerySchema = paginationQuerySchema.extend({
     .string()
     .regex(/^pi_test_[A-Za-z0-9_-]{1,200}$/)
     .optional(),
-  authorizationStatus: z
+  sessionStatus: z
     .enum(['REQUESTING', 'READY', 'UNKNOWN', 'FAILED', 'EXPIRED'])
     .optional(),
   settlementStatus: z
     .enum(['REQUESTED', 'UNKNOWN', 'SUCCEEDED', 'REVIEW'])
     .optional(),
-  settlementKind: z.enum(['CAPTURE', 'VOID']).optional(),
+  settlementKind: z.enum(['SALE']).optional(),
   // PaymentAttempt creation day in Cairo, not travel day or collection day.
   createdDate: adminBookingListQuerySchema.shape.travelDate,
 });

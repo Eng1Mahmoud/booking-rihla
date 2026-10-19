@@ -320,7 +320,7 @@ model PaymentAttempt {
   expiresAt TimestamptzString
   createdAt TimestamptzString @default(now())
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  authorization PaymentAuthorization?
+  paymentSession PaymentSession?
   @@index([expiresAt])
   @@index([createdAt, id], name: "payment_attempt_created")
   @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700 AND currency = 'EGP'`, name: "payment_attempt_amount")
@@ -329,17 +329,17 @@ model PaymentAttempt {
 }
 
 // Durable send-once intention creation. READY means checkout created, never paid.
-enum PaymentAuthorizationStatus {
+enum PaymentSessionStatus {
   REQUESTING
   READY
   UNKNOWN
   FAILED
   EXPIRED
 }
-model PaymentAuthorization {
+model PaymentSession {
   id String @id @default(uuid())
   paymentAttemptId String @unique
-  status PaymentAuthorizationStatus @default(REQUESTING)
+  status PaymentSessionStatus @default(REQUESTING)
   integrationId String
   ownerId String
   intentionId String? @unique
@@ -353,15 +353,14 @@ model PaymentAuthorization {
   attempt PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   @@index([status, updatedAt])
   @@index([reconciliationComplete, nextReconcileAt], name: "payment_reconcile_due")
-  @@check(expression: sql`"integrationId" ~ '^[1-9][0-9]*$' AND "ownerId" ~ '^[1-9][0-9]*$'`, name: "payment_authorization_scope")
-  @@check(expression: sql`"intentionId" IS NULL OR "orderId" IS NOT NULL`, name: "payment_authorization_references")
-  @@check(expression: sql`("status" = 'READY' AND "encryptedCheckoutUrl" IS NOT NULL AND "intentionId" IS NOT NULL) OR ("status" <> 'READY' AND "encryptedCheckoutUrl" IS NULL)`, name: "payment_authorization_checkout")
+  @@check(expression: sql`"integrationId" ~ '^[1-9][0-9]*$' AND "ownerId" ~ '^[1-9][0-9]*$'`, name: "payment_session_scope")
+  @@check(expression: sql`"intentionId" IS NULL OR "orderId" IS NOT NULL`, name: "payment_session_references")
+  @@check(expression: sql`("status" = 'READY' AND "encryptedCheckoutUrl" IS NOT NULL AND "intentionId" IS NOT NULL) OR ("status" <> 'READY' AND "encryptedCheckoutUrl" IS NULL)`, name: "payment_session_checkout")
 }
 
-// A committed row grants exactly one caller permission to send capture or void.
+// Verified direct-payment result. No authorization, capture or void operation.
 enum PaymentSettlementKind {
- CAPTURE
- VOID
+ SALE
 }
 enum PaymentSettlementStatus {
  REQUESTED
@@ -371,20 +370,20 @@ enum PaymentSettlementStatus {
 }
 model PaymentSettlement {
  id String @id @default(uuid())
- authorizationId String @unique
+ paymentSessionId String @unique
  transactionId String @unique
  kind PaymentSettlementKind
  status PaymentSettlementStatus @default(REQUESTED)
  amountPiastres BigInt
  createdAt TimestamptzString @default(now())
  updatedAt TimestamptzString @default(now())
- authorization PaymentAuthorization @relation(fields: [authorizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+ paymentSession PaymentSession @relation(fields: [paymentSessionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
  @@index([status, updatedAt])
  @@check(expression: sql`"amountPiastres" BETWEEN 1 AND 214748364700`, name: "payment_settlement_amount")
  @@check(expression: sql`"transactionId" ~ '^[1-9][0-9]{0,15}$'`, name: "payment_settlement_transaction")
 }
 
-// Created atomically with verified capture confirmation; also the durable mail queue.
+// Created atomically with verified payment confirmation; also the durable mail queue.
 model Ticket {
   id String @id @default(uuid())
   bookingId String @unique
@@ -404,7 +403,7 @@ model Ticket {
   @@check(expression: sql`attempts BETWEEN 0 AND 5`, name: "ticket_mail_attempts")
 }
 
-// Full operator-cancellation refunds only. Claims are never blindly resent.
+// Full refunds for operator cancellation or an unfulfillable paid booking. Claims are never blindly resent.
 enum RefundStatus {
   PENDING
   REQUESTED

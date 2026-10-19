@@ -1,0 +1,804 @@
+[
+  {
+    "id": "renameTable.PaymentAuthorization",
+    "label": "Rename table \"PaymentAuthorization\" to \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentAuthorization\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      },
+      {
+        "description": "ensure table \"PaymentSession\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename table \"PaymentAuthorization\" to \"PaymentSession\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentAuthorization\" RENAME TO \"PaymentSession\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentSession\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "verify table \"PaymentAuthorization\" no longer exists",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaryKey.public.PaymentSession.PaymentAuthorization_pkey.rename",
+    "label": "Rename primary key \"PaymentAuthorization_pkey\" to \"PaymentSession_pkey\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "primaryKey",
+        "name": "PaymentSession_pkey",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_pkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_pkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_pkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_pkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename primary key \"PaymentAuthorization_pkey\" to \"PaymentSession_pkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_pkey\" TO \"PaymentSession_pkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_pkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_pkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.public.PaymentSession.PaymentAuthorization_paymentAttemptId_key.rename",
+    "label": "Rename unique constraint \"PaymentAuthorization_paymentAttemptId_key\" to \"PaymentSession_paymentAttemptId_key\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSession_paymentAttemptId_key",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_paymentAttemptId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_paymentAttemptId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_paymentAttemptId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename unique constraint \"PaymentAuthorization_paymentAttemptId_key\" to \"PaymentSession_paymentAttemptId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_paymentAttemptId_key\" TO \"PaymentSession_paymentAttemptId_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_paymentAttemptId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_paymentAttemptId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.public.PaymentSession.PaymentAuthorization_intentionId_key.rename",
+    "label": "Rename unique constraint \"PaymentAuthorization_intentionId_key\" to \"PaymentSession_intentionId_key\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSession_intentionId_key",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_intentionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_intentionId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_intentionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_intentionId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename unique constraint \"PaymentAuthorization_intentionId_key\" to \"PaymentSession_intentionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_intentionId_key\" TO \"PaymentSession_intentionId_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_intentionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_intentionId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.public.PaymentSession.PaymentAuthorization_orderId_key.rename",
+    "label": "Rename unique constraint \"PaymentAuthorization_orderId_key\" to \"PaymentSession_orderId_key\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSession_orderId_key",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_orderId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_orderId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_orderId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_orderId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename unique constraint \"PaymentAuthorization_orderId_key\" to \"PaymentSession_orderId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_orderId_key\" TO \"PaymentSession_orderId_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_orderId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_orderId_key",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.public.PaymentSession.PaymentAuthorization_paymentAttemptId_fkey.rename",
+    "label": "Rename foreign key \"PaymentAuthorization_paymentAttemptId_fkey\" to \"PaymentSession_paymentAttemptId_fkey\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PaymentSession_paymentAttemptId_fkey",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_paymentAttemptId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_paymentAttemptId_fkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_paymentAttemptId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_paymentAttemptId_fkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename foreign key \"PaymentAuthorization_paymentAttemptId_fkey\" to \"PaymentSession_paymentAttemptId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_paymentAttemptId_fkey\" TO \"PaymentSession_paymentAttemptId_fkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_paymentAttemptId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_paymentAttemptId_fkey",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.public.PaymentSession.PaymentAuthorization_status_updatedAt_idx_29f913bb.rename",
+    "label": "Rename index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" to \"PaymentSession_status_updatedAt_idx_29f913bb\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentSession_status_updatedAt_idx_29f913bb",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentAuthorization_status_updatedAt_idx_29f913bb\""
+        ]
+      },
+      {
+        "description": "ensure index \"PaymentSession_status_updatedAt_idx_29f913bb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSession_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename index \"PaymentAuthorization_status_updatedAt_idx_29f913bb\" to \"PaymentSession_status_updatedAt_idx_29f913bb\"",
+        "sql": "ALTER INDEX \"public\".\"PaymentAuthorization_status_updatedAt_idx_29f913bb\" RENAME TO \"PaymentSession_status_updatedAt_idx_29f913bb\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentSession_status_updatedAt_idx_29f913bb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentSession_status_updatedAt_idx_29f913bb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.public.PaymentSession.PaymentAuthorization_status_check_c1795974.rename",
+    "label": "Rename check constraint \"PaymentAuthorization_status_check_c1795974\" to \"PaymentSession_status_check_c1795974\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "PaymentSession_status_check_c1795974",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentAuthorization_status_check_c1795974\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentAuthorization_status_check_c1795974",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSession_status_check_c1795974\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_status_check_c1795974",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename check constraint \"PaymentAuthorization_status_check_c1795974\" to \"PaymentSession_status_check_c1795974\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"PaymentAuthorization_status_check_c1795974\" TO \"PaymentSession_status_check_c1795974\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSession_status_check_c1795974\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSession_status_check_c1795974",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.public.PaymentSession.payment_authorization_checkout_0fc4d81c.rename",
+    "label": "Rename check constraint \"payment_authorization_checkout_0fc4d81c\" to \"payment_session_checkout_0fc4d81c\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "payment_session_checkout_0fc4d81c",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"payment_authorization_checkout_0fc4d81c\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_checkout_0fc4d81c",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"payment_session_checkout_0fc4d81c\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_checkout_0fc4d81c",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename check constraint \"payment_authorization_checkout_0fc4d81c\" to \"payment_session_checkout_0fc4d81c\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"payment_authorization_checkout_0fc4d81c\" TO \"payment_session_checkout_0fc4d81c\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"payment_session_checkout_0fc4d81c\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_checkout_0fc4d81c",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.public.PaymentSession.payment_authorization_references_f4507849.rename",
+    "label": "Rename check constraint \"payment_authorization_references_f4507849\" to \"payment_session_references_f4507849\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "payment_session_references_f4507849",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"payment_authorization_references_f4507849\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_references_f4507849",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"payment_session_references_f4507849\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_references_f4507849",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename check constraint \"payment_authorization_references_f4507849\" to \"payment_session_references_f4507849\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"payment_authorization_references_f4507849\" TO \"payment_session_references_f4507849\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"payment_session_references_f4507849\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_references_f4507849",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.public.PaymentSession.payment_authorization_scope_37324968.rename",
+    "label": "Rename check constraint \"payment_authorization_scope_37324968\" to \"payment_session_scope_37324968\" on \"PaymentSession\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "payment_session_scope_37324968",
+        "table": "PaymentSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"payment_authorization_scope_37324968\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_authorization_scope_37324968",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"payment_session_scope_37324968\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_scope_37324968",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename check constraint \"payment_authorization_scope_37324968\" to \"payment_session_scope_37324968\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSession\" RENAME CONSTRAINT \"payment_authorization_scope_37324968\" TO \"payment_session_scope_37324968\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"payment_session_scope_37324968\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payment_session_scope_37324968",
+          "public",
+          "\"public\".\"PaymentSession\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "renameColumn.PaymentSettlement.authorizationId",
+    "label": "Rename column \"PaymentSettlement\".\"authorizationId\" to \"paymentSessionId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentSessionId",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"authorizationId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentSettlement",
+          "authorizationId"
+        ]
+      },
+      {
+        "description": "ensure column \"paymentSessionId\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentSettlement",
+          "paymentSessionId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename column \"authorizationId\" to \"paymentSessionId\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" RENAME COLUMN \"authorizationId\" TO \"paymentSessionId\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentSessionId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentSettlement",
+          "paymentSessionId"
+        ]
+      },
+      {
+        "description": "verify column \"authorizationId\" no longer exists",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "PaymentSettlement",
+          "authorizationId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.public.PaymentSettlement.PaymentSettlement_authorizationId_key.rename",
+    "label": "Rename unique constraint \"PaymentSettlement_authorizationId_key\" to \"PaymentSettlement_paymentSessionId_key\" on \"PaymentSettlement\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentSettlement_paymentSessionId_key",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_authorizationId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSettlement_paymentSessionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_paymentSessionId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename unique constraint \"PaymentSettlement_authorizationId_key\" to \"PaymentSettlement_paymentSessionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" RENAME CONSTRAINT \"PaymentSettlement_authorizationId_key\" TO \"PaymentSettlement_paymentSessionId_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_paymentSessionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_paymentSessionId_key",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.public.PaymentSettlement.PaymentSettlement_authorizationId_fkey.rename",
+    "label": "Rename foreign key \"PaymentSettlement_authorizationId_fkey\" to \"PaymentSettlement_paymentSessionId_fkey\" on \"PaymentSettlement\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PaymentSettlement_paymentSessionId_fkey",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_authorizationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_authorizationId_fkey",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      },
+      {
+        "description": "ensure constraint \"PaymentSettlement_paymentSessionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_paymentSessionId_fkey",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "rename foreign key \"PaymentSettlement_authorizationId_fkey\" to \"PaymentSettlement_paymentSessionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" RENAME CONSTRAINT \"PaymentSettlement_authorizationId_fkey\" TO \"PaymentSettlement_paymentSessionId_fkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_paymentSessionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_paymentSessionId_fkey",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.PaymentSettlement.PaymentSettlement_kind_check_5f50b4db",
+    "label": "Drop check constraint \"PaymentSettlement_kind_check_5f50b4db\" on \"PaymentSettlement\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "PaymentSettlement_kind_check_5f50b4db",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_kind_check_5f50b4db\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_kind_check_5f50b4db",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"PaymentSettlement_kind_check_5f50b4db\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" DROP CONSTRAINT \"PaymentSettlement_kind_check_5f50b4db\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_kind_check_5f50b4db\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_kind_check_5f50b4db",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.PaymentSettlement.PaymentSettlement_kind_check_1f13d0e7",
+    "label": "Add check constraint \"PaymentSettlement_kind_check_1f13d0e7\" on \"PaymentSettlement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "PaymentSettlement_kind_check_1f13d0e7",
+        "table": "PaymentSettlement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentSettlement_kind_check_1f13d0e7\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_kind_check_1f13d0e7",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"PaymentSettlement_kind_check_1f13d0e7\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentSettlement\" ADD CONSTRAINT \"PaymentSettlement_kind_check_1f13d0e7\" CHECK (\"kind\" IN ('SALE'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentSettlement_kind_check_1f13d0e7\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentSettlement_kind_check_1f13d0e7",
+          "public",
+          "\"public\".\"PaymentSettlement\""
+        ]
+      }
+    ]
+  }
+]

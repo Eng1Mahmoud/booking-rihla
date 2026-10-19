@@ -17,10 +17,10 @@ export type AdminPaymentStatisticsQuery = z.infer<
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const paymentStatisticsCountsSchema = z.strictObject({
   total: count,
-  captured: count,
-  voided: count,
+  paid: count,
+  refundRequired: count,
   requested: count,
   unknown: count,
   requiresReview: count,
-  capturedPiastres: z.string().regex(/^(0|[1-9][0-9]*)$/),
+  paidPiastres: z.string().regex(/^(0|[1-9][0-9]*)$/),
 });

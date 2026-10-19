@@ -7,7 +7,7 @@ import {
 } from '../payments/checkoutEncryption.ts';
 import { paymobCheckoutUrlSchema } from '../payments/checkoutUrl.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
-import { createPaymentAuthorizationService } from './paymentAuthorizationService.ts';
+import { createPaymentSessionService } from './paymentSessionService.ts';
 import { withPayableBooking } from './payableBooking.ts';
 import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 import type { AuthContext } from './sessionService.ts';
@@ -19,7 +19,7 @@ function paymentRecords(db: typeof database) {
   return db.orm.public.Booking.include('refund')
     .include('trip')
     .include('paymentAttempt', (attempt) =>
-      attempt.include('authorization', (operation) =>
+      attempt.include('paymentSession', (operation) =>
         operation.include('settlement'),
       ),
     );
@@ -32,10 +32,7 @@ async function getPayment(userId: string, bookingId: string) {
 }
 
 export function createPaymentCheckoutService(dependencies: {
-  authorizations: Pick<
-    ReturnType<typeof createPaymentAuthorizationService>,
-    'start'
-  >;
+  sessions: Pick<ReturnType<typeof createPaymentSessionService>, 'start'>;
   integrationId: number;
   ownerId: number;
   publicKey: string;
@@ -54,8 +51,8 @@ export function createPaymentCheckoutService(dependencies: {
   return {
     get: getPayment,
     async start(auth: AuthContext, bookingId: string) {
-      // Authorization creation persists its send-once claim before network I/O.
-      await dependencies.authorizations.start(auth, bookingId);
+      // Payment session creation persists its send-once claim before network I/O.
+      await dependencies.sessions.start(auth, bookingId);
       // Recheck after the network call and before decrypting. All reads/decryption
       // here are local; no provider request is made while Trip is locked.
       return withPayableBooking(auth, bookingId, async ({ tx }) => {
@@ -64,11 +61,11 @@ export function createPaymentCheckoutService(dependencies: {
           userId: auth.user.id,
         })
           .include('paymentAttempt', (a) =>
-            a.include('authorization', (p) => p.include('settlement')),
+            a.include('paymentSession', (p) => p.include('settlement')),
           )
           .first();
         const attempt = row?.paymentAttempt,
-          operation = attempt?.authorization;
+          operation = attempt?.paymentSession;
         if (!row || !attempt || !operation)
           throw new Error('Payment operation missing');
         if (
@@ -127,7 +124,7 @@ export const paymentCheckoutService = {
       throw new AppError(503, 'PAYMENT_UNAVAILABLE', 'Checkout is not enabled');
     const key = checkoutKey(process.env);
     return createPaymentCheckoutService({
-      authorizations: createPaymentAuthorizationService({
+      sessions: createPaymentSessionService({
         provider: createPaymobProvider(config),
         integrationId: config.PAYMOB_INTEGRATION_ID,
         ownerId: config.PAYMOB_OWNER_ID,

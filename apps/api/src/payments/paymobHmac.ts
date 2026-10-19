@@ -75,7 +75,7 @@ export function verifyPaymobCallback(
   const expected = createHmac('sha512', secret).update(canonical).digest();
   if (!timingSafeEqual(expected, Buffer.from(signature, 'hex'))) return null;
   // Hash the signed payload rather than just transaction id: pending -> success
-  // and auth -> void updates can legitimately reuse the same transaction id.
+  // and refund updates can legitimately reuse the same transaction id.
   return {
     eventKey: createHash('sha256').update(canonical).digest('hex'),
     transactionId: String(t.id),

@@ -1,4 +1,6 @@
 import { z } from 'zod';
+// Paymob validates Intention expiration as at least 60 seconds.
+export const paymobMinimumCheckoutSeconds = 60;
 const positiveId = z
   .string()
   .regex(/^[1-9]\d*$/)
@@ -16,8 +18,6 @@ const schema = z.object({
   PAYMOB_HMAC_SECRET: z.string().min(1),
   PAYMOB_INTEGRATION_ID: positiveId,
   PAYMOB_OWNER_ID: positiveId,
-  // Set this only after Paymob enables Auth/Cap for the selected TEST card integration.
-  PAYMOB_AUTH_CAPTURE_ENABLED: z.literal('true'),
   PAYMOB_NOTIFICATION_URL: secureUrl,
   PAYMOB_RETURN_URL: secureUrl,
 });
@@ -112,6 +112,10 @@ export function parsePaymobCheckoutEnv(
   if (!config) throw new Error('Checkout requires PAYMOB_ENABLED');
   if (environment['PAYMOB_RECONCILIATION_ENABLED'] !== 'true')
     throw new Error('Checkout requires PAYMOB_RECONCILIATION_ENABLED');
+  if (environment['PAYMOB_REFUNDS_ENABLED'] !== 'true')
+    throw new Error(
+      'Checkout requires PAYMOB_REFUNDS_ENABLED for unfulfillable payments',
+    );
   const webhook = parsePaymobWebhookEnv(environment);
   if (
     !webhook ||

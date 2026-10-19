@@ -39,7 +39,8 @@ export async function processBookingNotices(
       if (
         !b ||
         !user?.emailVerifiedAt ||
-        b.trip?.status !== 'CANCELLED' ||
+        (notice.purpose === 'TRIP_CANCELLED' &&
+          b.trip?.status !== 'CANCELLED') ||
         notice.attempts >= 5 ||
         (notice.purpose === 'REFUND_SUCCEEDED' &&
           b.refund?.status !== 'SUCCEEDED')

@@ -6,56 +6,30 @@ import {
 } from '../payments/paymentVerification.ts';
 import { parsePaymobEnv } from '../config/paymob.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
-type Kind = 'CAPTURE' | 'VOID';
-type Decision = {
-  state: string;
-  send?: Kind;
-  settlementId?: string;
-  transactionId?: string;
-  amount?: number;
-};
-const terminal = (status: string) =>
-  status === 'SUCCEEDED' || status === 'REVIEW';
+
+type Decision = { state: string };
 export function createPaymentReconciliationService(
   provider: Pick<
     PaymentProvider,
-    'getTransaction' | 'capture' | 'voidAuthorization'
-  > &
-    Partial<Pick<PaymentProvider, 'getTransactionByReference'>>,
+    'getTransaction' | 'getTransactionByReference'
+  >,
   scope: { integrationId: number; ownerId: number },
 ) {
-  const integrationId = String(
-    z
-      .number()
-      .int()
-      .positive()
-      .max(Number.MAX_SAFE_INTEGER)
-      .parse(scope.integrationId),
-  );
-  const ownerId = String(
-    z
-      .number()
-      .int()
-      .positive()
-      .max(Number.MAX_SAFE_INTEGER)
-      .parse(scope.ownerId),
-  );
-  async function reconcile(
-    authorizationId: string,
-    followUp = false,
-  ): Promise<Decision> {
+  const scopeId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+  const integrationId = String(scopeId.parse(scope.integrationId));
+  const ownerId = String(scopeId.parse(scope.ownerId));
+  async function reconcile(paymentSessionId: string): Promise<Decision> {
     const { db } = await import('../prisma/db.ts');
-    let initial = await db.orm.public.PaymentAuthorization.where({
-      id: authorizationId,
+    let initial = await db.orm.public.PaymentSession.where({
+      id: paymentSessionId,
     }).first();
     if (!initial) return { state: 'WAITING' };
     if (initial.integrationId !== integrationId || initial.ownerId !== ownerId)
       return { state: 'MISMATCH' };
     const existing = await db.orm.public.PaymentSettlement.where({
-      authorizationId,
+      paymentSessionId,
     }).first();
-    if (existing && terminal(existing.status))
-      return { state: existing.status };
+    if (existing) return { state: existing.status };
     const attempt = await db.orm.public.PaymentAttempt.where({
       id: initial.paymentAttemptId,
     }).first();
@@ -64,65 +38,13 @@ export function createPaymentReconciliationService(
       id: attempt.bookingId,
     }).first();
     if (!initialBooking) return { state: 'MISMATCH' };
-    let recoveredTransactionId: string | undefined;
-    let queriedReference = false;
-    if (!initial.orderId) {
-      // Leave a live creation request time to finish. A stale REQUESTING is never resent.
-      if (
-        !provider.getTransactionByReference ||
-        !['REQUESTING', 'UNKNOWN'].includes(initial.status) ||
-        (initial.status === 'REQUESTING' &&
-          Date.parse(initial.createdAt) > Date.now() - 30000)
-      )
-        return { state: 'WAITING' };
-      let raw: unknown;
-      try {
-        queriedReference = true;
-        raw = await provider.getTransactionByReference(initial.id);
-      } catch {
-        return { state: 'RETRY' };
-      }
-      const recovered = verifiedReferencePayment(raw, {
-        reference: initial.id,
-        orderId: null,
-        integrationId,
-        ownerId,
-        amountPiastres: attempt.amountPiastres,
-      });
-      if (!recovered) return { state: 'MISMATCH' };
-      // Compare-and-set prevents a slow recovery from replacing a concurrently saved order.
-      const saved = await db.orm.public.PaymentAuthorization.where({
-        id: initial.id,
-        orderId: null,
-        status: initial.status,
-        reconciliationComplete: false,
-      }).update({
-        orderId: recovered.orderId,
-        status: 'UNKNOWN',
-        updatedAt: new Date().toISOString(),
-      });
-      initial =
-        saved ??
-        (await db.orm.public.PaymentAuthorization.where({
-          id: initial.id,
-        }).first());
-      if (
-        !initial ||
-        initial.orderId !== recovered.orderId ||
-        initial.integrationId !== integrationId ||
-        initial.ownerId !== ownerId
-      )
-        return { state: 'MISMATCH' };
-      if (
-        recovered.authorization &&
-        !recovered.capture &&
-        !recovered.standalone
-      )
-        recoveredTransactionId = recovered.id;
-    }
-    if (!initial.orderId) return { state: 'WAITING' };
-    let candidates = existing ? [existing.transactionId] : [];
-    if (!existing) {
+    if (
+      initial.status === 'REQUESTING' &&
+      Date.parse(initial.createdAt) > Date.now() - 30000
+    )
+      return { state: 'WAITING' };
+    const candidates: string[] = [];
+    if (initial.orderId) {
       const events = await db.orm.public.PaymentEvent.where({
         orderId: initial.orderId,
         integrationId,
@@ -131,42 +53,13 @@ export function createPaymentReconciliationService(
         .orderBy((e) => e.receivedAt.desc())
         .limit(20)
         .all();
-      candidates = [
-        ...new Set(
-          events
-            .filter((event) => {
-              try {
-                const signed = JSON.parse(event.signedJson) as Record<
-                  string,
-                  unknown
-                >;
-                return (
-                  signed['authorization'] === true &&
-                  signed['capture'] === false &&
-                  signed['standalone'] === false
-                );
-              } catch {
-                return false;
-              }
-            })
-            .map((event) => event.transactionId),
-        ),
-      ].slice(0, 5);
+      candidates.push(...new Set(events.map((e) => e.transactionId)));
     }
-    if (!existing && !candidates.length && recoveredTransactionId)
-      candidates = [recoveredTransactionId];
-    if (
-      !existing &&
-      !candidates.length &&
-      !queriedReference &&
-      provider.getTransactionByReference
-    ) {
-      let raw: unknown;
-      try {
-        raw = await provider.getTransactionByReference(initial.id);
-      } catch {
-        return { state: 'RETRY' };
-      }
+    // Query the latest reference too: an old failed callback must not hide a
+    // later successful attempt whose callback was lost.
+    let referenceUnavailable = false;
+    try {
+      const raw = await provider.getTransactionByReference(initial.id);
       const recovered = verifiedReferencePayment(raw, {
         reference: initial.id,
         orderId: initial.orderId,
@@ -174,18 +67,33 @@ export function createPaymentReconciliationService(
         ownerId,
         amountPiastres: attempt.amountPiastres,
       });
-      if (!recovered) return { state: 'MISMATCH' };
-      // Inquiry returns the latest transaction, which may be a capture/refund child.
-      // Only an original authorization is eligible; never guess a parent ID.
-      if (
-        recovered.authorization &&
-        !recovered.capture &&
-        !recovered.standalone
-      )
-        candidates = [recovered.id];
+      if (recovered) {
+        if (!initial.orderId) {
+          await db.orm.public.PaymentSession.where({
+            id: initial.id,
+            orderId: null,
+            status: initial.status,
+          }).update({
+            orderId: recovered.orderId,
+            status: 'UNKNOWN',
+            encryptedCheckoutUrl: null,
+            updatedAt: new Date().toISOString(),
+          });
+          initial = await db.orm.public.PaymentSession.where({
+            id: initial.id,
+          }).first();
+          if (!initial || initial.orderId !== recovered.orderId)
+            return { state: 'MISMATCH' };
+        }
+        candidates.unshift(recovered.id);
+      } else if (!candidates.length) return { state: 'MISMATCH' };
+    } catch {
+      referenceUnavailable = true;
     }
+    if (!candidates.length && referenceUnavailable) return { state: 'RETRY' };
+    if (!initial?.orderId) return { state: 'WAITING' };
     let sawVerified = false;
-    for (const transactionId of candidates) {
+    for (const transactionId of [...new Set(candidates)].slice(0, 10)) {
       let raw: unknown;
       try {
         raw = await provider.getTransaction(transactionId);
@@ -200,18 +108,17 @@ export function createPaymentReconciliationService(
         amountPiastres: attempt.amountPiastres,
       });
       if (!remote) continue;
-      if (!remote.authorization || remote.capture || remote.standalone)
-        continue;
-      sawVerified = true;
+      // Auth-only and child transactions cannot confirm a direct payment.
       if (
-        (remote.pending || !remote.success) &&
-        !remote.voided &&
-        !remote.refunded &&
-        remote.capturedPiastres === 0
+        remote.authorization ||
+        remote.capture ||
+        !remote.standalone ||
+        remote.parentTransactionId
       )
         continue;
-      const decision = await db.transaction(async (tx): Promise<Decision> => {
-        // Same account/trip/catalog lock order as checkout. Inquiry already finished.
+      sawVerified = true;
+      if (remote.pending || !remote.success) continue;
+      return db.transaction(async (tx): Promise<Decision> => {
         await tx.execute(
           db.raw
             .sql`SELECT "id" FROM "public"."User" WHERE "id" = ${initialBooking.userId} FOR SHARE`
@@ -227,8 +134,8 @@ export function createPaymentReconciliationService(
         const booking = await tx.orm.public.Booking.where({
           id: initialBooking.id,
         }).first();
-        const operation = await tx.orm.public.PaymentAuthorization.where({
-          id: authorizationId,
+        const operation = await tx.orm.public.PaymentSession.where({
+          id: paymentSessionId,
         }).first();
         const snapshot = await tx.orm.public.PaymentAttempt.where({
           id: attempt.id,
@@ -247,23 +154,11 @@ export function createPaymentReconciliationService(
           Date.parse(snapshot.expiresAt) !== Date.parse(booking.expiresAt)
         )
           return { state: 'MISMATCH' };
-        const settlement = await tx.orm.public.PaymentSettlement.where({
-          authorizationId,
+        const settled = await tx.orm.public.PaymentSettlement.where({
+          paymentSessionId,
         }).first();
-        if (settlement && terminal(settlement.status))
-          return { state: settlement.status };
-        if (
-          settlement &&
-          (settlement.transactionId !== remote.id ||
-            settlement.amountPiastres !== snapshot.amountPiastres)
-        )
-          return { state: 'MISMATCH' };
-        const seats = await tx.orm.public.BookingSeat.where({
-          bookingId: booking.id,
-          tripId: booking.tripId,
-          releasedAt: null,
-        }).all();
-        const ownsSeats = seats.length === booking.seatCount;
+        if (settled) return { state: settled.status };
+        const now = new Date().toISOString();
         const trip = await tx.orm.public.Trip.where({
           id: booking.tripId,
         }).first();
@@ -287,145 +182,67 @@ export function createPaymentReconciliationService(
         const user = await tx.orm.public.User.where({
           id: booking.userId,
         }).first();
-        const now = new Date().toISOString();
-        async function save(
-          kind: Kind,
-          status: 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW',
-        ) {
-          return settlement
-            ? tx.orm.public.PaymentSettlement.where({
-                id: settlement.id,
-              }).update({ status, updatedAt: now })
-            : tx.orm.public.PaymentSettlement.create({
-                authorizationId,
-                transactionId: remote!.id,
-                kind,
-                status,
-                amountPiastres: snapshot!.amountPiastres,
-              });
-        }
-        async function complete() {
-          await tx.orm.public.PaymentAuthorization.where({
-            id: authorizationId,
-          }).update({
-            reconciliationComplete: true,
-            encryptedCheckoutUrl: null,
-            status: 'EXPIRED',
-          });
-        }
-        async function releaseSeats() {
-          if (booking!.status === 'CONFIRMED') return;
-          await tx.orm.public.BookingSeat.where({
-            bookingId: booking!.id,
-            releasedAt: null,
-          }).updateAll({ releasedAt: now });
-          await tx.orm.public.Booking.where({ id: booking!.id }).update({
-            status: 'EXPIRED',
-          });
-        }
-        async function review(): Promise<Decision> {
-          await save(settlement?.kind ?? 'CAPTURE', 'REVIEW');
-          // Preserve remaining allocations if unexpected money was observed. Never
-          // reclaim a seat already released/reallocated to another passenger.
-          if (booking!.status === 'PENDING_PAYMENT')
-            await tx.orm.public.Booking.where({ id: booking!.id }).update({
-              status: 'PAYMENT_PROCESSING',
-            });
-          await complete();
-          return { state: 'REVIEW' };
-        }
-        if (
+        const seats = await tx.orm.public.BookingSeat.where({
+          bookingId: booking.id,
+          tripId: trip.id,
+          releasedAt: null,
+        }).all();
+        const review =
+          remote.voided ||
           remote.refunded ||
-          (remote.voided && (remote.capturedPiastres > 0 || remote.pending)) ||
-          (remote.capturedPiastres > 0 && (remote.pending || !remote.success))
-        )
-          return review();
-        if (remote.capturedPiastres > 0) {
-          if (
-            remote.capturedPiastres !== remote.amountPiastres ||
-            settlement?.kind !== 'CAPTURE' ||
-            booking.status !== 'PAYMENT_PROCESSING' ||
-            !ownsSeats ||
-            trip.status !== 'SCHEDULED'
-          )
-            return review();
-          await tx.orm.public.Booking.where({ id: booking.id }).update({
-            status: 'CONFIRMED',
-          });
-          // Issue exactly once in the same transaction as confirmation. No SMTP here.
-          await tx.orm.public.Ticket.create({ bookingId: booking.id });
-          await save('CAPTURE', 'SUCCEEDED');
-          await complete();
-          return { state: 'SUCCEEDED' };
-        }
-        if (remote.voided) {
-          if (booking.status === 'CONFIRMED') return review();
-          await releaseSeats();
-          const state = settlement?.kind === 'CAPTURE' ? 'REVIEW' : 'SUCCEEDED';
-          await save(settlement?.kind ?? 'VOID', state);
-          await complete();
-          return { state };
-        }
-        // A previous durable claim may have been sent, even if inquiry is stale.
-        // Never send it again, including after process crashes or provider errors.
-        if (settlement) {
-          await save(settlement.kind, 'UNKNOWN');
-          return { state: 'UNKNOWN' };
-        }
-        if (
-          booking.status === 'PAYMENT_PROCESSING' ||
-          booking.status === 'CONFIRMED'
-        )
-          return review();
+          (remote.refundedPiastres ?? 0) > 0;
+        await tx.orm.public.PaymentSettlement.create({
+          paymentSessionId,
+          transactionId: remote.id,
+          kind: 'SALE',
+          status: review ? 'REVIEW' : 'SUCCEEDED',
+          amountPiastres: snapshot.amountPiastres,
+        });
+        await tx.orm.public.PaymentSession.where({
+          id: paymentSessionId,
+        }).update({
+          reconciliationComplete: true,
+          encryptedCheckoutUrl: null,
+          status: 'EXPIRED',
+          updatedAt: now,
+        });
+        if (review) return { state: 'REVIEW' };
         const eligible =
           booking.status === 'PENDING_PAYMENT' &&
-          ownsSeats &&
-          Date.parse(booking.expiresAt) - Date.now() >= 1000 &&
+          seats.length === booking.seatCount &&
+          Date.parse(booking.expiresAt) > Date.now() &&
           trip.status === 'SCHEDULED' &&
           Date.parse(trip.departureAt) > Date.now() &&
           route?.isActive &&
           bus?.isActive &&
           user?.isActive &&
           user.emailVerifiedAt;
-        const kind = eligible ? 'CAPTURE' : 'VOID';
-        if (kind === 'CAPTURE')
+        if (eligible) {
           await tx.orm.public.Booking.where({ id: booking.id }).update({
-            status: 'PAYMENT_PROCESSING',
+            status: 'CONFIRMED',
           });
-        else await releaseSeats();
-        const claimed = await save(kind, 'REQUESTED');
-        if (!claimed) throw new Error('Unable to persist payment settlement');
-        return {
-          state: 'REQUESTED',
-          send: kind,
-          settlementId: claimed.id,
-          transactionId: remote.id,
-          amount: remote.amountPiastres,
-        };
+          await tx.orm.public.Ticket.create({ bookingId: booking.id });
+          return { state: 'SUCCEEDED' };
+        }
+        // A late successful charge never reclaims a released/reallocated seat.
+        // Record the debt atomically; only the super admin may send its refund.
+        await tx.orm.public.BookingSeat.where({
+          bookingId: booking.id,
+          releasedAt: null,
+        }).updateAll({ releasedAt: now });
+        await tx.orm.public.Booking.where({ id: booking.id }).update({
+          status: 'EXPIRED',
+        });
+        await tx.orm.public.Refund.create({
+          bookingId: booking.id,
+          amountPiastres: booking.totalPiastres,
+        });
+        return { state: 'REFUND_REQUIRED' };
       });
-      if (!decision.send || followUp) return decision;
-      // No database locks are held while the provider is contacted. ACK or failure
-      // both lead to inquiry; neither is proof of collection/void completion.
-      try {
-        if (decision.send === 'CAPTURE')
-          await provider.capture(decision.transactionId!, decision.amount!);
-        else await provider.voidAuthorization(decision.transactionId!);
-      } catch {
-        /* Outcome may be unknown. Reconcile; never retry a money POST. */
-      }
-      await db.orm.public.PaymentSettlement.where({
-        id: decision.settlementId!,
-        status: 'REQUESTED',
-      }).update({ status: 'UNKNOWN', updatedAt: new Date().toISOString() });
-      return reconcile(authorizationId, true);
     }
-    return {
-      state: sawVerified
-        ? 'WAITING'
-        : candidates.length
-          ? 'MISMATCH'
-          : 'WAITING',
-    };
+    // An unsuccessful transaction does not prove another attempt on the checkout cannot succeed.
+    // Keep inquiries active; the hold worker expires seats independently.
+    return { state: sawVerified ? 'WAITING' : 'MISMATCH' };
   }
   return {
     reconcile,
@@ -433,7 +250,7 @@ export function createPaymentReconciliationService(
       if (!Number.isInteger(limit) || limit < 1 || limit > 100)
         throw new Error('Invalid payment batch size');
       const { db } = await import('../prisma/db.ts');
-      const rows = await db.orm.public.PaymentAuthorization.where({
+      const rows = await db.orm.public.PaymentSession.where({
         reconciliationComplete: false,
       })
         .where((p) => p.nextReconcileAt.lte(new Date().toISOString()))
@@ -457,9 +274,9 @@ export function createPaymentReconciliationService(
         } catch {
           counts.failed++;
         } finally {
-          await db.orm.public.PaymentAuthorization.where({ id: row.id }).update(
-            { nextReconcileAt: new Date(Date.now() + 30000).toISOString() },
-          );
+          await db.orm.public.PaymentSession.where({ id: row.id }).update({
+            nextReconcileAt: new Date(Date.now() + 30000).toISOString(),
+          });
         }
       }
       return counts;

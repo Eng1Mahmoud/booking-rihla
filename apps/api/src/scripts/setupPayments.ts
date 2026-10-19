@@ -9,7 +9,7 @@ if (setup.credentialIssues.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    'TEST credential formats are valid locally. Remote validity and Auth/Cap are not verified.',
+    'TEST credential formats are valid locally. Remote validity is not verified.',
   );
 }
 if (setup.remainingSettings.length)
@@ -25,9 +25,7 @@ console.log(
 
 const instructions: Record<string, string> = {
   PAYMOB_OWNER_ID:
-    'Obtain the transaction owner from an authenticated TEST transaction inquiry or confirmation from Paymob. Do not substitute the merchant profile id.',
-  PAYMOB_AUTH_CAPTURE_ENABLED:
-    'Ask Paymob to confirm Auth/Capture for this TEST card Integration ID and the Intention API request fields. Setting true here does not enable it on the account.',
+    'Use the account user id from an authenticated API-key response (profile.user.id), then verify it matches owner on the first TEST transaction inquiry. Never substitute profile.id.',
   PAYMOB_NOTIFICATION_URL:
     'Use the reachable public HTTPS API webhook URL. Paymob cannot call your localhost address.',
   PAYMOB_RETURN_URL:
@@ -38,5 +36,5 @@ for (const field of setup.remainingSettings) {
   if (instruction) console.log(field + ': ' + instruction);
 }
 console.log(
-  'Keep all activation flags false until account capability and the complete TEST payment/refund flow have been verified. No LIVE credentials are accepted by this adapter.',
+  'Keep activation flags false during setup; enable them only for a controlled TEST payment/refund verification once all required settings and workers are ready. No LIVE credentials are accepted by this adapter.',
 );

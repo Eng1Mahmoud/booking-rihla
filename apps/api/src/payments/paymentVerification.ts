@@ -19,7 +19,13 @@ const transaction = z.object({
   refunded: z.boolean(),
   standalone: z.boolean(),
   live: z.literal(false),
-  capturedPiastres: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  refundedPiastres: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(Number.MAX_SAFE_INTEGER)
+    .optional(),
+  parentTransactionId: id.optional(),
 });
 // The callback selects a candidate only. Money state always comes from inquiry.
 export function verifiedPayment(
@@ -40,8 +46,7 @@ export function verifiedPayment(
     t.orderId !== expected.orderId ||
     String(t.integrationId) !== expected.integrationId ||
     String(t.ownerId) !== expected.ownerId ||
-    BigInt(t.amountPiastres) !== expected.amountPiastres ||
-    t.capturedPiastres > t.amountPiastres
+    BigInt(t.amountPiastres) !== expected.amountPiastres
   )
     return null;
   return t;

@@ -30,21 +30,24 @@ export const tripCancellationService = {
         );
       const bookings = await tx.orm.public.Booking.where({ tripId })
         .include('paymentAttempt', (a) =>
-          a.include('authorization', (o) => o.include('settlement')),
+          a.include('paymentSession', (o) => o.include('settlement')),
         )
         .all();
-      // Do not race an in-flight capture or discard uncertain funds. Resolve it first.
+      // Active checkout holds must finish before cancellation; expired payments refund if they arrive late.
       for (const booking of bookings) {
-        const authz = booking.paymentAttempt?.authorization;
+        const authz = booking.paymentAttempt?.paymentSession;
         if (
           booking.status === 'PAYMENT_PROCESSING' ||
-          (authz && !authz.reconciliationComplete) ||
+          (authz &&
+            !authz.reconciliationComplete &&
+            booking.expiresAt &&
+            Date.parse(booking.expiresAt) > Date.now()) ||
           authz?.settlement?.status === 'REVIEW'
         )
           throw new AppError(
             409,
             'PAYMENTS_UNRESOLVED',
-            'Resolve pending payment authorizations and review cases before cancelling this trip',
+            'Resolve pending payments and review cases before cancelling this trip',
           );
         if (
           booking.status === 'CONFIRMED' &&
@@ -53,7 +56,7 @@ export const tripCancellationService = {
           throw new AppError(
             409,
             'PAYMENTS_UNRESOLVED',
-            'A confirmed booking has no verified full capture',
+            'A confirmed booking has no verified full payment',
           );
       }
       const now = new Date().toISOString();

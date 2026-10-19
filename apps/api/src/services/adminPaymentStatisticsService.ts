@@ -7,7 +7,7 @@ import { cairoDayBounds, cairoTimeZone } from '../utils/cairoTime.ts';
 // Aggregate money can exceed JavaScript's safe integer range. Keep it exact.
 export function formatPiastresAsEGP(piastres: string) {
   const amount = BigInt(piastres);
-  if (amount < 0n) throw new Error('Invalid captured amount');
+  if (amount < 0n) throw new Error('Invalid paid amount');
   return (
     (amount / 100n).toString() +
     '.' +
@@ -34,7 +34,7 @@ export const adminPaymentStatisticsService = {
               AND p."expiresAt" = b."expiresAt"
               AND s."amountPiastres" = b."totalPiastres") AS matches
           FROM "public"."PaymentSettlement" s
-          JOIN "public"."PaymentAuthorization" a ON a."id" = s."authorizationId"
+          JOIN "public"."PaymentSession" a ON a."id" = s."paymentSessionId"
           JOIN "public"."PaymentAttempt" p ON p."id" = a."paymentAttemptId"
           JOIN "public"."Booking" b ON b."id" = p."bookingId"
           WHERE s."updatedAt" >= ${start}::timestamptz
@@ -43,15 +43,12 @@ export const adminPaymentStatisticsService = {
           SELECT "amountPiastres",
             CASE
               WHEN "status" = 'REVIEW' OR matches IS NOT TRUE THEN 'REVIEW'
-              WHEN "status" = 'SUCCEEDED' AND "kind" = 'CAPTURE'
+              WHEN "status" = 'SUCCEEDED' AND "kind" = 'SALE'
                 AND "bookingStatus" = 'CONFIRMED' AND "reconciliationComplete"
-                THEN 'CAPTURED'
-              WHEN "status" = 'SUCCEEDED' AND "kind" = 'VOID'
-                AND "reconciliationComplete"
-                AND ("bookingStatus" = 'EXPIRED'
-                  OR ("bookingStatus" = 'PENDING_PAYMENT'
-                    AND "bookingExpiresAt" <= ${serverTime}::timestamptz))
-                THEN 'VOIDED'
+                THEN 'PAID'
+              WHEN "status" = 'SUCCEEDED' AND "kind" = 'SALE'
+                AND "bookingStatus" = 'EXPIRED' AND "reconciliationComplete"
+                THEN 'REFUND_REQUIRED'
               WHEN "status" = 'REQUESTED' THEN 'REQUESTED'
               WHEN "status" = 'UNKNOWN' THEN 'UNKNOWN'
               ELSE 'REVIEW'
@@ -60,12 +57,12 @@ export const adminPaymentStatisticsService = {
         )
         SELECT json_build_object(
           'total', count(*),
-          'captured', count(*) FILTER (WHERE state = 'CAPTURED'),
-          'voided', count(*) FILTER (WHERE state = 'VOIDED'),
+          'paid', count(*) FILTER (WHERE state = 'PAID'),
+          'refundRequired', count(*) FILTER (WHERE state = 'REFUND_REQUIRED'),
           'requested', count(*) FILTER (WHERE state = 'REQUESTED'),
           'unknown', count(*) FILTER (WHERE state = 'UNKNOWN'),
           'requiresReview', count(*) FILTER (WHERE state = 'REVIEW'),
-          'capturedPiastres', coalesce(sum("amountPiastres") FILTER (WHERE state = 'CAPTURED'), 0)::text
+          'paidPiastres', coalesce(sum("amountPiastres") FILTER (WHERE state = 'PAID'), 0)::text
         )::text AS data
         FROM classified
       `
@@ -73,7 +70,7 @@ export const adminPaymentStatisticsService = {
         .build(),
     );
     if (!rows[0]) throw new Error('Payment statistics aggregate is missing');
-    const { capturedPiastres, ...settlements } =
+    const { paidPiastres, ...settlements } =
       paymentStatisticsCountsSchema.parse(JSON.parse(rows[0].data));
     return {
       date,
@@ -84,9 +81,9 @@ export const adminPaymentStatisticsService = {
       dateBasis: 'SETTLEMENT_LAST_UPDATED_AT' as const,
       currency: 'EGP' as const,
       settlements,
-      captured: {
-        amountPiastres: capturedPiastres,
-        amountEGP: formatPiastresAsEGP(capturedPiastres),
+      paid: {
+        amountPiastres: paidPiastres,
+        amountEGP: formatPiastresAsEGP(paidPiastres),
       },
     };
   },

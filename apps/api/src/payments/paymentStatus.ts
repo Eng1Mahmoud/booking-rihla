@@ -12,7 +12,7 @@ type PaymentStatusInput = {
     amountPiastres: bigint;
     currency: string;
     expiresAt: string;
-    authorization: {
+    paymentSession: {
       status: string;
       reconciliationComplete: boolean;
       settlement: {
@@ -32,7 +32,7 @@ type PaymentStatus =
   | 'PROCESSING'
   | 'PAID'
   | 'REFUNDED'
-  | 'VOIDED'
+  | 'REFUND_REQUIRED'
   | 'FAILED'
   | 'EXPIRED'
   | 'REVIEW';
@@ -40,7 +40,7 @@ export function serializeBookingPayment(row: PaymentStatusInput) {
   const now = Date.now(),
     state = bookingState(row, now),
     attempt = row.paymentAttempt,
-    operation = attempt?.authorization,
+    operation = attempt?.paymentSession,
     settlement = operation?.settlement;
   const matches =
     attempt &&
@@ -51,16 +51,17 @@ export function serializeBookingPayment(row: PaymentStatusInput) {
   let paymentStatus: PaymentStatus;
   if (settlement?.status === 'REVIEW') paymentStatus = 'REVIEW';
   else if (attempt && !matches) paymentStatus = 'UNKNOWN';
-  else if (settlement?.kind === 'CAPTURE' && settlement.status === 'SUCCEEDED')
+  else if (settlement?.kind === 'SALE' && settlement.status === 'SUCCEEDED')
     paymentStatus =
-      state === 'CONFIRMED' &&
       operation?.reconciliationComplete &&
       settlement.amountPiastres === row.totalPiastres
-        ? 'PAID'
+        ? state === 'CONFIRMED'
+          ? 'PAID'
+          : row.refund
+            ? 'REFUND_REQUIRED'
+            : 'REVIEW'
         : 'UNKNOWN';
   else if (state === 'CONFIRMED') paymentStatus = 'UNKNOWN';
-  else if (settlement?.kind === 'VOID' && settlement.status === 'SUCCEEDED')
-    paymentStatus = state === 'EXPIRED' ? 'VOIDED' : 'UNKNOWN';
   else if (settlement || state === 'PAYMENT_PROCESSING')
     paymentStatus = 'PROCESSING';
   else if (operation?.status === 'REQUESTING') paymentStatus = 'INITIALIZING';
@@ -76,7 +77,7 @@ export function serializeBookingPayment(row: PaymentStatusInput) {
     paymentStatus:
       row.refund?.status === 'SUCCEEDED' &&
       row.refund.amountPiastres === row.totalPiastres &&
-      paymentStatus === 'PAID'
+      (paymentStatus === 'PAID' || paymentStatus === 'REFUND_REQUIRED')
         ? 'REFUNDED'
         : paymentStatus,
     refundStatus: row.refund?.status ?? null,

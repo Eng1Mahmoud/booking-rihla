@@ -1,12 +1,8 @@
 import { paymobCheckoutUrlSchema } from '../payments/checkoutUrl.ts';
 import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
-import { parsePaymobEnv } from '../config/paymob.ts';
-import {
-  checkoutKey,
-  encryptCheckout,
-} from '../payments/checkoutEncryption.ts';
-import { createPaymobProvider } from '../payments/paymobProvider.ts';
+import { paymobMinimumCheckoutSeconds } from '../config/paymob.ts';
+import { encryptCheckout } from '../payments/checkoutEncryption.ts';
 import {
   PaymentProviderError,
   type PaymentProvider,
@@ -15,7 +11,7 @@ import type { AuthContext } from './sessionService.ts';
 import { withPayableBooking } from './payableBooking.ts';
 import type { db as database } from '../prisma/db.ts';
 type Operation = NonNullable<
-  Awaited<ReturnType<typeof database.orm.public.PaymentAuthorization.first>>
+  Awaited<ReturnType<typeof database.orm.public.PaymentSession.first>>
 >;
 function summary(row: Operation | null) {
   if (!row)
@@ -40,8 +36,8 @@ const resultSchema = z.object({
 });
 // Durable creation only: the owner-scoped checkout service controls link exposure.
 // This service returns operation metadata only, never a usable checkout link.
-export function createPaymentAuthorizationService(dependencies: {
-  provider: Pick<PaymentProvider, 'createAuthorization'>;
+export function createPaymentSessionService(dependencies: {
+  provider: Pick<PaymentProvider, 'createPayment'>;
   integrationId: number;
   ownerId: number;
   encryptionKey: Buffer;
@@ -77,7 +73,7 @@ export function createPaymentAuthorizationService(dependencies: {
               'PAYMENT_ATTEMPT_MISMATCH',
               'The payment attempt no longer matches this booking',
             );
-          const previous = await tx.orm.public.PaymentAuthorization.where({
+          const previous = await tx.orm.public.PaymentSession.where({
             paymentAttemptId: attempt.id,
           }).first();
           if (previous) {
@@ -92,6 +88,15 @@ export function createPaymentAuthorizationService(dependencies: {
               );
             return { operation: previous, input: null };
           }
+          if (
+            Date.parse(booking.expiresAt) - Date.now() <
+            paymobMinimumCheckoutSeconds * 1000
+          )
+            throw new AppError(
+              409,
+              'PAYMENT_WINDOW_TOO_SHORT',
+              'At least one minute must remain to create a new checkout',
+            );
           const names = user.name.trim().split(/\s+/);
           const customer = {
             firstName: names[0]!,
@@ -114,7 +119,7 @@ export function createPaymentAuthorizationService(dependencies: {
               'PAYMENT_CUSTOMER_INVALID',
               'Update your account/contact details before payment',
             );
-          const operation = await tx.orm.public.PaymentAuthorization.create({
+          const operation = await tx.orm.public.PaymentSession.create({
             paymentAttemptId: attempt.id,
             integrationId,
             ownerId,
@@ -124,7 +129,7 @@ export function createPaymentAuthorizationService(dependencies: {
             input: {
               reference: operation.id,
               amountPiastres: Number(attempt.amountPiastres),
-              expiresAt: attempt.expiresAt,
+              expiresAt: new Date(attempt.expiresAt).toISOString(),
               customer,
             },
           };
@@ -136,14 +141,14 @@ export function createPaymentAuthorizationService(dependencies: {
       let result: z.infer<typeof resultSchema>;
       try {
         result = resultSchema.parse(
-          await dependencies.provider.createAuthorization(claim.input),
+          await dependencies.provider.createPayment(claim.input),
         );
       } catch (error) {
         const status =
           error instanceof PaymentProviderError && !error.uncertain
             ? 'FAILED'
             : 'UNKNOWN';
-        const row = await db.orm.public.PaymentAuthorization.where({
+        const row = await db.orm.public.PaymentSession.where({
           id: claim.operation.id,
           status: 'REQUESTING',
         }).update({ status, updatedAt: new Date().toISOString() });
@@ -169,7 +174,7 @@ export function createPaymentAuthorizationService(dependencies: {
                 'PAYMENT_ATTEMPT_MISMATCH',
                 'The booking changed during payment initialization',
               );
-            return tx.orm.public.PaymentAuthorization.where({
+            return tx.orm.public.PaymentSession.where({
               id: claim.operation.id,
               status: 'REQUESTING',
             }).update({
@@ -189,7 +194,7 @@ export function createPaymentAuthorizationService(dependencies: {
         // cannot resurrect an expired booking or return a checkout for released seats.
         if (!(error instanceof AppError) || error.statusCode >= 500)
           throw error;
-        row = await db.orm.public.PaymentAuthorization.where({
+        row = await db.orm.public.PaymentSession.where({
           id: claim.operation.id,
           status: 'REQUESTING',
         }).update({
@@ -202,22 +207,4 @@ export function createPaymentAuthorizationService(dependencies: {
       return summary(row);
     },
   };
-}
-export async function startPaymentAuthorization(
-  auth: AuthContext,
-  bookingId: string,
-) {
-  const config = parsePaymobEnv(process.env);
-  if (!config)
-    throw new AppError(
-      503,
-      'PAYMENT_UNAVAILABLE',
-      'Payment provider is not enabled',
-    );
-  return createPaymentAuthorizationService({
-    provider: createPaymobProvider(config),
-    integrationId: config.PAYMOB_INTEGRATION_ID,
-    ownerId: config.PAYMOB_OWNER_ID,
-    encryptionKey: checkoutKey(process.env),
-  }).start(auth, bookingId);
 }

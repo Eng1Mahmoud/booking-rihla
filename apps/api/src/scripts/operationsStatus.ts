@@ -10,6 +10,7 @@ try {
       'overdueAccountEmails', (SELECT count(*) FROM "public"."EmailOutbox" WHERE "sentAt" IS NULL AND "discardedAt" IS NULL AND "expiresAt" > now() AND "nextAttemptAt" < now() - interval '10 minutes'),
       'overdueTicketEmails', (SELECT count(*) FROM "public"."Ticket" WHERE "sentAt" IS NULL AND "discardedAt" IS NULL AND "nextAttemptAt" < now() - interval '10 minutes'),
       'overdueBookingNotices', (SELECT count(*) FROM "public"."BookingNotice" WHERE "sentAt" IS NULL AND "discardedAt" IS NULL AND "nextAttemptAt" < now() - interval '10 minutes'),
+      'overduePaymentInquiries', (SELECT count(*) FROM "public"."PaymentSession" WHERE NOT "reconciliationComplete" AND "createdAt" < now() - interval '15 minutes'),
       'paymentReview', (SELECT count(*) FROM "public"."PaymentSettlement" WHERE status = 'REVIEW'),
       'uncertainRefunds', (SELECT count(*) FROM "public"."Refund" WHERE status IN ('REQUESTED', 'UNKNOWN') AND "createdAt" < now() - interval '5 minutes'),
       'refundReview', (SELECT count(*) FROM "public"."Refund" WHERE status = 'REVIEW'),

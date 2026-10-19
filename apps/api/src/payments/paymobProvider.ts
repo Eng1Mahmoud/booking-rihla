@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import type { PaymobConfig } from '../config/paymob.ts';
-import { parsePaymobEnv } from '../config/paymob.ts';
+import {
+  parsePaymobEnv,
+  paymobMinimumCheckoutSeconds,
+} from '../config/paymob.ts';
 import {
   PaymentProviderError,
-  type AuthorizationInput,
+  type PaymentInput,
   type PaymentProvider,
 } from './paymentProvider.ts';
 const origin = 'https://accept.paymob.com';
@@ -51,12 +54,6 @@ const transactionSchema = z.object({
     .max(Number.MAX_SAFE_INTEGER)
     .nullish(),
   parent_transaction: numericId.nullish(),
-  captured_amount: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(Number.MAX_SAFE_INTEGER)
-    .nullable(),
 });
 const inputSchema = z.object({
   reference: z.string().min(1).max(100),
@@ -103,6 +100,18 @@ export function createPaymobProvider(
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
       if (!response.ok) {
+        if (
+          path === '/v1/intention/' ||
+          path === '/api/acceptance/void_refund/refund'
+        )
+          console.warn(
+            JSON.stringify({
+              event: 'payment_provider_http_error',
+              operation:
+                path === '/v1/intention/' ? 'intention' : 'payment_operation',
+              status: response.status,
+            }),
+          );
         // A gateway error is not proof that a money-moving POST failed.
         throw new PaymentProviderError(method === 'POST');
       }
@@ -115,8 +124,6 @@ export function createPaymobProvider(
   }
   function normalize(parsed: z.infer<typeof transactionSchema>) {
     const t = parsed;
-    if ((t.captured_amount ?? 0) > t.amount_cents)
-      throw new PaymentProviderError();
     return {
       id: String(t.id),
       orderId: String(t.order.id),
@@ -132,7 +139,6 @@ export function createPaymobProvider(
       refunded: t.is_refunded,
       standalone: t.is_standalone_payment,
       live: t.is_live,
-      capturedPiastres: t.captured_amount ?? 0,
       refundedPiastres:
         t.refunded_amount_cents === null && !t.is_refunded
           ? 0
@@ -153,18 +159,22 @@ export function createPaymobProvider(
     return parsed.data.token;
   }
   return {
-    async createAuthorization(rawInput: AuthorizationInput) {
-      const input = inputSchema.parse(rawInput);
+    async createPayment(rawInput: PaymentInput) {
+      const parsedInput = inputSchema.safeParse(rawInput);
+      if (!parsedInput.success) throw new PaymentProviderError();
+      const input = parsedInput.data;
       const remainingMs = Date.parse(input.expiresAt) - now();
       const remaining = Math.floor(remainingMs / 1000);
-      // No usable checkout when less than a full second remains. Never extend a hold.
-      if (remaining < 1 || remainingMs > 600000)
+      // Respect the provider minimum without ever extending a local hold.
+      if (remaining < paymobMinimumCheckoutSeconds || remainingMs > 600000)
         throw new PaymentProviderError();
       const raw = await request('/v1/intention/', 'POST', {
         amount: input.amountPiastres,
         currency: 'EGP',
+        items: [
+          { name: 'Bus booking', amount: input.amountPiastres, quantity: 1 },
+        ],
         payment_methods: [config.PAYMOB_INTEGRATION_ID],
-        is_auth: true,
         special_reference: input.reference,
         expiration: remaining,
         billing_data: {
@@ -177,6 +187,17 @@ export function createPaymobProvider(
         redirection_url: config.PAYMOB_RETURN_URL,
       });
       const parsed = intentionSchema.safeParse(raw);
+      if (!parsed.success)
+        console.warn(
+          JSON.stringify({
+            event: 'payment_provider_response_mismatch',
+            fields: [
+              ...new Set(
+                parsed.error.issues.map((issue) => issue.path.join('.')),
+              ),
+            ],
+          }),
+        );
       if (
         !parsed.success ||
         parsed.data.intention_detail.amount !== input.amountPiastres ||
@@ -203,21 +224,6 @@ export function createPaymobProvider(
       await request('/api/acceptance/void_refund/refund', 'POST', {
         transaction_id: Number(id),
         amount_cents: amountPiastres,
-      });
-    },
-    async capture(id, amountPiastres) {
-      transactionId.parse(id);
-      amount.parse(amountPiastres);
-      // A successful HTTP response is NOT payment confirmation; inquire or process a verified callback.
-      await request('/api/acceptance/capture', 'POST', {
-        transaction_id: Number(id),
-        amount_cents: amountPiastres,
-      });
-    },
-    async voidAuthorization(id) {
-      transactionId.parse(id);
-      await request('/api/acceptance/void_refund/void', 'POST', {
-        transaction_id: Number(id),
       });
     },
     async getTransactionByReference(reference) {

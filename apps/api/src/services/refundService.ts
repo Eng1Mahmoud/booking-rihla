@@ -15,7 +15,7 @@ function records(client: Pick<typeof database, 'orm'>) {
     b
       .include('trip')
       .include('paymentAttempt', (p) =>
-        p.include('authorization', (a) => a.include('settlement')),
+        p.include('paymentSession', (a) => a.include('settlement')),
       ),
   );
 }
@@ -46,16 +46,19 @@ function matches(
   scope: { integrationId: number; ownerId: number },
 ) {
   const b = row.booking,
-    a = b?.paymentAttempt?.authorization,
+    a = b?.paymentAttempt?.paymentSession,
     s = a?.settlement;
   return (
-    b?.trip?.status === 'CANCELLED' &&
-    b.status === 'CONFIRMED' &&
+    b &&
+    ((b.trip?.status === 'CANCELLED' && b.status === 'CONFIRMED') ||
+      b.status === 'EXPIRED') &&
     a &&
-    s?.kind === 'CAPTURE' &&
+    s?.kind === 'SALE' &&
     s.status === 'SUCCEEDED' &&
     a.reconciliationComplete &&
-    serializeBookingPayment(b).paymentStatus === 'PAID' &&
+    ['PAID', 'REFUND_REQUIRED', 'REFUNDED'].includes(
+      serializeBookingPayment({ ...b, refund: row }).paymentStatus,
+    ) &&
     row.amountPiastres === b.totalPiastres &&
     remote.orderId === a.orderId &&
     remote.integrationId === scope.integrationId &&
@@ -65,18 +68,16 @@ function matches(
     !remote.live &&
     remote.currency === 'EGP' &&
     BigInt(remote.amountPiastres) === row.amountPiastres &&
-    remote.capture &&
+    !remote.capture &&
     !remote.authorization &&
-    !remote.standalone &&
-    remote.parentTransactionId === s.transactionId &&
+    remote.standalone &&
+    !remote.parentTransactionId &&
+    remote.id === s.transactionId &&
     !remote.voided
   );
 }
 export function createRefundService(
-  provider: Pick<
-    PaymentProvider,
-    'getTransactionByReference' | 'getTransaction' | 'refund'
-  >,
+  provider: Pick<PaymentProvider, 'getTransaction' | 'refund'>,
   scope: { integrationId: number; ownerId: number },
 ) {
   async function reconcile(
@@ -163,8 +164,9 @@ export function createRefundService(
       const row = await records(db).where({ id }).first();
       if (!row) throw new AppError(404, 'REFUND_NOT_FOUND', 'Refund not found');
       if (row.status !== 'PENDING') return reconcile(id);
-      const operationId = row.booking?.paymentAttempt?.authorization?.id;
-      if (!operationId)
+      const transactionId =
+        row.booking?.paymentAttempt?.paymentSession?.settlement?.transactionId;
+      if (!transactionId)
         throw new AppError(
           409,
           'REFUND_REVIEW_REQUIRED',
@@ -172,7 +174,7 @@ export function createRefundService(
         );
       let remote: PaymentTransaction;
       try {
-        remote = await provider.getTransactionByReference(operationId);
+        remote = await provider.getTransaction(transactionId);
       } catch {
         throw new AppError(
           503,
@@ -192,7 +194,7 @@ export function createRefundService(
         throw new AppError(
           409,
           'REFUND_REVIEW_REQUIRED',
-          'A verified, fully captured and unrefunded transaction is required',
+          'A verified, successful and unrefunded transaction is required',
         );
       }
       const claimed = await db.transaction(async (tx) => {

@@ -1,6 +1,6 @@
 import { checkoutKey } from '../payments/checkoutEncryption.ts';
 import { parsePaymobCheckoutEnv, parsePaymobEnv } from '../config/paymob.ts';
-// Configuration-only check: never creates an intention, captures or voids funds.
+// Configuration-only check: never creates an intention, moves funds.
 try {
   parsePaymobCheckoutEnv(process.env);
   const config = parsePaymobEnv(process.env);
@@ -11,7 +11,7 @@ try {
   else {
     checkoutKey(process.env);
     console.log(
-      'Paymob TEST configuration is valid locally. Account permissions and Auth/Cap still require verification in Paymob; no payment request was sent.',
+      'Paymob TEST configuration is valid locally. TEST payment and refund behavior still require verification in Paymob; no payment request was sent.',
     );
   }
 } catch (error) {

@@ -1,5 +1,5 @@
 // All amounts are integer piastres. Only the booking service may choose them.
-export interface AuthorizationInput {
+export interface PaymentInput {
   reference: string;
   amountPiastres: number;
   expiresAt: string;
@@ -25,22 +25,19 @@ export interface PaymentTransaction {
   refunded: boolean;
   standalone: boolean;
   live: boolean;
-  capturedPiastres: number;
   refundedPiastres?: number;
   parentTransactionId?: string;
 }
 // Transport operations only: payment services must persist intent/operation
 // identifiers, enforce ownership and seat locks, and reconcile uncertain outcomes.
-// Never expose these methods directly as public capture/void endpoints.
+// Only verified, server-owned records may initiate a refund.
 export interface PaymentProvider {
-  createAuthorization(input: AuthorizationInput): Promise<{
+  createPayment(input: PaymentInput): Promise<{
     intentionId: string;
     orderId: string;
     checkoutUrl: string;
   }>;
   refund(transactionId: string, amountPiastres: number): Promise<void>;
-  capture(transactionId: string, amountPiastres: number): Promise<void>;
-  voidAuthorization(transactionId: string): Promise<void>;
   getTransaction(transactionId: string): Promise<PaymentTransaction>;
   getTransactionByReference(
     reference: string,
