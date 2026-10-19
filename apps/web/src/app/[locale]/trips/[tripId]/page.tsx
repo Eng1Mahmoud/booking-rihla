@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BusFront, ArrowLeft, MapPin } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { ApiResponseError } from '@/shared/lib/server/backend';
+import { ApiResponseError } from '@/shared/lib/apiServer';
 import { getSeats, getTrip } from '@/features/trips/api/trips.server';
 import { displayName, formatDate, formatTime } from '@/shared/lib/format';
 import { cairoDate } from '@/features/trips/schemas/searchSchema';

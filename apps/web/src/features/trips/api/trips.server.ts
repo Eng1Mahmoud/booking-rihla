@@ -1,4 +1,4 @@
-import { apiGet } from '@/shared/lib/server/backend';
+import { apiGet } from '@/shared/lib/apiServer';
 import type { Trip, SeatList } from '@/features/trips/types/trip';
 import type { Search } from '@/features/trips/schemas/searchSchema';
 export type City = { id: string; nameAr: string; nameEn: string };
