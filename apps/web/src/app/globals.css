@@ -1811,3 +1811,90 @@ html[dir='ltr'] .hero-shade {
   bottom: 0;
   margin-bottom: 0;
 }
+
+.payment-checking {
+  max-width: 620px;
+  margin: 40px auto 64px;
+  padding: 44px 32px 30px;
+  text-align: center;
+}
+.payment-checking-symbol {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  border: 1px solid #d5e8f2;
+  border-radius: 50%;
+  background: #f0f7fb;
+  color: var(--ocean);
+}
+.payment-checking-spinner {
+  animation: payment-checking-spin 1.25s linear infinite;
+}
+@keyframes payment-checking-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.payment-checking h2 {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+.payment-checking-description {
+  max-width: 380px;
+  margin: 12px auto 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.9;
+}
+.payment-checking-reference {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px 16px;
+  margin-top: 28px;
+  padding-block: 16px;
+  border-block: 1px solid var(--border);
+  font-size: 13px;
+}
+.payment-checking-reference span {
+  color: var(--muted);
+}
+.payment-checking-reference bdi {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.payment-checking-safety {
+  margin: 26px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.payment-checking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 24px;
+}
+@media (max-width: 767px) {
+  .payment-checking {
+    margin: 24px auto 40px;
+    padding: 32px 20px 26px;
+  }
+  .payment-checking h2 {
+    font-size: 22px;
+  }
+  .payment-checking-description {
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .payment-checking-spinner {
+    animation: none;
+  }
+}

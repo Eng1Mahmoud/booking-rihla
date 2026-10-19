@@ -20,6 +20,7 @@ import { Link } from '@/i18n/navigation';
 import type { Booking, BookingPayment } from '../types';
 import { isPaymentPending, paymentOutcome } from '../payment-state';
 import { PaymentStatus } from './payment-status';
+import { PaymentChecking } from './payment-checking';
 export function BookingDetail({
   bookingId,
   afterCheckout = false,
@@ -29,7 +30,6 @@ export function BookingDetail({
 }) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
-  const resultText = useTranslations('PaymentResult');
   const { user, status, request } = useSession();
   const queryClient = useQueryClient();
   const immediateCheck = useRef('');
@@ -125,13 +125,7 @@ export function BookingDetail({
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [afterCheckout]);
-  const checkingResult = (
-    <section className="panel result-entry" role="status">
-      <Clock size={26} aria-hidden="true" />
-      <h2>{resultText('checkingTitle')}</h2>
-      <p>{resultText('checkingNote')}</p>
-    </section>
-  );
+  const checkingResult = <PaymentChecking />;
   if (status === 'loading')
     return afterCheckout ? (
       checkingResult
@@ -182,25 +176,11 @@ export function BookingDetail({
   // A return from checkout never offers another charge while verification is pending.
   if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
     return (
-      <section className="panel result-entry" role="status">
-        <Clock size={26} aria-hidden="true" />
-        <h2>{resultText('checkingTitle')}</h2>
-        <p>{resultText('checkingNote')}</p>
-        <p>
-          {t('reference')} <bdi>{booking.reference}</bdi>
-        </p>
-        <button
-          type="button"
-          className="button-secondary"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          {t('refresh')}
-        </button>
-        <Link href="/bookings" className="text-button">
-          {t('myBookings')}
-        </Link>
-      </section>
+      <PaymentChecking
+        reference={booking.reference}
+        onRefresh={() => void query.refetch()}
+        refreshing={query.isFetching}
+      />
     );
   }
   const canPay =

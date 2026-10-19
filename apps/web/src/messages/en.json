@@ -191,7 +191,7 @@
   },
   "PaymentResult": {
     "title": "Payment result",
-    "note": "We check your booking with our server. A payment-page message or return link alone does not confirm a reservation.",
+    "note": "Check your payment status and view your ticket once your booking is confirmed.",
     "chooseBooking": "Open the booking you just paid for to check its latest status and view your ticket after confirmation.",
     "bookings": "Check my bookings",
     "viewTicket": "View ticket",
@@ -242,8 +242,9 @@
         "note": "The ticket is no longer valid. Any full refund due is shown separately below."
       }
     },
-    "checkingTitle": "Checking your payment result",
-    "checkingNote": "We are checking the latest booking status. The result and ticket will appear automatically after server confirmation. Do not pay again while verification is pending."
+    "checkingTitle": "Checking your payment",
+    "checkingNote": "We are checking your booking payment. The result will appear here automatically once confirmed.",
+    "checkingSafety": "Please do not pay again while we check."
   },
   "Ticket": {
     "title": "Your ticket",
