@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { authApi } from '../api/auth.api';
 import type { AuthUser } from '../types/auth';
-import { BrowserApiError } from '@/shared/lib/apiClient';
+import { ApiError } from '@/shared/lib/apiClient';
 import { queryKeys } from '@/shared/lib/queryClient';
 export async function clearAuthCache(client: QueryClient) {
   await client.cancelQueries();
@@ -21,7 +21,7 @@ export function useCurrentUser() {
       try {
         return await authApi.me(signal);
       } catch (error) {
-        if (error instanceof BrowserApiError && error.status === 401)
+        if (error instanceof ApiError && error.status === 401)
           return null;
         throw error;
       }

@@ -3,7 +3,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useTicket } from '../hooks/useTicket';
 import Image from 'next/image';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { BrowserApiError, errorMessage } from '@/shared/lib/apiClient';
+import { ApiError, errorMessage } from '@/shared/lib/apiClient';
 import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
 export function TicketView({ bookingId }: { bookingId: string }) {
@@ -22,7 +22,7 @@ export function TicketView({ bookingId }: { bookingId: string }) {
   if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
   if (query.isError) {
     const unavailable =
-      query.error instanceof BrowserApiError &&
+      query.error instanceof ApiError &&
       query.error.code === 'TICKET_NOT_FOUND';
     return (
       <section className="panel result-entry" role="alert">

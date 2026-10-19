@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { BrowserApiError } from './apiClient';
+import { ApiError } from './apiClient';
 export const queryKeys = {
   me: ['auth', 'me'] as const,
   bookings: (userId: string | undefined, offset: number) =>
@@ -17,7 +17,7 @@ export const createQueryClient = () =>
       queries: {
         retry: (count, error) =>
           !(
-            error instanceof BrowserApiError &&
+            error instanceof ApiError &&
             [401, 403].includes(error.status)
           ) && count < 1,
         staleTime: 15000,

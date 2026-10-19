@@ -9,7 +9,7 @@ import { createBookingStore } from '@/features/seats/store/bookingStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useRouter, Link } from '@/i18n/navigation';
 import {
-  BrowserApiError,
+  ApiError,
   isUncertainRequestError,
   errorMessage,
 } from '@/shared/lib/apiClient';
@@ -103,7 +103,7 @@ export function SeatBooking({
         return;
       }
       setError(errorMessage(cause, locale));
-      if (cause instanceof BrowserApiError && cause.code === 'SEAT_UNAVAILABLE')
+      if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE')
         await query.refetch();
     }
   }

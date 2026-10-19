@@ -2,14 +2,14 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { BusFront, Armchair, Ticket, ArrowUpLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { getSearchCatalog } from '@/features/trips/api/trips.server';
+import { tripsApi } from '@/features/trips/api/trips.api';
 import { TripSearchForm } from '@/features/trips/components/TripSearchForm';
 import { cairoDate } from '@/features/trips/schemas/searchSchema';
 export default async function HomePage() {
   const t = await getTranslations('Home');
   let catalog;
   try {
-    catalog = await getSearchCatalog();
+    catalog = await tripsApi.catalog();
   } catch {
     catalog = null;
   }

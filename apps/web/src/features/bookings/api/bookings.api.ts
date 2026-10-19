@@ -1,4 +1,4 @@
-import { apiClient, BrowserApiError } from '@/shared/lib/apiClient';
+import { apiClient, ApiError } from '@/shared/lib/apiClient';
 import type { Booking, BookingPayment } from '../types/booking';
 export type CreateBookingInput = {
   tripId: string;
@@ -39,7 +39,7 @@ export const bookingsApi = {
         );
       } catch (error) {
         if (
-          !(error instanceof BrowserApiError) ||
+          !(error instanceof ApiError) ||
           error.code !== 'PAYMENT_ATTEMPT_EXISTS'
         )
           throw error;

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { readAuthCookies, fetchBackend } from '@/shared/lib/apiServer';
+import { readAuthCookies } from '@/shared/lib/authCookies';
+import { fetchBackend } from '@/shared/lib/apiClient';
 import { protectedRoute, routeInfo } from './roleRoutes';
 
 export async function authMiddleware(

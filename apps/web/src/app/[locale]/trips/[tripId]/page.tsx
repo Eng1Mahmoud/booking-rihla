@@ -2,8 +2,8 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BusFront, ArrowLeft, MapPin } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { ApiResponseError } from '@/shared/lib/apiServer';
-import { getSeats, getTrip } from '@/features/trips/api/trips.server';
+import { ApiError } from '@/shared/lib/apiClient';
+import { tripsApi } from '@/features/trips/api/trips.api';
 import { displayName, formatDate, formatTime } from '@/shared/lib/format';
 import { cairoDate } from '@/features/trips/schemas/searchSchema';
 import { SeatBooking } from '@/features/seats/components/SeatBooking';
@@ -22,9 +22,9 @@ export default async function TripPage({
     notFound();
   let data;
   try {
-    data = await Promise.all([getTrip(tripId), getSeats(tripId)]);
+    data = await Promise.all([tripsApi.details(tripId), tripsApi.seats(tripId)]);
   } catch (error) {
-    if (error instanceof ApiResponseError && error.status === 404) notFound();
+    if (error instanceof ApiError && error.status === 404) notFound();
     return (
       <div className="container-shell page-space">
         <div className="empty-state" role="alert">

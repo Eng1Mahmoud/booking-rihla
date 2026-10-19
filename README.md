@@ -1435,17 +1435,19 @@ src/
     account/                   Account components using the auth query
   shared/
     components/                Site header/footer and shared navigation
-    lib/                       apiClient, apiServer (server-only), queryClient, format
+    lib/                       apiClient, authCookies (server-only), queryClient, format
   i18n/                        Locale routing and messages configuration
   messages/                    Arabic and English copy
   middleware/                  authMiddleware, intlMiddleware, roleRoutes, runMiddlewares
   proxy.ts                     Runs the ordered middleware chain
 ```
 
-Components render forms/screens and call feature hooks; feature API files own request paths/bodies; hooks own TanStack Query queries/mutations and invalidation. Query keys are centralized in shared/lib/queryClient.ts. Server-only trip/catalog reads use trips.server.ts, separately from browser trips.api.ts, to keep credentials/server configuration out of client bundles. Only folders with actual implementations are created. Component filenames use PascalCase as in the reference.
+Components render forms/screens and call feature hooks; feature API files own request paths/bodies; hooks own TanStack Query queries/mutations and invalidation. Query keys are centralized in shared/lib/queryClient.ts. Trips use one trips.api.ts module for public server reads and browser seat queries. All feature API functions use apiClient.ts: on the server it reads public data from API_BASE_URL; in the browser it uses the same-origin HttpOnly gateway. Server-side feature calls do not automatically inherit browser cookies or refresh a user session. Only folders with actual implementations are created. Component filenames use PascalCase as in the reference.
 
 Authentication uses useCurrentUser/useLogin/useLogout in features/auth/hooks/useAuth.ts. There is no custom SessionProvider, auth Context, duplicate user Zustand store, generation counter or BroadcastChannel synchronization. The shared current-user query refreshes on window focus; another tab's session changes are discovered on focus or authenticated requests, rather than broadcast immediately. AuthSessionSync handles confirmed authentication expiry by clearing the private query cache. Zustand remains for seat selection. The gateway, refresh coordination, signature/session/current-role checks, returnTo validation, payment Idempotency-Key and uncertain-result handling are retained. The reference's token-returning/logging login behavior is not copied: website tokens remain HttpOnly and absent from JSON/browser state.
 
-API organization: feature/api functions use the central browser apiClient.ts; feature/hooks pass those functions to TanStack Query. The server-only apiServer.ts combines the fixed backend connection and HttpOnly token-cookie helpers used by the gateway and page middleware. The old shared/lib/server directory has been removed.
+API organization: feature/api functions use the central browser apiClient.ts; feature/hooks pass those functions to TanStack Query. apiClient.ts owns all HTTP transport; server-only authCookies.ts handles reading, saving and clearing token cookies for the gateway and page middleware. The old shared/lib/server directory has been removed.
 
 The owner approved removal of shared/config/apiRoutes.ts. Adding a feature endpoint now requires only its feature API function and TanStack Query hook, plus its backend implementation. No website forwarding registry needs updating. The gateway still handles login/refresh token responses as HttpOnly cookies, never browser JSON; it retains CSRF/Origin validation, a 100kb body limit and explicit Idempotency-Key forwarding.
+
+Unified API client: removed apiServer.ts, apiGet and trips.server.ts. The single ApiError type preserves HTTP status/code for both environments, including trip 404 handling. tripsApi.catalog/search/details/seats are shared by pages and query hooks. Only authCookies.ts imports server-only; it contains no HTTP client. Refresh coordination and cookie exchanges remain browser/gateway responsibilities, never shared across server requests.

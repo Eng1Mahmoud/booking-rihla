@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { CheckCircle2, KeyRound } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import {
-  BrowserApiError,
+  ApiError,
   isUncertainRequestError,
   errorMessage,
 } from '@/shared/lib/apiClient';
@@ -130,7 +130,7 @@ export function PasswordRecovery({
           : errorMessage(cause, locale),
       );
       if (
-        cause instanceof BrowserApiError &&
+        cause instanceof ApiError &&
         cause.code === 'INVALID_RESET_CODE'
       )
         setFocus('code');

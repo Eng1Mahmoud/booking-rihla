@@ -1,11 +1,11 @@
+import { fetchBackend } from '@/shared/lib/apiClient';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
-  fetchBackend,
   readAuthCookies,
   saveAuthCookies,
   clearAuthCookies,
-} from '@/shared/lib/apiServer';
+} from '@/shared/lib/authCookies';
 export const runtime = 'nodejs';
 const tokensSchema = z.object({
   data: z.object({

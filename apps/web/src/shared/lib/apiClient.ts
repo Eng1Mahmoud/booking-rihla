@@ -1,5 +1,5 @@
 export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
-export class BrowserApiError extends Error {
+export class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
@@ -9,12 +9,31 @@ export class BrowserApiError extends Error {
 }
 export function isUncertainRequestError(error: unknown) {
   return (
-    error instanceof BrowserApiError &&
+    error instanceof ApiError &&
     (error.code === 'NETWORK_ERROR' || error.status >= 500)
   );
 }
-async function fetchBrowser(path: string, options: RequestInit = {}) {
+// Raw responses are used by the gateway and page middleware.
+export function fetchBackend(path: string, options: RequestInit = {}) {
+  if (typeof window !== 'undefined')
+    throw new Error('Direct backend requests run only on the server');
+  const base = process.env.API_BASE_URL;
+  if (!base) throw new Error('API_BASE_URL is required');
+  const url = base.replace(/\/$/, '') + '/' + path;
+
+  return fetch(url, {
+    ...options,
+    cache: 'no-store', // Always request fresh data.
+    redirect: 'error', // Do not follow backend redirects.
+    // Use the caller's cancellation signal, or a 20-second timeout.
+    signal: options.signal ?? AbortSignal.timeout(20000),
+  });
+}
+
+async function sendRequest(path: string, options: RequestInit = {}) {
   try {
+    // Server pages read public data directly; browsers use the HttpOnly gateway.
+    if (typeof window === 'undefined') return await fetchBackend(path, options);
     return await fetch('/api/backend/' + path, {
       ...options,
       cache: 'no-store',
@@ -27,7 +46,7 @@ async function fetchBrowser(path: string, options: RequestInit = {}) {
       signal: options.signal ?? AbortSignal.timeout(25000),
     });
   } catch {
-    throw new BrowserApiError(0, 'NETWORK_ERROR');
+    throw new ApiError(0, 'NETWORK_ERROR');
   }
 }
 async function withSessionLock(action: () => Promise<void>) {
@@ -40,21 +59,21 @@ async function withSessionLock(action: () => Promise<void>) {
   }
 }
 async function send(path: string, options: RequestInit = {}) {
-  if (!['auth/login', 'auth/logout', 'auth/logout-all'].includes(path))
-    return fetchBrowser(path, options);
+  if (
+    typeof window === 'undefined' ||
+    !['auth/login', 'auth/logout', 'auth/logout-all'].includes(path)
+  )
+    return sendRequest(path, options);
   let response!: Response;
   // A concurrent refresh must finish before login/logout can replace the shared cookies.
   await withSessionLock(async () => {
-    response = await fetchBrowser(path, options);
+    response = await sendRequest(path, options);
   });
   return response;
 }
 async function failure(response: Response) {
   const body = await response.json().catch(() => null);
-  return new BrowserApiError(
-    response.status,
-    body?.error?.code ?? 'REQUEST_FAILED',
-  );
+  return new ApiError(response.status, body?.error?.code ?? 'REQUEST_FAILED');
 }
 function expired() {
   if (typeof window !== 'undefined')
@@ -79,10 +98,7 @@ async function recoverSession() {
   });
   return refreshInFlight;
 }
-async function browserRequest<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response = await send(path, options);
   const endpoint = path.split('?')[0].toLowerCase();
   // Credential/code failures are not expired-session failures.
@@ -91,7 +107,7 @@ async function browserRequest<T>(
     endpoint === 'auth/me' ||
     endpoint === 'auth/logout-all';
   // Only authentication rejection permits a replay: no retries for 403, network failures or unknown payment outcomes.
-  if (response.status === 401 && canRefresh) {
+  if (typeof window !== 'undefined' && response.status === 401 && canRefresh) {
     await recoverSession();
     response = await send(path, options);
     if (response.status === 401) expired();
@@ -165,8 +181,7 @@ const errors: Record<string, [string, string]> = {
   ],
 };
 export function errorMessage(error: unknown, locale: string) {
-  const pair =
-    error instanceof BrowserApiError ? errors[error.code] : undefined;
+  const pair = error instanceof ApiError ? errors[error.code] : undefined;
   return (
     pair?.[locale === 'ar' ? 0 : 1] ??
     (locale === 'ar'
@@ -177,25 +192,25 @@ export function errorMessage(error: unknown, locale: string) {
 
 export const apiClient = {
   get: <T>(path: string, options: RequestInit = {}) =>
-    browserRequest<T>(path, options),
+    request<T>(path, options),
   post: <T>(path: string, body: unknown = {}, options: RequestInit = {}) =>
-    browserRequest<T>(path, {
+    request<T>(path, {
       ...options,
       method: 'POST',
       body: JSON.stringify(body),
     }),
   patch: <T>(path: string, body: unknown, options: RequestInit = {}) =>
-    browserRequest<T>(path, {
+    request<T>(path, {
       ...options,
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
   put: <T>(path: string, body: unknown, options: RequestInit = {}) =>
-    browserRequest<T>(path, {
+    request<T>(path, {
       ...options,
       method: 'PUT',
       body: JSON.stringify(body),
     }),
   delete: <T>(path: string, options: RequestInit = {}) =>
-    browserRequest<T>(path, { ...options, method: 'DELETE' }),
+    request<T>(path, { ...options, method: 'DELETE' }),
 };
