@@ -18,6 +18,8 @@ import {
 } from '@/features/trips/format';
 import { Link } from '@/i18n/navigation';
 import type { Booking, BookingPayment } from '../types';
+import { isPaymentPending, paymentOutcome } from '../payment-state';
+import { PaymentStatus } from './payment-status';
 export function BookingDetail({ bookingId }: { bookingId: string }) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
@@ -50,7 +52,14 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
     },
     retry: false,
     refetchInterval: (q) =>
-      q.state.data?.booking.paymentRequired ? 5000 : false,
+      q.state.data &&
+      (q.state.data.booking.paymentRequired ||
+        isPaymentPending(q.state.data.payment.paymentStatus) ||
+        ['PENDING', 'REQUESTED', 'UNKNOWN'].includes(
+          q.state.data.payment.refundStatus ?? '',
+        ))
+        ? 5000
+        : false,
   });
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -93,6 +102,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         ),
       )
     : 0;
+  const outcome = paymentOutcome(payment);
   const canPay =
     availability.data?.checkoutEnabled === true &&
     booking.paymentRequired &&
@@ -184,12 +194,13 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
       </section>
       <aside className="panel payment-summary">
         <div
-          className={
-            'booking-state ' +
-            (booking.status === 'CONFIRMED' ? 'confirmed' : '')
-          }
+          className={'booking-state ' + (outcome === 'paid' ? 'confirmed' : '')}
         >
-          <CheckCircle2 size={21} />
+          {outcome === 'paid' ? (
+            <CheckCircle2 size={21} />
+          ) : (
+            <Clock size={21} />
+          )}
           <strong>{t('statuses.' + booking.status)}</strong>
         </div>
         <div className="summary-total">
@@ -209,6 +220,7 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
         <p className="muted text-sm leading-7 mb-4">
           {t('paymentState')} {t('paymentStatuses.' + payment.paymentStatus)}
         </p>
+        <PaymentStatus payment={payment} />
         {error && (
           <p className="notice mb-4" role="alert">
             {error}
@@ -226,10 +238,13 @@ export function BookingDetail({ bookingId }: { bookingId: string }) {
             </button>
             <p className="summary-note">{t('paymentNote')}</p>
           </>
-        ) : booking.status === 'EXPIRED' ||
-          (booking.paymentRequired && seconds === 0) ? (
+        ) : outcome === 'waiting' &&
+          booking.paymentRequired &&
+          seconds === 0 ? (
           <p className="notice">{t('expired')}</p>
-        ) : booking.paymentRequired && !availability.data?.checkoutEnabled ? (
+        ) : outcome === 'waiting' &&
+          booking.paymentRequired &&
+          !availability.data?.checkoutEnabled ? (
           <p className="notice" role="status">
             {availability.isPending
               ? t('checkingAvailability')

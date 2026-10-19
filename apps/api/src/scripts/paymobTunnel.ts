@@ -16,7 +16,7 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === returnPath) {
       // Ignore all Paymob query values. The owned-booking API confirms payment.
       response.writeHead(302, {
-        Location: 'http://localhost:3000/ar/bookings',
+        Location: 'http://localhost:3000/ar/checkout/result',
       });
       response.end();
       return;

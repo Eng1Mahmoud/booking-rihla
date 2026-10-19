@@ -1370,6 +1370,12 @@ The payment action checks GET /payments/availability before allowing checkout. T
 
 ### Temporary local Paymob TEST ingress
 
-Run `npm run payment:proxy` beside the API on port 4000 and website on localhost:3000. The development-only proxy binds 127.0.0.1:4010 and allows only POST /api/v1/payments/paymob/webhook and GET /api/v1/payments/paymob/return; other routes return 404. The return redirects to the local bookings page and ignores callback query values. Only the authenticated payment inquiry can confirm a booking.
+Run `npm run payment:proxy` beside the API on port 4000 and website on localhost:3000. The development-only proxy binds 127.0.0.1:4010 and allows only POST /api/v1/payments/paymob/webhook and GET /api/v1/payments/paymob/return; other routes return 404. The return redirects to the local payment-result page and ignores callback query values. Only the authenticated payment inquiry can confirm a booking.
 
 Forward a temporary HTTPS tunnel to this restricted proxy, verify reachability, and update PAYMOB_NOTIFICATION_URL and PAYMOB_RETURN_URL in apps/api/.env with its current HTTPS address. Temporary addresses expire when their tunnel ends and may change. Keep credentials local. Validate with `npm run payment:check`, keep `npm run payment:worker` and `npm run refund:worker` running, and restart the API after changing environment settings. Enable the existing TEST checkout, provider, webhook, reconciliation and refund flags only while this configuration is ready. Set them back to false when ending the experiment. Do not extend an expired booking: select seats again if its hold has elapsed.
+
+### Passenger payment result and ticket
+
+After checkout, the local TEST proxy returns to /ar/checkout/result. That page links to My bookings because the configured provider return URL is shared: it does not guess a booking from provider query values. /ar/checkout/result?bookingId=<UUID> can display the signed-in owner's authoritative booking/payment result directly; success=true and other callback status values are ignored.
+
+A paid, confirmed booking exposes View ticket, opening /ar/bookings/<UUID>/ticket (also available in /en). The protected API supplies the journey, passengers, seats, paid total and PNG QR. Missing, unpaid, cancelled or inaccessible tickets show an unavailable state. Ticket status is rechecked on focus and every 30 seconds while visible; it is a current status display, not an offline validity or boarding guarantee. Payment states distinguish pending verification, failure, expiry, review and full refunds. Do not repeat a payment while its result is unknown.
