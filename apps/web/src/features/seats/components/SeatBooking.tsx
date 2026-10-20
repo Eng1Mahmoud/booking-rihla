@@ -1,7 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { useStore } from 'zustand';
-import { useTripSeats } from '@/features/trips/hooks/useTripSeats';
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
 import { useLocale, useTranslations } from 'next-intl';
 import { RefreshCw, ArrowRight } from 'lucide-react';
@@ -54,8 +53,16 @@ export function SeatBooking({
   }, [phase]);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
-  const query = useTripSeats(trip.id, initialSeats);
-  const seats = query.data.seats;
+  const [refreshing, startTransition] = useTransition();
+  const refreshSeats = () => startTransition(() => router.refresh());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible')
+        startTransition(() => router.refresh());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [router]);
+  const seats = initialSeats.seats;
   const selected = seats.filter(
     (seat) => selectedIds.includes(seat.id) && seat.isAvailable,
   );
@@ -71,19 +78,12 @@ export function SeatBooking({
     passengers: { seatId: string; name: string }[];
   }) {
     setError('');
-    const latest = await query.refetch();
-    const live = latest.data;
-    if (latest.error || !live) {
-      setError(t('refreshFailed'));
-      return;
-    }
+    // The backend checks current seat availability atomically when it creates the reservation.
     if (
       !input.passengers.length ||
       input.passengers.some(
         (person) =>
-          !live.seats.some(
-            (seat) => seat.id === person.seatId && seat.isAvailable,
-          ),
+          !seats.some((seat) => seat.id === person.seatId && seat.isAvailable),
       )
     ) {
       setError(t('conflict'));
@@ -104,7 +104,7 @@ export function SeatBooking({
       }
       setError(errorMessage(cause, locale));
       if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE')
-        await query.refetch();
+        refreshSeats();
     }
   }
   return (
@@ -118,25 +118,17 @@ export function SeatBooking({
           <button
             type="button"
             className="icon-button"
-            onClick={() => query.refetch()}
+            onClick={refreshSeats}
             aria-label={t('refresh')}
-            disabled={query.isFetching}
+            disabled={refreshing}
           >
-            <RefreshCw
-              size={18}
-              className={query.isFetching ? 'animate-spin' : ''}
-            />
+            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
           </button>
         </div>
-        {query.isError && (
-          <p role="alert" className="notice">
-            {t('refreshFailed')}
-          </p>
-        )}
         <SeatMap
           seats={seats}
           selectedIds={selected.map((seat) => seat.id)}
-          layout={query.data.seatLayout}
+          layout={initialSeats.seatLayout}
           onToggle={toggle}
         />
       </section>
@@ -192,9 +184,7 @@ export function SeatBooking({
             <button
               type="button"
               className="button-primary w-full"
-              disabled={
-                !selected.length || status === 'loading' || query.isError
-              }
+              disabled={!selected.length || status === 'loading'}
               onClick={() => setPhase('details')}
             >
               {t('continue')}
@@ -216,7 +206,7 @@ export function SeatBooking({
                 key={user.id}
                 seats={selected}
                 user={user}
-                disabled={!selected.length || query.isError}
+                disabled={!selected.length}
                 onReserve={reserve}
               />
             )}
@@ -232,7 +222,7 @@ export function SeatBooking({
           <button
             type="button"
             className="button-primary"
-            disabled={!selected.length || status === 'loading' || query.isError}
+            disabled={!selected.length || status === 'loading'}
             onClick={() => setPhase('details')}
           >
             {t('continue')}

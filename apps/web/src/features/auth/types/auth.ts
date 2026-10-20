@@ -12,3 +12,6 @@ export type RegisterInput = LoginInput & {
   phone: string;
   language: string;
 };
+
+// Safe server-rendered session view; tokens never enter this browser cache.
+export type AuthSession = { user: AuthUser | null; error?: string };

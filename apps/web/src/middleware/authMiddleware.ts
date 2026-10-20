@@ -50,9 +50,16 @@ export async function authMiddleware(
 ): Promise<NextResponse | null> {
   const { locale, path } = routeInfo(request.nextUrl.pathname);
   const rule = protectedRoute(path);
-  if (!rule) return response;
   const session = readAuthCookies(request);
   const toLogin = () => {
+    if (!rule) {
+      // Public pages remain public, but an invalid session must not reach the render cache.
+      request.cookies.delete(authCookies.access);
+      request.cookies.delete(authCookies.refresh);
+      const next = NextResponse.next({ request: { headers: request.headers } });
+      clearAuthCookies(next);
+      return next;
+    }
     const login = new URL('/' + locale + '/login', request.url);
     login.searchParams.set('returnTo', path + request.nextUrl.search);
     const redirect = NextResponse.redirect(login);
@@ -70,7 +77,7 @@ export async function authMiddleware(
         headers: { 'Cache-Control': 'private, no-store', 'Retry-After': '5' },
       },
     );
-  if (!session.access && !session.refresh) return toLogin();
+  if (!session.access && !session.refresh) return rule ? toLogin() : response;
   try {
     let role = await readRole(session.access);
     let renewed: AuthTokens | undefined;
@@ -92,7 +99,7 @@ export async function authMiddleware(
       role = await readRole(renewed.accessToken);
       if (!role) return toLogin();
     }
-    if (!rule.roles.includes(role)) {
+    if (rule && !rule.roles.includes(role)) {
       const forbidden = NextResponse.redirect(
         new URL('/' + locale + '/forbidden', request.url),
       );

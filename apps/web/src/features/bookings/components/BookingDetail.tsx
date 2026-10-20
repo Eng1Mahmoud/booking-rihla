@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import type { BookingDetails } from '../types/booking';
 import { errorMessage } from '@/shared/lib/apiClient';
 import { useBookingPayment, useCheckout } from '../hooks/useBookings';
 import {
@@ -16,22 +16,18 @@ import { paymentOutcome } from '@/features/bookings/lib/paymentState';
 import { PaymentStatus } from '@/features/bookings/components/PaymentStatus';
 import { PaymentChecking } from '@/features/bookings/components/PaymentChecking';
 export function BookingDetail({
-  bookingId,
+  initial,
   afterCheckout = false,
 }: {
-  bookingId: string;
+  initial: BookingDetails;
   afterCheckout?: boolean;
 }) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
-  const { user, status } = useAuth();
-  const [now, setNow] = useState(() => Date.now());
+  const bookingId = initial.booking.id;
+  const [now, setNow] = useState(initial.readAt);
   const [error, setError] = useState('');
-  const { query, availability } = useBookingPayment(
-    user?.id,
-    bookingId,
-    afterCheckout,
-  );
+  const query = useBookingPayment(initial, afterCheckout);
   const checkout = useCheckout();
   const busy = checkout.isPending;
   useEffect(() => {
@@ -39,20 +35,6 @@ export function BookingDetail({
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [afterCheckout]);
-  const checkingResult = <PaymentChecking />;
-  if (status === 'loading')
-    return afterCheckout ? (
-      checkingResult
-    ) : (
-      <p className="loading-state">{t('loading')}</p>
-    );
-  if (status === 'guest') return null;
-  if (query.isPending || (afterCheckout && !query.isFetchedAfterMount))
-    return afterCheckout ? (
-      checkingResult
-    ) : (
-      <p className="loading-state">{t('loading')}</p>
-    );
   if (query.isError)
     return (
       <div className="notice" role="alert">
@@ -61,14 +43,14 @@ export function BookingDetail({
           className="text-button"
           onClick={() => {
             void query.refetch();
-            void availability.refetch();
           }}
         >
           {t('refresh')}
         </button>
       </div>
     );
-  const { booking, payment } = query.data;
+  const booking = initial.booking;
+  const { payment, checkoutEnabled } = query.data;
   const seconds = payment.expiresAt
     ? Math.max(
         0,
@@ -93,7 +75,7 @@ export function BookingDetail({
   }
   const canPay =
     !afterCheckout &&
-    availability.data?.checkoutEnabled === true &&
+    checkoutEnabled &&
     booking.paymentRequired &&
     seconds > 0 &&
     ['NOT_STARTED', 'PREPARED', 'AWAITING_PAYMENT'].includes(
@@ -213,11 +195,9 @@ export function BookingDetail({
           <p className="notice">{t('expired')}</p>
         ) : outcome === 'waiting' &&
           booking.paymentRequired &&
-          !availability.data?.checkoutEnabled ? (
+          !checkoutEnabled ? (
           <p className="notice" role="status">
-            {availability.isPending
-              ? t('checkingAvailability')
-              : t('checkoutUnavailable')}
+            {t('checkoutUnavailable')}
           </p>
         ) : null}
         <button
@@ -225,7 +205,6 @@ export function BookingDetail({
           type="button"
           onClick={() => {
             void query.refetch();
-            void availability.refetch();
           }}
           disabled={query.isFetching}
         >

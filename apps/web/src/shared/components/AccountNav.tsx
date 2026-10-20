@@ -7,7 +7,7 @@ import { errorMessage } from '@/shared/lib/apiClient';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { useState } from 'react';
 export function AccountNav() {
-  const { user, status } = useAuth();
+  const { user, status, reloadSession } = useAuth();
   const logout = useLogout();
   const pathname = usePathname();
   const router = useRouter();
@@ -46,6 +46,10 @@ export function AccountNav() {
             <LogOut size={17} />
           </button>
         </>
+      ) : status === 'unavailable' ? (
+        <button type="button" className="text-button" onClick={reloadSession}>
+          {t('retrySession')}
+        </button>
       ) : (
         <Link
           href={

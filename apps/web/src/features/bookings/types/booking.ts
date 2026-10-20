@@ -22,3 +22,13 @@ export type BookingPayment = {
   checkoutUrl?: string | null;
   refundStatus: string | null;
 };
+
+export type PaymentState = {
+  payment: BookingPayment;
+  checkoutEnabled: boolean;
+};
+export type BookingDetails = PaymentState & {
+  booking: Booking;
+  userId: string;
+  readAt: number;
+};

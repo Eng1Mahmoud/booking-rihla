@@ -1,5 +1,5 @@
-import { apiClient, invokeAction } from '@/shared/lib/apiClient';
-import type { Booking, BookingPayment } from '../types/booking';
+import { invokeAction, pollPayment } from '@/shared/lib/apiClient';
+import type { PaymentState } from '../types/booking';
 import {
   createBookingAction,
   checkoutAction,
@@ -10,21 +10,8 @@ export const bookingsApi = {
   create: async (input: CreateBookingInput) => ({
     data: await invokeAction(() => createBookingAction(input)),
   }),
-  details: async (id: string, signal?: AbortSignal) => {
-    const [booking, payment] = await Promise.all([
-      apiClient.get<{ data: Booking }>('bookings/' + id, { signal }),
-      apiClient.get<{ data: BookingPayment }>('bookings/' + id + '/payment', {
-        signal,
-      }),
-    ]);
-    return { booking: booking.data, payment: payment.data };
-  },
-  availability: async () =>
-    (
-      await apiClient.get<{ data: { checkoutEnabled: boolean } }>(
-        'payments/availability',
-      )
-    ).data,
+  payment: (id: string, signal?: AbortSignal) =>
+    pollPayment<PaymentState>(id, signal),
   refreshPayment: (id: string) => invokeAction(() => refreshPaymentAction(id)),
   checkout: ({ id, prepare }: { id: string; prepare: boolean }) => {
     // Keep the same client-generated key for the whole action invocation.

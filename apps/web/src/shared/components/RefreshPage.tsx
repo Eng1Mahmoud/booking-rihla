@@ -19,10 +19,9 @@ export function RefreshPage({
         startTransition(() => router.refresh());
     };
     const timer = setInterval(refresh, 30000);
-    window.addEventListener('focus', refresh);
+    // AuthSessionSync handles focus refresh once for the whole page.
     return () => {
       clearInterval(timer);
-      window.removeEventListener('focus', refresh);
     };
   }, [autoRefresh, router]);
   return (
