@@ -12,8 +12,9 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { SiteHeader } from '@/shared/components/SiteHeader';
-import { SiteFooter } from '@/shared/components/SiteFooter';
+import { SiteHeader } from '@/shared/components/layout/SiteHeader';
+import { SiteFooter } from '@/shared/components/layout/SiteFooter';
+import { AccountMenu } from '@/features/auth/components/AccountMenu';
 export const metadata: Metadata = {
   title: 'Rihla | Bus booking',
   description: 'Find a bus trip and choose your seat.',
@@ -37,7 +38,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <AppProviders state={dehydrate(queryClient)}>
             <div className="flex min-h-screen flex-col">
-              <SiteHeader />
+              <SiteHeader accountMenu={<AccountMenu />} />
               <main className="flex-1">{children}</main>
               <SiteFooter />
             </div>

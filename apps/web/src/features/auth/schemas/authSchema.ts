@@ -5,7 +5,6 @@ export const registerSchema = z.object({
   phone: z.string().regex(/^\+[1-9]\d{7,14}$/),
   password: z.string().min(12).max(128),
 });
-export type AuthFormValues = z.input<typeof registerSchema> & { code: string };
 
 export const loginSchema = registerSchema.pick({ email: true, password: true });
 export const resendVerificationSchema = z.object({

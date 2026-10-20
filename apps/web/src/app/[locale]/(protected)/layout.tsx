@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { getCurrentUser } from '@/features/auth/lib/auth.server';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
-import { ReadError } from '@/shared/components/ReadError';
+import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
 export default async function ProtectedLayout({

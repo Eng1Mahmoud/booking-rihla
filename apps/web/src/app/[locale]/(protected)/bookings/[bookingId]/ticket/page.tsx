@@ -4,7 +4,7 @@ import { TicketView } from '@/features/tickets/components/TicketView';
 import { getTicket } from '@/features/tickets/lib/tickets.server';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { Link } from '@/i18n/navigation';
-import { ReadError } from '@/shared/components/ReadError';
+import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export default async function TicketPage({
   params,

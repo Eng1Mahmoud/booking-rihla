@@ -10,7 +10,8 @@ export function LanguageSwitcher() {
     <Link
       href={pathname}
       locale={other}
-      className="language-link"
+      className="text-xs font-medium hover:text-primary md:text-sm"
+      dir="ltr"
       onClick={(event) => {
         event.preventDefault();
         router.replace(pathname + window.location.search, { locale: other });

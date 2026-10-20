@@ -2,7 +2,7 @@ import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
 import { getBookings } from '@/features/bookings/lib/bookings.server';
-import { ReadError } from '@/shared/components/ReadError';
+import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
 export default async function BookingsPage({

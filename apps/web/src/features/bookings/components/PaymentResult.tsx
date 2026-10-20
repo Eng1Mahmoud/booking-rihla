@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { BookingDetail } from './BookingDetail';
 import { getBookingDetails } from '../lib/bookings.server';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
-import { ReadError } from '@/shared/components/ReadError';
+import { ReadError } from '@/shared/components/feedback/ReadError';
 export async function PaymentResult({ bookingId }: { bookingId?: string }) {
   const t = await getTranslations('PaymentResult');
   let initial;

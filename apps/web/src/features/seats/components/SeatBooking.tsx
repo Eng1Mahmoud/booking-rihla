@@ -67,7 +67,7 @@ export function SeatBooking({
   const total = selected.length * trip.pricePiastres;
   function toggle(id: string) {
     store.getState().toggle(id);
-    setPhase('select');
+    // Keep the details form mounted when selection changes, preserving the remaining names.
     setError('');
   }
   async function reserve(input: {

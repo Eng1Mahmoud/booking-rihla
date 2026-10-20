@@ -317,5 +317,14 @@
     "working": "Signing out…",
     "loading": "Loading your account…",
     "retry": "Try again"
+  },
+  "Forms": {
+    "invalid": "Check this field and try again.",
+    "working": "Submitting…",
+    "loading": "Loading page…",
+    "unavailable": "Could not load this page. Please try again.",
+    "retry": "Try again",
+    "notFound": "This page could not be found.",
+    "home": "Back to home"
   }
 }

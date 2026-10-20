@@ -1,5 +1,4 @@
 'use client';
-import { useState, type FormEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   ArrowRightLeft,
@@ -8,150 +7,141 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import type { City, Station } from '@/features/trips/types/trip';
-import type { Search } from '@/features/trips/schemas/searchSchema';
-import { isCalendarDate } from '@/features/trips/schemas/searchSchema';
-type Props = {
-  cities: City[];
-  stations: Station[];
-  today: string;
-  defaults?: Partial<Search>;
-};
+import { Form } from '@/shared/components/forms/Form';
+import { FormSelect } from '@/shared/components/forms/FormSelect';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { Button } from '@/shared/components/ui/button';
+import type { City, Station } from '../types/trip';
+import type { Search } from '../schemas/searchSchema';
+import {
+  searchFormSchema,
+  type SearchFormValues,
+} from '../schemas/searchFormSchema';
 export function TripSearchForm({
   cities,
   stations,
   today,
   defaults = {},
-}: Props) {
-  const locale = useLocale();
-  const t = useTranslations('Search');
-  const router = useRouter();
-  const [origin, setOrigin] = useState(
-    defaults.originStationId
-      ? 'station:' + defaults.originStationId
-      : defaults.originCityId
-        ? 'city:' + defaults.originCityId
-        : '',
+}: {
+  cities: City[];
+  stations: Station[];
+  today: string;
+  defaults?: Partial<Search>;
+}) {
+  const locale = useLocale(),
+    t = useTranslations('Search'),
+    router = useRouter();
+  const name = (city: City) => (locale === 'ar' ? city.nameAr : city.nameEn);
+  const options = (
+    <>
+      <option value="" disabled>
+        {t('choose')}
+      </option>
+      {cities.map((city) => (
+        <optgroup key={city.id} label={name(city)}>
+          <option value={'city:' + city.id}>
+            {name(city)} — {t('allStations')}
+          </option>
+          {stations
+            .filter((station) => station.cityId === city.id)
+            .map((station) => (
+              <option key={station.id} value={'station:' + station.id}>
+                {name(station)}، {name(city)}
+              </option>
+            ))}
+        </optgroup>
+      ))}
+    </>
   );
-  const [destination, setDestination] = useState(
-    defaults.destinationStationId
-      ? 'station:' + defaults.destinationStationId
-      : defaults.destinationCityId
-        ? 'city:' + defaults.destinationCityId
-        : '',
-  );
-  const [date, setDate] = useState(defaults.travelDate ?? today);
-  const [error, setError] = useState('');
-  const name = (item: City) => (locale === 'ar' ? item.nameAr : item.nameEn);
-  function options() {
-    return (
-      <>
-        <option value="" disabled>
-          {t('choose')}
-        </option>
-        {cities.map((city) => (
-          <optgroup key={city.id} label={name(city)}>
-            <option value={'city:' + city.id}>
-              {name(city)} — {t('allStations')}
-            </option>
-            {stations
-              .filter((station) => station.cityId === city.id)
-              .map((station) => (
-                <option key={station.id} value={'station:' + station.id}>
-                  {name(station)}، {name(city)}
-                </option>
-              ))}
-          </optgroup>
-        ))}
-      </>
-    );
-  }
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    if (
-      !origin ||
-      !destination ||
-      origin === destination ||
-      !isCalendarDate(date)
-    ) {
-      setError(t('invalid'));
-      return;
-    }
-    const [originKind, originId] = origin.split(':');
-    const [destinationKind, destinationId] = destination.split(':');
-    const query = new URLSearchParams({
-      [originKind === 'city' ? 'originCityId' : 'originStationId']: originId!,
-      [destinationKind === 'city'
-        ? 'destinationCityId'
-        : 'destinationStationId']: destinationId!,
-      travelDate: date,
-    });
-    router.push('/trips?' + query);
-  }
   return (
-    <div>
-      <form className="search-form" onSubmit={submit}>
-        <label className="field search-field">
-          <span>
-            <MapPin size={16} />
-            {t('from')}
-          </span>
-          <select
-            value={origin}
-            onChange={(event) => setOrigin(event.target.value)}
-            required
+    <Form
+      schema={searchFormSchema(today)}
+      defaultValues={{
+        origin: defaults.originStationId
+          ? 'station:' + defaults.originStationId
+          : defaults.originCityId
+            ? 'city:' + defaults.originCityId
+            : '',
+        destination: defaults.destinationStationId
+          ? 'station:' + defaults.destinationStationId
+          : defaults.destinationCityId
+            ? 'city:' + defaults.destinationCityId
+            : '',
+        date: defaults.travelDate ?? today,
+      }}
+      onSubmit={(values) => {
+        const [from, fromId] = values.origin.split(':'),
+          [to, toId] = values.destination.split(':');
+        router.push(
+          '/trips?' +
+            new URLSearchParams({
+              [from === 'city' ? 'originCityId' : 'originStationId']: fromId!,
+              [to === 'city' ? 'destinationCityId' : 'destinationStationId']:
+                toId!,
+              travelDate: values.date,
+            }),
+        );
+      }}
+      className="items-start gap-4 md:grid-cols-[1fr_auto_1fr] lg:grid-cols-[1fr_auto_1fr_1fr_auto]"
+    >
+      {(form) => (
+        <>
+          <FormSelect<SearchFormValues>
+            name="origin"
+            label={
+              <>
+                <MapPin size={16} />
+                {t('from')}
+              </>
+            }
           >
-            {options()}
-          </select>
-        </label>
-        <button
-          type="button"
-          className="search-swap icon-button"
-          onClick={() => {
-            setOrigin(destination);
-            setDestination(origin);
-          }}
-          aria-label={t('swap')}
-        >
-          <ArrowRightLeft size={19} />
-        </button>
-        <label className="field search-field">
-          <span>
-            <MapPin size={16} />
-            {t('to')}
-          </span>
-          <select
-            value={destination}
-            onChange={(event) => setDestination(event.target.value)}
-            required
+            {options}
+          </FormSelect>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="mx-auto mt-1 size-10 md:mt-8"
+            aria-label={t('swap')}
+            onClick={() => {
+              const { origin, destination } = form.getValues();
+              form.setValue('origin', destination, { shouldValidate: false });
+              form.setValue('destination', origin, { shouldValidate: false });
+            }}
           >
-            {options()}
-          </select>
-        </label>
-        <label className="field search-field">
-          <span>
-            <CalendarDays size={16} />
-            {t('date')}
-          </span>
-          <input
+            <ArrowRightLeft size={19} />
+          </Button>
+          <FormSelect<SearchFormValues>
+            name="destination"
+            label={
+              <>
+                <MapPin size={16} />
+                {t('to')}
+              </>
+            }
+          >
+            {options}
+          </FormSelect>
+          <FormInput<SearchFormValues>
+            name="date"
+            label={
+              <>
+                <CalendarDays size={16} />
+                {t('date')}
+              </>
+            }
             type="date"
-            value={date}
             min={today}
-            onChange={(event) => setDate(event.target.value)}
-            required
           />
-        </label>
-        <button type="submit" className="button-primary">
-          <SearchIcon size={19} />
-          {t('search')}
-        </button>
-      </form>
-      {error && (
-        <p role="alert" className="notice mt-4">
-          {error}
-        </p>
+          <div className="self-start md:col-span-2 md:mt-8 lg:col-span-1">
+            <SubmitButton>
+              <SearchIcon size={19} />
+              {t('search')}
+            </SubmitButton>
+          </div>
+        </>
       )}
-    </div>
+    </Form>
   );
 }

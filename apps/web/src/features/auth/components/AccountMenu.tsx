@@ -6,7 +6,8 @@ import { useAuth, useLogout } from '@/features/auth/hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { useState } from 'react';
-export function AccountNav() {
+import { Button } from '@/shared/components/ui/button';
+export function AccountMenu() {
   const { user, status, reloadSession } = useAuth();
   const logout = useLogout();
   const pathname = usePathname();
@@ -16,20 +17,21 @@ export function AccountNav() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   return (
-    <div className="account-nav">
+    <div className="relative flex items-center gap-2">
       {status === 'signed-in' ? (
         <>
           <Link
             href="/account"
-            className="nav-account"
+            className="flex items-center gap-2 text-sm hover:text-primary"
             aria-label={t('account')}
           >
             <UserRound size={18} />
-            <span>{user?.name.split(' ')[0]}</span>
+            <span className="hidden sm:inline">{user?.name.split(' ')[0]}</span>
           </Link>
-          <button
+          <Button
             type="button"
-            className="icon-button"
+            variant="ghost"
+            size="icon"
             disabled={busy}
             aria-label={t('logout')}
             onClick={async () => {
@@ -44,7 +46,7 @@ export function AccountNav() {
             }}
           >
             <LogOut size={17} />
-          </button>
+          </Button>
         </>
       ) : status === 'unavailable' ? (
         <button type="button" className="text-button" onClick={reloadSession}>
@@ -55,7 +57,7 @@ export function AccountNav() {
           href={
             '/login?returnTo=' + encodeURIComponent(safeReturnPath(pathname))
           }
-          className="nav-account"
+          className="flex items-center gap-2 text-sm hover:text-primary"
           aria-label={t('login')}
           onClick={(event) => {
             event.preventDefault();
@@ -70,11 +72,14 @@ export function AccountNav() {
           }}
         >
           <UserRound size={18} />
-          <span>{t('login')}</span>
+          <span className="hidden sm:inline">{t('login')}</span>
         </Link>
       )}
       {error && (
-        <span role="alert" className="nav-error">
+        <span
+          role="alert"
+          className="absolute end-0 top-full mt-2 w-60 rounded-lg border bg-card p-3 text-xs text-destructive shadow-sm"
+        >
           {error}
         </span>
       )}

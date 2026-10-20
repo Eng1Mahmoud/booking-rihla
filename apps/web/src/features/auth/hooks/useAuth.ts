@@ -38,6 +38,7 @@ export function useCurrentUser() {
 export function useLogin() {
   const client = useQueryClient();
   return useMutation({
+    mutationKey: ['auth', 'useLogin'],
     mutationFn: async (input: LoginInput) =>
       (await invokeAction(() => loginAction(input))).user,
     retry: false,
@@ -54,6 +55,7 @@ export function useLogout() {
   const client = useQueryClient();
   const router = useRouter();
   return useMutation({
+    mutationKey: ['auth', 'useLogout'],
     mutationFn: (all: boolean = false) => invokeAction(() => logoutAction(all)),
     retry: false,
     onSuccess: async () => {
@@ -83,6 +85,7 @@ export function useAuth() {
 
 export function useRegister() {
   return useMutation({
+    mutationKey: ['auth', 'useRegister'],
     mutationFn: (input: RegisterInput) =>
       invokeAction(() => registerAction(input)),
     retry: false,
@@ -90,6 +93,7 @@ export function useRegister() {
 }
 export function useVerifyEmail() {
   return useMutation({
+    mutationKey: ['auth', 'useVerifyEmail'],
     mutationFn: (input: Parameters<typeof verifyEmailAction>[0]) =>
       invokeAction(() => verifyEmailAction(input)),
     retry: false,
@@ -97,6 +101,7 @@ export function useVerifyEmail() {
 }
 export function useResendVerification() {
   return useMutation({
+    mutationKey: ['auth', 'useResendVerification'],
     mutationFn: (input: Parameters<typeof resendVerificationAction>[0]) =>
       invokeAction(() => resendVerificationAction(input)),
     retry: false,
@@ -104,6 +109,7 @@ export function useResendVerification() {
 }
 export function useForgotPassword() {
   return useMutation({
+    mutationKey: ['auth', 'useForgotPassword'],
     mutationFn: (input: { email: string }) =>
       invokeAction(() => forgotPasswordAction(input)),
     retry: false,
@@ -111,6 +117,7 @@ export function useForgotPassword() {
 }
 export function useResetPassword() {
   return useMutation({
+    mutationKey: ['auth', 'useResetPassword'],
     mutationFn: (input: RecoveryValues) =>
       invokeAction(() => resetPasswordAction(input)),
     retry: false,
