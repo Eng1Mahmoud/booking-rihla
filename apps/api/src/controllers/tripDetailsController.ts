@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import { tripIdSchema, tripDetailsQuerySchema } from '../schemas/tripSchema.ts';
@@ -19,13 +20,13 @@ export function createTripDetailsController(service: TripDetailsService) {
       response.set('Cache-Control', 'no-store');
       const trip = await service.findById(validateRequest(request));
       if (!trip) throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
-      response.json({ data: trip });
+      sendSuccess(response, trip);
     },
     async listSeats(request: Request, response: Response) {
       response.set('Cache-Control', 'no-store');
       const seats = await service.listSeats(validateRequest(request));
       if (!seats) throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
-      response.json({ data: seats });
+      sendSuccess(response, seats);
     },
   };
 }

@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -22,6 +23,6 @@ export function createTicketController(service: TicketService) {
     const ticket = await service.findByBooking(auth.user.id, id.data);
     if (!ticket)
       throw new AppError(404, 'TICKET_NOT_FOUND', 'Ticket not found');
-    response.json({ data: ticket });
+    sendSuccess(response, ticket);
   };
 }

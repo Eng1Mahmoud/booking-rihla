@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -50,10 +51,12 @@ export function createPaymentAttemptController(service: PaymentAttemptService) {
         id,
         key.data,
       );
-      response
-        .location('/api/v1/bookings/' + id + '/payment-attempt')
-        .status(result.created ? 201 : 200)
-        .json({ data: result.data });
+      sendSuccess(
+        response
+          .location('/api/v1/bookings/' + id + '/payment-attempt')
+          .status(result.created ? 201 : 200),
+        result.data,
+      );
     },
     async get(request: Request, response: Response) {
       const id = bookingId(request);
@@ -65,7 +68,7 @@ export function createPaymentAttemptController(service: PaymentAttemptService) {
           'PAYMENT_ATTEMPT_NOT_FOUND',
           'Payment attempt not found',
         );
-      response.json({ data });
+      sendSuccess(response, data);
     },
   };
 }

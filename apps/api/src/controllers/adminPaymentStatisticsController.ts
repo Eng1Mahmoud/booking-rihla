@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import { adminPaymentStatisticsQuerySchema } from '../schemas/adminPaymentStatisticsSchema.ts';
@@ -15,7 +16,7 @@ export function createAdminPaymentStatisticsController(
           'VALIDATION_ERROR',
           'Use only an optional date (YYYY-MM-DD Cairo, years 2000-9998)',
         );
-      response.json({ data: await service.get(query.data) });
+      sendSuccess(response, await service.get(query.data));
     },
   };
 }

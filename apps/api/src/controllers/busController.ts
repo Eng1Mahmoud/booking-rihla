@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { BusService } from '../services/busService.ts';
@@ -20,7 +21,7 @@ export function createBusController(service: BusService) {
         );
       }
       const buses = await service.list(query.data);
-      response.json({ data: buses, pagination: query.data });
+      sendSuccess(response, { items: buses, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = busIdSchema.safeParse(request.params.id);
@@ -35,7 +36,7 @@ export function createBusController(service: BusService) {
       if (!bus) {
         throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
       }
-      response.json({ data: bus });
+      sendSuccess(response, bus);
     },
     async listSeats(request: Request, response: Response) {
       const id = busIdSchema.safeParse(request.params.id);
@@ -47,7 +48,7 @@ export function createBusController(service: BusService) {
         );
       const seats = await service.listSeats(id.data);
       if (!seats) throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
-      response.json({ data: seats });
+      sendSuccess(response, seats);
     },
     async create(request: Request, response: Response) {
       if (!request.is('application/json')) {
@@ -66,10 +67,10 @@ export function createBusController(service: BusService) {
         );
       }
       const bus = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/buses/' + bus.id)
-        .status(201)
-        .json({ data: bus });
+      sendSuccess(
+        response.location('/api/v1/buses/' + bus.id).status(201),
+        bus,
+      );
     },
     async update(request: Request, response: Response) {
       const id = busIdSchema.safeParse(request.params.id);
@@ -103,7 +104,7 @@ export function createBusController(service: BusService) {
       if (!bus) {
         throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
       }
-      response.json({ data: bus });
+      sendSuccess(response, bus);
     },
     async remove(request: Request, response: Response) {
       const id = busIdSchema.safeParse(request.params.id);
@@ -118,7 +119,7 @@ export function createBusController(service: BusService) {
       if (!bus) {
         throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
       }
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

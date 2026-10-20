@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -16,8 +17,8 @@ export function createAdminPaymentController(service: AdminPaymentService) {
           'VALIDATION_ERROR',
           'Provide bounded pagination and supported exact payment filters only',
         );
-      response.json({
-        data: await service.list(query.data),
+      sendSuccess(response, {
+        items: await service.list(query.data),
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },
@@ -35,7 +36,7 @@ export function createAdminPaymentController(service: AdminPaymentService) {
       const data = await service.findById(id.data);
       if (!data)
         throw new AppError(404, 'PAYMENT_NOT_FOUND', 'Payment not found');
-      response.json({ data });
+      sendSuccess(response, data);
     },
   };
 }

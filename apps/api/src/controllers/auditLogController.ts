@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
@@ -13,8 +14,8 @@ export function createAuditLogController(service: AuditLogService) {
           'VALIDATION_ERROR',
           'Use pagination and optional actorId, entity, entityId, action, from/to ISO timestamps; from must not be after to',
         );
-      response.json({
-        data: await service.list(query.data),
+      sendSuccess(response, {
+        items: await service.list(query.data),
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },
@@ -29,7 +30,7 @@ export function createAuditLogController(service: AuditLogService) {
       const row = await service.findById(id.data);
       if (!row)
         throw new AppError(404, 'AUDIT_LOG_NOT_FOUND', 'Audit log not found');
-      response.json({ data: row });
+      sendSuccess(response, row);
     },
   };
 }

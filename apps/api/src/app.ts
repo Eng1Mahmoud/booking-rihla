@@ -1,3 +1,4 @@
+import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
 import { parsePaymobCheckoutEnv } from './config/paymob.ts';
 import { createOperationRouter } from './routes/operationRoutes.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
@@ -162,19 +163,19 @@ export function createApp(
   app.get('/api/v1/ready', async (_request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     if (app.locals.stopping) {
-      response.status(503).json({ status: 'not_ready' });
+      sendFailure(response, 503, 'SERVICE_UNAVAILABLE');
       return;
     }
     try {
       await (services.readiness ?? readinessService).check();
-      response.json({ status: 'ready' });
+      sendSuccess(response, { status: 'ready' });
     } catch {
-      response.status(503).json({ status: 'not_ready' });
+      sendFailure(response, 503, 'SERVICE_UNAVAILABLE');
     }
   });
 
   app.get('/api/v1/health', (_request, response) => {
-    response.json({ status: 'ok' });
+    sendSuccess(response, { status: 'ok' });
   });
 
   app.use(
@@ -226,9 +227,7 @@ export function createApp(
     } catch {
       /* Keep checkout closed for invalid settings. */
     }
-    response
-      .set('Cache-Control', 'no-store')
-      .json({ data: { checkoutEnabled } });
+    sendSuccess(response.set('Cache-Control', 'no-store'), { checkoutEnabled });
   });
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
   app.use(

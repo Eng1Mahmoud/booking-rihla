@@ -27,7 +27,11 @@ const tokensSchema = z.object({
 
 function errorResponse(status: number, code: string, clearSession = false) {
   const response = NextResponse.json(
-    { error: { code } },
+    {
+      success: false,
+      code,
+      message: 'The request could not be completed. Please try again.',
+    },
     { status, headers: { 'Cache-Control': 'private, no-store' } },
   );
   if (clearSession) clearAuthCookies(response);
@@ -103,6 +107,7 @@ async function forwardRequest(
       'Content-Type': 'application/json',
       'X-CSRF-Protection': '1',
       Origin: websiteOrigin,
+      'Accept-Language': request.headers.get('accept-language') ?? 'en',
     };
     const idempotencyKey = request.headers.get('Idempotency-Key');
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
@@ -119,7 +124,8 @@ async function forwardRequest(
 
     // Login/refresh returns user JSON and stores tokens only in HttpOnly cookies.
     if ((authPath === 'auth/login' || refreshing) && upstream.ok) {
-      const parsed = tokensSchema.safeParse(await upstream.json());
+      const payload = await upstream.json();
+      const parsed = tokensSchema.safeParse(payload);
       const cookie = upstream.headers
         .getSetCookie()
         .find((value) => /^(bus_refresh|__Secure-bus_refresh)=/.test(value));
@@ -136,7 +142,12 @@ async function forwardRequest(
       }
 
       const response = NextResponse.json(
-        { data: { user: parsed.data.data.user } },
+        {
+          success: true,
+          code: payload.code,
+          message: payload.message,
+          data: { user: parsed.data.data.user },
+        },
         { headers: { 'Cache-Control': 'private, no-store' } },
       );
       saveAuthCookies(response, {

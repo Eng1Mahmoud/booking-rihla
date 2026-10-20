@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { TripService } from '../services/tripService.ts';
@@ -20,7 +21,7 @@ export function createTripController(service: TripService) {
         );
       }
       const trips = await service.list(query.data);
-      response.json({ data: trips, pagination: query.data });
+      sendSuccess(response, { items: trips, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = tripIdSchema.safeParse(request.params.id);
@@ -35,7 +36,7 @@ export function createTripController(service: TripService) {
       if (!trip) {
         throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       }
-      response.json({ data: trip });
+      sendSuccess(response, trip);
     },
     async create(request: Request, response: Response) {
       if (!request.is('application/json')) {
@@ -54,10 +55,10 @@ export function createTripController(service: TripService) {
         );
       }
       const trip = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/trips/' + trip.id)
-        .status(201)
-        .json({ data: trip });
+      sendSuccess(
+        response.location('/api/v1/trips/' + trip.id).status(201),
+        trip,
+      );
     },
     async update(request: Request, response: Response) {
       const id = tripIdSchema.safeParse(request.params.id);
@@ -91,7 +92,7 @@ export function createTripController(service: TripService) {
       if (!trip) {
         throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       }
-      response.json({ data: trip });
+      sendSuccess(response, trip);
     },
     async remove(request: Request, response: Response) {
       const id = tripIdSchema.safeParse(request.params.id);
@@ -106,7 +107,7 @@ export function createTripController(service: TripService) {
       if (!trip) {
         throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       }
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

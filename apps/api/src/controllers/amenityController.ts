@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { AmenityService } from '../services/amenityService.ts';
@@ -48,15 +49,15 @@ export function createAmenityController(service: AmenityService) {
           'VALIDATION_ERROR',
           'Use only valid limit and offset pagination',
         );
-      response.json({
-        data: await service.list(query.data),
+      sendSuccess(response, {
+        items: await service.list(query.data),
         pagination: query.data,
       });
     },
     async getById(request: Request, response: Response) {
       const result = await service.findById(id(request));
       if (!result) throw missing();
-      response.json({ data: result });
+      sendSuccess(response, result);
     },
     async create(request: Request, response: Response) {
       json(request);
@@ -68,10 +69,10 @@ export function createAmenityController(service: AmenityService) {
           'Provide only code (1-32 uppercase letters/digits/underscores, starting with a letter), nameAr and nameEn (1-100 characters)',
         );
       const item = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/amenities/' + item.id)
-        .status(201)
-        .json({ data: item });
+      sendSuccess(
+        response.location('/api/v1/amenities/' + item.id).status(201),
+        item,
+      );
     },
     async update(request: Request, response: Response) {
       const itemId = id(request);
@@ -89,12 +90,12 @@ export function createAmenityController(service: AmenityService) {
         response.locals.auth,
       );
       if (!result) throw missing();
-      response.json({ data: result });
+      sendSuccess(response, result);
     },
     async remove(request: Request, response: Response) {
       if (!(await service.remove(id(request), response.locals.auth)))
         throw missing();
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

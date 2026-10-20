@@ -1,3 +1,4 @@
+import { AppError } from '../errors/AppError.ts';
 import { Router, type RequestHandler } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { operationController } from '../controllers/operationController.ts';
@@ -8,9 +9,8 @@ export function createOperationRouter(superAdmin: RequestHandler[]) {
     limit: 30,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
-    message: {
-      error: { code: 'RATE_LIMITED', message: 'Too many operation requests' },
-    },
+    handler: (_request, _response, next) =>
+      next(new AppError(429, 'RATE_LIMITED', 'Too many requests')),
   });
   router.post(
     '/trips/:id/cancel',

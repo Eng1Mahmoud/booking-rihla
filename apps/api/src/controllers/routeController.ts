@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { RouteService } from '../services/routeService.ts';
@@ -20,7 +21,7 @@ export function createRouteController(service: RouteService) {
         );
       }
       const routes = await service.list(query.data);
-      response.json({ data: routes, pagination: query.data });
+      sendSuccess(response, { items: routes, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = routeIdSchema.safeParse(request.params.id);
@@ -35,7 +36,7 @@ export function createRouteController(service: RouteService) {
       if (!route) {
         throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
       }
-      response.json({ data: route });
+      sendSuccess(response, route);
     },
     async create(request: Request, response: Response) {
       if (!request.is('application/json')) {
@@ -54,10 +55,10 @@ export function createRouteController(service: RouteService) {
         );
       }
       const route = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/routes/' + route.id)
-        .status(201)
-        .json({ data: route });
+      sendSuccess(
+        response.location('/api/v1/routes/' + route.id).status(201),
+        route,
+      );
     },
     async update(request: Request, response: Response) {
       const id = routeIdSchema.safeParse(request.params.id);
@@ -91,7 +92,7 @@ export function createRouteController(service: RouteService) {
       if (!route) {
         throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
       }
-      response.json({ data: route });
+      sendSuccess(response, route);
     },
     async remove(request: Request, response: Response) {
       const id = routeIdSchema.safeParse(request.params.id);
@@ -106,7 +107,7 @@ export function createRouteController(service: RouteService) {
       if (!route) {
         throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
       }
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler } from 'express';
 import { AppError } from '../errors/AppError.ts';
+import { sendFailure } from '../utils/apiResponse.ts';
 
 export const errorHandler: ErrorRequestHandler = (
   error: unknown,
@@ -30,34 +31,16 @@ export const errorHandler: ErrorRequestHandler = (
     }
   }
 
-  // Explicit operational unavailability has a fixed public message, not an
-  // arbitrary upstream/server exception message.
-  if (
-    error instanceof AppError &&
-    error.statusCode === 503 &&
-    error.code === 'PAYMENT_UNAVAILABLE'
-  ) {
-    response.status(503).json({
-      error: {
-        code: 'PAYMENT_UNAVAILABLE',
-        message: 'Payment is temporarily unavailable',
-      },
-    });
-    return;
+  if (error instanceof AppError && Number.isInteger(error.statusCode)) {
+    if (error.statusCode >= 400 && error.statusCode < 500) {
+      sendFailure(response, error.statusCode, error.code);
+      return;
+    }
+    if (error.statusCode === 503 && error.code === 'PAYMENT_UNAVAILABLE') {
+      sendFailure(response, 503, error.code);
+      return;
+    }
   }
-
-  if (
-    error instanceof AppError &&
-    Number.isInteger(error.statusCode) &&
-    error.statusCode >= 400 &&
-    error.statusCode < 500
-  ) {
-    response.status(error.statusCode).json({
-      error: { code: error.code, message: error.message },
-    });
-    return;
-  }
-
   console.error(
     JSON.stringify({
       event: 'unhandled_request_error',
@@ -65,11 +48,5 @@ export const errorHandler: ErrorRequestHandler = (
       code: 'INTERNAL_SERVER_ERROR',
     }),
   );
-  // Never expose unexpected errors, stack traces, or server details to clients.
-  response.status(500).json({
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred',
-    },
-  });
+  sendFailure(response, 500, 'INTERNAL_SERVER_ERROR', true);
 };

@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { setTimeout } from 'node:timers/promises';
 import { AppError } from '../errors/AppError.ts';
@@ -6,8 +7,6 @@ import {
   resetPasswordSchema,
 } from '../schemas/passwordResetSchema.ts';
 import type { PasswordResetService } from '../services/passwordResetService.ts';
-export const forgotPasswordMessage =
-  'If recovery is available for this account, a password reset email will be sent';
 function requireJson(request: Request) {
   if (!request.is('application/json'))
     throw new AppError(
@@ -37,7 +36,7 @@ export function createPasswordResetController(service: PasswordResetService) {
       await service.requestReset(input.data.email);
       // Reduce easy timing differences between queued, throttled and unknown accounts.
       await setTimeout(Math.max(0, 250 - (Date.now() - started)));
-      response.status(202).json({ message: forgotPasswordMessage });
+      sendSuccess(response.status(202), undefined, 'PASSWORD_RESET_REQUESTED');
     },
     async reset(request: Request, response: Response) {
       requireJson(request);
@@ -49,9 +48,7 @@ export function createPasswordResetController(service: PasswordResetService) {
           'Provide email, a six-digit code string, and matching newPassword/confirmPassword (12-128 characters, at most 512 bytes)',
         );
       await service.resetPassword(input.data);
-      response.json({
-        message: 'Password reset successfully; sign in with your new password',
-      });
+      sendSuccess(response, undefined, 'PASSWORD_RESET');
     },
   };
 }

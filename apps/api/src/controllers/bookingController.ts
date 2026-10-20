@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { AuthContext } from '../services/sessionService.ts';
@@ -29,10 +30,10 @@ export function createBookingController(service: BookingService) {
           'Provide tripId, contactPhone and 1-100 passengers with distinct seatId/name; no other fields are supported',
         );
       const booking = await service.create(owner(response), input.data);
-      response
-        .location('/api/v1/bookings/' + booking.id)
-        .status(201)
-        .json({ data: booking });
+      sendSuccess(
+        response.location('/api/v1/bookings/' + booking.id).status(201),
+        booking,
+      );
     },
     async list(request: Request, response: Response) {
       const query = bookingListQuerySchema.safeParse(request.query);
@@ -43,7 +44,7 @@ export function createBookingController(service: BookingService) {
           'Provide only valid limit and offset pagination',
         );
       const data = await service.list(owner(response).user.id, query.data);
-      response.json({ data, pagination: query.data });
+      sendSuccess(response, { items: data, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = bookingIdSchema.safeParse(request.params.id);
@@ -59,7 +60,7 @@ export function createBookingController(service: BookingService) {
       const booking = await service.findById(owner(response).user.id, id.data);
       if (!booking)
         throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
-      response.json({ data: booking });
+      sendSuccess(response, booking);
     },
   };
 }

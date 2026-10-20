@@ -9,8 +9,13 @@ export const authApi = {
       .data.user,
   logout: (all = false) =>
     apiClient.post<void>(all ? 'auth/logout-all' : 'auth/logout'),
-  register: (input: RegisterInput) =>
-    apiClient.post<{ verificationId: string }>('auth/register', input),
+  register: async (input: RegisterInput) =>
+    (
+      await apiClient.post<{ data: { verificationId: string } }>(
+        'auth/register',
+        input,
+      )
+    ).data,
   verifyEmail: (input: {
     email: string;
     verificationId: string;

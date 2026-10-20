@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { StationService } from '../services/stationService.ts';
@@ -20,7 +21,7 @@ export function createStationController(service: StationService) {
         );
       }
       const stations = await service.list(query.data);
-      response.json({ data: stations, pagination: query.data });
+      sendSuccess(response, { items: stations, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = stationIdSchema.safeParse(request.params.id);
@@ -35,7 +36,7 @@ export function createStationController(service: StationService) {
       if (!station) {
         throw new AppError(404, 'STATION_NOT_FOUND', 'Station not found');
       }
-      response.json({ data: station });
+      sendSuccess(response, station);
     },
     async create(request: Request, response: Response) {
       if (!request.is('application/json')) {
@@ -54,10 +55,10 @@ export function createStationController(service: StationService) {
         );
       }
       const station = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/stations/' + station.id)
-        .status(201)
-        .json({ data: station });
+      sendSuccess(
+        response.location('/api/v1/stations/' + station.id).status(201),
+        station,
+      );
     },
     async update(request: Request, response: Response) {
       const id = stationIdSchema.safeParse(request.params.id);
@@ -91,7 +92,7 @@ export function createStationController(service: StationService) {
       if (!station) {
         throw new AppError(404, 'STATION_NOT_FOUND', 'Station not found');
       }
-      response.json({ data: station });
+      sendSuccess(response, station);
     },
     async remove(request: Request, response: Response) {
       const id = stationIdSchema.safeParse(request.params.id);
@@ -106,7 +107,7 @@ export function createStationController(service: StationService) {
       if (!station) {
         throw new AppError(404, 'STATION_NOT_FOUND', 'Station not found');
       }
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

@@ -2,6 +2,34 @@
 
 A bus booking application for Egypt, built in focused feature batches with explanations.
 
+## API response contract — phase 1 (2026-10-20)
+
+All JSON API replies use `{ success, code, message, data?, requestId? }`. `message` is one backend-owned, user-facing string selected by `Accept-Language` (`ar` or `en`, including regional language preferences; default `en`). Branch on `code`, never on translated message text. Validation failures use one general message. Responses vary by Accept-Language.
+
+Success examples:
+
+```json
+{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "id": "..." } }
+```
+
+```json
+{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "items": [], "pagination": { "limit": 20, "offset": 0 } } }
+```
+
+Failure example:
+
+```json
+{ "success": false, "code": "VALIDATION_ERROR", "message": "راجع البيانات المدخلة وحاول مجددًا." }
+```
+
+Only unexpected 5xx failures include `requestId` in the body; it matches X-Request-ID and can be shown as a support reference. The header remains on all API requests. Known PAYMENT_UNAVAILABLE and readiness failures have localized messages without a support id. Internal exception/parser details are never public messages.
+
+Registration returns `data.verificationId`. Successful delete/logout operations return HTTP 200 with a success envelope instead of empty 204. Health returns `data.status: "ok"`; readiness returns `data.status: "ready"` on success or 503 SERVICE_UNAVAILABLE. The webhook still acknowledges receipt with HTTP 200, now with `data.received: true`.
+
+Implementation: `apps/api/src/config/apiMessages.ts`, `utils/apiResponse.ts`, controller calls to sendSuccess and the central error handler. Existing feature components keep working through a temporary list adapter in the web API client. Browser requests pass their language through the gateway; the old frontend API-error translation table is removed. HTTP statuses, permissions, payment idempotency and uncertain-outcome handling are preserved.
+
+This phase does not migrate sessions to server-only refresh, add Server Actions or remove the gateway. Those are subsequent phases. Where older examples below omit the envelope fields, use this contract; list records now live at data.items.
+
 ## Current backend status
 
 Implemented: an Express + TypeScript API with a health endpoint, centralized JSON error responses, validated startup settings, Helmet security headers, JSON body parsing with a 100kb limit, and an explicit CORS allowlist. The health endpoint checks that the API responds. Local PostgreSQL setup is now defined in compose.yaml; Prisma 8 backs catalog management, trips, repeatable demo data, and passenger trip search; the health endpoint remains independent of the database.
@@ -20,7 +48,7 @@ npm run dev
 Open http://127.0.0.1:4000/api/v1/health in your browser. Expected response:
 
 ```json
-{ "status": "ok" }
+{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "status": "ok" } }
 ```
 
 Stop the server with Ctrl+C. Development mode restarts it when source files change.
@@ -247,7 +275,7 @@ The migration command applies pending changes and updates the development db ref
 | GET    | /api/v1/cities/:id               | Return one city or CITY_NOT_FOUND                    |
 | POST   | /api/v1/cities                   | Create a city and return 201 with a Location header  |
 | PATCH  | /api/v1/cities/:id               | Update one or both names and return the updated city |
-| DELETE | /api/v1/cities/:id               | Delete a city and return an empty 204 response       |
+| DELETE | /api/v1/cities/:id               | Delete a city and return 200 with a success envelope       |
 
 Example PowerShell request after signing in as ADMIN or SUPER_ADMIN (set $accessToken from data.accessToken in the login response):
 
@@ -283,7 +311,7 @@ Apply the committed migrations with npm run db:migrate before using these endpoi
 | GET    | /api/v1/stations/:id                                | Read a station or return STATION_NOT_FOUND                       |
 | POST   | /api/v1/stations                                    | Create a station using nameAr, nameEn, and cityId                |
 | PATCH  | /api/v1/stations/:id                                | Update one or more names or move the station to an existing city |
-| DELETE | /api/v1/stations/:id                                | Delete a station and return an empty 204 response                |
+| DELETE | /api/v1/stations/:id                                | Delete a station and return 200 with a success envelope                |
 
 POST/PATCH require application/json and reject unknown fields. Names are trimmed and must contain 1-100 characters; ids must be UUIDs. PATCH needs at least one field and preserves omitted values. List defaults to limit=20/offset=0, allows limit 1-100/offset 0-100000, and sorts by English name then id. A city filter with no matching stations returns an empty list, including a well-formed but absent city id.
 
@@ -312,7 +340,7 @@ Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateN
 | GET    | /api/v1/buses/:id/seats                       | Read its numbered seats in ascending order              |
 | POST   | /api/v1/buses                                 | Create the bus and seats 1 through seatCount atomically |
 | PATCH  | /api/v1/buses/:id                             | Edit the plate, capacity, or active status              |
-| DELETE | /api/v1/buses/:id                             | Delete the bus and its owned seats; return 204          |
+| DELETE | /api/v1/buses/:id                             | Delete the bus and its owned seats; return 200 with a success envelope          |
 
 Example create body:
 
@@ -340,7 +368,7 @@ Run npm run db:migrate before using this feature. Route represents one direction
 | GET    | /api/v1/routes/:id | Read a route or return ROUTE_NOT_FOUND                                               |
 | POST   | /api/v1/routes     | Create a directed route; return 201 and Location                                     |
 | PATCH  | /api/v1/routes/:id | Update endpoints, estimated duration or active status                                |
-| DELETE | /api/v1/routes/:id | Delete the route; return an empty 204                                                |
+| DELETE | /api/v1/routes/:id | Delete the route; return 200 with a success envelope                                                |
 
 Example create body (use UUIDs returned by the Station API):
 
@@ -375,7 +403,7 @@ Apply npm run db:migrate before using this feature. Trip joins an existing Route
 | GET    | /api/v1/trips/:id | Read one trip or return TRIP_NOT_FOUND                       |
 | POST   | /api/v1/trips     | Create a future trip; return 201 and Location                |
 | PATCH  | /api/v1/trips/:id | Edit references, times, price or status before departure     |
-| DELETE | /api/v1/trips/:id | Delete an unreferenced trip; return an empty 204             |
+| DELETE | /api/v1/trips/:id | Delete an unreferenced trip; return 200 with a success envelope             |
 
 Example create body (replace the route and bus placeholders with real UUIDs, and choose future dates):
 
@@ -446,9 +474,14 @@ Response shape:
 
 ```json
 {
-  "data": [],
-  "pagination": { "limit": 20, "offset": 0 },
-  "search": { "travelDate": "2099-01-01", "timeZone": "Africa/Cairo" }
+  "success": true,
+  "code": "SUCCESS",
+  "message": "The request completed successfully.",
+  "data": {
+    "items": [],
+    "pagination": { "limit": 20, "offset": 0 },
+    "search": { "travelDate": "2099-01-01", "timeZone": "Africa/Cairo" }
+  }
 }
 ```
 
@@ -556,7 +589,7 @@ Register body:
 }
 ```
 
-Names are trimmed and contain 1-100 characters. Emails are trimmed/lowercased and limited to 254 characters. Phone numbers use international +country-code format with 8-15 digits, without spaces; phone uniqueness is not assumed. Passwords contain 12-128 characters, at most 512 UTF-8 bytes, and are not trimmed. language is ar (default) or en. Unknown fields, including caller ids/roles, are rejected. JSON is required and query parameters are unsupported. Register returns a generic message plus a random verificationId receipt, without user ids, password hashes or codes. A new registration receives its real verification id; duplicate emails receive an indistinguishable decoy id, preserve existing credentials and do not queue email. Keep the original receipt for verification/resend; a duplicate registration must not activate an account created by another client.
+Names are trimmed and contain 1-100 characters. Emails are trimmed/lowercased and limited to 254 characters. Phone numbers use international +country-code format with 8-15 digits, without spaces; phone uniqueness is not assumed. Passwords contain 12-128 characters, at most 512 UTF-8 bytes, and are not trimmed. language is ar (default) or en. Unknown fields, including caller ids/roles, are rejected. JSON is required and query parameters are unsupported. Register returns a generic message plus a random data.verificationId receipt, without user ids, password hashes or codes. A new registration receives its real verification id; duplicate emails receive an indistinguishable decoy id, preserve existing credentials and do not queue email. Keep the original receipt for verification/resend; a duplicate registration must not activate an account created by another client.
 
 Read the code from Mailpit, then verify:
 
@@ -595,8 +628,8 @@ Before sign-in, registration clients must retain the verificationId returned by 
 | POST   | /api/v1/auth/login      | Verified, active account signs in; sets refresh cookie and returns access token/user |
 | POST   | /api/v1/auth/refresh    | Consumes refresh cookie and sets its replacement                                     |
 | GET    | /api/v1/auth/me         | Returns the current user using Bearer access authentication                          |
-| POST   | /api/v1/auth/logout     | Revokes the refresh cookie's session, clears cookie, returns 204                     |
-| POST   | /api/v1/auth/logout-all | Revokes every session for the authenticated user and returns 204                     |
+| POST   | /api/v1/auth/logout     | Revokes the refresh cookie's session, clears cookie, returns 200 with a success envelope                     |
+| POST   | /api/v1/auth/logout-all | Revokes every session for the authenticated user and returns 200 with a success envelope                     |
 
 All session POST requests require Content-Type: application/json and X-CSRF-Protection: 1. Login body contains only email/password with the registration email/password validation rules. Refresh/logout/logout-all accept an empty object (or empty JSON body); tokens must not be supplied in their body or query. me/logout-all require Authorization: Bearer ACCESS_TOKEN. All responses disable caching.
 
@@ -625,7 +658,7 @@ Refresh returns the same response shape with a new access token and replacement 
 
 Refresh tokens are random 32-byte opaque values; only SHA-256 hashes are stored. Each login creates an independent Session (token family). The session and all its refresh tokens have the same thirty-day absolute expiry; refresh does not extend it. Refresh locks the Session, rereads the presented token, marks it used, and inserts a new token atomically. Reusing a consumed token revokes the whole session and returns 401, including tokens issued by a concurrent refresh. Keep refresh calls serialized in clients: two simultaneous refreshes can produce one success followed by replay revocation. Lost refresh responses require signing in again rather than retrying the consumed token.
 
-Local HTTP cookies are named bus_refresh; production uses __Secure-bus_refresh and Secure. Both are HttpOnly, SameSite=Strict, host-only (no Domain), expire at session expiry, and use Path=/api/v1/auth. Logout clears matching attributes. Unknown/missing refresh cookies yield 401 on refresh and idempotent 204 on logout. Refresh auth failures clear the cookie. Logout-all requires a valid Bearer token and revokes all currently existing sessions; a later fresh sign-in can create another session. Expired/revoked session/token records remain for replay detection until later maintenance cleanup.
+Local HTTP cookies are named bus_refresh; production uses __Secure-bus_refresh and Secure. Both are HttpOnly, SameSite=Strict, host-only (no Domain), expire at session expiry, and use Path=/api/v1/auth. Logout clears matching attributes. Unknown/missing refresh cookies yield 401 on refresh and idempotent 200 success on logout. Refresh auth failures clear the cookie. Logout-all requires a valid Bearer token and revokes all currently existing sessions; a later fresh sign-in can create another session. Expired/revoked session/token records remain for replay detection until later maintenance cleanup.
 
 The custom CSRF header is mandatory even for non-browser clients. If Origin is present it must exactly match the configured CORS allowlist; missing Origin is allowed for CLI clients that send the custom header. Browser requests with a custom header require a successful preflight, and CORS enables credentials only alongside explicit allowed origins. No wildcard or trusted forwarded-host inference is used. A browser client must use credentials: include for login/refresh/logout. SameSite=Strict requires same-site web/API hostnames: use localhost for both (or configure 127.0.0.1 consistently), not a mixture. Separate ports are supported; a cross-site production arrangement is outside this local setup and needs its own cookie/CSRF design and browser verification.
 
@@ -897,9 +930,9 @@ Optional query fields on the list are combined with AND:
 | limit      | Page size 1-100, default 20                                                            |
 | offset     | Rows to skip 0-100000, default 0                                                       |
 
-Examples: GET /api/v1/admin/bookings?reference=BUS-0123456789ABCDEF or GET /api/v1/admin/bookings?email=customer%40example.com&travelDate=2026-11-01&limit=20&offset=0. Replace these placeholders with real booking/customer data. Reference/email searches are exact, not partial or wildcard searches. URL-encode query values. Repeated, malformed, unknown and nested query fields return 400 VALIDATION_ERROR. Valid filters that match no reservations return data: [] with normal pagination, not 404. travelDate uses the Cairo day's inclusive start and exclusive end, including daylight-saving changes; it is not the booking creation date or the UTC departure date.
+Examples: GET /api/v1/admin/bookings?reference=BUS-0123456789ABCDEF or GET /api/v1/admin/bookings?email=customer%40example.com&travelDate=2026-11-01&limit=20&offset=0. Replace these placeholders with real booking/customer data. Reference/email searches are exact, not partial or wildcard searches. URL-encode query values. Repeated, malformed, unknown and nested query fields return 400 VALIDATION_ERROR. Valid filters that match no reservations return data.items: [] with normal pagination, not 404. travelDate uses the Cairo day's inclusive start and exclusive end, including daylight-saving changes; it is not the booking creation date or the UTC departure date.
 
-List replies contain data: [...] and pagination: { limit, offset }. Results sort by createdAt descending, then id descending for deterministic ties. Each summary contains the existing reservation reference/status/contact phone, seat count, integer-piastre price snapshot/total, currency EGP, paymentRequired: false, createdAt and trip/route/station/city information. It adds customer: { id, name, email, phone } and trip.status. Customer phone is the account phone; contactPhone is the separate phone supplied with that booking. Passenger names and seat allocation arrays are omitted from list queries and responses.
+List replies contain data: { items: [...], pagination: { limit, offset } }. Results sort by createdAt descending, then id descending for deterministic ties. Each summary contains the existing reservation reference/status/contact phone, seat count, integer-piastre price snapshot/total, currency EGP, paymentRequired: false, createdAt and trip/route/station/city information. It adds customer: { id, name, email, phone } and trip.status. Customer phone is the account phone; contactPhone is the separate phone supplied with that booking. Passenger names and seat allocation arrays are omitted from list queries and responses.
 
 ### Read details
 
@@ -931,7 +964,7 @@ All routes require a verified active ADMIN or SUPER_ADMIN using a Bearer access 
 
 List filters are optional and combined with AND: email (trimmed/lowercased exact account email), phone (exact international account phone), isActive (query string true/false), limit (1-100, default 20) and offset (0-100000, default 0). No partial/wildcard name search or role filter is supported. Phone numbers are not unique: matching passenger accounts are all eligible results. URL-encode phone values, especially the plus sign: /api/v1/admin/users?phone=%2B201012345678&isActive=false.
 
-List responses are { data: [...], pagination: { limit, offset } }; empty matches return 200 with an empty data array. Order is createdAt descending then id descending for deterministic ties. Detail returns { data: account }. The selected fields are id, name, email, phone, role USER, language, isActive, emailVerifiedAt (nullable ISO string) and createdAt (ISO string). Password hashes, activation/reset codes, sessions, refresh tokens and login-failure/lockout fields are not loaded for the public account projection. Detail/status routes reject all query parameters; unsupported, repeated, nested or malformed filters/ids return 400 VALIDATION_ERROR.
+List responses are { success, code, message, data: { items: [...], pagination: { limit, offset } } }; empty matches return 200 with an empty data.items array. Order is createdAt descending then id descending for deterministic ties. Detail returns { data: account }. The selected fields are id, name, email, phone, role USER, language, isActive, emailVerifiedAt (nullable ISO string) and createdAt (ISO string). Password hashes, activation/reset codes, sessions, refresh tokens and login-failure/lockout fields are not loaded for the public account projection. Detail/status routes reject all query parameters; unsupported, repeated, nested or malformed filters/ids return 400 VALIDATION_ERROR.
 
 Use /api/v1/admin/bookings?userId=USER_UUID for a customer's reservation history; the user list does not fetch or expose reservation/passenger arrays.
 
@@ -968,7 +1001,7 @@ No migration, package or environment change is needed. This feature uses the exi
 
 All endpoints require a verified active SUPER_ADMIN with a valid Bearer token. Ordinary ADMIN and USER accounts receive 403, anonymous callers 401. Checks run before input validation and replies use Cache-Control: no-store. There is no HTTP bootstrap, account creation, password editing, unrestricted profile editing or deletion endpoint.
 
-The staff list accepts optional exact email (trimmed/lowercased), role ADMIN/SUPER_ADMIN, isActive true/false, limit 1-100 (default 20), and offset 0-100000 (default 0). Filters combine with AND. It returns { data: [...], pagination: { limit, offset } } sorted by createdAt descending then id descending. Empty matches return 200 and an empty array. Read/status queries exclude USER accounts; a missing or passenger detail/status target returns 404 ADMINISTRATOR_NOT_FOUND. Staff responses share the selected safe account fields used by passenger management: id, name, email, phone, role, language, isActive, emailVerifiedAt and createdAt. No password, reset/activation code, lockout field or session/token data is exposed.
+The staff list accepts optional exact email (trimmed/lowercased), role ADMIN/SUPER_ADMIN, isActive true/false, limit 1-100 (default 20), and offset 0-100000 (default 0). Filters combine with AND. It returns { success, code, message, data: { items: [...], pagination: { limit, offset } } } sorted by createdAt descending then id descending. Empty matches return 200 and an empty array. Read/status queries exclude USER accounts; a missing or passenger detail/status target returns 404 ADMINISTRATOR_NOT_FOUND. Staff responses share the selected safe account fields used by passenger management: id, name, email, phone, role, language, isActive, emailVerifiedAt and createdAt. No password, reset/activation code, lockout field or session/token data is exposed.
 
 ### Grant or remove a staff role
 
@@ -1236,13 +1269,13 @@ Start npm run email:worker in another terminal for account codes, tickets, depar
 ### Browser integration contract
 
 - Public reads: GET /cities, GET /stations, GET /trips/search, GET /trips/:id/details and GET /trips/:id/seats. Search accepts travelDate plus one originCityId/originStationId and one destinationCityId/destinationStationId, with limit/offset pagination. Travel dates use Africa/Cairo; API timestamps are ISO instants with a timezone.
-- Accounts: POST /auth/register, /auth/verify-email, /auth/resend-verification, /auth/login, /auth/refresh, /auth/logout, /auth/logout-all, /auth/forgot-password and /auth/reset-password; GET /auth/me. Keep the returned verificationId for verification/resend. Passwords are 12-128 characters, phones use international format, and language is ar/en.
-- Login, refresh and logout requests use credentials: include, JSON Content-Type, and X-CSRF-Protection: 1. Origins must match CORS_ORIGINS exactly. Keep short-lived access tokens in memory, send Authorization: Bearer <accessToken> on protected reads/writes, and restore the session with the HttpOnly refresh cookie. Production cookies require HTTPS and a same-site web/API deployment; unrelated cross-site hosting needs an explicit cookie/CSRF design change.
+- Accounts: POST /auth/register, /auth/verify-email, /auth/resend-verification, /auth/login, /auth/refresh, /auth/logout, /auth/logout-all, /auth/forgot-password and /auth/reset-password; GET /auth/me. Keep data.verificationId from registration for verification/resend. Passwords are 12-128 characters, phones use international format, and language is ar/en.
+- Website browser requests use the same-origin /api/backend gateway, JSON and X-CSRF-Protection: 1. Access and refresh tokens remain in website HttpOnly cookies. Next.js attaches the Bearer token for Express; browser JavaScript receives no tokens. Production website cookies require HTTPS. This phase retains the existing refresh coordination until the server-session migration.
 - Booking: POST /bookings with tripId, contactPhone and passengers [{seatId, name}]. Prices and totals come from the server. GET /bookings and GET /bookings/:id only expose the current owner's records. There is no passenger cancellation route. A pending payment hold lasts at most ten minutes and ends no later than departure.
 - Payment: POST/GET /bookings/:id/payment-attempt, POST /bookings/:id/checkout and GET /bookings/:id/payment. Payment preparation uses an Idempotency-Key UUID. Use expiresAt and serverTime for the countdown, refresh availability after a conflict, and treat PAYMENT_PROCESSING/UNKNOWN as unresolved. Browser redirects are not payment confirmation. A disabled provider returns 503 PAYMENT_UNAVAILABLE; the website must display this state rather than claim payment succeeded.
 - Tickets: GET /bookings/:id/ticket only returns a currently valid, paid and confirmed ticket. A cancelled trip invalidates its ticket. QR contents are opaque identifiers, not boarding authorization.
 - Operator APIs: existing city/station, fleet, amenities, routes and trip management; /trips/batch/preview and /trips/batch; protected /admin/bookings, /admin/payments, /admin/users, /admin/statistics and /admin/payments/statistics. Super-admin administrator and audit APIs retain their existing restrictions.
-- Errors use {error: {code, message}}. Read X-Request-ID from response headers for troubleshooting. Success payloads normally use {data}, and paginated lists include pagination. Handle 401 (session), 403 (role), 409 (state/seat conflict), 429 (rate limit) and 503 (unavailable service).
+- Replies use {success, code, message, data?, requestId?}. The backend localizes message via Accept-Language; lists use data.items and data.pagination. Only unexpected server-error bodies include requestId for support. Handle 401 (session), 403 (role), 409 (state/seat conflict), 429 (rate limit) and 503 (unavailable service).
 - Money uses integer piastres, currency EGP. Refund/report amounts are exact decimal strings of piastres to avoid aggregate rounding; convert for display only. Booking states can now expose CANCELLED; payment state can expose REFUNDED. Cancellation is derived from trip state while original confirmed payment history remains persisted.
 
 ### Operator cancellation and full refunds
@@ -1270,7 +1303,7 @@ Set PAYMOB_REFUNDS_ENABLED=true only after verifying account-specific TEST refun
 
 ### Operational checks and remaining external setup
 
-GET /health checks the HTTP process; GET /ready probes PostgreSQL and returns {status: ready} or 503 {status: not_ready}, with no connection details. The readiness probe has a statement timeout and a bounded response wait and shares concurrent work to avoid accumulating connection probes. It does not certify worker delivery or provider availability. Requests log one JSON event containing requestId, method, status, durationMs and aborted; queries, bodies, credentials, IP addresses and user data are omitted. Unexpected errors log a generic correlated error event. SIGINT/SIGTERM stop HTTP acceptance, drain requests and close Prisma, with a 15-second forced-shutdown deadline.
+GET /health checks the HTTP process; GET /ready probes PostgreSQL and returns a success envelope with data.status ready, or a 503 SERVICE_UNAVAILABLE failure envelope, with no connection details. The readiness probe has a statement timeout and a bounded response wait and shares concurrent work to avoid accumulating connection probes. It does not certify worker delivery or provider availability. Requests log one JSON event containing requestId, method, status, durationMs and aborted; queries, bodies, credentials, IP addresses and user data are omitted. Unexpected errors log a generic correlated error event. SIGINT/SIGTERM stop HTTP acceptance, drain requests and close Prisma, with a 15-second forced-shutdown deadline.
 
 Future payment sessions need reachable public HTTPS notification/return URLs. Account API-key authentication succeeded and OWNER_ID was filled from the authenticated account user. Actual TEST card payment and full refund were verified; see the current Paymob section above. Payment flags are disabled again after temporary verification.
 

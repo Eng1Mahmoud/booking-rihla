@@ -5,8 +5,10 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
+    message = code,
+    public readonly requestId?: string,
   ) {
-    super(code);
+    super(message);
   }
 }
 export function isUncertainRequestError(error: unknown) {
@@ -47,6 +49,10 @@ async function send(path: string, options: RequestInit = {}) {
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
     headers.set('X-CSRF-Protection', '1');
+    headers.set(
+      'Accept-Language',
+      window.location.pathname.startsWith('/ar') ? 'ar' : 'en',
+    );
     return fetch('/api/backend/' + path, {
       ...options,
       headers,
@@ -70,7 +76,12 @@ async function send(path: string, options: RequestInit = {}) {
 
 async function failure(response: Response) {
   const body = await response.json().catch(() => null);
-  return new ApiError(response.status, body?.error?.code ?? 'REQUEST_FAILED');
+  return new ApiError(
+    response.status,
+    body?.code ?? body?.error?.code ?? 'REQUEST_FAILED',
+    body?.message ?? body?.error?.message,
+    body?.requestId,
+  );
 }
 // All failed requests in this tab wait for the same refresh.
 let refreshInFlight: Promise<void> | null = null;
@@ -113,94 +124,40 @@ async function request<T>(
       window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   if (!response.ok) throw await failure(response);
-  return response.status === 204
-    ? (undefined as T)
-    : ((await response.json()) as T);
+  if (response.status === 204) return undefined as T;
+  const result = await response.json();
+  // Keep existing list components working until their migration phase.
+  if (result.success && Array.isArray(result.data?.items))
+    return {
+      ...result,
+      data: result.data.items,
+      pagination: result.data.pagination,
+    } as T;
+  return result as T;
 }
-// Display messages only; they do not control requests or session recovery.
-const errors: Record<string, [string, string]> = {
-  UPSTREAM_UNAVAILABLE: [
-    'تعذر الاتصال بالخادم. حاول مجددًا.',
-    'The server could not be reached. Please try again.',
-  ],
-  UPSTREAM_ERROR: [
-    'تعذر معالجة رد الخادم. حاول مجددًا.',
-    'The server response could not be processed. Try again.',
-  ],
-  FORBIDDEN: [
-    'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
-    'You do not have permission to perform this action.',
-  ],
-  NETWORK_ERROR: [
-    'تعذر الاتصال. تحقق من اتصالك ثم أعد المحاولة.',
-    'Could not connect. Check your connection and try again.',
-  ],
-  INVALID_RESET_CODE: [
-    'رمز الاستعادة غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا عند الحاجة.',
-    'The recovery code is invalid or expired. Request a new code if needed.',
-  ],
-  INVALID_CREDENTIALS: [
-    'تعذر تسجيل الدخول. راجع البريد وكلمة المرور وتأكد من تفعيل البريد.',
-    'Could not sign in. Check your credentials and verify your email.',
-  ],
-  UNAUTHENTICATED: ['سجل الدخول للمتابعة.', 'Sign in to continue.'],
-  VALIDATION_ERROR: [
-    'راجع البيانات المدخلة وحاول مرة أخرى.',
-    'Check your details and try again.',
-  ],
-  INVALID_VERIFICATION_CODE: [
-    'الرمز غير صحيح أو انتهت صلاحيته.',
-    'The code is incorrect or has expired.',
-  ],
-  VERIFICATION_FAILED: [
-    'الرمز غير صحيح أو انتهت صلاحيته.',
-    'The code is incorrect or has expired.',
-  ],
-  RATE_LIMITED: [
-    'محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.',
-    'Too many attempts. Please wait before trying again.',
-  ],
-  SEAT_UNAVAILABLE: [
-    'حجز شخص آخر أحد المقاعد. اختر مقعدًا متاحًا.',
-    'Someone else reserved a selected seat. Choose an available seat.',
-  ],
-  TRIP_UNAVAILABLE: [
-    'هذه الرحلة لم تعد متاحة للحجز.',
-    'This trip is no longer available for booking.',
-  ],
-  BOOKING_EXPIRED: [
-    'انتهت مهلة الحجز. اختر المقاعد من جديد.',
-    'The reservation expired. Choose your seats again.',
-  ],
-  PAYMENT_UNAVAILABLE: [
-    'الدفع الإلكتروني غير متاح حاليًا. راجع حالة الدفع المسجلة في صفحة الحجز.',
-    'Online payment is currently unavailable. Check the recorded payment status in your booking.',
-  ],
-  CSRF_REJECTED: [
-    'افتح الموقع عبر localhost:3000 ثم حاول مرة أخرى.',
-    'Open the website using localhost:3000 and try again.',
-  ],
-};
+// Backend messages are localized; only unavailable transport needs a fallback.
 export function errorMessage(error: unknown, locale: string) {
-  const pair = error instanceof ApiError ? errors[error.code] : undefined;
-  return (
-    pair?.[locale === 'ar' ? 0 : 1] ??
-    (locale === 'ar'
-      ? 'تعذر إكمال الطلب. حاول مرة أخرى.'
-      : 'Could not complete the request. Please try again.')
-  );
+  const fallback =
+    locale === 'ar'
+      ? 'تعذر إكمال الطلب. حاول مجددًا.'
+      : 'Could not complete the request. Please try again.';
+  if (!(error instanceof ApiError) || error.message === error.code)
+    return fallback;
+  return error.requestId
+    ? error.message + ' (' + error.requestId + ')'
+    : error.message;
 }
 
 // Feature API files use these methods; request() handles their shared behavior.
 export const apiClient = {
-  get: <T>(path: string, options: RequestInit = {}) =>
+  get: <T,>(path: string, options: RequestInit = {}) =>
     request<T>(path, options),
-  post: <T>(path: string, body: unknown = {}, options: RequestInit = {}) =>
+  post: <T,>(path: string, body: unknown = {}, options: RequestInit = {}) =>
     request<T>(path, { ...options, method: 'POST' }, body),
-  patch: <T>(path: string, body: unknown, options: RequestInit = {}) =>
+  patch: <T,>(path: string, body: unknown, options: RequestInit = {}) =>
     request<T>(path, { ...options, method: 'PATCH' }, body),
-  put: <T>(path: string, body: unknown, options: RequestInit = {}) =>
+  put: <T,>(path: string, body: unknown, options: RequestInit = {}) =>
     request<T>(path, { ...options, method: 'PUT' }, body),
-  delete: <T>(path: string, options: RequestInit = {}) =>
+  delete: <T,>(path: string, options: RequestInit = {}) =>
     request<T>(path, { ...options, method: 'DELETE' }),
 };

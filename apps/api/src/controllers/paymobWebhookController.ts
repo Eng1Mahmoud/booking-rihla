@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
@@ -23,6 +24,6 @@ export function createPaymobWebhookController(service: PaymobWebhookService) {
       );
     await service.receive(request.body, query.data.hmac);
     // Acknowledge durable receipt only; this is never a booking/payment result.
-    response.status(200).json({ received: true });
+    sendSuccess(response.status(200), { received: true });
   };
 }

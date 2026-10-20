@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -32,8 +33,8 @@ export function createAdminUserController(service: AdminUserService) {
           'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
         );
       const data = await service.list(query.data);
-      response.json({
-        data,
+      sendSuccess(response, {
+        items: data,
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },
@@ -45,7 +46,7 @@ export function createAdminUserController(service: AdminUserService) {
           'USER_NOT_FOUND',
           'Passenger account not found',
         );
-      response.json({ data: user });
+      sendSuccess(response, user);
     },
     async updateStatus(request: Request, response: Response) {
       const userId = id(request);
@@ -73,7 +74,7 @@ export function createAdminUserController(service: AdminUserService) {
           'USER_NOT_FOUND',
           'Passenger account not found',
         );
-      response.json({ data: user });
+      sendSuccess(response, user);
     },
   };
 }

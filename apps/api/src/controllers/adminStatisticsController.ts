@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import { adminStatisticsQuerySchema } from '../schemas/adminStatisticsSchema.ts';
@@ -14,7 +15,7 @@ export function createAdminStatisticsController(
           'VALIDATION_ERROR',
           'Use only an optional travelDate (YYYY-MM-DD Cairo, years 2000-9998)',
         );
-      response.json({ data: await service.get(query.data) });
+      sendSuccess(response, await service.get(query.data));
     },
   };
 }

@@ -1,4 +1,4 @@
-// Use this for expected request errors with messages safe to show to clients.
+// Expected HTTP failure. Public messages come from apiMessages by code.
 export class AppError extends Error {
   readonly statusCode: number;
   readonly code: string;

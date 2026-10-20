@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import { loginSchema, emptySessionSchema } from '../schemas/authSchema.ts';
@@ -58,7 +59,7 @@ export function createSessionController(service: SessionService) {
       ...cookieOptions(),
       expires: new Date(refreshExpiresAt),
     });
-    response.json({ data });
+    sendSuccess(response, data);
   }
   return {
     async login(request: Request, response: Response) {
@@ -95,20 +96,20 @@ export function createSessionController(service: SessionService) {
           'No query parameters are supported',
         );
       const auth = response.locals['auth'] as AuthContext;
-      response.json({ data: auth.user });
+      sendSuccess(response, auth.user);
     },
     async logout(request: Request, response: Response) {
       validateEmpty(request);
       await service.logout(refreshCookie(request));
       response.clearCookie(refreshCookieName(), cookieOptions());
-      response.status(204).end();
+      sendSuccess(response);
     },
     async logoutAll(request: Request, response: Response) {
       validateEmpty(request);
       const auth = response.locals['auth'] as AuthContext;
       await service.logoutAll(auth.user.id);
       response.clearCookie(refreshCookieName(), cookieOptions());
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

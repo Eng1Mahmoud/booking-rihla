@@ -1,3 +1,4 @@
+import { AppError } from '../errors/AppError.ts';
 import { rateLimit } from 'express-rate-limit';
 import { createAdminPaymentStatisticsController } from '../controllers/adminPaymentStatisticsController.ts';
 import {
@@ -23,12 +24,8 @@ export function createAdminPaymentRouter(
       limit: 60,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
-      message: {
-        error: {
-          code: 'RATE_LIMITED',
-          message: 'Too many statistics requests',
-        },
-      },
+      handler: (_request, _response, next) =>
+        next(new AppError(429, 'RATE_LIMITED', 'Too many requests')),
     }),
     createAdminPaymentStatisticsController(statistics).get,
   );

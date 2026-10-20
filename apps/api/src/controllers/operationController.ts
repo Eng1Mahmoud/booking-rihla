@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import { refundStatisticsService } from '../services/refundStatisticsService.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
@@ -17,7 +18,7 @@ function id(value: unknown) {
 export const operationController = {
   async refundStatistics(_request: Request, response: Response) {
     response.setHeader('Cache-Control', 'no-store');
-    response.json({ data: await refundStatisticsService.get() });
+    sendSuccess(response, await refundStatisticsService.get());
   },
   async cancel(request: Request, response: Response) {
     if (!request.is('application/json'))
@@ -34,13 +35,14 @@ export const operationController = {
         'Provide a cancellation reason of 5-500 characters',
       );
     response.setHeader('Cache-Control', 'no-store');
-    response.json({
-      data: await tripCancellationService.cancel(
+    sendSuccess(
+      response,
+      await tripCancellationService.cancel(
         response.locals.auth,
         id(request.params.id),
         input.data.reason,
       ),
-    });
+    );
   },
   async listRefunds(request: Request, response: Response) {
     const parsed = paginationQuerySchema.safeParse(request.query);
@@ -51,8 +53,11 @@ export const operationController = {
         'Use supported pagination fields',
       );
     response.setHeader('Cache-Control', 'no-store');
-    response.json({
-      data: await refundReadService.list(parsed.data.limit, parsed.data.offset),
+    sendSuccess(response, {
+      items: await refundReadService.list(
+        parsed.data.limit,
+        parsed.data.offset,
+      ),
       pagination: parsed.data,
     });
   },
@@ -60,28 +65,24 @@ export const operationController = {
     const value = await refundReadService.get(id(request.params.id));
     if (!value) throw new AppError(404, 'REFUND_NOT_FOUND', 'Refund not found');
     response.setHeader('Cache-Control', 'no-store');
-    response.json({ data: value });
+    sendSuccess(response, value);
   },
   async reconcileRefund(request: Request, response: Response) {
     const refundId = id(request.params.id);
     if (!(await refundReadService.get(refundId)))
       throw new AppError(404, 'REFUND_NOT_FOUND', 'Refund not found');
     response.setHeader('Cache-Control', 'no-store');
-    response.json({
-      data: await configuredRefundService().review(
-        response.locals.auth,
-        refundId,
-      ),
-    });
+    sendSuccess(
+      response,
+      await configuredRefundService().review(response.locals.auth, refundId),
+    );
   },
   async issueRefund(request: Request, response: Response) {
     const refundId = id(request.params.id);
     response.setHeader('Cache-Control', 'no-store');
-    response.status(202).json({
-      data: await configuredRefundService().issue(
-        response.locals.auth,
-        refundId,
-      ),
-    });
+    sendSuccess(
+      response.status(202),
+      await configuredRefundService().issue(response.locals.auth, refundId),
+    );
   },
 };

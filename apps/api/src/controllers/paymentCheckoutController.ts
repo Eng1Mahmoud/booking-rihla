@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -39,9 +40,10 @@ export function createPaymentCheckoutController(
           'Provide an empty JSON object',
         );
       const auth = response.locals['auth'] as AuthContext;
-      response.set('Cache-Control', 'no-store').json({
-        data: await service.refresh(auth.user.id, bookingId),
-      });
+      sendSuccess(
+        response.set('Cache-Control', 'no-store'),
+        await service.refresh(auth.user.id, bookingId),
+      );
     },
     async start(request: Request, response: Response) {
       if (!request.is('application/json'))
@@ -61,15 +63,17 @@ export function createPaymentCheckoutController(
         response.locals['auth'] as AuthContext,
         bookingId,
       );
-      response
-        .set('Referrer-Policy', 'no-referrer')
-        .location('/api/v1/bookings/' + bookingId + '/payment')
-        .json({ data });
+      sendSuccess(
+        response
+          .set('Referrer-Policy', 'no-referrer')
+          .location('/api/v1/bookings/' + bookingId + '/payment'),
+        data,
+      );
     },
     async get(request: Request, response: Response) {
       const bookingId = id(request),
         auth = response.locals['auth'] as AuthContext;
-      response.json({ data: await service.get(auth.user.id, bookingId) });
+      sendSuccess(response, await service.get(auth.user.id, bookingId));
     },
   };
 }

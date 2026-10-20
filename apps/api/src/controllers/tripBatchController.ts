@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import {
@@ -28,12 +29,13 @@ export function createTripBatchController(service: TripBatchService) {
   }
   return {
     async preview(request: Request, response: Response) {
-      response.json({ data: await service.preview(input(request)) });
+      sendSuccess(response, await service.preview(input(request)));
     },
     async create(request: Request, response: Response) {
-      response.status(201).json({
-        data: await service.create(input(request), response.locals.auth),
-      });
+      sendSuccess(
+        response.status(201),
+        await service.create(input(request), response.locals.auth),
+      );
     },
   };
 }

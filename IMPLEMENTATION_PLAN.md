@@ -633,3 +633,24 @@ Validation: production web build/TypeScript and ESLint passed after the reorgani
 API simplification completed — 2026-10-19: owner explicitly approved removal of the website API route/method allowlist. Backend routing, authentication, roles and ownership are authoritative. Feature API functions use the central apiClient and feed feature TanStack Query hooks. Server helpers are combined in shared/lib/apiServer.ts. Fixed-destination forwarding, CSRF/Origin validation, JSON size limits, HttpOnly token handling, refresh coordination and payment idempotency remain. Earlier allowlist-specific checks describe the superseded implementation.
 
 Unified feature API — 2026-10-19: all feature requests now use shared/lib/apiClient.ts, including public Server Component reads. tripsApi in trips.api.ts replaces separate server functions. Removed apiServer.ts and apiGet; server-only cookie operations live in authCookies.ts. Server requests do not run browser session refresh or share user session state. A common ApiError preserves backend 404 handling.
+
+
+## Auth/API refactor — phase 1 completed (2026-10-20)
+
+Owner approved the reviewed response-contract migration in small groups. Applied client compatibility first, then errors/shared helpers, account/session responses, catalogs/trips, booking/payment/ticket HTTP responses, admin responses, and operational/rate-limit responses. Backend services, data models, provider logic and refresh-token rotation are unchanged.
+
+- [x] Shared `{ success, code, message, data?, requestId? }` envelope and backend ar/en code dictionary.
+- [x] One general validation message; no raw exception text in public errors.
+- [x] Body requestId only for unexpected 5xx; X-Request-ID remains on all requests.
+- [x] Paginated data.items/data.pagination and data.search where relevant.
+- [x] 200 success envelopes for logout/delete; data.verificationId for registration.
+- [x] Client/gateway compatibility and Accept-Language forwarding; removed frontend API-error translation table.
+- [x] All rate-limit handlers use the central localized error handler, including the previously default-text admin statistics limiter; original limits retained.
+- [ ] Server-only apiFetch/ApiResult and shared refresh helper.
+- [ ] Local signed JWT role verification and pre-render refresh in proxy.
+- [ ] Server Actions for mutations with authentication/permission checks inside each action.
+- [ ] Server Component reads, one GET payment-status polling route, and removal of legacy gateway/browser refresh after migration.
+
+Checks use inline HTTP/scripts rather than stored test files. Group checks cover auth (injected services), live catalog/search compatibility, injected booking/payment/ticket/idempotency/webhook acknowledgement, role guards, readiness, 429 Retry-After, and safe parser errors. No database writes, backups, real account actions, emails, provider transactions or deployment. Final validation passed: API production build, web production build/TypeScript and root ESLint; injected HTTP checks for all groups and unexpected 500 requestId correlation; live catalog/search, Arabic/English SSR and guest rejection; client support-reference display, paginated compatibility and no retry for uncertain POST failures. No automated test files were added.
+
+Strict token rotation remains. An in-memory single-flight map is a single-process coordination mechanism, not sufficient by itself for multiple server replicas or late old-token requests; no grace window, asymmetric-token change or shared-secret copy was introduced in phase 1.

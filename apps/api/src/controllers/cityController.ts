@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { CityService } from '../services/cityService.ts';
@@ -20,7 +21,7 @@ export function createCityController(service: CityService) {
         );
       }
       const cities = await service.list(query.data);
-      response.json({ data: cities, pagination: query.data });
+      sendSuccess(response, { items: cities, pagination: query.data });
     },
     async getById(request: Request, response: Response) {
       const id = cityIdSchema.safeParse(request.params.id);
@@ -35,7 +36,7 @@ export function createCityController(service: CityService) {
       if (!city) {
         throw new AppError(404, 'CITY_NOT_FOUND', 'City not found');
       }
-      response.json({ data: city });
+      sendSuccess(response, city);
     },
     async create(request: Request, response: Response) {
       if (!request.is('application/json')) {
@@ -54,10 +55,10 @@ export function createCityController(service: CityService) {
         );
       }
       const city = await service.create(input.data, response.locals.auth);
-      response
-        .location('/api/v1/cities/' + city.id)
-        .status(201)
-        .json({ data: city });
+      sendSuccess(
+        response.location('/api/v1/cities/' + city.id).status(201),
+        city,
+      );
     },
     async update(request: Request, response: Response) {
       const id = cityIdSchema.safeParse(request.params.id);
@@ -91,7 +92,7 @@ export function createCityController(service: CityService) {
       if (!city) {
         throw new AppError(404, 'CITY_NOT_FOUND', 'City not found');
       }
-      response.json({ data: city });
+      sendSuccess(response, city);
     },
     async remove(request: Request, response: Response) {
       const id = cityIdSchema.safeParse(request.params.id);
@@ -106,7 +107,7 @@ export function createCityController(service: CityService) {
       if (!city) {
         throw new AppError(404, 'CITY_NOT_FOUND', 'City not found');
       }
-      response.status(204).end();
+      sendSuccess(response);
     },
   };
 }

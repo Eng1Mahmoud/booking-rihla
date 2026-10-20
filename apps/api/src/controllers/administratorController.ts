@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import type { AuthContext } from '../services/sessionService.ts';
@@ -33,8 +34,8 @@ export function createAdministratorController(service: AdministratorService) {
           'Use bounded limit/offset and optional email, role ADMIN/SUPER_ADMIN and isActive true/false',
         );
       const data = await service.list(query.data);
-      response.json({
-        data,
+      sendSuccess(response, {
+        items: data,
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },
@@ -46,7 +47,7 @@ export function createAdministratorController(service: AdministratorService) {
           'ADMINISTRATOR_NOT_FOUND',
           'Administrator account not found',
         );
-      response.json({ data: user });
+      sendSuccess(response, user);
     },
     async updateRole(request: Request, response: Response) {
       const target = id(request);
@@ -69,7 +70,7 @@ export function createAdministratorController(service: AdministratorService) {
         input.data,
       );
       if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'Account not found');
-      response.json({ data: user });
+      sendSuccess(response, user);
     },
     async updateStatus(request: Request, response: Response) {
       const target = id(request);
@@ -97,7 +98,7 @@ export function createAdministratorController(service: AdministratorService) {
           'ADMINISTRATOR_NOT_FOUND',
           'Administrator account not found',
         );
-      response.json({ data: user });
+      sendSuccess(response, user);
     },
   };
 }

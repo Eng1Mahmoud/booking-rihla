@@ -1,3 +1,4 @@
+import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
 import { adminBookingListQuerySchema } from '../schemas/adminBookingSchema.ts';
@@ -18,8 +19,8 @@ export function createAdminBookingController(service: AdminBookingService) {
           'Use limit 1-100, offset 0-100000 and optional booking reference, tripId/userId UUIDs, customer email and travelDate (YYYY-MM-DD Cairo, years 2000-9998); no other query fields',
         );
       const data = await service.list(parsed.data);
-      response.json({
-        data,
+      sendSuccess(response, {
+        items: data,
         pagination: { limit: parsed.data.limit, offset: parsed.data.offset },
       });
     },
@@ -37,7 +38,7 @@ export function createAdminBookingController(service: AdminBookingService) {
       const booking = await service.findById(id.data);
       if (!booking)
         throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
-      response.json({ data: booking });
+      sendSuccess(response, booking);
     },
   };
 }
