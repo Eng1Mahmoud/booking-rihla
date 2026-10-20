@@ -2,9 +2,8 @@
 
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
-import { apiFetch } from '@/shared/lib/apiFetch';
+import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib/apiResult';
-import { updateAuthCookies } from '@/shared/lib/authCookies';
 import {
   loginSchema,
   registerSchema,
@@ -16,7 +15,14 @@ import {
   recoveryResetSchema,
   type RecoveryValues,
 } from '../schemas/recoverySchema';
-import type { AuthUser, LoginInput, RegisterInput } from '../types/auth';
+import { cookies } from 'next/headers';
+import { readAuthCookies } from '@/shared/lib/session';
+import type {
+  AuthSession,
+  AuthUser,
+  LoginInput,
+  RegisterInput,
+} from '../types/auth';
 
 // Actions are public POST entrypoints: validate again on the server, not only in the form.
 async function submit<T>(
@@ -42,7 +48,7 @@ async function submit<T>(
     method: 'POST',
     body: parsed.data,
     locale,
-    onSession: updateAuthCookies,
+    context: 'action',
   });
 }
 
@@ -86,4 +92,21 @@ export async function logoutAction(all = false) {
     all,
     z.boolean().transform(() => ({})),
   );
+}
+
+export async function getCurrentUserAction(): Promise<ApiResult<AuthSession>> {
+  const session = readAuthCookies({ cookies: await cookies() });
+  if (!session.access && !session.refresh)
+    return {
+      success: true,
+      status: 200,
+      code: 'OK',
+      message: 'OK',
+      data: { user: null },
+    };
+  const result = await apiFetch<AuthUser>('auth/me', { context: 'action' });
+  return {
+    ...result,
+    data: result.success && result.data ? { user: result.data } : undefined,
+  };
 }

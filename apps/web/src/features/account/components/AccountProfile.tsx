@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
 import { useLogout } from '@/features/auth/hooks/useAuth';
-import { errorMessage } from '@/shared/lib/apiClient';
+import { errorMessage } from '@/shared/lib/apiResult';
 import type { AuthUser } from '@/features/auth/types/auth';
 import { AccountNavigation } from '@/features/account/components/AccountNavigation';
 

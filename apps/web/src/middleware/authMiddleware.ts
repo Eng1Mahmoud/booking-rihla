@@ -7,8 +7,8 @@ import {
   saveAuthCookies,
   clearAuthCookies,
   type AuthTokens,
-} from '@/shared/lib/authCookies';
-import { apiFetch } from '@/shared/lib/apiFetch';
+} from '@/shared/lib/session';
+import { apiFetch } from '@/shared/lib/api';
 import type { UserRole } from '@/features/auth/types/auth';
 import { protectedRoute, routeInfo } from './roleRoutes';
 

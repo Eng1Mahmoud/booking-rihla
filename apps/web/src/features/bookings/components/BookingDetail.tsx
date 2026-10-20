@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import type { BookingDetails } from '../types/booking';
-import { errorMessage } from '@/shared/lib/apiClient';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { useBookingPayment, useCheckout } from '../hooks/useBookings';
 import {
   displayName,

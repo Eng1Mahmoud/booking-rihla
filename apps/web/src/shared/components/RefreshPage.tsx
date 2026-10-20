@@ -19,7 +19,7 @@ export function RefreshPage({
         startTransition(() => router.refresh());
     };
     const timer = setInterval(refresh, 30000);
-    // AuthSessionSync handles focus refresh once for the whole page.
+    // Interactive feature data uses TanStack focus refresh.
     return () => {
       clearInterval(timer);
     };

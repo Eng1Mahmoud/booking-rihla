@@ -1,13 +1,40 @@
-import { getLocale, getTranslations } from 'next-intl/server';
+'use client';
+import { useLocale, useTranslations } from 'next-intl';
+import { useTicket } from '../hooks/useTicket';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { errorMessage } from '@/shared/lib/apiResult';
 import Image from 'next/image';
-import type { Ticket } from '../types/ticket';
-import { RefreshPage } from '@/shared/components/RefreshPage';
+import type { TicketViewData } from '../types/ticket';
 import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
-export async function TicketView({ ticket }: { ticket: Ticket }) {
+export function TicketView({
+  initial,
+  userId,
+}: {
+  initial: TicketViewData;
+  userId: string;
+}) {
+  const t = useTranslations('Ticket');
+  const locale = useLocale() as 'ar' | 'en';
+  const { user } = useAuth();
+  const query = useTicket(initial, userId);
+  if (user?.id !== userId) return null;
+  // A failed refresh must not keep displaying an old usable ticket.
+  if (query.isError)
+    return (
+      <div role="alert" className="notice">
+        {errorMessage(query.error, locale)}{' '}
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => void query.refetch()}
+        >
+          {t('refresh')}
+        </button>
+      </div>
+    );
+  const ticket = query.data;
   const bookingId = ticket.bookingId;
-  const t = await getTranslations('Ticket');
-  const locale = (await getLocale()) as 'ar' | 'en';
   const back = (
     <Link href={'/bookings/' + bookingId} className="text-button">
       {t('back')}
@@ -96,7 +123,14 @@ export async function TicketView({ ticket }: { ticket: Ticket }) {
             <p role="alert">{t('qrError')}</p>
           )}
           <p>{t('qrNote')}</p>
-          <RefreshPage label={t('refresh')} autoRefresh />
+          <button
+            type="button"
+            className="button-secondary"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            {t('refresh')}
+          </button>
         </aside>
       </article>
     </>

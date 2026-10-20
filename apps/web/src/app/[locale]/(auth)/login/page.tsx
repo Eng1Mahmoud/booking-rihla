@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { getCurrentUser } from '@/features/auth/api/auth.queries';
+import { getCurrentUser } from '@/features/auth/lib/auth.server';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { LoginScreen } from '@/features/auth/components/LoginScreen';
 export default async function LoginPage({

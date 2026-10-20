@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from 'zustand';
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
 import { useLocale, useTranslations } from 'next-intl';
@@ -11,13 +11,14 @@ import {
   ApiError,
   isUncertainRequestError,
   errorMessage,
-} from '@/shared/lib/apiClient';
+} from '@/shared/lib/apiResult';
 import { formatPrice } from '@/shared/lib/format';
 import type { SeatList, Trip } from '@/features/trips/types/trip';
 import { RequireAuth } from '@/features/auth/components/RequireAuth';
 import { useSearchParams } from 'next/navigation';
 import { PassengerForm } from '@/features/seats/components/PassengerForm';
 import { SeatMap } from '@/features/seats/components/SeatMap';
+import { useTripSeats } from '../hooks/useTripSeats';
 export function SeatBooking({
   trip,
   initialSeats,
@@ -53,16 +54,12 @@ export function SeatBooking({
   }, [phase]);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
-  const [refreshing, startTransition] = useTransition();
-  const refreshSeats = () => startTransition(() => router.refresh());
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible')
-        startTransition(() => router.refresh());
-    }, 15000);
-    return () => clearInterval(timer);
-  }, [router]);
-  const seats = initialSeats.seats;
+  const seatQuery = useTripSeats(initialSeats);
+  const refreshing = seatQuery.isFetching;
+  const refreshSeats = () => {
+    void seatQuery.refetch();
+  };
+  const seats = seatQuery.data.seats;
   const selected = seats.filter(
     (seat) => selectedIds.includes(seat.id) && seat.isAvailable,
   );
@@ -125,10 +122,15 @@ export function SeatBooking({
             <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
           </button>
         </div>
+        {seatQuery.isError && (
+          <p role="alert" className="notice">
+            {errorMessage(seatQuery.error, locale)}
+          </p>
+        )}
         <SeatMap
           seats={seats}
           selectedIds={selected.map((seat) => seat.id)}
-          layout={initialSeats.seatLayout}
+          layout={seatQuery.data.seatLayout}
           onToggle={toggle}
         />
       </section>

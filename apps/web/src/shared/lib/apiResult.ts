@@ -51,3 +51,39 @@ export function unwrapApiResult<T>(result: ApiResult<T>): T {
   }
   return result.data as T;
 }
+
+// The server reports an ended session; this event clears the client query cache.
+export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
+
+// Adapt action results for forms/React Query; a lost response has an uncertain outcome.
+export async function invokeAction<T>(
+  action: () => Promise<ApiResult<T>>,
+): Promise<T> {
+  let result: ApiResult<T>;
+  try {
+    result = await action();
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR');
+  }
+  if (
+    !result.success &&
+    result.status === 401 &&
+    result.code === 'UNAUTHENTICATED' &&
+    typeof window !== 'undefined'
+  ) {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+  return unwrapApiResult(result);
+}
+
+export function validationError(locale: string): ApiResult<never> {
+  return {
+    success: false,
+    status: 400,
+    code: 'VALIDATION_ERROR',
+    message:
+      locale === 'ar'
+        ? 'راجع البيانات المدخلة وحاول مجددًا.'
+        : 'Check your details and try again.',
+  };
+}

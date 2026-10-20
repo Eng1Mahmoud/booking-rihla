@@ -3,7 +3,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth';
-import { errorMessage } from '@/shared/lib/apiClient';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { useState } from 'react';
 export function AccountNav() {

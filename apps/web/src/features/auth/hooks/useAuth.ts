@@ -1,38 +1,52 @@
 'use client';
 import {
-  skipToken,
   useMutation,
   useQuery,
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import { authApi } from '../api/auth.api';
+import {
+  getCurrentUserAction,
+  loginAction,
+  logoutAction,
+  registerAction,
+  verifyEmailAction,
+  resendVerificationAction,
+  forgotPasswordAction,
+  resetPasswordAction,
+} from '../actions/auth.actions';
+import { invokeAction } from '@/shared/lib/apiResult';
+import type { LoginInput, RegisterInput } from '../types/auth';
+import type { RecoveryValues } from '../schemas/recoverySchema';
 import type { AuthSession } from '../types/auth';
-import { queryKeys } from '@/shared/lib/queryClient';
+import { authKeys } from '@/features/auth/hooks/auth.queries';
 import { useRouter } from 'next/navigation';
 export async function clearAuthCache(client: QueryClient) {
   await client.cancelQueries();
   client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
-  client.setQueryData<AuthSession>(queryKeys.me, { user: null });
+  client.setQueryData<AuthSession>(authKeys.me, { user: null });
 }
 export function useCurrentUser() {
-  // The layout hydrates this cache. Refresh it through router.refresh(), not a read action/API.
+  // SSR supplies the first safe user view; TanStack refreshes through a Server Action.
   return useQuery<AuthSession>({
-    queryKey: queryKeys.me,
-    queryFn: skipToken,
-    staleTime: Infinity,
+    queryKey: authKeys.me,
+    queryFn: () => invokeAction(getCurrentUserAction),
+    staleTime: 60000,
+    retry: false,
   });
 }
 export function useLogin() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: authApi.login,
+    mutationFn: async (input: LoginInput) =>
+      (await invokeAction(() => loginAction(input))).user,
+    retry: false,
     onSuccess: async (user) => {
       await client.cancelQueries();
       client.removeQueries({
         predicate: (entry) => entry.queryKey[0] !== 'auth',
       });
-      client.setQueryData<AuthSession>(queryKeys.me, { user });
+      client.setQueryData<AuthSession>(authKeys.me, { user });
     },
   });
 }
@@ -40,7 +54,8 @@ export function useLogout() {
   const client = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationFn: authApi.logout,
+    mutationFn: (all: boolean = false) => invokeAction(() => logoutAction(all)),
+    retry: false,
     onSuccess: async () => {
       await clearAuthCache(client);
       router.refresh();
@@ -64,4 +79,40 @@ export function useAuth() {
     clearSession: () => clearAuthCache(client),
     reloadSession: () => router.refresh(),
   };
+}
+
+export function useRegister() {
+  return useMutation({
+    mutationFn: (input: RegisterInput) =>
+      invokeAction(() => registerAction(input)),
+    retry: false,
+  });
+}
+export function useVerifyEmail() {
+  return useMutation({
+    mutationFn: (input: Parameters<typeof verifyEmailAction>[0]) =>
+      invokeAction(() => verifyEmailAction(input)),
+    retry: false,
+  });
+}
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: (input: Parameters<typeof resendVerificationAction>[0]) =>
+      invokeAction(() => resendVerificationAction(input)),
+    retry: false,
+  });
+}
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (input: { email: string }) =>
+      invokeAction(() => forgotPasswordAction(input)),
+    retry: false,
+  });
+}
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (input: RecoveryValues) =>
+      invokeAction(() => resetPasswordAction(input)),
+    retry: false,
+  });
 }

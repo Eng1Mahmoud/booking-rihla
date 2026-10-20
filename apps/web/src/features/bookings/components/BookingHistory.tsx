@@ -1,18 +1,27 @@
-import { getLocale, getTranslations } from 'next-intl/server';
-import { RefreshPage } from '@/shared/components/RefreshPage';
+'use client';
+import { useLocale, useTranslations } from 'next-intl';
+import { useBookings } from '../hooks/useBookings';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { errorMessage } from '@/shared/lib/apiResult';
 import type { Booking } from '../types/booking';
 import { Link } from '@/i18n/navigation';
 import { displayName, formatDate, formatPrice } from '@/shared/lib/format';
 import { AccountNavigation } from '@/features/account/components/AccountNavigation';
-export async function BookingHistory({
-  bookings,
+export function BookingHistory({
+  bookings: initial,
+  userId,
   offset,
 }: {
   bookings: Booking[];
+  userId: string;
   offset: number;
 }) {
-  const locale = (await getLocale()) as 'ar' | 'en';
-  const t = await getTranslations('Booking');
+  const locale = useLocale() as 'ar' | 'en';
+  const t = useTranslations('Booking');
+  const { user } = useAuth();
+  const query = useBookings(initial, userId, offset);
+  if (user?.id !== userId) return null;
+  const bookings = query.data.items;
   return (
     <>
       <AccountNavigation />
@@ -22,6 +31,11 @@ export async function BookingHistory({
           {t('findTrip')}
         </Link>
       </div>
+      {query.isError && (
+        <p className="notice" role="alert">
+          {errorMessage(query.error, locale)}
+        </p>
+      )}
       {bookings.length === 0 ? (
         <div className="empty-state">
           <h2>{t('noBookings')}</h2>
@@ -55,7 +69,14 @@ export async function BookingHistory({
           ))}
         </div>
       )}
-      <RefreshPage label={t('refresh')} />
+      <button
+        type="button"
+        className="button-secondary"
+        disabled={query.isFetching}
+        onClick={() => void query.refetch()}
+      >
+        {t('refresh')}
+      </button>
       <div className="pagination">
         {offset > 0 && (
           <Link

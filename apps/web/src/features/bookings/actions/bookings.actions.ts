@@ -1,9 +1,8 @@
 'use server';
 
 import { getLocale } from 'next-intl/server';
-import { apiFetch } from '@/shared/lib/apiFetch';
+import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib/apiResult';
-import { updateAuthCookies } from '@/shared/lib/authCookies';
 import {
   createBookingSchema,
   bookingIdSchema,
@@ -33,7 +32,7 @@ export async function createBookingAction(input: CreateBookingInput) {
   return apiFetch<Booking>('bookings', {
     method: 'POST',
     body: parsed.data,
-    onSession: updateAuthCookies,
+    context: 'action',
   });
 }
 
@@ -45,7 +44,7 @@ export async function checkoutAction(
   const { id, prepare, idempotencyKey } = parsed.data;
   // Check ownership inside the action. Express also enforces it on each mutation.
   const owned = await apiFetch<Booking>('bookings/' + id, {
-    onSession: updateAuthCookies,
+    context: 'action',
   });
   if (!owned.success) return { ...owned, data: undefined };
   if (prepare) {
@@ -53,7 +52,7 @@ export async function checkoutAction(
       method: 'POST',
       body: {},
       headers: { 'Idempotency-Key': idempotencyKey! },
-      onSession: updateAuthCookies,
+      context: 'action',
     });
     // Only a known existing attempt allows checkout to continue; never retry an uncertain write.
     if (
@@ -65,7 +64,7 @@ export async function checkoutAction(
   return apiFetch<BookingPayment>('bookings/' + id + '/checkout', {
     method: 'POST',
     body: {},
-    onSession: updateAuthCookies,
+    context: 'action',
   });
 }
 
@@ -75,7 +74,7 @@ export async function refreshPaymentAction(
   const parsed = bookingIdSchema.safeParse(id);
   if (!parsed.success) return invalidInput();
   const owned = await apiFetch<Booking>('bookings/' + parsed.data, {
-    onSession: updateAuthCookies,
+    context: 'action',
   });
   if (!owned.success) return { ...owned, data: undefined };
   // One explicit provider inquiry, not the repeating read/polling endpoint.
@@ -84,7 +83,16 @@ export async function refreshPaymentAction(
     {
       method: 'POST',
       body: {},
-      onSession: updateAuthCookies,
+      context: 'action',
     },
   );
+}
+
+export async function getBookingsAction(offset: number) {
+  if (!Number.isInteger(offset) || offset < 0 || offset > 100000)
+    return invalidInput();
+  return apiFetch<{
+    items: Booking[];
+    pagination: { limit: number; offset: number };
+  }>('bookings?limit=20&offset=' + offset, { context: 'action' });
 }

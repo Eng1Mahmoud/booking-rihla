@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { BookingDetail } from './BookingDetail';
-import { getBookingDetails } from '../api/bookings.queries';
+import { getBookingDetails } from '../lib/bookings.server';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { ReadError } from '@/shared/components/ReadError';
 export async function PaymentResult({ bookingId }: { bookingId?: string }) {

@@ -1,17 +1,17 @@
-import { getTranslations } from 'next-intl/server';
+import { useTranslations } from 'next-intl';
 import { BusFront, ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { displayName, formatPrice, formatTime } from '@/shared/lib/format';
 import { cairoDate } from '@/features/trips/schemas/searchSchema';
 import type { Trip } from '@/features/trips/types/trip';
-export async function TripCard({
+export function TripCard({
   trip,
   locale,
 }: {
   trip: Trip;
   locale: 'ar' | 'en';
 }) {
-  const t = await getTranslations('Trips');
+  const t = useTranslations('Trips');
   const minutes = Math.round(
     (Date.parse(trip.arrivalAt) - Date.parse(trip.departureAt)) / 60000,
   );

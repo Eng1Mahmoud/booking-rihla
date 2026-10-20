@@ -20,3 +20,7 @@ export type Ticket = {
   };
   qr: { payload: string; imageDataUrl: string };
 };
+
+export type TicketViewData = Omit<Ticket, 'qr'> & {
+  qr: { imageDataUrl: string };
+};

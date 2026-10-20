@@ -4,14 +4,21 @@ import { Link } from '@/i18n/navigation';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { useForm } from 'react-hook-form';
 import { registerSchema, type AuthFormValues } from '../schemas/authSchema';
-import { authApi } from '../api/auth.api';
 import { useLocale, useTranslations } from 'next-intl';
-import { useLogin } from '@/features/auth/hooks/useAuth';
-import { errorMessage } from '@/shared/lib/apiClient';
+import {
+  useLogin,
+  useRegister,
+  useVerifyEmail,
+  useResendVerification,
+} from '../hooks/useAuth';
+import { errorMessage } from '@/shared/lib/apiResult';
 export function AuthForm({ returnTo }: { returnTo: string }) {
   const locale = useLocale();
   const t = useTranslations('Auth');
   const login = useLogin();
+  const registration = useRegister();
+  const verification = useVerifyEmail();
+  const resendVerification = useResendVerification();
   const [mode, setMode] = useState<'login' | 'register' | 'verify'>('login');
   const [challenge, setChallenge] = useState<{
     email: string;
@@ -31,7 +38,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
     try {
       if (mode === 'verify') {
         if (!challenge) return;
-        await authApi.verifyEmail({ ...challenge, code: values.code });
+        await verification.mutateAsync({ ...challenge, code: values.code });
         setMode('login');
         setMessage(t('verified'));
         reset();
@@ -52,7 +59,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
         setMessage(t('checkDetails'));
         return;
       }
-      const payload = await authApi.register({
+      const payload = await registration.mutateAsync({
         ...result.data,
         language: locale,
       });
@@ -75,7 +82,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
     }
     setResendBusy(true);
     try {
-      await authApi.resendVerification(challenge);
+      await resendVerification.mutateAsync(challenge);
       setResendAfter(Date.now() + 60000);
       setMessage(t('resent'));
     } catch (error) {

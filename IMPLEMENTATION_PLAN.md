@@ -4,7 +4,7 @@ Status: Backend implementation is ready for local passenger-site/dashboard integ
 
 ## How we will build
 
-Build in focused feature batches. Combine related models, migrations, endpoints, validation, tests, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. The owner authorizes committing and pushing each completed feature after its checks; finish and publish it before starting the next feature. Production publication and real-money operations still need explicit approval. A phase is complete only when its working result can be demonstrated.
+Build in focused feature batches. Combine related models, migrations, endpoints, validation, appropriate checks, and usage notes in one commit. Explain the outcome after the batch and go deeper on requested code. Do not pause after every small subtask; keep moving toward the MVP. Use a simple Route -> Controller -> Service -> Prisma structure with consistent naming; avoid a separate repository layer for now. Create cohesive local feature commits after checks; pushing requires the owner’s explicit approval. Production publication and real-money operations still need explicit approval. A phase is complete only when its working result can be demonstrated.
 
 This root roadmap is the project's planning document and defines the implementation order. Detailed code explanations are provided in the chat rather than a docs folder. Its initial assumptions are one bus operator, account-based booking, Arabic as the default language, English support, and a fixed numbered seat layout. These are proposed defaults, not settled business decisions. Confirmed owner decision: passengers cannot cancel bookings; no passenger cancellation endpoint or frontend action is planned. Approved on 2026-10-18: company cancellation requires a full refund; only Super Admin may issue it. Passengers cannot cancel.
 
@@ -634,7 +634,6 @@ API simplification completed — 2026-10-19: owner explicitly approved removal o
 
 Unified feature API — 2026-10-19: all feature requests now use shared/lib/apiClient.ts, including public Server Component reads. tripsApi in trips.api.ts replaces separate server functions. Removed apiServer.ts and apiGet; server-only cookie operations live in authCookies.ts. Server requests do not run browser session refresh or share user session state. A common ApiError preserves backend 404 handling.
 
-
 ## Auth/API refactor — phase 1 completed (2026-10-20)
 
 Owner approved the reviewed response-contract migration in small groups. Applied client compatibility first, then errors/shared helpers, account/session responses, catalogs/trips, booking/payment/ticket HTTP responses, admin responses, and operational/rate-limit responses. Backend services, data models, provider logic and refresh-token rotation are unchanged.
@@ -655,26 +654,21 @@ Checks use inline HTTP/scripts rather than stored test files. Group checks cover
 
 Strict token rotation remains. An in-memory single-flight map is a single-process coordination mechanism, not sufficient by itself for multiple server replicas or late old-token requests; no grace window, asymmetric-token change or shared-secret copy was introduced in phase 1.
 
-
 Auth/API refactor — phase 2 completed (2026-10-20): added server-only apiFetch and shared ApiResult/ApiError. The gateway delegates all backend transport, strips token replies into HttpOnly cookies and preserves CSRF/Origin checks, body limits and Idempotency-Key. Removed browser refresh/Web Locks. Public trip/catalog page queries now use trips.queries.ts; browser seat queries remain transitional. Protected GET recovery repeats once; protected mutations authenticate/renew via auth/me before sending the actual mutation once. Cookie writes require an explicit writable-context callback. Confirmed refresh 401 clears the session; transient refresh failures preserve it. An in-flight Map merges matching refreshes only within the current runtime and deletes settled entries; multi-instance and late-old-token coordination remain unresolved. No grace period was added.
 
 Validation passed: web TypeScript, root ESLint and production build; isolated concurrent-refresh checks (eight requests sharing one renewal), real gateway-to-injected-Express checks (six concurrent reads), login token redaction/HttpOnly cookies, CSRF/body limits, payment mutation sent once with idempotency preserved, transient/invalid refresh behavior, Arabic/English public SSR, search and trip 404. No saved test files, real account writes, provider payments, database changes or dependencies were introduced. Server transport identifiers were absent from browser chunks. Proxy still uses backend auth/me; local JWT/pre-render renewal and the remaining reads/actions/polling migration are pending. Historical browser-refresh notes above describe superseded implementations.
-
 
 Auth/API refactor — phase 3 completed (2026-10-20): authMiddleware now verifies access JWT locally using jose with the backend's exact hex-decoded HS256 key, issuer/audience/type, required claims, identity/session UUIDs, token purpose and role validation. Protected navigation no longer requests auth/me. Missing/invalid/expired access renews through apiFetch's shared helper, then checks roleRoutes before rendering. Updated request cookies reach the same render through next-intl; outgoing HttpOnly cookies survive locale rewrites/redirects. Invalid sessions redirect to login with returnTo and clear cookies; transient refresh failures return 503 while retaining cookies. Missing/invalid signing configuration fails closed and logs no secrets. Backend live-session/current-role checks and all business logic remain unchanged. The role in the JWT may lag database role changes up to 15 minutes, with Express still authoritative.
 
 Added jose as a direct web dependency and AUTH_ACCESS_SECRET to the env example; the actual matching development key stays only in ignored apps/web/.env.local. Production build, TypeScript, ESLint and isolated checks using actual jose/next-intl passed: guest/role redirects, signature/issuer/audience/purpose/expiry/session-claim rejection, six concurrent requests sharing one renewal in one runtime, same-render Cookie plus locale forwarding, new-cookie retention on redirects, invalid-refresh cleanup, transient failures and missing-key rejection. No saved test files, database writes, real sessions/provider calls or backend changes. Single-flight across separate proxy/handler instances and late old-token requests remains unresolved; no grace window was added. Next: feature-by-feature Server Actions and Server Component migration, then remove the legacy gateway except payment polling.
 
-
 Auth/API refactor — phase 4, authentication mutations completed (2026-10-20): added seven exported auth Server Actions with runtime schema validation and fixed backend paths through apiFetch. Shared updateAuthCookies writes the same HttpOnly cookies from the action context; login results remain user-only, registration returns verificationId, and logout/reset clear cookies only on confirmed outcomes. Logout-all authenticates inside the action using apiFetch's live auth/me preflight (including refresh-before-write); public login/register/verification/recovery actions remain public, and current logout uses its refresh credential. Existing React Query mutations/forms now call action adapters instead of generic gateway POSTs. Adapters preserve ApiError, session-expiry cache clearing and uncertain network outcomes, with no automatic retry. auth/me remains a transitional browser GET until the account Server Component migration. Backend validation/rate limits/business rules are unchanged.
 
 Checks passed: web TypeScript, root ESLint, production build; isolated action validation/session/refresh cases; actual production Next HTTP action requests against a fake API for every auth mutation, ar/en language, HttpOnly/Secure cookies, token redaction, direct unauthenticated logout-all denial from a public page, logout/reset cookie cleanup, invalid input, cross-origin rejection and a lost upstream connection sent once. Browser adapters preserve form results and uncertain-error/session-expiry behavior. No saved tests, dependencies, database writes, real sessions or payment calls. Remaining: booking/payment Server Actions, server account/booking/ticket reads, single GET payment polling and final legacy gateway/browser client removal. Existing single-flight runtime/late-token limitation remains.
 
-
 Auth/API refactor — phase 5, booking/payment mutations completed (2026-10-20): added createBookingAction, checkoutAction and refreshPaymentAction plus strict runtime schemas. Reservation authenticates before one write; checkout/inquiry verify booking ownership inside the action and retain backend ownership/payable-state enforcement. Checkout retains the client-generated UUID Idempotency-Key, prepares once when needed, continues only after success or known 409 PAYMENT_ATTEMPT_EXISTS, then starts checkout once. Uncertain failures/5xx or expired preparation stop the action without another write. The provider inquiry is an explicit one-time mutation, not status polling. Booking hooks disable reservation/checkout retries explicitly. Auth and booking adapters share apiClient.invokeAction, preserving user-facing contracts, ApiError, uncertain results and session-expiry cache clearing. All current feature mutations now use Actions; legacy gateway usage remains for reads.
 
 TypeScript, ESLint and production web build passed. Isolated checks and real production Next HTTP requests against a fake API covered malformed/duplicate passenger input, direct guest calls from a public trip page, ownership denial, refresh-before-create and HttpOnly cookies, reservation conflicts, ar/en forwarding, exact idempotency key, known-attempt recovery, expired/uncertain preparation stopping checkout, no replay after lost checkout response, owner-only inquiry, cross-origin rejection and shared adapter compatibility with auth. No real bookings/provider calls, database writes, dependencies, saved tests or backend changes. Remaining: server account/booking/ticket reads, dedicated GET payment polling, legacy gateway removal and remaining browser-read migration. Runtime-only refresh coordination limitation remains.
-
 
 Auth/API refactor — phase 6, account/history/ticket reads completed (2026-10-20): added server-only auth/bookings/tickets query modules through apiFetch. Cached current-user validation is request/render-scoped, not global. The private layout checks the live session on the server, and each private reader also requires the same cached user before fetching data because page/layout work can run in parallel. Profile data renders from server props; booking history and ticket views render on the server. History pagination uses validated URL offset and 20-row backend pages. Ticket manual/30-second visible/focus refresh uses router.refresh, without Server Actions for reads or another API route. Removed old list/ticket hooks/API modules and unused query keys. Shared ReadError/RefreshPage handle recoverable server read errors and refresh.
 
@@ -682,7 +676,383 @@ The proxy overwrites x-bus-return-to with the actual internal path/query, preser
 
 Validation passed: production web build/TypeScript, root ESLint and real HTTP calls to a temporary production Next server using a fake API. Confirmed initial account/history/ticket HTML, two-user isolation, per-render auth deduplication, same-render proxy renewal, minimal user fields/no raw QR-payload serialization, URL pagination/empty/404, direct guest/revoked-session redirects with query preservation despite a spoofed header, backend outage/support-id handling without cookie clearing, safe login destinations and working logout cookies. No saved tests, real data/provider actions, database changes or dependencies. Runtime-only refresh coordination limitation remains.
 
-
 Auth/API refactor — phase 7, final website migration completed (2026-10-20): booking detail/result now read an owner-scoped snapshot through server queries and render confirmation immediately when known. The only Route Handler is GET /api/payments/[bookingId]/status, returning status plus availability without checkout URL/credentials or provider-side work. Existing one-time reconciliation is an Action; polling/readonly renders never invoke Paymob. Older cached/in-flight pending data cannot overwrite a fresher server/reconciliation view; payment/refund polling uses 3/5-second intervals only while needed. Auth user/error state is hydrated into the existing TanStack Query cache per server render and observed with skipToken; no browser auth/me fetch, auth Context or duplicate Zustand user store. Public authenticated pages also renew before render. Seat props refresh through visible 15-second/manual router.refresh while Zustand selection persists; actual reservation conflicts remain enforced atomically by Express. Global focus/visibility refresh is debounced once. Deleted generic API gateway, browser trips API/hook and all generic apiClient HTTP methods; apiClient now only adapts action results and fixed payment GETs.
 
 Validated production build/TypeScript, root ESLint, isolated ordering checks and real HTTP against an isolated fake API: paid/pending SSR independent of provider flags, owner/session/origin/method/UUID validation, old gateway 404, six callers/one refresh in one handler runtime, HttpOnly/token redaction, transient/invalid refresh, rate-limit Retry-After, unexpected requestId, public-page renewal, session hydration and two-user isolation. Chrome sandbox verification covered login/returnTo, immediate paid result, seat selection surviving server refresh, hydrated passenger form, one fake reservation navigation, explicit inquiry updating the result and logout redirect preserving returnTo. No hydration errors observed. Closed only sandbox tab/processes. No real provider/database/user actions, dependencies or saved tests were added. All agreed website migration checkboxes are complete. Backend strict rotation stays unchanged; multi-instance/separate-runtime and late-old-token refresh coordination remains unresolved before production deployment. No grace window or token-model change was introduced.
+
+## الخطة الموحدة لواجهة الركاب — 2026-10-20
+
+الحالة: قيد التنفيذ على دفعات. سجل التنفيذ في نهاية هذا القسم يوضح ما اكتمل وما بقي.
+
+تجمع هذه النسخة أحدث قرارات المستخدم وتحل محل المقترحات المتعارضة في نقاش إعادة تنظيم الواجهة. المشروع الفعلي موجود في `D:\personal-projects\bus-booking-platform`. هذه هي الخطة المعتمدة الحالية داخل المشروع، وتلغي المقترحات المتعارضة الأقدم المتعلقة بتنظيم الواجهة.
+
+## 1. الهدف والنطاق
+
+- تنظيم الموقع كما لو بدأناه من الصفر، ونقل التنفيذ الحالي إليه تدريجيًا.
+- بنية حسب الميزات، وأسماء مألوفة، ومسؤولية واضحة لكل ملف.
+- إعادة استخدام المكوّنات والمنطق المشترك عند وجود حاجة فعلية؛ لا إنشاء ملف لكل دالة أو مجلدات فارغة.
+- إكمال موقع الركاب، ثم مراجعة التصميم وUX، ثم الانتقال إلى Dashboard.
+- استخدام العربية في الشرح، وشرح التغييرات والكود بعد كل مرحلة.
+- الحفاظ على وظائف الحجز والمقاعد والدفع والتذاكر الحالية أثناء التنظيم.
+- لا تغيير قواعد Backend أو نموذج Session أو قاعدة البيانات لمجرد إعادة ترتيب الواجهة.
+
+## 2. القرارات النهائية
+
+| الموضوع               | القرار المعتمد                                                                 |
+| --------------------- | ------------------------------------------------------------------------------ |
+| الإطار                | Next.js App Router وTypeScript                                                 |
+| التصميم               | Tailwind utilities داخل JSX                                                    |
+| المكوّنات             | shadcn/ui لكل مكوّن مناسب متاح نحتاجه؛ مكوّنات أعمال مخصصة عند الحاجة          |
+| النماذج               | React Hook Form وZod مع Form وحقول مشتركة                                      |
+| كاش API               | TanStack Query فقط                                                             |
+| fetch                 | إرسال الطلبات باستخدام `cache: 'no-store'`                                     |
+| طلبات الميزات         | Hook → Server Action → apiFetch مركزي → Backend                                |
+| مجلد api داخل Feature | غير مطلوب؛ لا wrapper يكرر استدعاء Action                                      |
+| خيار auth             | محذوف من واجهة apiFetch                                                        |
+| Access Token          | يضاف تلقائيًا إلى Authorization عند وجوده                                      |
+| Refresh Token         | يستخدم فقط في عمليات الجلسة المناسبة                                           |
+| تخزين التوكنات        | HttpOnly Cookies على نطاق تطبيق الويب                                          |
+| حماية التنقل          | middleware منظمة، تُشغَّل من proxy.ts                                          |
+| الصلاحيات النهائية    | Backend، مع تحقق Actions الخاصة من الجلسة والصلاحيات                           |
+| متابعة الدفع          | استثناء GET الحالي؛ لا ننفذ polling المتكرر عبر Actions                        |
+| Zustand               | المقاعد المختارة والمسودة المشتركة، وليس نسخة من بيانات TanStack أو قيم RHF    |
+| الاختبارات            | لا ملفات اختبارات آلية جديدة حاليًا؛ تحقق الأنواع وLint والبناء وتجربة المتصفح |
+| Git                   | commits مترابطة؛ لا push قبل موافقة صريحة؛ لا أسرار أو ملفات build             |
+
+لا Next Data Cache أو `force-cache` أو `next.revalidate/tags` أو `updateTag/revalidateTag` لبيانات API. هذا لا يمنع كاش الأصول الثابتة مثل الصور والخطوط وJavaScript.
+
+## 3. الأدوات
+
+نحتفظ بـNext.js، React، TypeScript، Tailwind، next-intl، TanStack Query، Zustand، React Hook Form، Zod، Lucide وfetch.
+
+عند تنفيذ الأساس نضيف shadcn ومكوّناته وتبعياته حسب الحاجة، و`@hookform/resolvers` لربط Zod بالنماذج، و`clsx`/`tailwind-merge` لدالة `cn` إذا احتاج إعداد shadcn ذلك. لا Axios أو مكتبة حالة بديلة، ولا تثبيت كل مكوّنات shadcn مقدمًا.
+
+نضبط `components.json` على `shared/components/ui` ودالة `shared/lib/cn`، ونختار عائلة primitives متسقة خلال إعداد shadcn.
+
+## 4. الهيكل العام
+
+```text
+apps/web/
+  public/
+    images/
+    icons/
+  src/
+    app/
+      [locale]/
+        layout.tsx
+        page.tsx
+        loading.tsx
+        error.tsx
+        not-found.tsx
+        (auth)/
+          login/page.tsx
+          forgot-password/page.tsx
+          reset-password/page.tsx
+        trips/
+          page.tsx
+          [tripId]/page.tsx
+        (protected)/
+          layout.tsx
+          account/page.tsx
+          bookings/
+            page.tsx
+            [bookingId]/
+              page.tsx
+              ticket/page.tsx
+          checkout/result/page.tsx
+        forbidden/page.tsx
+      api/payments/[bookingId]/status/route.ts
+      providers.tsx
+      globals.css
+    features/
+      auth/
+      trips/
+      seats/
+      bookings/
+      tickets/
+      account/
+    shared/
+      components/
+        ui/
+        forms/
+        layout/
+        feedback/
+      lib/
+        api.ts
+        session.ts
+        apiResult.ts
+        queryClient.ts
+        cn.ts
+        format.ts
+    middleware/
+      authMiddleware.ts
+      intlMiddleware.ts
+      roleRoutes.ts
+      runMiddlewares.ts
+    i18n/
+      routing.ts
+      navigation.ts
+      request.ts
+    messages/
+      ar.json
+      en.json
+    proxy.ts
+  components.json
+  next.config.ts
+  next-env.d.ts
+  postcss.config.mjs
+  tsconfig.json
+  package.json
+  .env.example
+  .env.local
+```
+
+المسارات الحالية محفوظة؛ التسجيل والتحقق يمكن أن يبقيا خطوات داخل شاشة المصادقة بدل إضافة URLs جديدة. `app` يركب الصفحة ويمرر بيانات المسار، ولا يحتوي تفاصيل أعمال الميزات.
+
+### توزيع ملفات الميزات
+
+| Feature  | Actions                                     | Hooks                                                                                  | أمثلة المكوّنات                                                                         |
+| -------- | ------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| auth     | auth.actions.ts                             | useCurrentUser/useLogin/useRegister/useEmailVerification/usePasswordRecovery/useLogout | LoginForm/RegisterForm/VerifyEmailForm/ForgotPasswordForm/ResetPasswordForm/AccountMenu |
+| trips    | trips.actions.ts                            | useTripSearch/useTripDetails/useTripCatalog                                            | TripSearchForm/TripResults/TripCard/TripDetails                                         |
+| seats    | seats.actions.ts                            | useTripSeats                                                                           | SeatBooking/SeatMap/SeatButton/SeatLegend/PassengerForm/SelectionSummary                |
+| bookings | bookings.actions.ts                         | useBookings/useBookingDetails/useCreateBooking/useCheckout/useBookingPayment           | BookingHistory/BookingDetails/BookingSummary/BookingCountdown/PaymentResult             |
+| tickets  | tickets.actions.ts                          | useTicket                                                                              | TicketView                                                                              |
+| account  | يستخدم بيانات auth؛ لا قراءة مكررة للمستخدم | عند حاجة فعلية فقط                                                                     | AccountProfile/AccountNavigation                                                        |
+
+داخل كل Feature مجلدات `actions/hooks/components/schemas/types/lib/store` بحسب الحاجة فقط. مفاتيح وإعدادات TanStack في `hooks/<feature>.queries.ts` عندما يستحق حجمها فصلها. أدوات مثل `seatLayout.ts` و`paymentState.ts` داخل Feature المالكة.
+
+مكوّنات المشروع PascalCase، والـHooks تبدأ بـuse. مكوّنات shadcn تحت ui تحتفظ بأسماء ملفات CLI مثل `button.tsx`.
+
+`shared` لا يستورد تفاصيل Feature. التكامل بين الميزات يستخدم عقدًا صغيرًا واضحًا أو props من المكوّن الجامع، وليس الوصول العشوائي إلى ملفاتها الداخلية. لا repositories أو factories عامة أو barrel files تجمع شجرة المشروع.
+
+## 5. مسؤوليات ملفات الاتصال الثلاثة
+
+### api.ts — server-only
+
+- نقطة الدخول المركزية `apiFetch(path, options)` لكل طلب عادي من Action إلى Express.
+- عنوان Backend ثابت من البيئة، وليس من مدخل المستخدم.
+- method وbody وlocale وheaders الإضافية الضرورية مثل Idempotency-Key.
+- Headers والتوكن وJSON وtimeout و`no-store` ورفض redirects.
+- قراءة رد Backend والتحقق من شكله وتحويله إلى ApiResult.
+- تنسيق طلبات login/refresh/logout الخاصة دون كشف التوكنات أو إعادة تنفيذ منطقها في Features.
+- يقرأ الجلسة الحالية ويضيف Bearer إذا وجد Access Token؛ لا خيار auth في الاستدعاء.
+- لا يثق في Authorization/Cookie عشوائيين من المتصفح.
+- لا TanStack ولا JSX ولا toast ولا قواعد أسعار ومقاعد داخل هذا الملف.
+
+```ts
+apiFetch('cities');
+apiFetch('bookings', { method: 'POST', body: data });
+```
+
+هذه أمثلة للعقد المقترح، وليست تنفيذًا مكتملًا. اللغة تُستخرج أو تُمرر بحسب سياق الطلب، دون تكرار الإعداد داخل كل Feature.
+
+لا واجهة `apiMutation` إلزامية إضافية للميزات. المساعدات الداخلية الصغيرة مسموحة لتوضيح النقل والجلسة، وليست عملاء HTTP مستقلين.
+
+### session.ts — server-only
+
+- أنواع بيانات الجلسة والتوكنات، وأسماء Cookies وخياراتها.
+- قراءة Cookies الطلب الحالي، حفظ التوكنات الجديدة، وحذف Cookies عند انتهاء الجلسة المؤكد.
+- استخراج التوكنات والتحقق من شكلها في رد Backend الخاص بالمصادقة.
+- أدوات الكتابة تعمل مع السياق الصحيح: Cookie store للـActions، وresponse للـProxy/Handler.
+- HttpOnly، وSecure في الإنتاج، وSameSite=Lax، وPath=/، مع أسماء الإنتاج المناسبة.
+- لا fetch ولا استيراد api.ts ولا كاش مستخدم مشترك.
+
+الاتجاه `api.ts → session.ts` فقط. طلب refresh عبر HTTP وتنسيق single-flight داخل api.ts؛ الحفظ عبر session.ts.
+
+### apiResult.ts — مشترك للسيرفر والمتصفح
+
+- نوع `ApiResult` لنجاح/فشل العملية وcode/message/data/status وrequestId عند اللزوم.
+- `ApiError` موحد للواجهة.
+- مساعد `invokeAction` يحول نتيجة Action الفاشلة إلى خطأ يفهمه TanStack ويعيد البيانات عند النجاح.
+- يعالج تعذر الوصول إلى Action دون إعادة إرسال العملية تلقائيًا.
+- لا أسرار أو Cookie APIs أو استيرادات server-only.
+- التفرع البرمجي حسب code، والعرض حسب message المترجمة؛ requestId للأخطاء غير المتوقعة.
+
+## 6. تدفق القراءات والكتابة
+
+```text
+Component/Form
+  → Feature hook: useQuery أو useMutation
+  → Feature Server Action
+  → apiFetch
+  → Express
+  → ApiResult
+  → invokeAction
+  → TanStack
+  → UI
+```
+
+- Actions تبدأ بـ`'use server'`، وتصدر دوال async محددة مثل getTripsAction/createBookingAction.
+- كل Action تربط endpoint معروفًا وتتحقق من المدخلات؛ لا نصدر Action عامة تمرر أي مسار أو method من المتصفح إلى Backend.
+- القراءة العادية تستخدم useQuery مع Action. كتابة الحجز أو بدء الدفع تستخدم useMutation مع Action.
+- استدعاء Action من المتصفح POST حتى لو كان طلب Next إلى Backend GET. لا ندعي أنه GET endpoint أو أن استدعاءات Actions لها نفس توازي وجدولة طلبات GET المستقلة.
+- لا نقل polling المتكرر إلى Actions: يبقى GET الدفع الحالي، ومساعده الصغير بجوار hook الدفع. هذا لا يبرر مجلد api لكل Feature أو gateway عام.
+- إلغاء Query في المتصفح لا يضمن إيقاف Action على السيرفر؛ timeout وحماية النتائج القديمة يلزمان بحسب التدفق.
+- قراءات SSR اللازمة تبقى في ملف server-only داخلي واضح. عند الحاجة إلى متابعة بيانات SSR في العميل، نهيئ TanStack عبر QueryClient خاص بالطلب وHydrationBoundary.
+
+## 7. TanStack وملكية الحالة
+
+- QueryClient مستقر داخل المتصفح، ومنفصل لكل طلب SSR؛ لا بيانات مستخدم في متغير module مشترك.
+- query keys/options قرب hooks الخاصة بالميزة؛ queryClient.ts للإعداد العام فقط.
+- المفاتيح تشمل locale وsearch/filter/pagination عندما تغير النتيجة، وuserId للبيانات الخاصة.
+- لا تخزين دائم للبيانات الخاصة أو التوكنات في localStorage. إزالة البيانات الخاصة عند logout أو تبديل المستخدم.
+- `staleTime` حد اعتبار البيانات حديثة، وليس مؤقتًا للتحديث الدوري.
+- `refetchInterval` للمتابعة الدورية عند الحاجة، ويتوقف حسب حالة الدفع أو مغادرة الشاشة.
+- `gcTime` لتنظيف Queries غير المستخدمة.
+- البداية المقترحة: كتالوج المدن/المحطات staleTime خمس دقائق؛ البحث والمقاعد والدفع staleTime صفر مع قواعد refetch محددة للواجهة. تضبط القيم داخل Feature.
+- الكتابة `retry:false`؛ لا retry خفي في fetch، خصوصًا للدفع والنتائج غير المؤكدة.
+- بعد mutation نختار cache update أو invalidateQueries حسب الرد، ولا ننفذ تحديثات متعددة بلا حاجة.
+- router.refresh عند الحاجة لإعادة عرض Server Components فقط؛ ليس إبطالًا لكاش TanStack.
+
+| الحالة                             | المسؤول            |
+| ---------------------------------- | ------------------ |
+| قيم وأخطاء النموذج                 | React Hook Form    |
+| بيانات السيرفر التفاعلية           | TanStack Query     |
+| المقاعد المختارة والمسودة المشتركة | Zustand داخل seats |
+| البحث والفلاتر ورقم الصفحة         | URL                |
+| فتح نافذة/إظهار كلمة المرور        | useState           |
+| التوكنات                           | HttpOnly Cookies   |
+
+كل fetch لبيانات API يستخدم no-store، وردود API في Next تمنع HTTP/CDN caching أيضًا. لا تمنع قراءة Cookies كاش TanStack؛ لكنها قد تجعل server render ديناميكيًا، وهذا مقبول في الخطة.
+
+## 8. المصادقة وتجديد الجلسة
+
+1. Form يتحقق من المدخلات؛ Action يعيد التحقق منها.
+2. طلب تسجيل الدخول إلى Express، الذي يتحقق من الحساب وينشئ Session.
+3. Next يستقبل Access في رد JSON وRefresh عبر Set-Cookie وفق عقد Backend الحالي.
+4. أدوات الجلسة تحفظ Cookies على نطاق موقع الويب.
+5. لا تعود التوكنات إلى المتصفح ضمن JSON/Action/RSC/HTML؛ تعود بيانات المستخدم الآمنة.
+6. المتصفح يرسل Cookies إلى Next تلقائيًا، وNext يضيف Bearer إلى الاتصال بـBackend حتى لو كان على نطاق مختلف.
+7. Backend يتحقق من JWT وSession والمستخدم والدور والملكية لكل عملية خاصة.
+8. returnTo داخلي ومتحقق منه، مع fallback آمن.
+
+إرسال Access تلقائيًا لا يفرض auth/me قبل كل عملية عامة. Actions الخاصة تطلب التحقق المركزي اللازم، والـBackend يفرض الحماية. إرسال طلب بلا توكن لا يجعل endpoint خاصًا عامًا.
+
+- كلمة مرور خاطئة في login ليست سببًا لتجديد أو حذف جلسة أخرى.
+- لا Refresh بسبب403 أو429 أو5xx. outage لا يعني logout.
+- GET فشل بجلسة UNAUTHENTICATED يمكن تجديده مرة واحدة وإعادة القراءة مرة واحدة في سياق يسمح بكتابة Cookies؛ refresh نفسه لا يدخل loop.
+- قبل mutation خاصة نجهز الجلسة ونرسل الكتابة مرة واحدة. انتهاء التوكن أثناءها أو فقد الرد لا يبرر تكرار الدفع تلقائيًا.
+- Refresh Token لا يرفق بكل طلب؛ فقط عمليات الجلسة المناسبة.
+- كتابة Cookies مسموحة في Action/Handler/Proxy؛ لا أثناء Server Component render.
+- logout يبطل الجلسة ثم يمسح Cookies وكاش المستخدم؛ لا ندعي نجاح logout-all على Backend إذا لم يصل الرد.
+- نموذج Session وHS256 وstrict rotation الحالي محفوظ؛ لا grace window جديدة.
+
+**بند نشر غير محلول:** single-flight الحالي ينسق داخل runtime واحد فقط؛ لا يغطي عدة replicas أو runtimes مختلفة أو طلبًا متأخرًا يحمل Refresh قديمًا. لا نعلن حل ذلك عبر إعادة ترتيب الملفات؛ يلزم قرار مستقل قبل اعتماد النشر.
+
+## 9. Middleware وProxy
+
+| الملف             | المسؤولية                                                         |
+| ----------------- | ----------------------------------------------------------------- |
+| roleRoutes.ts     | جدول المسارات الخاصة والأدوار، ومطابقة المسارات                   |
+| authMiddleware.ts | تحقق JWT محليًا وتجديد قبل العرض والقرار login/forbidden/continue |
+| intlMiddleware.ts | اللغة والـrewrite مع حفظ Cookies والـheaders اللازمة              |
+| runMiddlewares.ts | التشغيل بالترتيب وتمرير الرد والتوقف عند redirect/error           |
+| proxy.ts          | تشغيل السلسلة وتعريف matcher فقط                                  |
+
+```ts
+export default function proxy(request: NextRequest) {
+  return runMiddlewares(request, [authMiddleware, intlMiddleware]);
+}
+```
+
+- الزائر يدخل الصفحات العامة؛ الصفحة الخاصة تعيده إلى login مع returnTo آمن.
+- access منتهي مع refresh صالح: تجديد مركزي، وتمرير التوكنات الجديدة إلى render الجاري وإلى الرد.
+- دور غير مسموح: forbidden؛ Backend يظل مصدر الدور الحالي والقرار النهائي.
+- فشل تجديد مؤكد401 ينهي الجلسة؛ مشكلة خدمة تحفظ Cookies وتعرض حالة مناسبة.
+- intl لا يمحو Cookies المجددة، ولا تستبدل مرحلة لاحقة redirect/error صادرًا قبلها.
+- الاستثناءات في matcher لا تعفي Actions أو Handler من التحقق الداخلي.
+- الردود الخاصة أو التي تجدد الجلسة لا توضع في كاش HTTP مشترك.
+
+## 10. shadcn وTailwind والمكوّنات
+
+- ui يحتوي المكوّنات المضافة من shadcn بأسماء CLI: button/input/field/select/checkbox/dialog/sheet/badge/alert/skeleton وغيرها عند الحاجة.
+- forms يبني الربط المشترك مع RHF؛ لا يعيد رسم Input وField الموجودين.
+- layout للـHeader/Footer/Container؛ feedback لحالات التطبيق المركبة من أساسيات shadcn.
+- TripCard/SeatMap/BookingSummary/TicketView مكوّنات ميزات مخصصة.
+- theme tokens والألوان والخطوط ثابتة؛ className يحمل التخطيط والاستجابة والحالات.
+- لا إعادة كتابة مجموعة CSS كبيرة عبر @apply، ولا أسماء Tailwind مركبة ديناميكيًا لا يستطيع اكتشافها.
+- ربط `cn` في مكان واحد؛ variants بسيطة؛ لا غلاف عام لكل مكوّن دون وظيفة.
+- RTL/LTR باستخدام اتجاهات منطقية، وتحقق من ترتيب المقاعد الفيزيائي.
+- globals.css للاستيراد والثيم والأساسيات والطباعة والحركات الضرورية فقط؛ حذف selector بعد نقل كل مستخدميه.
+
+## 11. النماذج المشتركة
+
+Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خطأ الإرسال العام. يستقبل schema/defaultValues/onSubmit/children، ولكل نموذج instance مستقل.
+
+- FormInput/FormSelect/FormCheckbox تربط مكوّنات shadcn عبر useFormContext.
+- register للعناصر الأصلية، وController/useController للعناصر المتحكم فيها حسب واجهتها.
+- استخدام Field/FieldLabel/FieldDescription/FieldError؛ ربط id وlabel وaria-invalid وaria-describedby.
+- أسماء الحقول typed، ومراعاة اختلاف Zod input/output مع transforms، دون any لإخفاء المشكلة.
+- SubmitButton مبني على shadcn Button ويقرأ isSubmitting؛ أزرار غير الإرسال type=button صريح.
+- onSubmit ينتظر mutateAsync حتى لا تنتهي حالة الإرسال مبكرًا.
+- خطأ الإرسال يعرض مرة واحدة، ولا toast مكرر فوق نفس الخطأ بلا داعٍ.
+- schema وترجمة الأخطاء وقواعد الأعمال والنجاح والتنقل/reset داخل Feature.
+- نموذج البحث يحول القيم إلى URL؛ ليس كل Form عملية mutation.
+- حقول الركاب الديناميكية تحتفظ بأسماء المقاعد الباقية عند تعديل الاختيار أو تحديث التوافر.
+- لا محرك نماذج JSON عام، ولا reset مفاجئ بسبب background refetch.
+
+## 12. صفحات وسلوك الموقع
+
+| المنطقة    | النطاق                                                                |
+| ---------- | --------------------------------------------------------------------- |
+| الرئيسية   | نموذج بحث ومحتوى أساسي                                                |
+| الرحلات    | نتائج/تاريخ/محطات وتفاصيل وتوافر حديث                                 |
+| المقاعد    | تخطيط الحافلة، اختيار مقاعد، بيانات ركاب، ملخص                        |
+| المصادقة   | login/register/verify/resend/forgot/reset/logout/logout-all           |
+| حجوزاتي    | قائمة وpagination وتفاصيل وحالة الدفع                                 |
+| الدفع      | بدء checkout والعودة والانتظار والنجاح والفشل والانتهاء               |
+| التذكرة    | QR والعرض والطباعة للتذاكر المؤكدة                                    |
+| حسابي      | بيانات المستخدم وإجراءات الجلسة                                       |
+| المدفوعات  | ما يتيحه Backend الحالي؛ قائمة مستقلة تحتاج endpoint تُحدد كعمل منفصل |
+| حالات عامة | loading/empty/error/not-found/forbidden وإعادة المحاولة المناسبة      |
+
+لا إلغاء حجز من الراكب. تأكيد الدفع من Backend وليس query string. لا إظهار حالة pending قديمة فوق نتيجة مؤكدة، ولا استجابة polling قديمة تستبدل نتيجة أحدث. GET متابعة الحالة لا يجري reconciliation مع Paymob؛ inquiry الصريح منفصل.
+
+## 13. مراحل التنفيذ ومعيار الانتهاء
+
+| المرحلة | العمل                                   | معيار الانتهاء                                                                             |
+| ------- | --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1       | api/session/apiResult وActions/TanStack | تتبع قراءة وكتابة وتجديد واضح؛ حذف wrappers وخيار auth بعد تحديث المراجع؛ كل HTTP no-store |
+| 2       | shadcn/Tailwind/layout                  | ثيم ومكوّنات مستخدمة فعليًا، Header/Footer يعملان بالعربية والإنجليزية والجوال             |
+| 3       | forms/auth                              | النماذج موحدة، أخطاء واضحة، حماية returnTo، بلا tokens في الواجهة                          |
+| 4       | search/trips                            | البحث والفلاتر وpagination وتفاصيل الرحلة وحالات الفراغ/الفشل تعمل                         |
+| 5       | seats/passengers/booking                | تخطيط ثابت، الحفاظ على المدخلات، معالجة تعارض المقعد، إنشاء حجز مرة واحدة                  |
+| 6       | payments                                | نتيجة صحيحة، polling يتوقف، لا إعادة دفع غير مقصودة أو بيانات قديمة                        |
+| 7       | account/history/tickets                 | المسار من الحساب والحجز إلى التذكرة والطباعة يعمل                                          |
+| 8       | cleanup/UX                              | حذف غير المستخدم، globals.css محدود، مراجعة RTL والجوال والوصول وحالات التعطل              |
+| بعدها   | Dashboard                               | خطة منفصلة ومشاركة ما ثبت احتياجه فقط                                                      |
+
+النقل تدريجي. لا حذف التطبيق وإعادة كتابته دفعة واحدة. لا نغير Backend أو بيانات المستخدم لتسهيل تجربة الواجهة.
+
+## 14. التحقق وGit
+
+- TypeScript وESLint والبناء المناسب وتجربة المتصفح للميزات المتأثرة.
+- تحقق من الزائر والمستخدم و401/403 وانقطاع الشبكة وتجديد الجلسة وتغير الحساب.
+- تحقق من عدم كشف tokens في ملفات العميل أو HTML أو RSC أو Action result أو logs.
+- تحقق من عدم إعادة mutations غير المؤكدة وثبات Idempotency-Key في محاولة الدفع.
+- يمكن تشغيل فحوص مؤقتة بـBackend وهمي؛ لا إضافة ملفات اختبارات آلية محفوظة حسب طلب المستخدم.
+- لا دفع حقيقي أو حذف بيانات أو DB backups ضمن إعادة التنظيم.
+- الحفاظ على .env/.env.local و.next وdist خارج Git.
+- commit لكل Feature أو مجموعة مترابطة؛ لا إعادة كتابة التاريخ المنشور.
+- شرح بالعربية بعد المرحلة: ما تغير ولماذا وكيف تحققنا منه وما بقي.
+- لا push دون موافقة صريحة من المستخدم.
+
+## 15. ما أُلغي وما بقي مفتوحًا
+
+ملغى: Feature api wrappers، وخيار auth، وNext Data Cache للكتالوج، وgateway عام للقراءات، وapiMutation كواجهة ثانية إلزامية.
+
+محفوظ: GET الدفع فقط للمتابعة، وHttpOnly، وrefresh على السيرفر، وBackend للصلاحيات، وstrict rotation، وعدم تكرار الدفع غير المؤكد.
+
+المتبقي قبل النشر: تنسيق refresh عبر عدة runtimes/replicas والطلبات المتأخرة، وتحقق بيئة النشر. هذه ليست قرارات محلولة ضمن الخطة.
+
+تفاصيل تحدد خلال المرحلة المناسبة دون تعقيد مسبق: مكوّنات shadcn المطلوبة فعليًا، مدد staleTime لكل شاشة، وحاجة سجل مدفوعات مستقل إلى Backend إضافي. أي تغيير في قواعد الأعمال أو نموذج الجلسة يُناقش قبل تنفيذه.
+
+### سجل تطبيق الخطة — الدفعة الأولى
+
+- توحيد HTTP إلى Express في shared/lib/api.ts، وإدارة Cookies واستخراج التوكنات في session.ts، وApiResult/invokeAction في apiResult.ts. حذف apiClient/apiFetch/authCookies القديمة وFeature API wrappers.
+- Actions وHooks للقراءات التفاعلية: المستخدم الحالي والكتالوج والبحث وتفاصيل الرحلة والمقاعد وسجل الحجوزات والتذكرة، بالإضافة إلى Actions الكتابة الموجودة. مفاتيح auth والحجوزات قرب ميزاتها؛ لا مفاتيح ميزات داخل queryClient.ts.
+- SSR يهيئ بيانات البداية؛ ملفات lib/*.server.ts داخلية لهذا الغرض. كل fetch يستخدم no-store؛ كاش الواجهة في TanStack فقط. المقاعد تتحدث بدون router.refresh أو فقد اختيارات Zustand وأسماء الركاب.
+- متابعة الدفع عبر GET ثابت محفوظة، وكذلك منع إعادة الكتابة والدفع غير المؤكد وIdempotency-Key وحماية ترتيب ردود الدفع. التذكرة المرسلة للعميل تتضمن صورة QR فقط دون حقل payload منفصل.
+- لا تغيير في Backend أو قاعدة البيانات أو Paymob. لا تغييرات UI شاملة أو إعداد shadcn/RHF المشترك بعد؛ هذه تبدأ في الدفعة التالية.
+- التحقق: نجحت TypeScript وESLint وبناء الإنتاج و17 حالة معزولة للجلسة والـActions ومنع إعادة الكتابة، وتجربة متصفح للإصدار المبني مع Backend وهمي: بحث واختيار مقعد وlogin/returnTo وحفظ اسم الراكب عند تحديث المقاعد وإنشاء حجز وهمي وعرض الحجز والتذكرة والسجل بالعربية والإنجليزية والخروج. لا أخطاء متصفح، ولا عمليات على DB أو Paymob أو ملفات اختبارات داخل المشروع. يبقى تنسيق refresh بين runtimes والطلبات المتأخرة قرار نشر مستقل. لا push دون موافقة.

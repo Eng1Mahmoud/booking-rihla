@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { TicketView } from '@/features/tickets/components/TicketView';
-import { getTicket } from '@/features/tickets/api/tickets.queries';
+import { getTicket } from '@/features/tickets/lib/tickets.server';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { Link } from '@/i18n/navigation';
 import { ReadError } from '@/shared/components/ReadError';
@@ -47,7 +47,7 @@ export default async function TicketPage({
   }
   return (
     <div className="container-shell page-space">
-      <TicketView ticket={ticket} />
+      <TicketView initial={ticket.ticket} userId={ticket.userId} />
     </div>
   );
 }

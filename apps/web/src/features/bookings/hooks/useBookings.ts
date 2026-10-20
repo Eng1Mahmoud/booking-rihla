@@ -1,27 +1,56 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bookingsApi } from '../api/bookings.api';
+import {
+  getBookingsAction,
+  createBookingAction,
+  checkoutAction,
+  refreshPaymentAction,
+} from '../actions/bookings.actions';
+import type { CreateBookingInput } from '../schemas/bookingSchema';
+import {
+  ApiError,
+  invokeAction,
+  unwrapApiResult,
+  SESSION_EXPIRED_EVENT,
+} from '@/shared/lib/apiResult';
 import { isPaymentPending, paymentOutcome } from '../lib/paymentState';
-import { queryKeys } from '@/shared/lib/queryClient';
-import type { BookingDetails, PaymentState } from '../types/booking';
+import { bookingKeys } from './bookings.queries';
+import type { Booking, BookingDetails, PaymentState } from '../types/booking';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function useCreateBooking() {
-  return useMutation({ mutationFn: bookingsApi.create, retry: false });
+  return useMutation({
+    mutationFn: async (input: CreateBookingInput) => ({
+      data: await invokeAction(() => createBookingAction(input)),
+    }),
+    retry: false,
+  });
 }
 export function useCheckout() {
-  return useMutation({ mutationFn: bookingsApi.checkout, retry: false });
+  return useMutation({
+    mutationFn: ({ id, prepare }: { id: string; prepare: boolean }) => {
+      // One key for the entire action; never replay an uncertain payment.
+      const idempotencyKey = prepare ? crypto.randomUUID() : undefined;
+      return invokeAction(() =>
+        checkoutAction({ id, prepare, idempotencyKey }),
+      );
+    },
+    retry: false,
+  });
 }
 export function useBookingPayment(
   initial: BookingDetails,
   afterCheckout: boolean,
 ) {
   const { user } = useAuth();
+  const locale = useLocale();
   const client = useQueryClient();
   const checked = useRef('');
-  const key = queryKeys.booking(
+  const key = bookingKeys.payment(
     initial.userId,
+    locale,
     initial.booking.id,
     afterCheckout,
   );
@@ -34,7 +63,7 @@ export function useBookingPayment(
     initialData: initialState,
     initialDataUpdatedAt: initial.readAt,
     queryFn: async ({ signal }) => {
-      const incoming = await bookingsApi.payment(initial.booking.id, signal);
+      const incoming = await pollPayment(initial.booking.id, signal);
       const current = client.getQueryData<PaymentState>(key);
       // An older in-flight GET must not replace a newer reconciliation result.
       return current &&
@@ -78,8 +107,7 @@ export function useBookingPayment(
     if (checked.current === id) return;
     checked.current = id;
     // One explicit reconciliation action on return; status polling itself never calls Paymob.
-    void bookingsApi
-      .refreshPayment(initial.booking.id)
+    void invokeAction(() => refreshPaymentAction(initial.booking.id))
       .then((payment) => {
         client.setQueryData<PaymentState>(key, (current) => ({
           payment:
@@ -109,4 +137,52 @@ export function useBookingPayment(
     dataUpdatedAt: Math.max(initial.readAt, query.dataUpdatedAt),
     isError: query.isError && query.errorUpdatedAt >= initial.readAt,
   };
+}
+
+// Payment polling keeps its fixed GET endpoint; ordinary feature reads use Actions.
+async function pollPayment(
+  bookingId: string,
+  signal?: AbortSignal,
+): Promise<PaymentState> {
+  let response: Response;
+  try {
+    response = await fetch(
+      '/api/payments/' + encodeURIComponent(bookingId) + '/status',
+      {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal,
+        headers: {
+          'Accept-Language': window.location.pathname.startsWith('/ar')
+            ? 'ar'
+            : 'en',
+        },
+      },
+    );
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR');
+  }
+  const result = await response.json().catch(() => null);
+  if (!result || typeof result.success !== 'boolean')
+    throw new ApiError(502, 'UPSTREAM_ERROR');
+  if (response.status === 401 && result.code === 'UNAUTHENTICATED')
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  return unwrapApiResult<PaymentState>({ ...result, status: response.status });
+}
+
+export function useBookings(
+  initial: Booking[],
+  userId: string,
+  offset: number,
+) {
+  const locale = useLocale();
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: bookingKeys.list(userId, locale, offset),
+    queryFn: () => invokeAction(() => getBookingsAction(offset)),
+    initialData: { items: initial, pagination: { limit: 20, offset } },
+    enabled: user?.id === userId,
+    staleTime: 0,
+    retry: false,
+  });
 }

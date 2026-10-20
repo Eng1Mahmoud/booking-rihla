@@ -1,17 +1,18 @@
 import 'server-only';
-import { requireCurrentUser } from '@/features/auth/api/auth.queries';
-import { apiFetch } from '@/shared/lib/apiFetch';
+import { requireCurrentUser } from '@/features/auth/lib/auth.server';
+import { apiFetch } from '@/shared/lib/api';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import type { Booking, BookingPayment, BookingDetails } from '../types/booking';
 
 export async function getBookings(offset: number) {
-  await requireCurrentUser();
-  return unwrapApiResult(
+  const user = await requireCurrentUser();
+  const result = unwrapApiResult(
     await apiFetch<{
       items: Booking[];
       pagination: { limit: number; offset: number };
     }>('bookings?limit=20&offset=' + offset),
   );
+  return { ...result, userId: user.id };
 }
 
 export async function getBookingDetails(id: string): Promise<BookingDetails> {
@@ -19,9 +20,7 @@ export async function getBookingDetails(id: string): Promise<BookingDetails> {
   const [booking, payment, availability] = await Promise.all([
     apiFetch<Booking>('bookings/' + id),
     apiFetch<BookingPayment>('bookings/' + id + '/payment'),
-    apiFetch<{ checkoutEnabled: boolean }>('payments/availability', {
-      auth: false,
-    }),
+    apiFetch<{ checkoutEnabled: boolean }>('payments/availability', {}),
   ]);
   return {
     booking: unwrapApiResult(booking),

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { BookingDetail } from '@/features/bookings/components/BookingDetail';
-import { getBookingDetails } from '@/features/bookings/api/bookings.queries';
+import { getBookingDetails } from '@/features/bookings/lib/bookings.server';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { ReadError } from '@/shared/components/ReadError';
 export default async function BookingPage({

@@ -1,7 +1,7 @@
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
-import { getBookings } from '@/features/bookings/api/bookings.queries';
+import { getBookings } from '@/features/bookings/lib/bookings.server';
 import { ReadError } from '@/shared/components/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
@@ -26,7 +26,12 @@ export default async function BookingsPage({
   }
   return (
     <div className="container-shell page-space">
-      <BookingHistory bookings={result.items} offset={offset} />
+      <BookingHistory
+        key={result.userId + ':' + offset}
+        bookings={result.items}
+        userId={result.userId}
+        offset={offset}
+      />
     </div>
   );
 }

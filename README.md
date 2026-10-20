@@ -9,17 +9,31 @@ All JSON API replies use `{ success, code, message, data?, requestId? }`. `messa
 Success examples:
 
 ```json
-{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "id": "..." } }
+{
+  "success": true,
+  "code": "SUCCESS",
+  "message": "The request completed successfully.",
+  "data": { "id": "..." }
+}
 ```
 
 ```json
-{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "items": [], "pagination": { "limit": 20, "offset": 0 } } }
+{
+  "success": true,
+  "code": "SUCCESS",
+  "message": "The request completed successfully.",
+  "data": { "items": [], "pagination": { "limit": 20, "offset": 0 } }
+}
 ```
 
 Failure example:
 
 ```json
-{ "success": false, "code": "VALIDATION_ERROR", "message": "راجع البيانات المدخلة وحاول مجددًا." }
+{
+  "success": false,
+  "code": "VALIDATION_ERROR",
+  "message": "راجع البيانات المدخلة وحاول مجددًا."
+}
 ```
 
 Only unexpected 5xx failures include `requestId` in the body; it matches X-Request-ID and can be shown as a support reference. The header remains on all API requests. Known PAYMENT_UNAVAILABLE and readiness failures have localized messages without a support id. Internal exception/parser details are never public messages.
@@ -48,7 +62,12 @@ npm run dev
 Open http://127.0.0.1:4000/api/v1/health in your browser. Expected response:
 
 ```json
-{ "success": true, "code": "SUCCESS", "message": "The request completed successfully.", "data": { "status": "ok" } }
+{
+  "success": true,
+  "code": "SUCCESS",
+  "message": "The request completed successfully.",
+  "data": { "status": "ok" }
+}
 ```
 
 Stop the server with Ctrl+C. Development mode restarts it when source files change.
@@ -275,7 +294,7 @@ The migration command applies pending changes and updates the development db ref
 | GET    | /api/v1/cities/:id               | Return one city or CITY_NOT_FOUND                    |
 | POST   | /api/v1/cities                   | Create a city and return 201 with a Location header  |
 | PATCH  | /api/v1/cities/:id               | Update one or both names and return the updated city |
-| DELETE | /api/v1/cities/:id               | Delete a city and return 200 with a success envelope       |
+| DELETE | /api/v1/cities/:id               | Delete a city and return 200 with a success envelope |
 
 Example PowerShell request after signing in as ADMIN or SUPER_ADMIN (set $accessToken from data.accessToken in the login response):
 
@@ -311,7 +330,7 @@ Apply the committed migrations with npm run db:migrate before using these endpoi
 | GET    | /api/v1/stations/:id                                | Read a station or return STATION_NOT_FOUND                       |
 | POST   | /api/v1/stations                                    | Create a station using nameAr, nameEn, and cityId                |
 | PATCH  | /api/v1/stations/:id                                | Update one or more names or move the station to an existing city |
-| DELETE | /api/v1/stations/:id                                | Delete a station and return 200 with a success envelope                |
+| DELETE | /api/v1/stations/:id                                | Delete a station and return 200 with a success envelope          |
 
 POST/PATCH require application/json and reject unknown fields. Names are trimmed and must contain 1-100 characters; ids must be UUIDs. PATCH needs at least one field and preserves omitted values. List defaults to limit=20/offset=0, allows limit 1-100/offset 0-100000, and sorts by English name then id. A city filter with no matching stations returns an empty list, including a well-formed but absent city id.
 
@@ -333,14 +352,14 @@ The feature follows routes/stationRoutes.ts -> controllers/stationController.ts 
 
 Apply npm run db:migrate before using this feature. Bus stores id (UUID), plateNumber (unique text), seatCount (integer 1-100), and isActive (boolean, default true). BusSeat stores its own UUID, busId, and number. Plate input is trimmed, internal whitespace collapsed, and letters uppercased before persistence. Optional busTypeId and many-to-many amenities are implemented below; optional seatLayout selects a fixed template, as described below.
 
-| Method | Path                                          | Behavior                                                |
-| ------ | --------------------------------------------- | ------------------------------------------------------- |
-| GET    | /api/v1/buses?isActive=true&limit=20&offset=0 | List buses with optional active/inactive filtering      |
-| GET    | /api/v1/buses/:id                             | Read one bus or return BUS_NOT_FOUND                    |
-| GET    | /api/v1/buses/:id/seats                       | Read its numbered seats in ascending order              |
-| POST   | /api/v1/buses                                 | Create the bus and seats 1 through seatCount atomically |
-| PATCH  | /api/v1/buses/:id                             | Edit the plate, capacity, or active status              |
-| DELETE | /api/v1/buses/:id                             | Delete the bus and its owned seats; return 200 with a success envelope          |
+| Method | Path                                          | Behavior                                                               |
+| ------ | --------------------------------------------- | ---------------------------------------------------------------------- |
+| GET    | /api/v1/buses?isActive=true&limit=20&offset=0 | List buses with optional active/inactive filtering                     |
+| GET    | /api/v1/buses/:id                             | Read one bus or return BUS_NOT_FOUND                                   |
+| GET    | /api/v1/buses/:id/seats                       | Read its numbered seats in ascending order                             |
+| POST   | /api/v1/buses                                 | Create the bus and seats 1 through seatCount atomically                |
+| PATCH  | /api/v1/buses/:id                             | Edit the plate, capacity, or active status                             |
+| DELETE | /api/v1/buses/:id                             | Delete the bus and its owned seats; return 200 with a success envelope |
 
 Example create body:
 
@@ -368,7 +387,7 @@ Run npm run db:migrate before using this feature. Route represents one direction
 | GET    | /api/v1/routes/:id | Read a route or return ROUTE_NOT_FOUND                                               |
 | POST   | /api/v1/routes     | Create a directed route; return 201 and Location                                     |
 | PATCH  | /api/v1/routes/:id | Update endpoints, estimated duration or active status                                |
-| DELETE | /api/v1/routes/:id | Delete the route; return 200 with a success envelope                                                |
+| DELETE | /api/v1/routes/:id | Delete the route; return 200 with a success envelope                                 |
 
 Example create body (use UUIDs returned by the Station API):
 
@@ -397,13 +416,13 @@ Verification also applied all four migrations to a fresh temporary PostgreSQL da
 
 Apply npm run db:migrate before using this feature. Trip joins an existing Route and Bus with departureAt, arrivalAt, pricePiastres, and status. Status is SCHEDULED by default or CANCELLED. The management list includes both statuses and past departures unless filtered. Passenger search is available below; passenger detail and seat endpoints are available below.
 
-| Method | Path              | Behavior                                                     |
-| ------ | ----------------- | ------------------------------------------------------------ |
-| GET    | /api/v1/trips     | List trips, optionally filtered by routeId, busId and status |
-| GET    | /api/v1/trips/:id | Read one trip or return TRIP_NOT_FOUND                       |
-| POST   | /api/v1/trips     | Create a future trip; return 201 and Location                |
-| PATCH  | /api/v1/trips/:id | Edit references, times, price or status before departure     |
-| DELETE | /api/v1/trips/:id | Delete an unreferenced trip; return 200 with a success envelope             |
+| Method | Path              | Behavior                                                        |
+| ------ | ----------------- | --------------------------------------------------------------- |
+| GET    | /api/v1/trips     | List trips, optionally filtered by routeId, busId and status    |
+| GET    | /api/v1/trips/:id | Read one trip or return TRIP_NOT_FOUND                          |
+| POST   | /api/v1/trips     | Create a future trip; return 201 and Location                   |
+| PATCH  | /api/v1/trips/:id | Edit references, times, price or status before departure        |
+| DELETE | /api/v1/trips/:id | Delete an unreferenced trip; return 200 with a success envelope |
 
 Example create body (replace the route and bus placeholders with real UUIDs, and choose future dates):
 
@@ -623,13 +642,13 @@ Apply npm run db:migrate. A separate AUTH_ACCESS_SECRET in apps/api/.env signs a
 
 Before sign-in, registration clients must retain the verificationId returned by their original POST /register and supply it with both email verification and resend requests. The id is not emailed. It stays stable when resending. Wrong receipts cannot confirm the account or request new codes. Re-registering the same email returns a new decoy receipt and never transfers ownership of the pending credentials. Existing unverified registrations from before this API change, or clients that lose the original receipt, cannot complete activation through duplicate registration; they can use the password recovery flow below to prove mailbox ownership and set a new password. This is an intentional change before building frontend clients.
 
-| Method | Path                    | Behavior                                                                             |
-| ------ | ----------------------- | ------------------------------------------------------------------------------------ |
-| POST   | /api/v1/auth/login      | Verified, active account signs in; sets refresh cookie and returns access token/user |
-| POST   | /api/v1/auth/refresh    | Consumes refresh cookie and sets its replacement                                     |
-| GET    | /api/v1/auth/me         | Returns the current user using Bearer access authentication                          |
-| POST   | /api/v1/auth/logout     | Revokes the refresh cookie's session, clears cookie, returns 200 with a success envelope                     |
-| POST   | /api/v1/auth/logout-all | Revokes every session for the authenticated user and returns 200 with a success envelope                     |
+| Method | Path                    | Behavior                                                                                 |
+| ------ | ----------------------- | ---------------------------------------------------------------------------------------- |
+| POST   | /api/v1/auth/login      | Verified, active account signs in; sets refresh cookie and returns access token/user     |
+| POST   | /api/v1/auth/refresh    | Consumes refresh cookie and sets its replacement                                         |
+| GET    | /api/v1/auth/me         | Returns the current user using Bearer access authentication                              |
+| POST   | /api/v1/auth/logout     | Revokes the refresh cookie's session, clears cookie, returns 200 with a success envelope |
+| POST   | /api/v1/auth/logout-all | Revokes every session for the authenticated user and returns 200 with a success envelope |
 
 All session POST requests require Content-Type: application/json and X-CSRF-Protection: 1. Login body contains only email/password with the registration email/password validation rules. Refresh/logout/logout-all accept an empty object (or empty JSON body); tokens must not be supplied in their body or query. me/logout-all require Authorization: Bearer ACCESS_TOKEN. All responses disable caching.
 
@@ -1453,43 +1472,28 @@ Strict backend token rotation and replay revocation are unchanged. The in-flight
 
 ### Website source structure
 
-The website follows the feature organization in the owner's al-baraka-frontend reference (https://github.com/Eng1Mahmoud/al-baraka-frontend/tree/master/src), adapted to the existing TypeScript/fetch/HttpOnly setup:
-
 ```text
-src/
-  app/                         Routes, layouts and providers.tsx
-    [locale]/(auth)/           Login and password recovery pages
-    [locale]/(protected)/      Account, bookings and checkout result
-    api/payments/[bookingId]/status/  Sole GET payment-status endpoint
+apps/web/src/
+  app/                       Thin routes, layouts, providers
+    api/payments/[bookingId]/status/  Fixed GET payment polling
   features/
-    auth/                      actions, api, hooks, components, schemas, types, lib
-    bookings/                  actions, api, hooks, schemas, components, types, lib
-    trips/                     api (server queries), components, schemas, types
-    seats/                     components, store, lib
-    tickets/                   api (server queries), components, types
-    account/                   Server-loaded profile with interactive logout controls
+    auth/                    actions, hooks, components, schemas, types, lib
+    trips/                   actions, hooks, components, schemas, types, lib
+    seats/                   actions, hooks, components, store, lib
+    bookings/                actions, hooks, components, schemas, types, lib
+    tickets/                 actions, hooks, components, types, lib
+    account/                 Account profile/navigation
   shared/
-    components/                Site header/footer and shared navigation
-    lib/                       apiClient, apiFetch (server-only), apiResult, authCookies, queryClient, format
-  i18n/                        Locale routing and messages configuration
-  messages/                    Arabic and English copy
-  middleware/                  authMiddleware, intlMiddleware, roleRoutes, runMiddlewares
-  proxy.ts                     Runs the ordered middleware chain
+    lib/api.ts               Server-only HTTP configuration and refresh coordination
+    lib/session.ts           Server-only HttpOnly cookie/token helpers
+    lib/apiResult.ts         Shared results, errors and invokeAction
+    lib/queryClient.ts       General TanStack settings
+    components/              Shared UI (moves to ui/forms/layout/feedback in the next batch)
+  middleware/                Role routes, auth, locale and middleware runner
+  proxy.ts                   Runs the middleware chain
 ```
 
-Components render forms/screens and call feature hooks; feature API files own request paths/bodies; hooks own TanStack Query queries/mutations and invalidation. Query keys are centralized in shared/lib/queryClient.ts. Public page reads use trips.queries.ts and server-only apiFetch. Seat props refresh through Server Component navigation; browser trips.api.ts/useTripSeats are removed. Only folders with actual implementations are created. Component filenames use PascalCase as in the reference.
-
-Authentication uses useAuth/useLogin/useLogout and the server-hydrated user cache. There is no custom auth Context, duplicate user Zustand store or browser refresh logic. AuthSessionSync refreshes server content on confirmed expiry and window focus/visibility. Feature mutations use invokeAction in apiClient; payment status alone uses pollPayment. Shared ApiError preserves backend error codes/messages and uncertain outcomes without retrying writes. All Next-to-Express traffic goes through apiFetch. authCookies contains only server cookie operations. The old shared/lib/server directory, apiServer/apiGet and generic forwarding registry remain removed.
-
-Adding a feature read means a server query/page; adding a mutation means a feature Server Action and an adapter/hook where needed. There is no generic website API forwarding surface or method registry. Authentication/booking Actions validate input and live permissions; the backend is authoritative for session/ownership and payment rules. The only HTTP GET adapter is fixed to payment status, with no arbitrary backend path input.
-
-Server API foundation (2026-10-20): apiFetch returns ApiResult containing success/code/message/data and HTTP status, with optional requestId and Retry-After metadata. The gateway removes HTTP metadata from browser JSON and never exposes access/refresh credentials. Its onSession callback queues cookie updates for the outgoing response; public Server Component reads supply no writer. ApiError remains shared across environments, preserving trip 404 handling. No backend service, token model, dependency or database data changed.
-
-The legacy gateway and existing browser feature hooks remain during the incremental migration. Local JWT verification and pre-render refresh in proxy are now implemented. Authentication and booking/payment Server Actions are implemented. Account details, booking history and ticket reads now use Server Components. Booking detail/payment reads, header/session and seat-query migration plus the single payment-status polling route remain.
-
-
-Proxy authentication completed (2026-10-20): jose is a direct web dependency. The ignored local web environment now has the matching local API signing key, without printing or committing it. Verification passed: production build, TypeScript/ESLint, real jose signature/claims and role checks, guest returnTo, missing-secret rejection, six concurrent requests sharing one refresh, same-render Cookie/locale forwarding, locale/forbidden redirects retaining new cookies, and transient/invalid refresh behavior. These checks used isolated fake sessions/network and no saved test files. The in-memory coordination limitation between runtime instances and late old-token requests still applies.
-
+The consolidated current plan is in IMPLEMENTATION_PLAN.md. The dated migration entries below record earlier steps and may mention filenames that were replaced by the current structure.
 
 ### Authentication Server Actions (2026-10-20)
 
@@ -1498,7 +1502,6 @@ Login, registration, email verification/resend, password recovery/reset and curr
 The flow is form/React Query mutation -> auth.api adapter -> Next Server Action -> apiFetch -> Express. Next supplies the POST action endpoint and same-origin checks; the browser no longer calls the generic gateway for these mutations. The adapter converts serialized failure results to the same ApiError used by the forms, preserves confirmed-session-expiry cache handling and marks a lost action response as an uncertain NETWORK_ERROR without retrying. Registration still returns verificationId; login still returns only the user. Existing forms and disabled/pending feedback are retained. auth/me is temporarily still a browser GET through the gateway; it will move with the server account/session reads. Other feature gateway calls remain until their migration.
 
 Production build, TypeScript and ESLint passed. Isolated checks covered all seven actions, runtime validation, cookie writes/clears, guest logout-all denial and refresh-before-write. Actual HTTP calls to a temporary production Next server with a fake API verified ar/en forwarding, HttpOnly/Secure cookies, token redaction, direct guest invocation from a public URL, logout/reset cleanup, cross-origin rejection and no retry on an uncertain network outcome. Client adapter checks preserved existing result/error contracts. No real accounts, provider transactions, database writes, dependencies or saved test files were added.
-
 
 ### Booking and payment Server Actions (2026-10-20)
 
@@ -1510,7 +1513,6 @@ The existing reservation data wrapper, checkout URL handling, seat invalidation 
 
 Validation passed: TypeScript, root ESLint, production web build, isolated action/adapter scenarios and actual HTTP action requests to a temporary production Next server with a fake API. Covered direct guest calls from a public trip page, ownership denial, expired-session renewal before creation, seat conflict, exact key forwarding, existing-attempt continuation, expired/uncertain preparation blocking checkout, one checkout on a lost response, owner-only inquiry, ar/en messages and CSRF rejection. No real reservations, Paymob transactions, database changes, saved tests or dependencies were added.
 
-
 ### Account, booking history and ticket server reads (2026-10-20)
 
 The private layout checks getCurrentUser through apiFetch on the server. React cache deduplicates this lookup only within a render, never across visitors. Booking and ticket readers call requireCurrentUser before fetching private data as well: Next can begin page and layout work in parallel, so the layout alone is insufficient as a data-read guard. Express still authenticates and enforces ownership on each request. AccountPage passes only the selected user fields to the interactive profile; booking history and ticket markup are Server Components. The raw QR payload is not sent as a Client Component prop.
@@ -1521,9 +1523,20 @@ History pagination uses /bookings?offset= with a validated 0-100000 offset and 2
 
 Production web build (including TypeScript) and root ESLint passed. Actual HTTP checks against a temporary production Next server with a fake API covered initial account/history/ticket HTML without browser fetch, two simultaneous user identities, one auth/me per render, proxy renewal visible to the same server render, minimal user/QR serialization, pagination/empty states/404, guest and revoked sessions, spoofed return-path header rejection, outage support-id rendering without logout, safe login redirects and current logout cookie clearing. No real users, bookings, provider transactions, database changes, dependencies or saved tests were introduced.
 
-
 ### Final auth/API migration completed (2026-10-20)
 
 Deleted the generic gateway and remaining browser auth/trip read modules. Session view is server-hydrated through TanStack Query without credentials or a duplicate store. Booking detail and payment result start from private server reads; the single GET status route supplies later payment/availability updates. Seat selection persists in Zustand across visible/manual server refreshes. Writes, provider inquiry and checkout remain Actions with retries disabled and exact Idempotency-Key behavior unchanged. A newer confirmed state cannot be replaced by an older in-flight status read. Focus refresh is coordinated once for the whole page.
 
 Production build/TypeScript and root ESLint passed. Actual HTTP checks with a temporary fake API covered immediate paid SSR, pending-state safety despite provider query flags, owner/session/cross-site/UUID/method rejection, 404 for the removed gateway, six concurrent status callers sharing one renewal in that runtime, HttpOnly redaction, transient/invalid refresh, Retry-After/requestId handling, public-page renewal and two-user isolation. An inline ordering check verified older pending reads do not replace paid results and pending refunds continue polling. In a separate Chrome tab on the sandbox server, login returned directly to confirmation, selection survived a server seat refresh, passenger details appeared from the hydrated session, a fake reservation navigated to details, explicit inquiry confirmed the fake result, and logout returned to login preserving returnTo. No hydration errors were observed. Temporary processes/tab were closed; no real reservations, Paymob traffic, database data, dependencies or saved automated tests changed. The runtime-only/late-token coordination limitation remains a production deployment decision.
+
+## Current frontend architecture (2026-10-20)
+
+The authoritative current plan and implementation progress are in IMPLEMENTATION_PLAN.md under "الخطة الموحدة لواجهة الركاب". Earlier migration notes above describe historical intermediate states.
+
+Interactive requests follow component → feature hook (TanStack) → specific Server Action → shared/lib/api.ts → Express. The central client sets headers, attaches an available access token, normalizes responses and coordinates refresh. session.ts only manages HttpOnly cookies/token extraction; apiResult.ts holds serializable results and invokeAction error conversion. apiClient.ts, apiFetch.ts, authCookies.ts and feature API adapters have been removed.
+
+TanStack owns the API data cache. HTTP fetches use no-store. Internal feature lib/*.server.ts readers prepare initial SSR data through the same central transport; they never write cookies during render. GET actions explicitly use context: 'action' to allow renewal. The browser Action transport is POST even when Express receives GET. The fixed GET /api/payments/:bookingId/status route remains for payment polling; it does not contact Paymob itself.
+
+Query keys include locale and private owner identity where relevant. Login/logout clear previous query data. No access or refresh credentials enter query data or Action results. The QR view receives its image without a separate raw payload field.
+
+This batch changes the request/data layer. shadcn, shared RHF fields, inline Tailwind conversion and the later UI phases remain in the plan. Runtime-local refresh single-flight still requires a separate deployment coordination decision for multiple runtimes or late old-token requests.

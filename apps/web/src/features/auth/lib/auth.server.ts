@@ -1,13 +1,13 @@
 import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
-import { apiFetch } from '@/shared/lib/apiFetch';
+import { apiFetch } from '@/shared/lib/api';
 import {
   ApiError,
   unwrapApiResult,
   errorMessage,
 } from '@/shared/lib/apiResult';
-import { readAuthCookies } from '@/shared/lib/authCookies';
+import { readAuthCookies } from '@/shared/lib/session';
 import { getLocale } from 'next-intl/server';
 import type { AuthUser, AuthSession } from '../types/auth';
 

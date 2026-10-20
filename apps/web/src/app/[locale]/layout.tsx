@@ -1,6 +1,7 @@
 import { dehydrate } from '@tanstack/react-query';
-import { createQueryClient, queryKeys } from '@/shared/lib/queryClient';
-import { getAuthSession } from '@/features/auth/api/auth.queries';
+import { createQueryClient } from '@/shared/lib/queryClient';
+import { authKeys } from '@/features/auth/hooks/auth.queries';
+import { getAuthSession } from '@/features/auth/lib/auth.server';
 import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
@@ -29,7 +30,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   // Request-local QueryClient: hydrate only the safe user view, never credentials.
   const queryClient = createQueryClient();
-  queryClient.setQueryData(queryKeys.me, await getAuthSession());
+  queryClient.setQueryData(authKeys.me, await getAuthSession());
   return (
     <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <body className="min-h-screen">

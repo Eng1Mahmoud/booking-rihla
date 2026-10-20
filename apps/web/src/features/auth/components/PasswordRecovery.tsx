@@ -8,9 +8,8 @@ import {
   ApiError,
   isUncertainRequestError,
   errorMessage,
-} from '@/shared/lib/apiClient';
-import { authApi } from '../api/auth.api';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+} from '@/shared/lib/apiResult';
+import { useAuth, useForgotPassword, useResetPassword } from '../hooks/useAuth';
 import {
   recoveryEmailSchema,
   recoveryResetSchema,
@@ -27,6 +26,8 @@ export function PasswordRecovery({
   const t = useTranslations('Recovery');
   const locale = useLocale();
   const { clearSession } = useAuth();
+  const forgotPassword = useForgotPassword();
+  const resetPassword = useResetPassword();
   const [step, setStep] = useState<'request' | 'reset' | 'done'>(initialStep);
   const [message, setMessage] = useState('');
   const [error, setErrorMessage] = useState('');
@@ -105,7 +106,7 @@ export function PasswordRecovery({
         return;
       }
       try {
-        await authApi.forgotPassword(parsed.data);
+        await forgotPassword.mutateAsync(parsed.data);
         setValue('email', parsed.data.email);
         setValue('code', '');
         setMessage(t('requested'));
@@ -119,7 +120,7 @@ export function PasswordRecovery({
     const parsed = validationErrors(values);
     if (!parsed) return;
     try {
-      await authApi.resetPassword(parsed);
+      await resetPassword.mutateAsync(parsed);
       await clearSession();
       reset();
       setStep('done');
@@ -129,10 +130,7 @@ export function PasswordRecovery({
           ? t('uncertain')
           : errorMessage(cause, locale),
       );
-      if (
-        cause instanceof ApiError &&
-        cause.code === 'INVALID_RESET_CODE'
-      )
+      if (cause instanceof ApiError && cause.code === 'INVALID_RESET_CODE')
         setFocus('code');
     }
   }
@@ -148,7 +146,7 @@ export function PasswordRecovery({
     setErrorMessage('');
     setMessage('');
     try {
-      await authApi.forgotPassword(parsed.data);
+      await forgotPassword.mutateAsync(parsed.data);
       setValue('email', parsed.data.email);
       setValue('code', '');
       startCooldown();

@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { apiFetch } from '@/shared/lib/apiFetch';
+import { apiFetch } from '@/shared/lib/api';
 import {
   readAuthCookies,
   saveAuthCookies,
   clearAuthCookies,
   type AuthTokens,
-} from '@/shared/lib/authCookies';
+} from '@/shared/lib/session';
 import type { BookingPayment } from '@/features/bookings/types/booking';
 
 export const runtime = 'nodejs';
@@ -69,7 +69,7 @@ export async function GET(
   if (result.success && result.data) {
     const availability = await apiFetch<{ checkoutEnabled: boolean }>(
       'payments/availability',
-      { auth: false, locale, signal: request.signal },
+      { locale, signal: request.signal },
     );
     data = {
       payment: { ...result.data, checkoutUrl: undefined },

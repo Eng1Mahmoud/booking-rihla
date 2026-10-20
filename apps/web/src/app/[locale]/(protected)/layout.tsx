@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { getCurrentUser } from '@/features/auth/api/auth.queries';
+import { getCurrentUser } from '@/features/auth/lib/auth.server';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { ReadError } from '@/shared/components/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';

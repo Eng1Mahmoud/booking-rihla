@@ -2,6 +2,8 @@
 import 'server-only';
 import type { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
+import type { ApiResult } from './apiResult';
 
 type CookieTarget = { cookies: Pick<NextResponse['cookies'], 'set'> };
 
@@ -58,4 +60,45 @@ export async function updateAuthCookies(tokens: AuthTokens | null) {
   const target = { cookies: await cookies() };
   if (tokens) saveAuthCookies(target, tokens);
   else clearAuthCookies(target);
+}
+
+const tokensSchema = z.object({
+  user: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    phone: z.string(),
+    role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
+  }),
+  accessToken: z.string().min(1),
+  expiresIn: z.number().int().positive().max(3600),
+});
+
+export type SessionUser = z.infer<typeof tokensSchema>['user'];
+
+// Extract backend tokens here only. ApiResult never contains access or refresh credentials.
+export function sessionTokens(response: Response, result: ApiResult<unknown>) {
+  const parsed = tokensSchema.safeParse(result.data);
+  const cookie = response.headers
+    .getSetCookie()
+    .find((value) => /^(bus_refresh|__Secure-bus_refresh)=/.test(value));
+  const refreshToken = cookie?.split(';')[0].split('=')[1];
+  const expires = cookie?.match(/;\s*Expires=([^;]+)/i)?.[1];
+  if (
+    !parsed.success ||
+    !refreshToken ||
+    !/^[a-f0-9]{64}$/.test(refreshToken) ||
+    !expires ||
+    Number.isNaN(Date.parse(expires))
+  )
+    return null;
+  return {
+    user: parsed.data.user,
+    tokens: {
+      accessToken: parsed.data.accessToken,
+      expiresIn: parsed.data.expiresIn,
+      refreshToken,
+      refreshExpiresAt: new Date(expires),
+    },
+  };
 }

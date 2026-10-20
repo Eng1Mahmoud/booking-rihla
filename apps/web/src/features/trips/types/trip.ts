@@ -1,3 +1,6 @@
+export type City = { id: string; nameAr: string; nameEn: string };
+export type Station = City & { cityId: string };
+export type TripCatalog = { cities: City[]; stations: Station[] };
 export type LocalName = { nameAr: string; nameEn: string };
 export type Trip = {
   id: string;
