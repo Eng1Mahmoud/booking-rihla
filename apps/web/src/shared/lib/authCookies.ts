@@ -11,7 +11,7 @@ export type AuthTokens = {
 
 const production = process.env.NODE_ENV === 'production';
 // Production names use __Host- with Secure cookies and no Domain.
-const authCookies = {
+export const authCookies = {
   access: production ? '__Host-bus_access' : 'bus_web_access',
   refresh: production ? '__Host-bus_refresh' : 'bus_web_refresh',
 };
