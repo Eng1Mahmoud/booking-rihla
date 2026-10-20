@@ -9,7 +9,8 @@ import {
   type AuthTokens,
   type SessionUser,
 } from './session';
-import type { ApiResult } from './apiResult';
+import { apiFailure, type ApiResult } from './apiResult';
+import { refreshSession } from './refreshSession';
 
 type Session = { access?: string; refresh?: string };
 type ApiOptions = {
@@ -32,20 +33,8 @@ const envelopeSchema = z.object({
   requestId: z.uuid().optional(),
 });
 
-function failed<T>(status: number, code: string, locale: string): ApiResult<T> {
-  const message =
-    status === 401
-      ? locale.startsWith('ar')
-        ? 'سجّل الدخول للمتابعة.'
-        : 'Sign in to continue.'
-      : locale.startsWith('ar')
-        ? 'تعذر إكمال الطلب. حاول مجددًا.'
-        : 'Could not complete the request. Please try again.';
-  return { success: false, status, code, message };
-}
-
 // This is the only Next-to-Express HTTP transport. Browser headers are never forwarded wholesale.
-function send(
+async function requestBackend<T>(
   path: string,
   options: ApiOptions,
   locale: string,
@@ -74,7 +63,7 @@ function send(
         session.refresh,
     );
   }
-  return fetch(base.replace(/\/$/, '') + '/' + path, {
+  const response = await fetch(base.replace(/\/$/, '') + '/' + path, {
     method: options.method ?? 'GET',
     headers,
     body:
@@ -87,6 +76,7 @@ function send(
     redirect: 'error',
     signal: options.signal ?? AbortSignal.timeout(20000),
   });
+  return { response, result: await readResult<T>(response, locale) };
 }
 
 async function readResult<T>(
@@ -97,7 +87,7 @@ async function readResult<T>(
     await response.json().catch(() => null),
   );
   if (!parsed.success || parsed.data.success !== response.ok)
-    return failed(502, 'UPSTREAM_ERROR', locale);
+    return apiFailure(502, 'UPSTREAM_ERROR', locale);
   const { requestId, ...body } = parsed.data;
   return {
     ...body,
@@ -110,42 +100,6 @@ async function readResult<T>(
   };
 }
 
-type RefreshResult = {
-  result: ApiResult<{ user: SessionUser }>;
-  tokens?: AuthTokens;
-};
-// Single-flight per old token, in this server runtime only. No grace window or replay cache.
-const refreshes = new Map<string, Promise<RefreshResult>>();
-function refreshSession(token: string, locale: string): Promise<RefreshResult> {
-  if (!/^[a-f0-9]{64}$/.test(token))
-    return Promise.resolve({ result: failed(401, 'UNAUTHENTICATED', locale) });
-  const running = refreshes.get(token);
-  if (running) return running;
-  const pending = (async (): Promise<RefreshResult> => {
-    try {
-      // Independent timeout: one caller cancelling must not cancel another caller's refresh.
-      const response = await send(
-        'auth/refresh',
-        { method: 'POST', body: {} },
-        locale,
-        { refresh: token },
-      );
-      const result = await readResult<unknown>(response, locale);
-      if (!result.success) return { result: { ...result, data: undefined } };
-      const session = sessionTokens(response, result);
-      if (!session) return { result: failed(502, 'UPSTREAM_ERROR', locale) };
-      return {
-        result: { ...result, data: { user: session.user } },
-        tokens: session.tokens,
-      };
-    } catch {
-      return { result: failed(502, 'UPSTREAM_UNAVAILABLE', locale) };
-    }
-  })().finally(() => refreshes.delete(token));
-  refreshes.set(token, pending);
-  return pending;
-}
-
 // Reads return ApiResult. Authenticated mutations verify/renew first and are sent once.
 export async function apiFetch<T = unknown>(
   path: string,
@@ -153,7 +107,7 @@ export async function apiFetch<T = unknown>(
 ): Promise<ApiResult<T>> {
   const locale = options.locale ?? (await getLocale());
   if (!/^[a-zA-Z0-9-]+(?:\/[a-zA-Z0-9-]+)*$/.test(path.split('?')[0]))
-    return failed(404, 'NOT_FOUND', locale);
+    return apiFailure(404, 'NOT_FOUND', locale);
   const endpoint = path.split('?')[0].toLowerCase();
   const method = options.method ?? 'GET';
   const login = method === 'POST' && endpoint === 'auth/login';
@@ -180,24 +134,16 @@ export async function apiFetch<T = unknown>(
         : {};
       await onSession?.(tokens);
     };
-    if (
-      (refreshing || logout) &&
-      session.refresh &&
-      !/^[a-f0-9]{64}$/.test(session.refresh)
-    ) {
+    if (logout && session.refresh && !/^[a-f0-9]{64}$/.test(session.refresh)) {
       await updateSession(null);
-      return failed(401, 'UNAUTHENTICATED', locale);
+      return apiFailure(401, 'UNAUTHENTICATED', locale);
     }
     if (refreshing) {
-      const refreshed = session.refresh
-        ? await refreshSession(session.refresh, locale)
-        : {
-            result: failed<{ user: SessionUser }>(
-              401,
-              'UNAUTHENTICATED',
-              locale,
-            ),
-          };
+      const refreshed = await refreshSession(
+        session.refresh,
+        locale,
+        requestBackend,
+      );
       if (refreshed.tokens) await updateSession(refreshed.tokens);
       else if (refreshed.result.status === 401) await updateSession(null);
       return refreshed.result as ApiResult<T>;
@@ -213,8 +159,12 @@ export async function apiFetch<T = unknown>(
       });
       if (!checked.success) return { ...checked, data: undefined };
     }
-    let response = await send(path, { ...options, method }, locale, session);
-    let result = await readResult<T>(response, locale);
+    let { response, result } = await requestBackend<T>(
+      path,
+      { ...options, method },
+      locale,
+      session,
+    );
     if (
       result.status === 401 &&
       result.code === 'UNAUTHENTICATED' &&
@@ -222,18 +172,26 @@ export async function apiFetch<T = unknown>(
       onSession &&
       session.refresh
     ) {
-      const refreshed = await refreshSession(session.refresh, locale);
+      const refreshed = await refreshSession(
+        session.refresh,
+        locale,
+        requestBackend,
+      );
       if (!refreshed.tokens) {
         if (refreshed.result.status === 401) await updateSession(null);
         return { ...refreshed.result, data: undefined };
       }
       await updateSession(refreshed.tokens);
-      response = await send(path, { ...options, method }, locale, session);
-      result = await readResult<T>(response, locale);
+      ({ response, result } = await requestBackend<T>(
+        path,
+        { ...options, method },
+        locale,
+        session,
+      ));
     }
     if (login && result.success) {
       const loggedIn = sessionTokens(response, result);
-      if (!loggedIn) return failed(502, 'UPSTREAM_ERROR', locale);
+      if (!loggedIn) return apiFailure(502, 'UPSTREAM_ERROR', locale);
       await updateSession(loggedIn.tokens);
       return { ...result, data: { user: loggedIn.user } as T };
     }
@@ -248,6 +206,6 @@ export async function apiFetch<T = unknown>(
     return result;
   } catch {
     // Do not retry uncertain network/payment outcomes or clear a session on a transient failure.
-    return failed(502, 'UPSTREAM_UNAVAILABLE', locale);
+    return apiFailure(502, 'UPSTREAM_UNAVAILABLE', locale);
   }
 }

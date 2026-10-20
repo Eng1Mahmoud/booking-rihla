@@ -779,6 +779,7 @@ apps/web/
         feedback/
       lib/
         api.ts
+        refreshSession.ts
         session.ts
         apiResult.ts
         queryClient.ts
@@ -826,7 +827,7 @@ apps/web/
 
 `shared` لا يستورد تفاصيل Feature. التكامل بين الميزات يستخدم عقدًا صغيرًا واضحًا أو props من المكوّن الجامع، وليس الوصول العشوائي إلى ملفاتها الداخلية. لا repositories أو factories عامة أو barrel files تجمع شجرة المشروع.
 
-## 5. مسؤوليات ملفات الاتصال الثلاثة
+## 5. مسؤوليات ملفات الاتصال والجلسة
 
 ### api.ts — server-only
 
@@ -849,6 +850,15 @@ apiFetch('bookings', { method: 'POST', body: data });
 
 لا واجهة `apiMutation` إلزامية إضافية للميزات. المساعدات الداخلية الصغيرة مسموحة لتوضيح النقل والجلسة، وليست عملاء HTTP مستقلين.
 
+### refreshSession.ts — server-only
+
+- مسؤولية تجديد الجلسة مستقلة عن إعدادات الطلبات العامة.
+- التحقق من Refresh Token، وتنفيذ عملية auth/refresh، واستخراج التوكنات الجديدة والتحقق منها.
+- Map لدمج الطلبات المتزامنة للتوكن نفسه داخل runtime واحد، وحذف المدخل في finally.
+- إعادة نتيجة آمنة للمستخدم مع التوكنات كقيمة داخلية للسيرفر فقط؛ apiFetch يحفظها قبل إرجاع ApiResult للعميل.
+- يستخدم نقل HTTP الممرر من api.ts للحفاظ على إعدادات العنوان والـHeaders والمهلة وno-store في مكان واحد. لا fetch ثانٍ أو import دائري أو Cookie writes داخل هذا المساعد.
+- فشل عابر لا ينهي الجلسة؛ 401 المؤكد يؤدي إلى حذف Cookies لدى المستدعي. تنسيق عدة runtimes والطلبات المتأخرة ما زال غير محلول.
+
 ### session.ts — server-only
 
 - أنواع بيانات الجلسة والتوكنات، وأسماء Cookies وخياراتها.
@@ -858,7 +868,7 @@ apiFetch('bookings', { method: 'POST', body: data });
 - HttpOnly، وSecure في الإنتاج، وSameSite=Lax، وPath=/، مع أسماء الإنتاج المناسبة.
 - لا fetch ولا استيراد api.ts ولا كاش مستخدم مشترك.
 
-الاتجاه `api.ts → session.ts` فقط. طلب refresh عبر HTTP وتنسيق single-flight داخل api.ts؛ الحفظ عبر session.ts.
+الاتجاه دون اعتماد دائري: api.ts يستدعي refreshSession.ts وsession.ts؛ وrefreshSession.ts يستخدم session.ts وapiResult.ts، ولا يستورد api.ts. يحفظ session.ts الـCookies فقط؛ تنسيق التجديد في refreshSession.ts عبر النقل المركزي الممرر من api.ts.
 
 ### apiResult.ts — مشترك للسيرفر والمتصفح
 
@@ -1132,3 +1142,13 @@ Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خ�
 **المفتوح قبل تشغيل عدة نسخ من السيرفر:** تنسيق تجديد الجلسة بين runtimes/replicas والطلبات المتأخرة التي تحمل Refresh قديمًا. Map الذاكرة الحالية لا تحل هذا السيناريو؛ نموذج التدوير الصارم وفشل إعادة استخدام التوكن محفوظان. لا grace window أو تخزين/تنسيق مشترك مضاف دون قرار مستقل. اختيارات JSON refresh opt-in أو تغيير خوارزمية JWT في الملف القديم اختيارية وليست تعديلات لازمة لهذه الدفعة.
 
 **التالي:** قرار تنسيق Refresh إذا بدأ تجهيز نشر متعدد النسخ؛ وإلا متابعة الميزات/مراجعة UX وفق خطة الموقع. لا نعيد بناء الأجزاء المنفذة أو نستبدل قرارات المستخدم الأحدث. لا push دون موافقة.
+
+### تصحيح فصل مسؤولية Refresh — 2026-10-21
+
+- المراجعات السابقة تحققت من سلوك مساعد التجديد المشترك، لكنها أبقته داخل api.ts. لم يكن الفصل الذي طلبه المستخدم الآن منفذًا، ولا يُعد تدقيق سلوك الجلسة دليلًا على فصل الملفات.
+- أضيف refreshSession.ts ونُقلت إليه عملية auth/refresh والتحقق من التوكن واستخراج الزوج الجديد وMap الطلبات المتزامنة. تبقى شروط استدعائه وحفظ Cookies وإعادة قراءة GET واحدة عند 401 داخل apiFetch؛ هذه إدارة الطلب الأصلي.
+- دالة requestBackend الداخلية في api.ts هي موقع fetch الوحيد نحو Express، مع نفس headers/timeout/no-store وقراءة الرد. تُمرر للمساعد دون تصدير عميل HTTP جديد للميزات أو اعتماد دائري. نُقل fallback النتيجة المحلي إلى apiResult.apiFailure حتى لا يتكرر بين الملفين.
+- لم يتغير نموذج التوكنات أو Cookie policy أو Backend أو retry للكتابات. TanStack + Server Actions والدور من Backend هما القراران الأحدث بدل بندَي Server-Component-only reads وJWT role verification المحليين في الملف المرفق.
+- التحقق لهذه الدفعة: TypeScript وESLint وبناء الإنتاج، و17 حالة API/Actions و17 حالة Middleware معزولة بعد الفصل، بما فيها six-way single-flight وHttpOnly/redaction والتجديد لنفس render و503 بعد تدوير ناجح وعدم إعادة الكتابة مجهولة النتيجة. لا اختبارات محفوظة بالمشروع أو DB/Paymob.
+
+**حد الاكتمال:** فصل Refresh ومهام التطوير الحالية مطبق. التنفيذ ليس مطابقًا حرفيًا لكل سطر في الملف القديم: بندا القراءة والدور مستبدلان باختيارات المستخدم، وتنسيق refresh بين عدة runtimes/replicas والطلبات المتأخرة ما زال قرار نشر مفتوحًا. لا grace window أو تغيير JWT algorithm أو JSON-token opt-in أضيف ضمنيًا.

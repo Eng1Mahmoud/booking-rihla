@@ -87,3 +87,20 @@ export function validationError(locale: string): ApiResult<never> {
         : 'Check your details and try again.',
   };
 }
+
+// Local failures have no backend message (network/configuration/invalid response).
+export function apiFailure<T>(
+  status: number,
+  code: string,
+  locale: string,
+): ApiResult<T> {
+  const message =
+    status === 401
+      ? locale.startsWith('ar')
+        ? 'سجّل الدخول للمتابعة.'
+        : 'Sign in to continue.'
+      : locale.startsWith('ar')
+        ? 'تعذر إكمال الطلب. حاول مجددًا.'
+        : 'Could not complete the request. Please try again.';
+  return { success: false, status, code, message };
+}
