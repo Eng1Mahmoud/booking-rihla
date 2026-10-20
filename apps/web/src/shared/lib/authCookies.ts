@@ -1,6 +1,9 @@
 // Keep this file on the Next.js server.
 import 'server-only';
 import type { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+type CookieTarget = { cookies: Pick<NextResponse['cookies'], 'set'> };
 
 export type AuthTokens = {
   accessToken: string;
@@ -31,7 +34,7 @@ const cookieOptions = {
   path: '/',
 };
 // Save login/refresh tokens through the outgoing Set-Cookie headers.
-export function saveAuthCookies(response: NextResponse, tokens: AuthTokens) {
+export function saveAuthCookies(response: CookieTarget, tokens: AuthTokens) {
   response.cookies.set(authCookies.access, tokens.accessToken, {
     ...cookieOptions,
     maxAge: tokens.expiresIn, // Duration in seconds.
@@ -42,10 +45,17 @@ export function saveAuthCookies(response: NextResponse, tokens: AuthTokens) {
   });
 }
 // Expire both website cookies immediately.
-export function clearAuthCookies(response: NextResponse) {
+export function clearAuthCookies(response: CookieTarget) {
   response.cookies.set(authCookies.access, '', { ...cookieOptions, maxAge: 0 });
   response.cookies.set(authCookies.refresh, '', {
     ...cookieOptions,
     maxAge: 0,
   });
+}
+
+// Server Actions can write directly; proxy/Route Handlers use their response instead.
+export async function updateAuthCookies(tokens: AuthTokens | null) {
+  const target = { cookies: await cookies() };
+  if (tokens) saveAuthCookies(target, tokens);
+  else clearAuthCookies(target);
 }

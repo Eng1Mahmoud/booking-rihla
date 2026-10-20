@@ -1,4 +1,4 @@
-// HTTP metadata stays on the server; Route Handlers omit status/retryAfter from JSON.
+// HTTP status supports action error handling; Route Handlers omit status/retryAfter from JSON.
 export type ApiResult<T = unknown> = {
   success: boolean;
   code: string;
@@ -39,7 +39,7 @@ export function errorMessage(error: unknown, locale: string) {
     : error.message;
 }
 
-// Server reads may throw for their existing page-level error/notFound handling.
+// Server reads and client action adapters use the same error shape.
 export function unwrapApiResult<T>(result: ApiResult<T>): T {
   if (!result.success) {
     throw new ApiError(
