@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { readAuthCookies } from '@/shared/lib/authCookies';
-import { fetchBackend } from '@/shared/lib/apiClient';
+import { apiFetch } from '@/shared/lib/apiFetch';
+import type { UserRole } from '@/features/auth/types/auth';
 import { protectedRoute, routeInfo } from './roleRoutes';
 
 export async function authMiddleware(
@@ -22,16 +23,15 @@ export async function authMiddleware(
   // Missing/expired access with a refresh cookie is resolved by the shared session flow.
   if (!access) return response;
   try {
-    // Express verifies the JWT signature, session revocation and CURRENT database role.
-    // No signing secret or unverified JWT role is trusted by the website.
-    const backendResponse = await fetchBackend('auth/me', {
-      headers: { Authorization: 'Bearer ' + access },
+    // Transitional live-role check. Local JWT verification is the next migration phase.
+    const result = await apiFetch<{ role: UserRole }>('auth/me', {
+      session: { access, refresh },
+      locale,
       signal: AbortSignal.timeout(5000),
     });
-    if (backendResponse.status === 401) return refresh ? response : toLogin();
-    if (!backendResponse.ok) return response; // The shared guard displays a recoverable server error.
-    const result = await backendResponse.json();
-    if (!rule.roles.includes(result.data?.role)) {
+    if (result.status === 401) return refresh ? response : toLogin();
+    if (!result.success) return response; // The shared guard displays a recoverable server error.
+    if (!result.data || !rule.roles.includes(result.data.role)) {
       const forbidden = NextResponse.redirect(
         new URL('/' + locale + '/forbidden', request.url),
       );

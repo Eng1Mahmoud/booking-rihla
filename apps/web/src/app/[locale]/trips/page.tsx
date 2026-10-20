@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { tripsApi } from '@/features/trips/api/trips.api';
+import { tripsApi } from '@/features/trips/api/trips.queries';
 import { TripSearchForm } from '@/features/trips/components/TripSearchForm';
 import { TripCard } from '@/features/trips/components/TripCard';
 import {

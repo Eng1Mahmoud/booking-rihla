@@ -1,6 +1,13 @@
 // Keep this file on the Next.js server.
 import 'server-only';
-import type { NextRequest, NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
+
+export type AuthTokens = {
+  accessToken: string;
+  expiresIn: number;
+  refreshToken: string;
+  refreshExpiresAt: Date;
+};
 
 const production = process.env.NODE_ENV === 'production';
 // Production names use __Host- with Secure cookies and no Domain.
@@ -9,7 +16,9 @@ const authCookies = {
   refresh: production ? '__Host-bus_refresh' : 'bus_web_refresh',
 };
 // Read the token cookies sent with the incoming request.
-export function readAuthCookies(request: NextRequest) {
+export function readAuthCookies(request: {
+  cookies: { get(name: string): { value: string } | undefined };
+}) {
   return {
     access: request.cookies.get(authCookies.access)?.value,
     refresh: request.cookies.get(authCookies.refresh)?.value,
@@ -22,15 +31,7 @@ const cookieOptions = {
   path: '/',
 };
 // Save login/refresh tokens through the outgoing Set-Cookie headers.
-export function saveAuthCookies(
-  response: NextResponse,
-  tokens: {
-    accessToken: string;
-    expiresIn: number;
-    refreshToken: string;
-    refreshExpiresAt: Date;
-  },
-) {
+export function saveAuthCookies(response: NextResponse, tokens: AuthTokens) {
   response.cookies.set(authCookies.access, tokens.accessToken, {
     ...cookieOptions,
     maxAge: tokens.expiresIn, // Duration in seconds.

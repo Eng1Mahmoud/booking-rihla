@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { fetchBackend } from '@/shared/lib/apiClient';
+import { apiFetch } from '@/shared/lib/apiFetch';
 import {
   readAuthCookies,
   saveAuthCookies,
   clearAuthCookies,
+  type AuthTokens,
 } from '@/shared/lib/authCookies';
 
 export const runtime = 'nodejs';
 const MAX_BODY_BYTES = 100 * 1024;
 
-// Validate token responses before writing website cookies.
-const tokensSchema = z.object({
-  data: z.object({
-    user: z.object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-      phone: z.string(),
-      role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
-    }),
-    accessToken: z.string().min(1),
-    expiresIn: z.number().int().positive().max(3600),
-  }),
-});
-
-function errorResponse(status: number, code: string, clearSession = false) {
+function errorResponse(status: number, code: string) {
   const response = NextResponse.json(
     {
       success: false,
@@ -34,7 +19,6 @@ function errorResponse(status: number, code: string, clearSession = false) {
     },
     { status, headers: { 'Cache-Control': 'private, no-store' } },
   );
-  if (clearSession) clearAuthCookies(response);
   return response;
 }
 
@@ -86,98 +70,37 @@ async function forwardRequest(
     return errorResponse(403, 'CSRF_REJECTED');
   }
 
-  // Read cookies; auth path checks match Express case-insensitive routing.
-  const authPath = path.toLowerCase();
-  const refreshing = authPath === 'auth/refresh';
-  const loggingOut =
-    authPath === 'auth/logout' || authPath === 'auth/logout-all';
-  const { access, refresh } = readAuthCookies(request);
-  const invalidRefresh = refresh && !/^[a-f0-9]{64}$/.test(refresh);
-  if (
-    ((refreshing || loggingOut) && invalidRefresh) ||
-    (refreshing && !refresh)
-  ) {
-    return errorResponse(401, 'UNAUTHENTICATED', true);
-  }
-
   try {
-    // Forward the request with our own credentials and headers.
     const body = await readBody(request);
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-CSRF-Protection': '1',
-      Origin: websiteOrigin,
-      'Accept-Language': request.headers.get('accept-language') ?? 'en',
-    };
+    let updatedTokens: AuthTokens | null | undefined;
     const idempotencyKey = request.headers.get('Idempotency-Key');
-    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    if (access && !refreshing) headers.Authorization = 'Bearer ' + access;
-    if (refresh && (refreshing || loggingOut)) {
-      headers.Cookie =
-        'bus_refresh=' + refresh + '; __Secure-bus_refresh=' + refresh;
-    }
-    const upstream = await fetchBackend(path + request.nextUrl.search, {
-      method: request.method,
-      headers,
-      body,
-    });
-
-    // Login/refresh returns user JSON and stores tokens only in HttpOnly cookies.
-    if ((authPath === 'auth/login' || refreshing) && upstream.ok) {
-      const payload = await upstream.json();
-      const parsed = tokensSchema.safeParse(payload);
-      const cookie = upstream.headers
-        .getSetCookie()
-        .find((value) => /^(bus_refresh|__Secure-bus_refresh)=/.test(value));
-      const refreshToken = cookie?.split(';')[0].split('=')[1];
-      const expires = cookie?.match(/;\s*Expires=([^;]+)/i)?.[1];
-      if (
-        !parsed.success ||
-        !refreshToken ||
-        !/^[a-f0-9]{64}$/.test(refreshToken) ||
-        !expires ||
-        Number.isNaN(Date.parse(expires))
-      ) {
-        return errorResponse(502, 'UPSTREAM_ERROR');
-      }
-
-      const response = NextResponse.json(
-        {
-          success: true,
-          code: payload.code,
-          message: payload.message,
-          data: { user: parsed.data.data.user },
-        },
-        { headers: { 'Cache-Control': 'private, no-store' } },
-      );
-      saveAuthCookies(response, {
-        ...parsed.data.data,
-        refreshToken,
-        refreshExpiresAt: new Date(expires),
-      });
-      return response;
-    }
-    const response = new NextResponse(
-      upstream.status === 204 ? null : await upstream.arrayBuffer(),
+    // apiFetch owns authentication, refresh and token parsing; this handler writes its cookies.
+    const { status, retryAfter, ...result } = await apiFetch(
+      path + request.nextUrl.search,
       {
-        status: upstream.status,
-        headers: {
-          'Content-Type':
-            upstream.headers.get('content-type') ?? 'application/json',
-          'Cache-Control': 'private, no-store',
-          'X-Content-Type-Options': 'nosniff',
+        method: request.method,
+        body,
+        signal: request.signal,
+        headers: idempotencyKey
+          ? { 'Idempotency-Key': idempotencyKey }
+          : undefined,
+        locale: request.headers.get('accept-language') ?? 'en',
+        session: readAuthCookies(request),
+        onSession: (tokens) => {
+          updatedTokens = tokens;
         },
       },
     );
-    const retryAfter = upstream.headers.get('retry-after');
+    const response = NextResponse.json(result, {
+      status,
+      headers: {
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
     if (retryAfter) response.headers.set('Retry-After', retryAfter);
-    if (
-      (refreshing && upstream.status === 401) ||
-      (loggingOut && upstream.ok) ||
-      (authPath === 'auth/reset-password' && upstream.ok)
-    ) {
-      clearAuthCookies(response);
-    }
+    if (updatedTokens === null) clearAuthCookies(response);
+    else if (updatedTokens) saveAuthCookies(response, updatedTokens);
     return response;
   } catch (error) {
     if (error instanceof RangeError && error.message === 'PAYLOAD_TOO_LARGE') {

@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { BusFront, Armchair, Ticket, ArrowUpLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { tripsApi } from '@/features/trips/api/trips.api';
+import { tripsApi } from '@/features/trips/api/trips.queries';
 import { TripSearchForm } from '@/features/trips/components/TripSearchForm';
 import { cairoDate } from '@/features/trips/schemas/searchSchema';
 export default async function HomePage() {

@@ -8,7 +8,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import type { City, Station } from '@/features/trips/api/trips.api';
+import type { City, Station } from '@/features/trips/api/trips.queries';
 import type { Search } from '@/features/trips/schemas/searchSchema';
 import { isCalendarDate } from '@/features/trips/schemas/searchSchema';
 type Props = {
