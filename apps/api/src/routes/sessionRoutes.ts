@@ -1,3 +1,4 @@
+import { clientRateLimitKey } from '../utils/clientIdentity.ts';
 import { Router } from 'express';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
@@ -16,6 +17,7 @@ export function createSessionRouter(
     rateLimit({
       limit: count,
       windowMs: 900000,
+      keyGenerator: clientRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>

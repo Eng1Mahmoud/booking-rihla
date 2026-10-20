@@ -1,3 +1,4 @@
+import { userRateLimitKey } from '../utils/clientIdentity.ts';
 import { createTicketController } from '../controllers/ticketController.ts';
 import {
   ticketService,
@@ -19,10 +20,7 @@ import { requireAuth } from '../middlewares/requireAuth.ts';
 import { AppError } from '../errors/AppError.ts';
 import { createBookingController } from '../controllers/bookingController.ts';
 import type { BookingService } from '../services/bookingService.ts';
-import type {
-  SessionService,
-  AuthContext,
-} from '../services/sessionService.ts';
+import type { SessionService } from '../services/sessionService.ts';
 export function createBookingRouter(
   service: BookingService,
   sessions: SessionService,
@@ -38,6 +36,7 @@ export function createBookingRouter(
     rateLimit({
       limit: 20,
       windowMs: 60000,
+      keyGenerator: userRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>
@@ -60,8 +59,7 @@ export function createBookingRouter(
     rateLimit({
       limit: 6,
       windowMs: 60000,
-      keyGenerator: (_request, response) =>
-        (response.locals['auth'] as AuthContext).user.id,
+      keyGenerator: userRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_request, _response, next) =>
@@ -80,6 +78,7 @@ export function createBookingRouter(
     rateLimit({
       limit: 20,
       windowMs: 60000,
+      keyGenerator: userRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>
@@ -98,6 +97,7 @@ export function createBookingRouter(
     rateLimit({
       limit: 120,
       windowMs: 60000,
+      keyGenerator: userRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>
@@ -116,6 +116,7 @@ export function createBookingRouter(
     rateLimit({
       limit: 60,
       windowMs: 60000,
+      keyGenerator: userRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>

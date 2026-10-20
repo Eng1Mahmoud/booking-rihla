@@ -1,3 +1,4 @@
+import { clientRateLimitKey } from '../utils/clientIdentity.ts';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { AppError } from '../errors/AppError.ts';
@@ -10,6 +11,7 @@ export function createPasswordResetRouter(service: PasswordResetService) {
     rateLimit({
       limit: count,
       windowMs: 900000,
+      keyGenerator: clientRateLimitKey,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       handler: (_req, _res, next) =>

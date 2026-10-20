@@ -58,6 +58,7 @@ export async function GET(
     {
       locale,
       session: readAuthCookies(request),
+      requestHeaders: request.headers,
       signal: request.signal,
       onSession: (tokens) => {
         renewed = tokens;
@@ -69,7 +70,7 @@ export async function GET(
   if (result.success && result.data) {
     const availability = await apiFetch<{ checkoutEnabled: boolean }>(
       'payments/availability',
-      { locale, signal: request.signal },
+      { locale, signal: request.signal, requestHeaders: request.headers },
     );
     data = {
       payment: { ...result.data, checkoutUrl: undefined },

@@ -1,3 +1,4 @@
+import { clientRateLimitKey } from '../utils/clientIdentity.ts';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { AppError } from '../errors/AppError.ts';
@@ -7,6 +8,7 @@ function authLimit(limit: number, windowMs: number) {
   return rateLimit({
     limit,
     windowMs,
+    keyGenerator: clientRateLimitKey,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     handler: (_request, _response, next) =>

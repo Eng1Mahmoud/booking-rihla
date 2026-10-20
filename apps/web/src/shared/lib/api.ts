@@ -11,6 +11,7 @@ import {
 } from './session';
 import { apiFailure, type ApiResult } from './apiResult';
 import { refreshSession } from './refreshSession';
+import { backendClientContext } from './clientIdentity';
 
 type Session = { access?: string; refresh?: string };
 type ApiOptions = {
@@ -22,6 +23,8 @@ type ApiOptions = {
   context?: 'action';
   locale?: string;
   session?: Session;
+  // Proxy/handlers provide headers without depending on request-scoped APIs.
+  requestHeaders?: Headers;
   // Handler/proxy supply their response writer; actions use the central cookie writer.
   onSession?: (tokens: AuthTokens | null) => void | Promise<void>;
 };
@@ -43,8 +46,17 @@ async function requestBackend<T>(
   const base = process.env.API_BASE_URL;
   if (!base) throw new Error('API_BASE_URL is required');
   const endpoint = path.split('?')[0].toLowerCase();
+  const url = new URL(base.replace(/\/$/, '') + '/' + path);
   const headers = new Headers(options.headers);
-  for (const name of ['Authorization', 'Cookie', 'Host', 'Origin'])
+  for (const name of [
+    'Authorization',
+    'Cookie',
+    'Host',
+    'Origin',
+    'X-Web-Client-IP',
+    'X-Web-Client-Time',
+    'X-Web-Client-Signature',
+  ])
     headers.delete(name);
   headers.set('Content-Type', 'application/json');
   headers.set('X-CSRF-Protection', '1');
@@ -63,7 +75,15 @@ async function requestBackend<T>(
         session.refresh,
     );
   }
-  const response = await fetch(base.replace(/\/$/, '') + '/' + path, {
+  const clientContext = await backendClientContext(
+    options.method ?? 'GET',
+    url,
+    options.requestHeaders,
+  );
+  for (const [name, value] of Object.entries(clientContext))
+    headers.set(name, value);
+  const deadline = AbortSignal.timeout(20000);
+  const response = await fetch(url, {
     method: options.method ?? 'GET',
     headers,
     body:
@@ -74,7 +94,9 @@ async function requestBackend<T>(
           : JSON.stringify(options.body),
     cache: 'no-store',
     redirect: 'error',
-    signal: options.signal ?? AbortSignal.timeout(20000),
+    signal: options.signal
+      ? AbortSignal.any([options.signal, deadline])
+      : deadline,
   });
   return { response, result: await readResult<T>(response, locale) };
 }
@@ -143,6 +165,7 @@ export async function apiFetch<T = unknown>(
         session.refresh,
         locale,
         requestBackend,
+        options.requestHeaders,
       );
       if (refreshed.tokens) await updateSession(refreshed.tokens);
       else if (refreshed.result.status === 401) await updateSession(null);
@@ -155,6 +178,7 @@ export async function apiFetch<T = unknown>(
         locale,
         session,
         signal: options.signal,
+        requestHeaders: options.requestHeaders,
         onSession: updateSession,
       });
       if (!checked.success) return { ...checked, data: undefined };
@@ -176,6 +200,7 @@ export async function apiFetch<T = unknown>(
         session.refresh,
         locale,
         requestBackend,
+        options.requestHeaders,
       );
       if (!refreshed.tokens) {
         if (refreshed.result.status === 401) await updateSession(null);

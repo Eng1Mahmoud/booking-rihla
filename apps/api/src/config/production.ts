@@ -20,6 +20,14 @@ export function validateProductionEnv(environment: NodeJS.ProcessEnv) {
     session.AUTH_ACCESS_SECRET.toLowerCase()
   )
     throw new Error('Authentication secrets must be independent');
+  if (
+    env.API_CLIENT_CONTEXT_SECRET &&
+    [mail.AUTH_CODE_SECRET, session.AUTH_ACCESS_SECRET].some(
+      (secret) =>
+        secret.toLowerCase() === env.API_CLIENT_CONTEXT_SECRET?.toLowerCase(),
+    )
+  )
+    throw new Error('Client context secret must be independent');
   const provider = parsePaymobEnv(environment);
   const checkout = parsePaymobCheckoutEnv(environment);
   parsePaymobWebhookEnv(environment);

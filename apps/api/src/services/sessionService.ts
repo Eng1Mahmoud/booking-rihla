@@ -4,6 +4,8 @@ import type { UserRole, LoginInput } from '../schemas/authSchema.ts';
 import { parseSessionEnv } from '../config/env.ts';
 import {
   newRefreshToken,
+  nextRefreshToken,
+  refreshReuseWindowMs,
   hashRefreshToken,
   signAccessToken,
   readAccessToken,
@@ -48,13 +50,20 @@ async function issueTokens(
   tx: Transaction,
   user: Parameters<typeof publicUser>[0],
   session: { id: string; expiresAt: string },
+  refreshToken = newRefreshToken(),
 ) {
-  const refreshToken = newRefreshToken();
   await tx.orm.public.RefreshToken.create({
     sessionId: session.id,
     tokenHash: hashRefreshToken(refreshToken),
     expiresAt: session.expiresAt,
   });
+  return tokenResponse(user, session, refreshToken);
+}
+async function tokenResponse(
+  user: Parameters<typeof publicUser>[0],
+  session: { id: string; expiresAt: string },
+  refreshToken: string,
+) {
   return {
     user: publicUser(user),
     accessToken: await signAccessToken(user.id, session.id, user.role),
@@ -139,12 +148,6 @@ export const sessionService = {
         Date.parse(current.expiresAt) <= Date.now()
       )
         return null;
-      if (current.usedAt) {
-        await tx.orm.public.Session.where({ id: session.id }).update({
-          revokedAt: new Date().toISOString(),
-        });
-        return null; // Commit replay revocation before responding 401.
-      }
       const user = await tx.orm.public.User.where({
         id: session.userId,
       }).first();
@@ -154,10 +157,28 @@ export const sessionService = {
         });
         return null;
       }
+      const successorToken = nextRefreshToken(token);
+      if (current.usedAt) {
+        const age = Date.now() - Date.parse(current.usedAt);
+        if (age >= 0 && age <= refreshReuseWindowMs) {
+          const successor = await tx.orm.public.RefreshToken.where({
+            sessionId: session.id,
+            tokenHash: hashRefreshToken(successorToken),
+            usedAt: null,
+          }).first();
+          // Only the immediate, still-unused successor can be recovered. Never rotate again.
+          if (successor && Date.parse(successor.expiresAt) > Date.now())
+            return await tokenResponse(user, session, successorToken);
+        }
+        await tx.orm.public.Session.where({ id: session.id }).update({
+          revokedAt: new Date().toISOString(),
+        });
+        return null; // Commit replay revocation before responding 401.
+      }
       await tx.orm.public.RefreshToken.where({ id: current.id }).update({
         usedAt: new Date().toISOString(),
       });
-      return await issueTokens(tx, user, session);
+      return await issueTokens(tx, user, session, successorToken);
     });
     if (!result) throw unauthorized();
     return result;

@@ -15,7 +15,7 @@ import {
   forgotPasswordAction,
   resetPasswordAction,
 } from '../actions/auth.actions';
-import { invokeAction } from '@/shared/lib/apiResult';
+import { ApiError, invokeAction } from '@/shared/lib/apiResult';
 import type { LoginInput, RegisterInput } from '../types/auth';
 import type { RecoveryValues } from '../schemas/recoverySchema';
 import type { AuthSession } from '../types/auth';
@@ -68,18 +68,28 @@ export function useAuth() {
   const query = useCurrentUser();
   const client = useQueryClient();
   const router = useRouter();
-  const status = query.data?.user
-    ? 'signed-in'
-    : query.data?.error
+  const expired =
+    query.isError &&
+    query.error instanceof ApiError &&
+    query.error.status === 401 &&
+    query.error.code === 'UNAUTHENTICATED';
+  const status = expired
+    ? 'guest'
+    : query.isError || query.data?.error
       ? 'unavailable'
-      : query.data
-        ? 'guest'
-        : 'loading';
+      : query.data?.user
+        ? 'signed-in'
+        : query.data
+          ? 'guest'
+          : 'loading';
   return {
-    user: query.data?.user ?? null,
+    user: status === 'signed-in' ? (query.data?.user ?? null) : null,
     status,
     clearSession: () => clearAuthCache(client),
-    reloadSession: () => router.refresh(),
+    reloadSession: async () => {
+      const result = await query.refetch();
+      if (result.isSuccess) router.refresh();
+    },
   };
 }
 

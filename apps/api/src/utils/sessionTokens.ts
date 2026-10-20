@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { z } from 'zod';
 import { parseSessionEnv } from '../config/env.ts';
@@ -10,6 +10,14 @@ function key() {
 }
 export function newRefreshToken() {
   return randomBytes(32).toString('hex');
+}
+// All API replicas derive the same immediate successor without storing plaintext tokens.
+export const refreshReuseWindowMs = 30000;
+export function nextRefreshToken(token: string) {
+  const rotationKey = createHmac('sha256', key())
+    .update('bus-refresh-rotation-v1')
+    .digest();
+  return createHmac('sha256', rotationKey).update(token).digest('hex');
 }
 export function hashRefreshToken(token: string) {
   return createHash('sha256').update(token).digest('hex');

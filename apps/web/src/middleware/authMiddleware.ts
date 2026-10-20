@@ -56,6 +56,7 @@ export async function authMiddleware(
     const result = await apiFetch<SessionUser>('auth/me', {
       session,
       locale,
+      requestHeaders: request.headers,
       onSession: (tokens) => {
         renewed = tokens ?? undefined;
       },

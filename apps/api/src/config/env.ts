@@ -14,6 +14,10 @@ const envSchema = z.object({
     .default('development'),
   HOST: z.enum(['127.0.0.1', '0.0.0.0', '::1', '::']).default('127.0.0.1'),
   TRUST_PROXY_HOPS: z.enum(['0', '1']).default('0').transform(Number),
+  API_CLIENT_CONTEXT_SECRET: z
+    .string()
+    .regex(/^[a-fA-F0-9]{64}$/)
+    .optional(),
   PORT: z
     .string()
     .regex(/^\d+$/, 'Must contain only digits')
