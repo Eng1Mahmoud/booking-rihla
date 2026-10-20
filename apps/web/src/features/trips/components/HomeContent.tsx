@@ -51,7 +51,7 @@ export function HomeContent({
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[#062032]/75 md:bg-linear-to-r md:from-[#062032]/95 md:via-[#062032]/60 md:to-[#062032]/10 md:rtl:bg-linear-to-l"
+          className="absolute inset-0 -z-10 bg-[#062032]/40 md:bg-transparent md:bg-linear-to-r md:from-[#062032]/65 md:via-[#062032]/25 md:to-transparent md:rtl:bg-linear-to-l"
         />
         <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] pt-10 text-white md:pt-16">
           <h1 className="max-w-[340px] text-3xl font-semibold leading-[1.5] text-white md:max-w-[600px] md:text-[44px]">
