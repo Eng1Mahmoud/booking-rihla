@@ -782,6 +782,7 @@ apps/web/
         refreshSession.ts
         session.ts
         apiResult.ts
+        parseSchema.ts
         queryClient.ts
         cn.ts
         format.ts
@@ -878,6 +879,15 @@ apiFetch('bookings', { method: 'POST', body: data });
 - يعالج تعذر الوصول إلى Action دون إعادة إرسال العملية تلقائيًا.
 - لا أسرار أو Cookie APIs أو استيرادات server-only.
 - التفرع البرمجي حسب code، والعرض حسب message المترجمة؛ requestId للأخطاء غير المتوقعة.
+
+### parseSchema.ts — server-only
+
+- مساعد موحّد لتحليل مدخلات Server Actions باستخدام schema المالكة للميزة.
+- يقبل schema وinput من نوع unknown، ويستخدم safeParseAsync لدعم refinements المتزامنة وغير المتزامنة.
+- عند النجاح يرجع { success: true, data } مع النوع الناتج من schema، بما فيه transforms/defaults.
+- عند الفشل يرجع { success: false, error }؛ error هي ApiResult عامة مترجمة عبر validationError. لا تُرسل issues أو القيم المدخلة للعميل.
+- Actions الخاصة بالمصادقة والحجوزات والرحلات والمقاعد والتذاكر تستعمله وتُرسل parsed.data فقط إلى apiFetch. التحقق من offset أصبح schema في Feature الحجوزات بنفس الحدود السابقة.
+- لا ينفذ HTTP أو مصادقة أو تغيير Cookies. تحقق الاستجابات وRHF يظلان في سياقهما؛ لا نبدّل أخطاء upstream بخطأ input من نوع 400.
 
 ## 6. تدفق القراءات والكتابة
 
@@ -1152,3 +1162,11 @@ Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خ�
 - التحقق لهذه الدفعة: TypeScript وESLint وبناء الإنتاج، و17 حالة API/Actions و17 حالة Middleware معزولة بعد الفصل، بما فيها six-way single-flight وHttpOnly/redaction والتجديد لنفس render و503 بعد تدوير ناجح وعدم إعادة الكتابة مجهولة النتيجة. لا اختبارات محفوظة بالمشروع أو DB/Paymob.
 
 **حد الاكتمال:** فصل Refresh ومهام التطوير الحالية مطبق. التنفيذ ليس مطابقًا حرفيًا لكل سطر في الملف القديم: بندا القراءة والدور مستبدلان باختيارات المستخدم، وتنسيق refresh بين عدة runtimes/replicas والطلبات المتأخرة ما زال قرار نشر مفتوحًا. لا grace window أو تغيير JWT algorithm أو JSON-token opt-in أضيف ضمنيًا.
+
+### استكمال مساعد تحليل Zod — 2026-10-21
+
+- كان الموجود validationError لتوحيد رسالة الفشل فقط، بينما استدعاءات safeParse ومعالجة فشل المدخلات موزعة في Actions. هذا لم يحقق طلب المستخدم بوجود مساعد parsing موحّد.
+- أضيف shared/lib/parseSchema.ts بمخرجات discriminated union typed، مع safeParseAsync ورسالة عامة مترجمة واحدة ودون issues أو صدى للمدخلات.
+- نُقلت جميع عمليات تحليل المدخلات في وحدات auth/bookings/trips/seats/tickets Actions إلى المساعد؛ حُذف invalidInput المحلي وتكرار getLocale لأخطاء المدخلات. schemas وقواعد الميزات في ملفاتها، والطلبات تستخدم البيانات المعالجة مع الحفاظ على trim/normalization وIdempotency-Key.
+- التحقق: TypeScript وESLint وبناء الإنتاج، و10 حالات معزولة للمساعد والتحويلات وdefaults وasync refinement والترجمة وعدم كشف المدخلات والـstrict input وحدود offset وتمرير مفتاح الدفع الموحّد وlogout {}. نجحت أيضًا 17 حالة API/Actions للجلسة والتجديد وعدم تكرار الكتابة. لا اختبارات محفوظة بالمشروع ولا خدمات Backend/DB/Paymob حقيقية مستخدمة.
+- هذا الاستكمال يخص parsing مدخلات Server Actions. اختيار TanStack والتحقق من الدور عبر Backend محفوظان، وتنظيم Refresh في ملف مستقل محفوظ. تنسيق Refresh بين runtimes والطلبات المتأخرة يظل مفتوحًا قبل النشر متعدد النسخ. لا push دون موافقة.

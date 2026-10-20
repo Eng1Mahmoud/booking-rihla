@@ -21,6 +21,7 @@ export const createBookingSchema = z
   );
 
 export const bookingIdSchema = z.uuid();
+export const bookingsOffsetSchema = z.number().int().min(0).max(100000);
 export const checkoutSchema = z
   .strictObject({
     id: bookingIdSchema,

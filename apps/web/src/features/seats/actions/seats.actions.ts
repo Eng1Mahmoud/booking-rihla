@@ -1,11 +1,12 @@
 'use server';
 import { z } from 'zod';
-import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import { validationError } from '@/shared/lib/apiResult';
+import { parseSchema } from '@/shared/lib/parseSchema';
 import type { SeatList } from '@/features/trips/types/trip';
 export async function getTripSeatsAction(id: string) {
-  if (!z.uuid().safeParse(id).success)
-    return validationError(await getLocale());
-  return apiFetch<SeatList>('trips/' + id + '/seats', { context: 'action' });
+  const parsed = await parseSchema(z.uuid(), id);
+  if (!parsed.success) return parsed.error;
+  return apiFetch<SeatList>('trips/' + parsed.data + '/seats', {
+    context: 'action',
+  });
 }

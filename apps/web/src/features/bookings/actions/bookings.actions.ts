@@ -1,25 +1,21 @@
 'use server';
 
-import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import { validationError, type ApiResult } from '@/shared/lib/apiResult';
+import type { ApiResult } from '@/shared/lib/apiResult';
+import { parseSchema } from '@/shared/lib/parseSchema';
 import {
   createBookingSchema,
   bookingIdSchema,
+  bookingsOffsetSchema,
   checkoutSchema,
   type CreateBookingInput,
   type CheckoutInput,
 } from '../schemas/bookingSchema';
 import type { Booking, BookingPayment } from '../types/booking';
 
-async function invalidInput(): Promise<ApiResult<never>> {
-  const locale = await getLocale();
-  return validationError(locale);
-}
-
 export async function createBookingAction(input: CreateBookingInput) {
-  const parsed = createBookingSchema.safeParse(input);
-  if (!parsed.success) return invalidInput();
+  const parsed = await parseSchema(createBookingSchema, input);
+  if (!parsed.success) return parsed.error;
   // apiFetch verifies the live session before sending the reservation once.
   return apiFetch<Booking>('bookings', {
     method: 'POST',
@@ -31,8 +27,8 @@ export async function createBookingAction(input: CreateBookingInput) {
 export async function checkoutAction(
   input: CheckoutInput,
 ): Promise<ApiResult<BookingPayment>> {
-  const parsed = checkoutSchema.safeParse(input);
-  if (!parsed.success) return invalidInput();
+  const parsed = await parseSchema(checkoutSchema, input);
+  if (!parsed.success) return parsed.error;
   const { id, prepare, idempotencyKey } = parsed.data;
   // Check ownership inside the action. Express also enforces it on each mutation.
   const owned = await apiFetch<Booking>('bookings/' + id, {
@@ -63,8 +59,8 @@ export async function checkoutAction(
 export async function refreshPaymentAction(
   id: string,
 ): Promise<ApiResult<BookingPayment>> {
-  const parsed = bookingIdSchema.safeParse(id);
-  if (!parsed.success) return invalidInput();
+  const parsed = await parseSchema(bookingIdSchema, id);
+  if (!parsed.success) return parsed.error;
   const owned = await apiFetch<Booking>('bookings/' + parsed.data, {
     context: 'action',
   });
@@ -81,10 +77,10 @@ export async function refreshPaymentAction(
 }
 
 export async function getBookingsAction(offset: number) {
-  if (!Number.isInteger(offset) || offset < 0 || offset > 100000)
-    return invalidInput();
+  const parsed = await parseSchema(bookingsOffsetSchema, offset);
+  if (!parsed.success) return parsed.error;
   return apiFetch<{
     items: Booking[];
     pagination: { limit: number; offset: number };
-  }>('bookings?limit=20&offset=' + offset, { context: 'action' });
+  }>('bookings?limit=20&offset=' + parsed.data, { context: 'action' });
 }

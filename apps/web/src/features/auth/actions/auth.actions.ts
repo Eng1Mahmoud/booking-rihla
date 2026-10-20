@@ -1,9 +1,9 @@
 'use server';
 
-import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { apiFetch } from '@/shared/lib/api';
-import { validationError, type ApiResult } from '@/shared/lib/apiResult';
+import type { ApiResult } from '@/shared/lib/apiResult';
+import { parseSchema } from '@/shared/lib/parseSchema';
 import {
   loginSchema,
   registerSchema,
@@ -30,14 +30,12 @@ async function submit<T>(
   input: unknown,
   schema: z.ZodType,
 ): Promise<ApiResult<T>> {
-  const locale = await getLocale();
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) return validationError(locale);
+  const parsed = await parseSchema(schema, input);
+  if (!parsed.success) return parsed.error;
   // apiFetch keeps tokens private and authenticates protected mutations before sending them.
   return apiFetch<T>(path, {
     method: 'POST',
     body: parsed.data,
-    locale,
     context: 'action',
   });
 }

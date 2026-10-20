@@ -1,15 +1,15 @@
 'use server';
 import { z } from 'zod';
-import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import { validationError, type ApiResult } from '@/shared/lib/apiResult';
+import type { ApiResult } from '@/shared/lib/apiResult';
+import { parseSchema } from '@/shared/lib/parseSchema';
 import type { Ticket, TicketViewData } from '../types/ticket';
 export async function getTicketAction(
   id: string,
 ): Promise<ApiResult<TicketViewData>> {
-  if (!z.uuid().safeParse(id).success)
-    return validationError(await getLocale());
-  const result = await apiFetch<Ticket>('bookings/' + id + '/ticket', {
+  const parsed = await parseSchema(z.uuid(), id);
+  if (!parsed.success) return parsed.error;
+  const result = await apiFetch<Ticket>('bookings/' + parsed.data + '/ticket', {
     context: 'action',
   });
   if (!result.success || !result.data) return { ...result, data: undefined };
