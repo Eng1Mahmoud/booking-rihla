@@ -1,18 +1,10 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import { useEffect } from 'react';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useTranslations } from 'next-intl';
 import { AuthForm } from '@/features/auth/components/AuthForm';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 export function LoginScreen({ returnTo }: { returnTo: string }) {
-  const locale = useLocale();
-  const { status } = useAuth();
   const t = useTranslations('Auth');
   const safe = safeReturnPath(returnTo);
-  useEffect(() => {
-    if (status === 'signed-in')
-      window.location.replace('/' + locale + (safe === '/' ? '' : safe));
-  }, [status, locale, safe]);
   return (
     <section className="auth-screen">
       <div className="auth-intro">

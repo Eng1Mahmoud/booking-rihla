@@ -1,31 +1,18 @@
-'use client';
-import { useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
-import { useBookings } from '../hooks/useBookings';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { RefreshPage } from '@/shared/components/RefreshPage';
+import type { Booking } from '../types/booking';
 import { Link } from '@/i18n/navigation';
-import { errorMessage } from '@/shared/lib/apiClient';
 import { displayName, formatDate, formatPrice } from '@/shared/lib/format';
 import { AccountNavigation } from '@/features/account/components/AccountNavigation';
-export function BookingHistory() {
-  const locale = useLocale() as 'ar' | 'en';
-  const t = useTranslations('Booking');
-  const { user, status } = useAuth();
-  const [offset, setOffset] = useState(0);
-  const query = useBookings(user?.id, offset);
-  if (status === 'loading')
-    return <p className="loading-state">{t('loading')}</p>;
-  if (status === 'guest') return null;
-  if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
-  if (query.isError)
-    return (
-      <div role="alert" className="notice">
-        {errorMessage(query.error, locale)}{' '}
-        <button onClick={() => query.refetch()} className="text-button">
-          {t('refresh')}
-        </button>
-      </div>
-    );
+export async function BookingHistory({
+  bookings,
+  offset,
+}: {
+  bookings: Booking[];
+  offset: number;
+}) {
+  const locale = (await getLocale()) as 'ar' | 'en';
+  const t = await getTranslations('Booking');
   return (
     <>
       <AccountNavigation />
@@ -35,7 +22,7 @@ export function BookingHistory() {
           {t('findTrip')}
         </Link>
       </div>
-      {query.data.data.length === 0 ? (
+      {bookings.length === 0 ? (
         <div className="empty-state">
           <h2>{t('noBookings')}</h2>
           <p>{t('noBookingsText')}</p>
@@ -45,7 +32,7 @@ export function BookingHistory() {
         </div>
       ) : (
         <div className="booking-history">
-          {query.data.data.map((booking) => (
+          {bookings.map((booking) => (
             <Link
               key={booking.id}
               href={'/bookings/' + booking.id}
@@ -68,22 +55,25 @@ export function BookingHistory() {
           ))}
         </div>
       )}
+      <RefreshPage label={t('refresh')} />
       <div className="pagination">
         {offset > 0 && (
-          <button
+          <Link
             className="button-secondary"
-            onClick={() => setOffset(Math.max(0, offset - 20))}
+            href={'/bookings?offset=' + Math.max(0, offset - 20)}
+            prefetch={false}
           >
             {t('previous')}
-          </button>
+          </Link>
         )}
-        {query.data.data.length === 20 && (
-          <button
+        {bookings.length === 20 && (
+          <Link
             className="button-secondary"
-            onClick={() => setOffset(offset + 20)}
+            href={'/bookings?offset=' + (offset + 20)}
+            prefetch={false}
           >
             {t('next')}
-          </button>
+          </Link>
         )}
       </div>
     </>

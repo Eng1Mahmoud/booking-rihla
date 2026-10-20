@@ -4,14 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '../api/bookings.api';
 import { isPaymentPending, paymentOutcome } from '../lib/paymentState';
 import { queryKeys } from '@/shared/lib/queryClient';
-export function useBookings(userId: string | undefined, offset: number) {
-  return useQuery({
-    queryKey: queryKeys.bookings(userId, offset),
-    enabled: Boolean(userId),
-    retry: false,
-    queryFn: ({ signal }) => bookingsApi.list(offset, signal),
-  });
-}
 export function useCreateBooking() {
   const client = useQueryClient();
   return useMutation({

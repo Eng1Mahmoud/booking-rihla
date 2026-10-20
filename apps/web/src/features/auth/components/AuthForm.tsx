@@ -42,6 +42,8 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           email: values.email.trim().toLowerCase(),
           password: values.password,
         });
+        // A full navigation reads the new server session and private page data.
+        window.location.replace('/' + locale + safeReturnPath(returnTo));
         reset();
         return;
       }

@@ -7,10 +7,6 @@ import {
 } from '../actions/bookings.actions';
 import type { CreateBookingInput } from '../schemas/bookingSchema';
 export const bookingsApi = {
-  list: (offset: number, signal?: AbortSignal) =>
-    apiClient.get<{ data: Booking[] }>('bookings?limit=20&offset=' + offset, {
-      signal,
-    }),
   create: async (input: CreateBookingInput) => ({
     data: await invokeAction(() => createBookingAction(input)),
   }),

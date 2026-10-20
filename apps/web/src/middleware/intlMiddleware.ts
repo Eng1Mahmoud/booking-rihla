@@ -9,6 +9,9 @@ export function intlMiddleware(
   request: NextRequest,
   previousResponse: NextResponse | null,
 ) {
+  const info = routeInfo(request.nextUrl.pathname);
+  // Overwrite any caller-supplied value; the server guard uses this internal return path.
+  request.headers.set('x-bus-return-to', info.path + request.nextUrl.search);
   // next-intl forwards request.headers, including any cookies renewed by authMiddleware.
   const response = internationalization(request);
   // Preserve the outgoing auth cookies when next-intl creates its rewrite/redirect.

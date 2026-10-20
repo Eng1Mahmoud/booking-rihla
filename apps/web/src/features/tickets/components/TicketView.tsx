@@ -1,50 +1,18 @@
-'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import { useTicket } from '../hooks/useTicket';
+import { getLocale, getTranslations } from 'next-intl/server';
 import Image from 'next/image';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ApiError, errorMessage } from '@/shared/lib/apiClient';
+import type { Ticket } from '../types/ticket';
+import { RefreshPage } from '@/shared/components/RefreshPage';
 import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
-export function TicketView({ bookingId }: { bookingId: string }) {
-  const t = useTranslations('Ticket');
-  const locale = useLocale() as 'ar' | 'en';
-  const { user, status } = useAuth();
-  const query = useTicket(user?.id, bookingId);
+export async function TicketView({ ticket }: { ticket: Ticket }) {
+  const bookingId = ticket.bookingId;
+  const t = await getTranslations('Ticket');
+  const locale = (await getLocale()) as 'ar' | 'en';
   const back = (
     <Link href={'/bookings/' + bookingId} className="text-button">
       {t('back')}
     </Link>
   );
-  if (status === 'loading')
-    return <p className="loading-state">{t('loading')}</p>;
-  if (status === 'guest') return null;
-  if (query.isPending) return <p className="loading-state">{t('loading')}</p>;
-  if (query.isError) {
-    const unavailable =
-      query.error instanceof ApiError &&
-      query.error.code === 'TICKET_NOT_FOUND';
-    return (
-      <section className="panel result-entry" role="alert">
-        <h1>{unavailable ? t('unavailable') : t('error')}</h1>
-        <p>
-          {unavailable
-            ? t('unavailableNote')
-            : errorMessage(query.error, locale)}
-        </p>
-        <button
-          type="button"
-          className="button-secondary"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          {t('refresh')}
-        </button>
-        {back}
-      </section>
-    );
-  }
-  const ticket = query.data;
   const { origin, destination } = ticket.trip;
   const name = (station: typeof origin) =>
     locale === 'ar' ? station.nameAr : station.nameEn;
@@ -128,14 +96,7 @@ export function TicketView({ bookingId }: { bookingId: string }) {
             <p role="alert">{t('qrError')}</p>
           )}
           <p>{t('qrNote')}</p>
-          <button
-            type="button"
-            className="button-secondary"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            {t('refresh')}
-          </button>
+          <RefreshPage label={t('refresh')} autoRefresh />
         </aside>
       </article>
     </>

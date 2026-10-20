@@ -2,14 +2,14 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
-import { useAuth, useLogout } from '@/features/auth/hooks/useAuth';
+import { useLogout } from '@/features/auth/hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiClient';
+import type { AuthUser } from '@/features/auth/types/auth';
 import { AccountNavigation } from '@/features/account/components/AccountNavigation';
 
-export function AccountProfile() {
+export function AccountProfile({ user }: { user: AuthUser }) {
   const t = useTranslations('Account');
   const locale = useLocale();
-  const { user, status } = useAuth();
   const logout = useLogout();
   const [confirmAll, setConfirmAll] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -25,13 +25,6 @@ export function AccountProfile() {
       setBusy(false);
     }
   }
-  if (status === 'loading')
-    return (
-      <p className="loading-state" role="status">
-        {t('loading')}
-      </p>
-    );
-  if (!user) return null;
   return (
     <>
       <AccountNavigation />

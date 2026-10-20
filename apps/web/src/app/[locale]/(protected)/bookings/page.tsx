@@ -1,8 +1,32 @@
+import { getLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
-export default function BookingsPage() {
+import { getBookings } from '@/features/bookings/api/bookings.queries';
+import { ReadError } from '@/shared/components/ReadError';
+import { errorMessage } from '@/shared/lib/apiResult';
+
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ offset?: string }>;
+}) {
+  const { offset: raw = '0' } = await searchParams;
+  if (typeof raw !== 'string' || !/^\d+$/.test(raw) || Number(raw) > 100000)
+    notFound();
+  const offset = Number(raw);
+  let result;
+  try {
+    result = await getBookings(offset);
+  } catch (error) {
+    return (
+      <div className="container-shell page-space">
+        <ReadError message={errorMessage(error, await getLocale())} />
+      </div>
+    );
+  }
   return (
     <div className="container-shell page-space">
-      <BookingHistory />
+      <BookingHistory bookings={result.items} offset={offset} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { authApi } from '../api/auth.api';
 import type { AuthUser } from '../types/auth';
 import { ApiError } from '@/shared/lib/apiClient';
 import { queryKeys } from '@/shared/lib/queryClient';
+import { useRouter } from 'next/navigation';
 export async function clearAuthCache(client: QueryClient) {
   await client.cancelQueries();
   client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
@@ -21,8 +22,7 @@ export function useCurrentUser() {
       try {
         return await authApi.me(signal);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 401)
-          return null;
+        if (error instanceof ApiError && error.status === 401) return null;
         throw error;
       }
     },
@@ -45,9 +45,13 @@ export function useLogin() {
 }
 export function useLogout() {
   const client = useQueryClient();
+  const router = useRouter();
   return useMutation({
     mutationFn: authApi.logout,
-    onSuccess: () => clearAuthCache(client),
+    onSuccess: async () => {
+      await clearAuthCache(client);
+      router.refresh();
+    },
   });
 }
 export function useAuth() {
