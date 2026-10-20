@@ -646,7 +646,7 @@ Owner approved the reviewed response-contract migration in small groups. Applied
 - [x] Client/gateway compatibility and Accept-Language forwarding; removed frontend API-error translation table.
 - [x] All rate-limit handlers use the central localized error handler, including the previously default-text admin statistics limiter; original limits retained.
 - [x] Server-only apiFetch/ApiResult and shared refresh helper.
-- [x] Local signed JWT role verification and pre-render refresh in proxy.
+- [x] Backend live-session/current-role verification and pre-render refresh in proxy (updated 2026-10-21).
 - [x] Server Actions for existing web mutations with authentication/permission checks inside each action.
 - [x] Server Component reads, one GET payment-status polling route, and removal of legacy gateway/browser refresh after migration.
 
@@ -942,13 +942,13 @@ Component/Form
 
 ## 9. Middleware وProxy
 
-| الملف             | المسؤولية                                                         |
-| ----------------- | ----------------------------------------------------------------- |
-| roleRoutes.ts     | جدول المسارات الخاصة والأدوار، ومطابقة المسارات                   |
-| authMiddleware.ts | تحقق JWT محليًا وتجديد قبل العرض والقرار login/forbidden/continue |
-| intlMiddleware.ts | اللغة والـrewrite مع حفظ Cookies والـheaders اللازمة              |
-| runMiddlewares.ts | التشغيل بالترتيب وتمرير الرد والتوقف عند redirect/error           |
-| proxy.ts          | تشغيل السلسلة وتعريف matcher فقط                                  |
+| الملف             | المسؤولية                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| roleRoutes.ts     | جدول المسارات الخاصة والأدوار، ومطابقة المسارات                                               |
+| authMiddleware.ts | قراءة الدور والجلسة من Backend عبر apiFetch وتجديد قبل العرض والقرار login/forbidden/continue |
+| intlMiddleware.ts | اللغة والـrewrite مع حفظ Cookies والـheaders اللازمة                                          |
+| runMiddlewares.ts | التشغيل بالترتيب وتمرير الرد والتوقف عند redirect/error                                       |
+| proxy.ts          | تشغيل السلسلة وتعريف matcher فقط                                                              |
 
 ```ts
 export default function proxy(request: NextRequest) {
@@ -958,8 +958,9 @@ export default function proxy(request: NextRequest) {
 
 - الزائر يدخل الصفحات العامة؛ الصفحة الخاصة تعيده إلى login مع returnTo آمن.
 - access منتهي مع refresh صالح: تجديد مركزي، وتمرير التوكنات الجديدة إلى render الجاري وإلى الرد.
-- دور غير مسموح: forbidden؛ Backend يظل مصدر الدور الحالي والقرار النهائي.
-- فشل تجديد مؤكد401 ينهي الجلسة؛ مشكلة خدمة تحفظ Cookies وتعرض حالة مناسبة.
+- عند وجود Cookies جلسة، يقرأ Middleware المستخدم والدور الحالي من Backend عبر GET auth/me باستخدام apiFetch وno-store. لا يقرأ الدور من JWT محليًا ولا يحتاج مفتاح توقيع في الويب. الزائر في الصفحة العامة لا يسبب طلب تحقق.
+- دور غير مسموح: forbidden؛ تغييرات الدور أو إلغاء الجلسة تطبق في طلب التحقق التالي من السيرفر. لا نضع الدور في كاش مستقل.
+- فشل تجديد مؤكد401 ينهي الجلسة؛ مشكلة خدمة تحفظ Cookies وتعرض 503 دون تمرير الصفحة المحمية. إذا نجح التدوير ثم فشلت قراءة المستخدم التالية، تُحفظ Cookies المجددة في رد 503 لتجنب ترك المتصفح بالتوكن القديم.
 - intl لا يمحو Cookies المجددة، ولا تستبدل مرحلة لاحقة redirect/error صادرًا قبلها.
 - الاستثناءات في matcher لا تعفي Actions أو Handler من التحقق الداخلي.
 - الردود الخاصة أو التي تجدد الجلسة لا توضع في كاش HTTP مشترك.
@@ -1090,3 +1091,12 @@ Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خ�
 - التحقق: نجح ESLint وTypeScript وبناء الإنتاج. تدقيق جميع ملفات TSX وCSS وجد صفر مراجع لأسماء الكلاسات القديمة وصفر class selectors داخل CSS. تجربة إنتاج بBackend وهمي شملت مخطط 44 مقعدًا ومواضع 17–21 والمقعد المعطل، اختيار المقاعد وlogin/returnTo وحفظ الأسماء بعد تحديث المقاعد، إنشاء حجز وهمي وعرض التأكيد والتذكرة وQR بالعربية والإنجليزية، الحساب والتأكيد والتراجع عن إنهاء الجلسات وسجل الحجوزات وشاشة انتظار الدفع. عرض الجوال 390px وسطح المكتب بلا تجاوز أفقي في الشاشات المفحوصة، وبلا أخطاء متصفح. لا بيانات حقيقية أو Paymob أو ملفات اختبارات محفوظة.
 
 **التقدم الحالي:** طلب نقل تنسيقات المكوّنات كلها إلى JSX مكتمل. تبقى مراجعة UX الشاملة وأي تحسينات وظيفية منفصلة. تنسيق refresh عبر runtimes والطلبات المتأخرة يظل قرار نشر مستقلًا. لا push دون موافقة.
+
+### تحديث قرار Auth/API — 2026-10-21
+
+- أكد المستخدم استمرار النمط الموحد TanStack Hook → Server Action → apiFetch لكل قراءات وكتابات الميزات التفاعلية، مع SSR لبيانات البداية واستثناء GET لمتابعة الدفع. بند منع Actions للقراءات في ملف Auth and API Refactor Spec القديم مُتجاوز بهذا القرار.
+- authMiddleware يطلب GET auth/me من Backend للحصول على الجلسة والدور الحاليين، ثم يطبق roleRoutes. لم يعد يتحقق من JWT محليًا. Backend يظل مسؤولًا عن توقيع JWT وصلاحيته والجلسة النشطة والدور من قاعدة البيانات وملكية العمليات.
+- أزيلت تبعية jose المباشرة من الويب وحاجة AUTH_ACCESS_SECRET في .env.example وملف الويب المحلي فقط؛ مفتاح Backend ونموذج Session/RefreshToken والتدوير الصارم لم يتغيروا.
+- يستخدم Middleware apiFetch نفسه لتجديد واحد وGET واحد معاد عند 401. Cookies المجددة تصل إلى render الجاري والرد؛ 401 المؤكد يعيد login مع returnTo، والدور غير المسموح يعيد forbidden. فشل الخدمة يعطي 503 ويحافظ على Cookies، بما فيها التوكنات الجديدة إذا نجح التدوير قبل فشل GET التالي.
+- يوجد طلب Backend للتحقق لكل طلب يمر عبر Middleware ومعه Cookies جلسة. يبقى تحقق SSR وActions والـBackend مستقلًا؛ لا نمرر هوية موثوقة في Headers قابلة للتزوير ولا نخزن الدور بين المستخدمين. الصفحات العامة بلا جلسة لا تستدعي auth/me من Middleware.
+- التحقق: نجح ESLint وبناء الإنتاج مع TypeScript دون مفتاح JWT في الويب؛ 17 حالة معزولة تستخدم NextRequest/NextResponse الفعليين وfetch وهميًا، تشمل الدور الحالي والترقية والخفض والضوابط الخاصة والتوكن المنتهي وإلغاء الجلسة والتعطل وتزامن ستة طلبات والتدوير الناجح متبوعًا بفشل القراءة. نجحت 7 حالات HTTP فعلية على نسخة الإنتاج مع Backend وهمي: المنع، والترقية رغم claim USER القديم، وSSR دون سر توقيع في الويب، وCookies التجديد لنفس العرض، والخفض، والتعطل، والإلغاء. لا اختبارات محفوظة بالمشروع ولا DB أو Paymob أو تغييرات Backend. يظل تنسيق refresh عبر runtimes والطلبات المتأخرة قرار نشر مستقلًا. لا push دون موافقة.
