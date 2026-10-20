@@ -1,12 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { Button } from '@/shared/components/ui/button';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import { readTripCatalog, readTrips } from '@/features/trips/lib/trips.server';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import { TripResults } from '@/features/trips/components/TripResults';
-import {
-  searchSchema,
-  searchHref,
-} from '@/features/trips/schemas/searchSchema';
+import { searchSchema } from '@/features/trips/schemas/searchSchema';
 export default async function TripsPage({
   params,
   searchParams,
@@ -20,13 +20,12 @@ export default async function TripsPage({
   const parsed = searchSchema.safeParse(raw);
   if (!parsed.success)
     return (
-      <div className="container-shell page-space">
-        <div className="empty-state" role="alert">
-          <h1>{t('invalid')}</h1>
-          <Link href="/" className="button-primary">
-            {t('back')}
-          </Link>
-        </div>
+      <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] py-8 md:py-14">
+        <EmptyState heading="h1" title={t('invalid')} role="alert">
+          <Button asChild className="h-12">
+            <Link href="/">{t('back')}</Link>
+          </Button>
+        </EmptyState>
       </div>
     );
   const search = parsed.data;
@@ -40,16 +39,13 @@ export default async function TripsPage({
     ]);
   } catch {
     return (
-      <div className="container-shell page-space">
-        <div className="empty-state" role="alert">
-          <h1>{t('error')}</h1>
-          <Link href={searchHref(search)} className="button-primary">
-            {t('retry')}
-          </Link>
-          <Link href="/" className="text-button">
-            {t('back')}
-          </Link>
-        </div>
+      <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] py-8 md:py-14">
+        <EmptyState heading="h1" title={t('error')} role="alert">
+          <RefreshPage label={t('retry')} />
+          <Button asChild variant="outline" className="h-12 bg-card">
+            <Link href="/">{t('back')}</Link>
+          </Button>
+        </EmptyState>
       </div>
     );
   }

@@ -1539,7 +1539,7 @@ TanStack owns the API data cache. HTTP fetches use no-store. Internal feature li
 
 Query keys include locale and private owner identity where relevant. Login/logout clear previous query data. No access or refresh credentials enter query data or Action results. The QR view receives its image without a separate raw payload field.
 
-The request/data foundation and shared UI/forms foundation are implemented. Existing login/register/verification/recovery, search and passenger forms now use shared RHF/Zod components built on shadcn. Layout/forms use inline Tailwind; remaining feature CSS and the full UX cleanup are the next batches. Runtime-local refresh single-flight still requires a separate deployment coordination decision for multiple runtimes or late old-token requests.
+The request/data foundation and shared UI/forms foundation are implemented. Existing login/register/verification/recovery, search and passenger forms now use shared RHF/Zod components built on shadcn. Layout, forms and the home/search/trip screens use inline Tailwind; seat, booking/payment, account/history/ticket CSS and the full UX cleanup remain in the next batches. Runtime-local refresh single-flight still requires a separate deployment coordination decision for multiple runtimes or late old-token requests.
 
 ### Shared UI and forms
 
@@ -1548,3 +1548,7 @@ components.json directs shadcn components to shared/components/ui. shared/lib/cn
 Form submissions await the feature's mutateAsync. Zod validates in the browser and Actions validate again on the server. Input/output types remain distinct for schema transforms. Passenger fields stay mounted while seats change, and removed seat fields unregister without resetting remaining names. There are no saved automated test files.
 
 Use @hookform/resolvers 5.9.2 with this RHF7/Zod4 dependency set; version 6 currently resolves incompatible optional peer dependencies in this project. No force/legacy-peer-deps override was applied. The current progress and remaining CSS/UI stages are recorded in IMPLEMENTATION_PLAN.md.
+
+### Trip search UI migration
+
+HomeContent, TripResults, TripCard and TripDetails use inline Tailwind and shared shadcn buttons. QueryError owns recoverable query feedback; EmptyState owns empty/error presentation. Features still own query hooks and messages. Search keeps Cairo dates, city/station filters and 20-row pagination. SSR failures use RefreshPage to retry the current route. Base CSS now lives in @layer base so utilities can override defaults; 124 obsolete trip selectors were removed. No data/auth/payment rules changed. See IMPLEMENTATION_PLAN.md for validation and remaining UI stages.

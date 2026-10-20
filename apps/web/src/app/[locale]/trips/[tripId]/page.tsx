@@ -1,6 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import { Button } from '@/shared/components/ui/button';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import { ApiError } from '@/shared/lib/apiResult';
 import { apiFetch } from '@/shared/lib/api';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
@@ -12,7 +15,10 @@ export default async function TripPage({
   params: Promise<{ locale: 'ar' | 'en'; tripId: string }>;
 }) {
   const { tripId } = await params;
-  const t = await getTranslations('Detail');
+  const [t, trips] = await Promise.all([
+    getTranslations('Detail'),
+    getTranslations('Trips'),
+  ]);
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       tripId,
@@ -28,13 +34,13 @@ export default async function TripPage({
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     return (
-      <div className="container-shell page-space">
-        <div className="empty-state" role="alert">
-          <h1>{t('error')}</h1>
-          <Link href="/" className="button-primary">
-            {t('back')}
-          </Link>
-        </div>
+      <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] py-8 md:py-14">
+        <EmptyState heading="h1" title={t('error')} role="alert">
+          <RefreshPage label={trips('retry')} />
+          <Button asChild variant="outline" className="h-12 bg-card">
+            <Link href="/">{t('back')}</Link>
+          </Button>
+        </EmptyState>
       </div>
     );
   }

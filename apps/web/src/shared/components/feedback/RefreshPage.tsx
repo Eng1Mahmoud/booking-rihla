@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/shared/components/ui/button';
 
 export function RefreshPage({
   label,
@@ -25,14 +26,15 @@ export function RefreshPage({
     };
   }, [autoRefresh, router]);
   return (
-    <button
+    <Button
       type="button"
-      className="button-secondary"
+      variant="outline"
+      className="h-12 bg-card"
       disabled={pending}
       aria-busy={pending}
       onClick={() => startTransition(() => router.refresh())}
     >
       {label}
-    </button>
+    </Button>
   );
 }

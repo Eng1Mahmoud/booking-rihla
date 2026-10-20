@@ -2,12 +2,15 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { BusFront, ArrowLeft, MapPin } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { Button } from '@/shared/components/ui/button';
+import { QueryError } from '@/shared/components/feedback/QueryError';
 import { displayName, formatDate, formatTime } from '@/shared/lib/format';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { SeatBooking } from '@/features/seats/components/SeatBooking';
 import { cairoDate } from '../schemas/searchSchema';
 import { useTripDetails } from '../hooks/useTrips';
 import type { Trip, SeatList } from '../types/trip';
+
 export function TripDetails({
   initial,
   seats,
@@ -27,42 +30,69 @@ export function TripDetails({
       travelDate: cairoDate(trip.departureAt),
     });
   return (
-    <div className="container-shell page-space">
-      <Link href={back} className="back-link">
-        <ArrowLeft size={17} className="rtl:rotate-180" />
-        {t('back')}
-      </Link>
-      <section className="trip-heading">
+    <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] py-6 md:pt-9 md:pb-16">
+      <Button
+        asChild
+        variant="ghost"
+        className="-ms-3 min-h-11 text-muted-foreground"
+      >
+        <Link href={back}>
+          <ArrowLeft size={17} aria-hidden="true" className="rtl:rotate-180" />
+          {t('back')}
+        </Link>
+      </Button>
+      <section className="flex flex-wrap items-start justify-between gap-4 py-5 md:items-center">
         <div>
-          <h1>
+          <h1 className="text-2xl font-semibold md:text-3xl">
             {displayName(trip.route.originStation.city, locale)}
-            <span> — </span>
+            <span className="text-muted-foreground"> — </span>
             {displayName(trip.route.destinationStation.city, locale)}
           </h1>
-          <p>{formatDate(trip.departureAt, locale)}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            <time dateTime={trip.departureAt}>
+              {formatDate(trip.departureAt, locale)}
+            </time>
+          </p>
         </div>
-        <span className="trip-bus-type">
-          <BusFront size={20} />
+        <span className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+          <BusFront size={20} aria-hidden="true" className="text-primary" />
           {trip.bus.busType ? displayName(trip.bus.busType, locale) : t('bus')}
         </span>
       </section>
-      <div className="trip-station-bar">
-        <span>
-          <MapPin size={18} />
+      <div className="mb-6 grid gap-4 border-y py-4 md:flex md:items-center md:gap-6">
+        <span className="flex flex-wrap items-center gap-2 text-sm">
+          <MapPin
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-primary"
+          />
           {displayName(trip.route.originStation, locale)}
-          <bdi>{formatTime(trip.departureAt, locale)}</bdi>
+          <time dateTime={trip.departureAt} className="font-semibold">
+            <bdi>{formatTime(trip.departureAt, locale)}</bdi>
+          </time>
         </span>
-        <span className="station-bar-line" />
-        <span>
-          <MapPin size={18} />
+        <span
+          className="hidden h-px w-14 shrink-0 bg-border md:block"
+          aria-hidden="true"
+        />
+        <span className="flex flex-wrap items-center gap-2 text-sm">
+          <MapPin
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-primary"
+          />
           {displayName(trip.route.destinationStation, locale)}
-          <bdi>{formatTime(trip.arrivalAt, locale)}</bdi>
+          <time dateTime={trip.arrivalAt} className="font-semibold">
+            <bdi>{formatTime(trip.arrivalAt, locale)}</bdi>
+          </time>
         </span>
       </div>
       {query.isError && (
-        <p className="notice" role="alert">
-          {errorMessage(query.error, locale)}
-        </p>
+        <QueryError
+          message={errorMessage(query.error, locale)}
+          onRetry={() => void query.refetch()}
+          pending={query.isFetching}
+        />
       )}
       <SeatBooking key={trip.id} trip={trip} initialSeats={seats} />
     </div>
