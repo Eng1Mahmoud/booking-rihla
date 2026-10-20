@@ -1,10 +1,30 @@
-import { ApiError } from './apiResult';
+import { ApiError, unwrapApiResult, type ApiResult } from './apiResult';
 export { ApiError, errorMessage, isUncertainRequestError } from './apiResult';
 
 // The server reports an ended session; this event clears the client query cache.
 export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
 
-// Browser requests only. Cookie handling and refresh now happen on the Next server.
+// Adapt action results for forms/React Query; a lost response has an uncertain outcome.
+export async function invokeAction<T>(
+  action: () => Promise<ApiResult<T>>,
+): Promise<T> {
+  let result: ApiResult<T>;
+  try {
+    result = await action();
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR');
+  }
+  if (
+    !result.success &&
+    result.status === 401 &&
+    result.code === 'UNAUTHENTICATED'
+  ) {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+  return unwrapApiResult(result);
+}
+
+// Transitional browser requests. Cookies and refresh stay on the Next server.
 async function request<T>(
   path: string,
   options: RequestInit = {},

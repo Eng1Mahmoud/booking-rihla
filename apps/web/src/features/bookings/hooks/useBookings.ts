@@ -16,12 +16,13 @@ export function useCreateBooking() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: bookingsApi.create,
+    retry: false,
     onSuccess: (_result, input) =>
       client.invalidateQueries({ queryKey: queryKeys.seats(input.tripId) }),
   });
 }
 export function useCheckout() {
-  return useMutation({ mutationFn: bookingsApi.checkout });
+  return useMutation({ mutationFn: bookingsApi.checkout, retry: false });
 }
 export function useBookingPayment(
   userId: string | undefined,

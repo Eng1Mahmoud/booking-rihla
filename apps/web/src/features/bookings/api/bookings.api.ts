@@ -1,17 +1,19 @@
-import { apiClient, ApiError } from '@/shared/lib/apiClient';
+import { apiClient, invokeAction } from '@/shared/lib/apiClient';
 import type { Booking, BookingPayment } from '../types/booking';
-export type CreateBookingInput = {
-  tripId: string;
-  contactPhone: string;
-  passengers: { seatId: string; name: string }[];
-};
+import {
+  createBookingAction,
+  checkoutAction,
+  refreshPaymentAction,
+} from '../actions/bookings.actions';
+import type { CreateBookingInput } from '../schemas/bookingSchema';
 export const bookingsApi = {
   list: (offset: number, signal?: AbortSignal) =>
     apiClient.get<{ data: Booking[] }>('bookings?limit=20&offset=' + offset, {
       signal,
     }),
-  create: (input: CreateBookingInput) =>
-    apiClient.post<{ data: Booking }>('bookings', input),
+  create: async (input: CreateBookingInput) => ({
+    data: await invokeAction(() => createBookingAction(input)),
+  }),
   details: async (id: string, signal?: AbortSignal) => {
     const [booking, payment] = await Promise.all([
       apiClient.get<{ data: Booking }>('bookings/' + id, { signal }),
@@ -27,28 +29,14 @@ export const bookingsApi = {
         'payments/availability',
       )
     ).data,
-  refreshPayment: (id: string) =>
-    apiClient.post('bookings/' + id + '/payment/refresh'),
-  checkout: async ({ id, prepare }: { id: string; prepare: boolean }) => {
-    if (prepare) {
-      try {
-        await apiClient.post(
-          'bookings/' + id + '/payment-attempt',
-          {},
-          { headers: { 'Idempotency-Key': crypto.randomUUID() } },
-        );
-      } catch (error) {
-        if (
-          !(error instanceof ApiError) ||
-          error.code !== 'PAYMENT_ATTEMPT_EXISTS'
-        )
-          throw error;
-      }
-    }
-    return (
-      await apiClient.post<{ data: BookingPayment }>(
-        'bookings/' + id + '/checkout',
-      )
-    ).data;
+  refreshPayment: (id: string) => invokeAction(() => refreshPaymentAction(id)),
+  checkout: ({ id, prepare }: { id: string; prepare: boolean }) => {
+    // Keep the same client-generated key for the whole action invocation.
+    const input = {
+      id,
+      prepare,
+      idempotencyKey: prepare ? crypto.randomUUID() : undefined,
+    };
+    return invokeAction(() => checkoutAction(input));
   },
 };
