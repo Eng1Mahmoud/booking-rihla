@@ -49,9 +49,14 @@ export function AccountMenu() {
           </Button>
         </>
       ) : status === 'unavailable' ? (
-        <button type="button" className="text-button" onClick={reloadSession}>
+        <Button
+          variant="link"
+          type="button"
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
+          onClick={reloadSession}
+        >
           {t('retrySession')}
-        </button>
+        </Button>
       ) : (
         <Link
           href={

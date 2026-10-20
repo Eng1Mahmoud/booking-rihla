@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/shared/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from 'zustand';
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
@@ -105,25 +106,33 @@ export function SeatBooking({
     }
   }
   return (
-    <div className="booking-grid">
-      <section className="seat-section">
-        <div className="section-heading">
+    <div className="grid items-start gap-5 pb-[85px] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
+      <section className="rounded-[14px] border bg-card px-3.5 py-[22px] md:p-[22px] min-[1001px]:p-7">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
           <div>
-            <h2>{t('title')}</h2>
-            <p>{t('subtitle')}</p>
+            <h2 className="text-[21px] font-semibold md:text-[23px]">
+              {t('title')}
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground md:text-[13px]">
+              {t('subtitle')}
+            </p>
           </div>
-          <button
+          <Button
+            variant="outline"
             type="button"
-            className="icon-button"
+            className="size-10 shrink-0 bg-card text-muted-foreground"
             onClick={refreshSeats}
             aria-label={t('refresh')}
             disabled={refreshing}
           >
             <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-          </button>
+          </Button>
         </div>
         {seatQuery.isError && (
-          <p role="alert" className="notice">
+          <p
+            role="alert"
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+          >
             {errorMessage(seatQuery.error, locale)}
           </p>
         )}
@@ -134,65 +143,91 @@ export function SeatBooking({
           onToggle={toggle}
         />
       </section>
-      <aside ref={summaryRef} className="selection-summary">
-        <div className="summary-heading">
-          <h2>{t('summary')}</h2>
-          <span className="pill">
+      <aside
+        ref={summaryRef}
+        className="scroll-mt-[110px] rounded-[14px] border bg-card p-[22px] md:sticky md:top-28 md:p-6"
+      >
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold">{t('summary')}</h2>
+          <span className="inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-primary">
             {t('selectedCount', { count: selected.length })}
           </span>
         </div>
-        <div className="summary-row">
-          <span>{t('price')}</span>
-          <strong>{formatPrice(trip.pricePiastres, locale)}</strong>
+        <div className="flex justify-between gap-2.5 py-2.5 text-xs">
+          <span className="text-muted-foreground">{t('price')}</span>
+          <strong className="font-medium">
+            {formatPrice(trip.pricePiastres, locale)}
+          </strong>
         </div>
-        <div className="selected-list" aria-live="polite">
+        <div
+          className="flex min-h-[58px] flex-wrap gap-2 py-4"
+          aria-live="polite"
+        >
           {selected.length ? (
             selected.map((seat) => (
               <button
                 key={seat.id}
                 type="button"
                 onClick={() => toggle(seat.id)}
-                className="selected-chip"
+                className="inline-flex cursor-pointer min-h-11 items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs text-sky-800 hover:bg-sky-100"
               >
                 {t('seatNumber', { number: seat.number })}
-                <span aria-hidden="true">×</span>
-                <span className="sr-only">{t('remove')}</span>
+                <span
+                  className="first-of-type:text-lg first-of-type:leading-none"
+                  aria-hidden="true"
+                >
+                  ×
+                </span>
+                <span className="sr-only first-of-type:text-lg first-of-type:leading-none">
+                  {t('remove')}
+                </span>
               </button>
             ))
           ) : (
-            <p className="muted text-sm">{t('chooseFirst')}</p>
+            <p className="text-muted-foreground text-sm">{t('chooseFirst')}</p>
           )}
         </div>
         {changed && (
-          <p role="status" className="notice">
+          <p
+            role="status"
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+          >
             {t('changed')}
           </p>
         )}
-        <div className="summary-total">
+        <div className="mt-3 flex items-center justify-between gap-5 border-t py-[18px] text-sm">
           <span>{t('total')}</span>
-          <strong>{formatPrice(total, locale)}</strong>
+          <strong className="text-[22px] font-semibold whitespace-nowrap">
+            {formatPrice(total, locale)}
+          </strong>
         </div>
         {error && (
-          <p role="alert" className="notice">
+          <p
+            role="alert"
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+          >
             {error}
           </p>
         )}
         {uncertain ? (
-          <Link href="/bookings" className="button-primary w-full">
-            {t('myBookings')}
-          </Link>
+          <Button size="lg" className="w-full" asChild>
+            <Link href="/bookings">{t('myBookings')}</Link>
+          </Button>
         ) : phase === 'select' ? (
           <>
-            <button
+            <Button
+              size="lg"
               type="button"
-              className="button-primary w-full"
+              className="w-full"
               disabled={!selected.length || status === 'loading'}
               onClick={() => setPhase('details')}
             >
               {t('continue')}
               <ArrowRight size={18} className="rtl:rotate-180" />
-            </button>
-            <p className="summary-note">{t('notReserved')}</p>
+            </Button>
+            <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
+              {t('notReserved')}
+            </p>
           </>
         ) : (
           <RequireAuth
@@ -216,19 +251,24 @@ export function SeatBooking({
         )}
       </aside>
       {phase === 'select' && (
-        <div className="mobile-selection-bar">
-          <div>
-            <span>{t('selectedCount', { count: selected.length })}</span>
-            <strong>{formatPrice(total, locale)}</strong>
+        <div className="fixed inset-x-0 bottom-0 z-25 flex items-center justify-between gap-4 border-t bg-card px-[18px] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_#092b4710] md:hidden">
+          <div className="grid gap-0.5">
+            <span className="text-xs text-muted-foreground">
+              {t('selectedCount', { count: selected.length })}
+            </span>
+            <strong className="text-xl font-semibold whitespace-nowrap">
+              {formatPrice(total, locale)}
+            </strong>
           </div>
-          <button
+          <Button
+            size="lg"
             type="button"
-            className="button-primary"
+
             disabled={!selected.length || status === 'loading'}
             onClick={() => setPhase('details')}
           >
             {t('continue')}
-          </button>
+          </Button>
         </div>
       )}
     </div>

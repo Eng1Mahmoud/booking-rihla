@@ -1,4 +1,6 @@
 'use client';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { paymentOutcome } from '@/features/bookings/lib/paymentState';
@@ -9,14 +11,21 @@ export function PaymentStatus({ payment }: { payment: BookingPayment }) {
   return (
     <>
       <section
-        className={'payment-outcome outcome-' + outcome}
+        className={cn(
+          'mb-5 border-s-[3px] ps-3.5',
+          outcome === 'paid' && 'border-emerald-700',
+        )}
         aria-live="polite"
         aria-atomic="true"
       >
-        <h2>{t('outcomes.' + outcome + '.title')}</h2>
-        <p>{t('outcomes.' + outcome + '.note')}</p>
+        <h2 className="text-lg leading-relaxed">
+          {t('outcomes.' + outcome + '.title')}
+        </h2>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          {t('outcomes.' + outcome + '.note')}
+        </p>
         {payment.refundStatus && (
-          <p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             {t('refundState')}{' '}
             {t.has('refundStatuses.' + payment.refundStatus)
               ? t('refundStatuses.' + payment.refundStatus)
@@ -25,17 +34,21 @@ export function PaymentStatus({ payment }: { payment: BookingPayment }) {
         )}
       </section>
       {outcome === 'paid' && (
-        <Link
-          href={'/bookings/' + payment.bookingId + '/ticket'}
-          className="button-primary w-full mb-4"
-        >
-          {t('viewTicket')}
-        </Link>
+        <Button size="lg" className="w-full mb-4" asChild>
+          <Link href={'/bookings/' + payment.bookingId + '/ticket'}>
+            {t('viewTicket')}
+          </Link>
+        </Button>
       )}
       {['expired', 'failed'].includes(outcome) && (
-        <Link href="/" className="button-secondary w-full mb-4">
-          {t('findTrip')}
-        </Link>
+        <Button
+          size="lg"
+          className="bg-card w-full mb-4"
+          asChild
+          variant="outline"
+        >
+          <Link href="/">{t('findTrip')}</Link>
+        </Button>
       )}
     </>
   );

@@ -11,7 +11,7 @@ export default async function ForgotPasswordPage({
 }) {
   const { returnTo } = await searchParams;
   return (
-    <div className="container-shell">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)]">
       <PasswordRecovery
         initialStep="request"
         returnTo={safeReturnPath(returnTo)}

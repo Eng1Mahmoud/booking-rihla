@@ -1,3 +1,4 @@
+import { Button } from '@/shared/components/ui/button';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { TicketView } from '@/features/tickets/components/TicketView';
@@ -28,7 +29,7 @@ export default async function TicketPage({
     const unavailable =
       error instanceof ApiError && error.code === 'TICKET_NOT_FOUND';
     return (
-      <div className="container-shell page-space">
+      <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
         <ReadError
           autoRefresh
           title={unavailable ? t('unavailable') : t('error')}
@@ -38,15 +39,19 @@ export default async function TicketPage({
               : errorMessage(error, await getLocale())
           }
         >
-          <Link href={'/bookings/' + bookingId} className="text-button">
-            {t('back')}
-          </Link>
+          <Button
+            className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
+            asChild
+            variant="link"
+          >
+            <Link href={'/bookings/' + bookingId}>{t('back')}</Link>
+          </Button>
         </ReadError>
       </div>
     );
   }
   return (
-    <div className="container-shell page-space">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
       <TicketView initial={ticket.ticket} userId={ticket.userId} />
     </div>
   );

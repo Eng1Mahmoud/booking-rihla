@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/shared/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTicket } from '../hooks/useTicket';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -22,23 +23,31 @@ export function TicketView({
   // A failed refresh must not keep displaying an old usable ticket.
   if (query.isError)
     return (
-      <div role="alert" className="notice">
+      <div
+        role="alert"
+        className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+      >
         {errorMessage(query.error, locale)}{' '}
-        <button
+        <Button
+          variant="link"
           type="button"
-          className="text-button"
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
           onClick={() => void query.refetch()}
         >
           {t('refresh')}
-        </button>
+        </Button>
       </div>
     );
   const ticket = query.data;
   const bookingId = ticket.bookingId;
   const back = (
-    <Link href={'/bookings/' + bookingId} className="text-button">
-      {t('back')}
-    </Link>
+    <Button
+      className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
+      asChild
+      variant="link"
+    >
+      <Link href={'/bookings/' + bookingId}>{t('back')}</Link>
+    </Button>
   );
   const { origin, destination } = ticket.trip;
   const name = (station: typeof origin) =>
@@ -52,26 +61,37 @@ export function TicketView({
     : null;
   return (
     <>
-      <div className="section-heading">
-        <h1>{t('title')}</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
+        <h1 className="text-[26px] font-semibold md:text-[29px]">
+          {t('title')}
+        </h1>
         {back}
       </div>
-      <article className="panel ticket-layout" aria-label={t('title')}>
+      <article
+        className="rounded-2xl border bg-card grid min-w-0 gap-8 p-[22px] md:grid-cols-[minmax(0,1fr)_280px] md:p-8"
+        aria-label={t('title')}
+      >
         <section>
-          <p className="pill">{t('confirmed')}</p>
-          <h2 className="ticket-route">
+          <p className="inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-primary">
+            {t('confirmed')}
+          </p>
+          <h2 className="my-5 text-[22px] font-semibold md:text-[26px]">
             {city(origin)} — {city(destination)}
           </h2>
-          <dl className="ticket-facts">
+          <dl className="grid gap-5">
             <div>
-              <dt>{t('reference')}</dt>
-              <dd>
+              <dt className="mb-1 text-sm text-muted-foreground">
+                {t('reference')}
+              </dt>
+              <dd className="m-0 leading-relaxed wrap-anywhere">
                 <bdi>{ticket.reference}</bdi>
               </dd>
             </div>
             <div>
-              <dt>{t('departure')}</dt>
-              <dd>
+              <dt className="mb-1 text-sm text-muted-foreground">
+                {t('departure')}
+              </dt>
+              <dd className="m-0 leading-relaxed wrap-anywhere">
                 {name(origin)}
                 <br />
                 {formatDate(ticket.trip.departureAt, locale)} —{' '}
@@ -79,8 +99,10 @@ export function TicketView({
               </dd>
             </div>
             <div>
-              <dt>{t('arrival')}</dt>
-              <dd>
+              <dt className="mb-1 text-sm text-muted-foreground">
+                {t('arrival')}
+              </dt>
+              <dd className="m-0 leading-relaxed wrap-anywhere">
                 {name(destination)}
                 <br />
                 {formatDate(ticket.trip.arrivalAt, locale)} —{' '}
@@ -88,31 +110,43 @@ export function TicketView({
               </dd>
             </div>
             <div>
-              <dt>{t('issued')}</dt>
-              <dd>
+              <dt className="mb-1 text-sm text-muted-foreground">
+                {t('issued')}
+              </dt>
+              <dd className="m-0 leading-relaxed wrap-anywhere">
                 {formatDate(ticket.issuedAt, locale)} —{' '}
                 <bdi>{formatTime(ticket.issuedAt, locale)}</bdi>
               </dd>
             </div>
             <div>
-              <dt>{t('total')}</dt>
-              <dd>{formatPrice(ticket.totalPiastres, locale)}</dd>
+              <dt className="mb-1 text-sm text-muted-foreground">
+                {t('total')}
+              </dt>
+              <dd className="m-0 leading-relaxed wrap-anywhere">
+                {formatPrice(ticket.totalPiastres, locale)}
+              </dd>
             </div>
           </dl>
           <h3 className="mt-6">{t('passengers')}</h3>
-          <ul className="passenger-list">
+          <ul className="mt-4 grid list-none gap-2 p-0">
             {ticket.passengers.map((person) => (
-              <li key={person.seatNumber}>
+              <li
+                className="flex flex-wrap justify-between gap-3 border-b py-3"
+                key={person.seatNumber}
+              >
                 <span>{person.name}</span>
-                <strong>{t('seat', { number: person.seatNumber })}</strong>
+                <strong className="font-medium">
+                  {t('seat', { number: person.seatNumber })}
+                </strong>
               </li>
             ))}
           </ul>
-          <p className="muted text-sm mt-5">{t('timeZone')}</p>
+          <p className="text-muted-foreground text-sm mt-5">{t('timeZone')}</p>
         </section>
-        <aside className="ticket-qr">
+        <aside className="self-start border-t pt-5 text-center md:border-t-0 md:pt-0">
           {qrImage ? (
             <Image
+              className="mx-auto block h-auto max-w-full"
               unoptimized
               src={qrImage}
               width={256}
@@ -120,17 +154,26 @@ export function TicketView({
               alt={t('qrAlt')}
             />
           ) : (
-            <p role="alert">{t('qrError')}</p>
+            <p
+              className="my-[18px] text-sm leading-relaxed text-muted-foreground"
+              role="alert"
+            >
+              {t('qrError')}
+            </p>
           )}
-          <p>{t('qrNote')}</p>
-          <button
+          <p className="my-[18px] text-sm leading-relaxed text-muted-foreground">
+            {t('qrNote')}
+          </p>
+          <Button
+            size="lg"
+            variant="outline"
             type="button"
-            className="button-secondary"
+            className="bg-card"
             disabled={query.isFetching}
             onClick={() => void query.refetch()}
           >
             {t('refresh')}
-          </button>
+          </Button>
         </aside>
       </article>
     </>

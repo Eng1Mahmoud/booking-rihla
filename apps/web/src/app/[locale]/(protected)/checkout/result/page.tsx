@@ -20,7 +20,7 @@ export default async function PaymentResultPage({
     notFound();
   // Provider query flags never determine payment status.
   return (
-    <div className="container-shell page-space">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
       <PaymentResult bookingId={bookingId} />
     </div>
   );

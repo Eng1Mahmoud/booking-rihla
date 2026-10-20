@@ -1,6 +1,11 @@
-export function SeatIcon() {
+export function SeatIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 40 40"
+      fill="none"
+      aria-hidden="true"
+    >
       <rect
         x="10"
         y="4"
@@ -22,9 +27,14 @@ export function SeatIcon() {
     </svg>
   );
 }
-export function SteeringWheel() {
+export function SteeringWheel({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 40 40"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle cx="20" cy="20" r="15" stroke="currentColor" strokeWidth="2" />
       <circle cx="20" cy="20" r="4" stroke="currentColor" strokeWidth="2" />
       <path

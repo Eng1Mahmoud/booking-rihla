@@ -1,3 +1,4 @@
+import { Button } from '@/shared/components/ui/button';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
@@ -19,10 +20,12 @@ export async function PaymentResult({ bookingId }: { bookingId?: string }) {
   }
   return (
     <>
-      <div className="section-heading">
-        <h1>{t('title')}</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
+        <h1 className="text-[26px] font-semibold md:text-[29px]">
+          {t('title')}
+        </h1>
       </div>
-      <p className="muted mb-6">{t('note')}</p>
+      <p className="text-muted-foreground mb-6">{t('note')}</p>
       {initial ? (
         <BookingDetail
           key={initial.booking.id}
@@ -30,11 +33,11 @@ export async function PaymentResult({ bookingId }: { bookingId?: string }) {
           afterCheckout
         />
       ) : (
-        <section className="panel result-entry">
+        <section className="rounded-2xl border bg-card grid justify-items-start gap-[18px] p-7">
           <p>{t('chooseBooking')}</p>
-          <Link href="/bookings" className="button-primary">
-            {t('bookings')}
-          </Link>
+          <Button size="lg" asChild>
+            <Link href="/bookings">{t('bookings')}</Link>
+          </Button>
         </section>
       )}
     </>

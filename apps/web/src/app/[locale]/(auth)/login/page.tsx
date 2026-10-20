@@ -13,7 +13,7 @@ export default async function LoginPage({
   if (user)
     redirect('/' + (await getLocale()) + safeReturnPath(query.returnTo));
   return (
-    <div className="container-shell">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)]">
       <LoginScreen
         returnTo={typeof query.returnTo === 'string' ? query.returnTo : '/'}
       />

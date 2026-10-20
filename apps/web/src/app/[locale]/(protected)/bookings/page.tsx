@@ -19,13 +19,13 @@ export default async function BookingsPage({
     result = await getBookings(offset);
   } catch (error) {
     return (
-      <div className="container-shell page-space">
+      <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
         <ReadError message={errorMessage(error, await getLocale())} />
       </div>
     );
   }
   return (
-    <div className="container-shell page-space">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
       <BookingHistory
         key={result.userId + ':' + offset}
         bookings={result.items}

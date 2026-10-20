@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/shared/components/ui/button';
 import { useEffect, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
@@ -34,16 +35,23 @@ export function RequireAuth({
   }, [status, router, returnTo, pathname, forbidden]);
   if (status === 'unavailable')
     return (
-      <div className="notice" role="alert">
+      <div
+        className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+        role="alert"
+      >
         {t('sessionUnavailable')}{' '}
-        <button className="text-button" onClick={() => void reloadSession()}>
+        <Button
+          variant="link"
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
+          onClick={() => void reloadSession()}
+        >
           {t('retrySession')}
-        </button>
+        </Button>
       </div>
     );
   if (status !== 'signed-in' || forbidden)
     return (
-      <p className="loading-state" role="status">
+      <p className="py-15 text-center text-muted-foreground" role="status">
         {t('checkingSession')}
       </p>
     );

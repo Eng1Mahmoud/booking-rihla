@@ -1539,7 +1539,7 @@ TanStack owns the API data cache. HTTP fetches use no-store. Internal feature li
 
 Query keys include locale and private owner identity where relevant. Login/logout clear previous query data. No access or refresh credentials enter query data or Action results. The QR view receives its image without a separate raw payload field.
 
-The request/data foundation and shared UI/forms foundation are implemented. Existing login/register/verification/recovery, search and passenger forms now use shared RHF/Zod components built on shadcn. Layout, forms and the home/search/trip screens use inline Tailwind; seat, booking/payment, account/history/ticket CSS and the full UX cleanup remain in the next batches. Runtime-local refresh single-flight still requires a separate deployment coordination decision for multiple runtimes or late old-token requests.
+The request/data foundation and shared UI/forms foundation are implemented. Existing login/register/verification/recovery, search and passenger forms now use shared RHF/Zod components built on shadcn. All passenger screens now use inline Tailwind utilities, including seats, booking/payment, account/history and tickets. globals.css contains theme/base rules and reduced-motion support only; the broader UX review remains separate. Runtime-local refresh single-flight still requires a separate deployment coordination decision for multiple runtimes or late old-token requests.
 
 ### Shared UI and forms
 
@@ -1552,3 +1552,7 @@ Use @hookform/resolvers 5.9.2 with this RHF7/Zod4 dependency set; version 6 curr
 ### Trip search UI migration
 
 HomeContent, TripResults, TripCard and TripDetails use inline Tailwind and shared shadcn buttons. QueryError owns recoverable query feedback; EmptyState owns empty/error presentation. Features still own query hooks and messages. Search keeps Cairo dates, city/station filters and 20-row pagination. SSR failures use RefreshPage to retry the current route. Base CSS now lives in @layer base so utilities can override defaults; 124 obsolete trip selectors were removed. No data/auth/payment rules changed. See IMPLEMENTATION_PLAN.md for validation and remaining UI stages.
+
+### Inline styling completed (2026-10-21)
+
+All remaining component CSS classes have been removed from globals.css and replaced with Tailwind utilities in JSX. Heading/text/icon styles sit on their elements. Shared Button handles action controls and links; size="lg" owns the repeated large-button dimensions. Seat row/column styles still come from the existing seat-number layout function. Data fetching, authentication, payment transitions and booking rules are unchanged. Production build, ESLint and temporary fake-backend browser checks passed; no saved tests or real transactions were added.

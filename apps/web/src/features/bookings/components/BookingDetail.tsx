@@ -1,4 +1,6 @@
 'use client';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
@@ -37,16 +39,20 @@ export function BookingDetail({
   }, [afterCheckout]);
   if (query.isError)
     return (
-      <div className="notice" role="alert">
+      <div
+        className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+        role="alert"
+      >
         {errorMessage(query.error, locale)}{' '}
-        <button
-          className="text-button"
+        <Button
+          variant="link"
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
           onClick={() => {
             void query.refetch();
           }}
         >
           {t('refresh')}
-        </button>
+        </Button>
       </div>
     );
   const booking = initial.booking;
@@ -103,49 +109,70 @@ export function BookingDetail({
     }
   }
   return (
-    <div className="booking-detail-layout">
-      <section className="panel booking-detail-main">
-        <div className="booking-reference">
+    <div className="grid gap-[18px] md:grid-cols-[minmax(0,1fr)_310px] md:gap-6 min-[1001px]:grid-cols-[minmax(0,1fr)_340px]">
+      <section className="rounded-2xl border bg-card min-w-0 p-6 md:p-[30px]">
+        <div className="mb-6 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span>{t('reference')}</span>
-          <bdi>{booking.reference}</bdi>
+          <bdi className="font-semibold tracking-wide text-foreground wrap-anywhere">
+            {booking.reference}
+          </bdi>
         </div>
-        <h1>
+        <h1 className="text-2xl font-semibold md:text-[27px]">
           {displayName(booking.trip.route.originStation.city, locale)} —{' '}
           {displayName(booking.trip.route.destinationStation.city, locale)}
         </h1>
-        <p className="muted mt-3">
+        <p className="text-muted-foreground mt-3">
           {formatDate(booking.trip.departureAt, locale)}
         </p>
-        <div className="journey-stations">
-          <div>
-            <strong>{formatTime(booking.trip.departureAt, locale)}</strong>
-            <span>{displayName(booking.trip.route.originStation, locale)}</span>
+        <div className="mt-7 flex items-center justify-between gap-3 border-y py-6 md:gap-5">
+          <div className="grid min-w-0 gap-1.5">
+            <strong className="text-xl font-semibold md:text-[22px]">
+              {formatTime(booking.trip.departureAt, locale)}
+            </strong>
+            <span className="text-xs text-muted-foreground">
+              {displayName(booking.trip.route.originStation, locale)}
+            </span>
           </div>
-          <ArrowRight size={24} className="rtl:rotate-180" />
-          <div>
-            <strong>{formatTime(booking.trip.arrivalAt, locale)}</strong>
-            <span>
+          <ArrowRight
+            size={24}
+            className="shrink-0 text-slate-400 rtl:rotate-180"
+          />
+          <div className="grid min-w-0 gap-1.5">
+            <strong className="text-xl font-semibold md:text-[22px]">
+              {formatTime(booking.trip.arrivalAt, locale)}
+            </strong>
+            <span className="text-xs text-muted-foreground">
               {displayName(booking.trip.route.destinationStation, locale)}
             </span>
           </div>
         </div>
-        <h2>{t('passengers')}</h2>
-        <div className="passenger-list">
+        <h2 className="mt-7 text-lg font-semibold">{t('passengers')}</h2>
+        <div className="mt-4 grid gap-2">
           {booking.passengers?.map((person) => (
-            <div key={person.seatId}>
+            <div
+              className="flex justify-between gap-3 border-b py-2.5 text-sm"
+              key={person.seatId}
+            >
               <span>{person.name}</span>
-              <strong>{t('seat', { number: person.seatNumber })}</strong>
+              <strong className="font-medium">
+                {t('seat', { number: person.seatNumber })}
+              </strong>
             </div>
           ))}
         </div>
-        <p className="mt-5 text-sm muted">
+        <p className="mt-5 text-sm text-muted-foreground">
           {t('contact')} <bdi>{booking.contactPhone}</bdi>
         </p>
-        <p className="mt-5 text-sm muted">{t('noCancellation')}</p>
+        <p className="mt-5 text-sm text-muted-foreground">
+          {t('noCancellation')}
+        </p>
       </section>
-      <aside className="panel payment-summary">
+      <aside className="rounded-2xl border bg-card h-fit min-w-0 p-6">
         <div
-          className={'booking-state ' + (outcome === 'paid' ? 'confirmed' : '')}
+          className={cn(
+            'flex items-center gap-2.5 text-sm',
+            outcome === 'paid' ? 'text-emerald-700' : 'text-amber-800',
+          )}
         >
           {outcome === 'paid' ? (
             <CheckCircle2 size={21} />
@@ -154,54 +181,71 @@ export function BookingDetail({
           )}
           <strong>{t('statuses.' + payment.bookingStatus)}</strong>
         </div>
-        <div className="summary-total">
+        <div className="mt-3 flex items-center justify-between gap-5 border-t py-[18px] text-sm">
           <span>{t('total')}</span>
-          <strong>{formatPrice(booking.totalPiastres, locale)}</strong>
+          <strong className="text-[22px] font-semibold whitespace-nowrap">
+            {formatPrice(booking.totalPiastres, locale)}
+          </strong>
         </div>
         {!afterCheckout && booking.paymentRequired && seconds > 0 && (
-          <div className="hold-timer" role="timer">
+          <div
+            className="mb-4 flex items-center gap-2.5 rounded-lg bg-accent p-3 text-xs text-primary"
+            role="timer"
+          >
             <Clock size={20} />
             <span>{t('remaining')}</span>
-            <bdi>
+            <bdi className="ms-auto text-[21px] font-semibold">
               {String(Math.floor(seconds / 60)).padStart(2, '0')}:
               {String(seconds % 60).padStart(2, '0')}
             </bdi>
           </div>
         )}
-        <p className="muted text-sm leading-7 mb-4">
+        <p className="text-muted-foreground text-sm leading-7 mb-4">
           {t('paymentState')} {t('paymentStatuses.' + payment.paymentStatus)}
         </p>
         <PaymentStatus payment={payment} />
         {error && (
-          <p className="notice mb-4" role="alert">
+          <p
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950 mb-4"
+            role="alert"
+          >
             {error}
           </p>
         )}
         {canPay ? (
           <>
-            <button
+            <Button
+              size="lg"
               type="button"
               disabled={busy}
-              className="button-primary w-full"
+              className="w-full"
               onClick={pay}
             >
               {busy ? t('working') : t('pay')}
-            </button>
-            <p className="summary-note">{t('paymentNote')}</p>
+            </Button>
+            <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
+              {t('paymentNote')}
+            </p>
           </>
         ) : outcome === 'waiting' &&
           booking.paymentRequired &&
           seconds === 0 ? (
-          <p className="notice">{t('expired')}</p>
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950">
+            {t('expired')}
+          </p>
         ) : outcome === 'waiting' &&
           booking.paymentRequired &&
           !checkoutEnabled ? (
-          <p className="notice" role="status">
+          <p
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+            role="status"
+          >
             {t('checkoutUnavailable')}
           </p>
         ) : null}
-        <button
-          className="text-button w-full mt-4"
+        <Button
+          variant="link"
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal w-full mt-4"
           type="button"
           onClick={() => {
             void query.refetch();
@@ -209,10 +253,14 @@ export function BookingDetail({
           disabled={query.isFetching}
         >
           {t('refresh')}
-        </button>
-        <Link href="/bookings" className="text-button w-full mt-3">
-          {t('myBookings')}
-        </Link>
+        </Button>
+        <Button
+          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal w-full mt-3"
+          asChild
+          variant="link"
+        >
+          <Link href="/bookings">{t('myBookings')}</Link>
+        </Button>
       </aside>
     </div>
   );

@@ -7,7 +7,7 @@ export default async function AccountPage() {
   const user = await getCurrentUser().catch(() => null);
   if (!user) return null;
   return (
-    <div className="container-shell page-space">
+    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
       <AccountProfile user={user} />
     </div>
   );
