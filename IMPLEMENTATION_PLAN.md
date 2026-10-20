@@ -1100,3 +1100,35 @@ Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خ�
 - يستخدم Middleware apiFetch نفسه لتجديد واحد وGET واحد معاد عند 401. Cookies المجددة تصل إلى render الجاري والرد؛ 401 المؤكد يعيد login مع returnTo، والدور غير المسموح يعيد forbidden. فشل الخدمة يعطي 503 ويحافظ على Cookies، بما فيها التوكنات الجديدة إذا نجح التدوير قبل فشل GET التالي.
 - يوجد طلب Backend للتحقق لكل طلب يمر عبر Middleware ومعه Cookies جلسة. يبقى تحقق SSR وActions والـBackend مستقلًا؛ لا نمرر هوية موثوقة في Headers قابلة للتزوير ولا نخزن الدور بين المستخدمين. الصفحات العامة بلا جلسة لا تستدعي auth/me من Middleware.
 - التحقق: نجح ESLint وبناء الإنتاج مع TypeScript دون مفتاح JWT في الويب؛ 17 حالة معزولة تستخدم NextRequest/NextResponse الفعليين وfetch وهميًا، تشمل الدور الحالي والترقية والخفض والضوابط الخاصة والتوكن المنتهي وإلغاء الجلسة والتعطل وتزامن ستة طلبات والتدوير الناجح متبوعًا بفشل القراءة. نجحت 7 حالات HTTP فعلية على نسخة الإنتاج مع Backend وهمي: المنع، والترقية رغم claim USER القديم، وSSR دون سر توقيع في الويب، وCookies التجديد لنفس العرض، والخفض، والتعطل، والإلغاء. لا اختبارات محفوظة بالمشروع ولا DB أو Paymob أو تغييرات Backend. يظل تنسيق refresh عبر runtimes والطلبات المتأخرة قرار نشر مستقلًا. لا push دون موافقة.
+
+### تدقيق إغلاق متطلبات Auth/API — 2026-10-21
+
+المرجع هو Auth and API Refactor Spec مع قرارَي المستخدم الأحدث: TanStack + Server Actions للقراءات والكتابات التفاعلية، والدور الحالي من Backend داخل Middleware. تغييرات كل مرحلة لا تعني أن بقية البنود لم تكن موجودة؛ الجدول التالي يميز الحالة الكاملة.
+
+| البند                                        | الحالة الحالية                                                                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Session + Access JWT + rotating RefreshToken | محفوظ؛ لا تغيير في نموذج Backend أو مدة التوكنات                                                                              |
+| قراءات وكتابات الواجهة                       | مطبق: TanStack Hook → Feature Server Action → apiFetch؛ SSR لبيانات البداية                                                   |
+| منع read Actions في الملف القديم             | مستبدل صراحة بقرار المستخدم؛ لا يُنفذ                                                                                         |
+| apiFetch server-only مركزي                   | مطبق؛ لا Feature API wrappers أو HTTP gateway عام                                                                             |
+| HttpOnly access/refresh cookies              | مطبق؛ أسرار الجلسة لا تدخل Action result أو TanStack أو Zustand                                                               |
+| Refresh على السيرفر فقط                      | مطبق في Middleware وapiFetch، دون browser refresh flow                                                                        |
+| دمج Refresh المتزامن                         | مطبق داخل runtime واحد؛ Map يحذف الطلب عند الاستقرار                                                                          |
+| حماية الأدوار                                | مطبق: Middleware يقرأ auth/me من Backend ثم يطبق roleRoutes                                                                   |
+| local JWT verification في proxy              | مستبدل صراحة بقرار المستخدم؛ لا يحتاج الويب مفتاح التوقيع                                                                     |
+| تمرير Cookies المجددة لنفس render            | مطبق، مع حفظها في redirects وحتى 503 إذا نجح التدوير قبل فشل القراءة                                                          |
+| صلاحيات Backend وActions الخاصة              | محفوظة؛ المصادقة والملكية داخل عمليات Backend، مع preflight للكتابات وقراءة الملكية قبل checkout/inquiry                      |
+| الرد success/code/message/data/requestId     | مطبق في Backend، وتعرض الواجهة message وتفرع القرارات على code                                                                |
+| ترجمة Accept-Language وvalidation عامة       | مطبق؛ 84 literal codes مدققة بلا ترجمات مفقودة؛ Auth وBookings يستخدمان validationError المشتركة                              |
+| requestId في الأخطاء غير المتوقعة فقط        | مطبق للأخطاء 5xx غير المتوقعة؛ لا تفاصيل استثناء أو مصفوفة أخطاء في الرد                                                      |
+| متابعة الدفع                                 | Route Handler GET واحد، محمي وowner-scoped؛ لا polling عبر Actions أو مصالحة Paymob داخل GET                                  |
+| عدم تكرار الكتابة/الدفع مجهول النتيجة        | مطبق؛ mutations بلا retry وIdempotency-Key محفوظ                                                                              |
+| إزالة القديم والمهاجرة التدريجية             | apiClient/apiFetch/authCookies القديمة والـGateway وFeature api wrappers محذوفة؛ توثيق تاريخ المراحل محفوظ وموسوم كحالة سابقة |
+
+**التنظيف في هذه الدفعة:** أزيل تكرار إنشاء خطأ VALIDATION_ERROR في auth.actions وbookings.actions لصالح shared/lib/apiResult.validationError؛ لم نضف طبقة أو عميل HTTP جديدًا.
+
+**التحقق الإضافي:** تدقيق المصدر وجد 84 code حرفيًا معرفة في قاموس الرسائل وصفر JSON responses مباشرة في Controllers. نجحت 16 حالة HTTP مع Express معزول تغطي نجاح/إنشاء/validation/JSON تالف/جسم كبير/404/500/503 المتوقعة بالعربية والإنجليزية، وصحة X-Request-ID وعدم كشف الاستثناءات. نجحت 17 حالة API/Actions معزولة بعد التنظيف تشمل HttpOnly/redaction والتجديد والتزامن والتحقق قبل mutation وعدم إعادة الكتابة مجهولة النتيجة وملكية التذكرة. TypeScript وESLint وبناء الإنتاج ضمن فحص الدفعة. لا DB/Paymob أو اختبارات آلية محفوظة بالمشروع.
+
+**المفتوح قبل تشغيل عدة نسخ من السيرفر:** تنسيق تجديد الجلسة بين runtimes/replicas والطلبات المتأخرة التي تحمل Refresh قديمًا. Map الذاكرة الحالية لا تحل هذا السيناريو؛ نموذج التدوير الصارم وفشل إعادة استخدام التوكن محفوظان. لا grace window أو تخزين/تنسيق مشترك مضاف دون قرار مستقل. اختيارات JSON refresh opt-in أو تغيير خوارزمية JWT في الملف القديم اختيارية وليست تعديلات لازمة لهذه الدفعة.
+
+**التالي:** قرار تنسيق Refresh إذا بدأ تجهيز نشر متعدد النسخ؛ وإلا متابعة الميزات/مراجعة UX وفق خطة الموقع. لا نعيد بناء الأجزاء المنفذة أو نستبدل قرارات المستخدم الأحدث. لا push دون موافقة.

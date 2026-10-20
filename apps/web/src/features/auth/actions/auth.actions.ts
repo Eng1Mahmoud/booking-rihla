@@ -3,7 +3,7 @@
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib/apiResult';
+import { validationError, type ApiResult } from '@/shared/lib/apiResult';
 import {
   loginSchema,
   registerSchema,
@@ -32,17 +32,7 @@ async function submit<T>(
 ): Promise<ApiResult<T>> {
   const locale = await getLocale();
   const parsed = schema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      success: false,
-      status: 400,
-      code: 'VALIDATION_ERROR',
-      message:
-        locale === 'ar'
-          ? 'راجع البيانات المدخلة وحاول مجددًا.'
-          : 'Check your details and try again.',
-    };
-  }
+  if (!parsed.success) return validationError(locale);
   // apiFetch keeps tokens private and authenticates protected mutations before sending them.
   return apiFetch<T>(path, {
     method: 'POST',

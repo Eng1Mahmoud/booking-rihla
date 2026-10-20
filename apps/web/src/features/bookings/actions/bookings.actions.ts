@@ -2,7 +2,7 @@
 
 import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib/apiResult';
+import { validationError, type ApiResult } from '@/shared/lib/apiResult';
 import {
   createBookingSchema,
   bookingIdSchema,
@@ -14,15 +14,7 @@ import type { Booking, BookingPayment } from '../types/booking';
 
 async function invalidInput(): Promise<ApiResult<never>> {
   const locale = await getLocale();
-  return {
-    success: false,
-    status: 400,
-    code: 'VALIDATION_ERROR',
-    message:
-      locale === 'ar'
-        ? 'راجع البيانات المدخلة وحاول مجددًا.'
-        : 'Check your details and try again.',
-  };
+  return validationError(locale);
 }
 
 export async function createBookingAction(input: CreateBookingInput) {
