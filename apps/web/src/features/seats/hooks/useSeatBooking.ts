@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { useStore } from 'zustand';
+
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -14,7 +14,7 @@ import {
   errorMessage,
 } from '@/shared/lib/apiResult';
 import type { SeatList, Trip } from '@/features/trips/types/trip';
-import { createBookingStore } from '../store/bookingStore';
+
 import { getTripSeatsAction } from '../actions/seats.actions';
 import { seatKeys } from './queryKeys';
 
@@ -25,21 +25,18 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   const createBooking = useCreateBooking();
   const summaryRef = useRef<HTMLElement>(null);
   const searchParams = useSearchParams();
-  const [store] = useState(() => {
-    const store = createBookingStore();
+  // Restore only seats that still exist and are available after returning from login.
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
     const ids = (searchParams.get('seats') ?? '')
       .split(',')
       .slice(0, initialSeats.seats.length);
-    for (const seat of initialSeats.seats) {
-      if (seat.isAvailable && ids.includes(seat.id))
-        store.getState().toggle(seat.id);
-    }
-    return store;
+    return initialSeats.seats
+      .filter((seat) => seat.isAvailable && ids.includes(seat.id))
+      .map((seat) => seat.id);
   });
-  const selectedIds = useStore(store, (state) => state.selectedIds);
   const { user, status, reloadSession } = useAuth();
   const [phase, setPhase] = useState<'select' | 'details'>(
-    store.getState().selectedIds.length ? 'details' : 'select',
+    selectedIds.length ? 'details' : 'select',
   );
   useEffect(() => {
     if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
@@ -62,7 +59,9 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     (seat) => selectedIds.includes(seat.id) && seat.isAvailable,
   );
   function toggle(id: string) {
-    store.getState().toggle(id);
+    setSelectedIds((ids) =>
+      ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id],
+    );
     // Keep the details form mounted when selection changes, preserving the remaining names.
     setError('');
   }
@@ -87,7 +86,7 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
         tripId: trip.id,
         ...input,
       });
-      store.getState().clear();
+      setSelectedIds([]);
       router.push('/bookings/' + result.id);
     } catch (cause) {
       if (isUncertainRequestError(cause)) {

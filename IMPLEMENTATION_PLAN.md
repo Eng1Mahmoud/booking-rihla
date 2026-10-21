@@ -230,14 +230,13 @@ Planning update — 2026-10-19. The owner requested discussion of tooling, featu
 | shadcn/ui                                                       | Editable UI primitives such as buttons, fields, dialogs and sheets, styled with our identity        | Add components when needed    |
 | next-intl                                                       | Arabic/English messages, locale routes and direction                                                | Foundation                    |
 | TanStack Query                                                  | Interactive server state: seat availability, owned bookings, payment polling and cache invalidation | First interactive API feature |
-| Zustand                                                         | Explicit global client state: session state in memory, booking draft and cross-component UI state   | Owner-selected frontend tool  |
 | React Hook Form + Zod                                           | Form state and browser validation, with server validation remaining authoritative                   | First account forms           |
 | Native fetch                                                    | Small typed API transport with normalized errors, cancellation and explicit retry rules             | Foundation                    |
 | Lucide React                                                    | Consistent icons; preserve physical seat orientation in RTL                                         | As needed                     |
 | Intl                                                            | Cairo date/time, durations and EGP display                                                          | Foundation                    |
 | Existing npm workspaces, ESLint, Prettier and TypeScript checks | Repository workflow and verification                                                                | Extend existing configuration |
 
-Install current compatible stable versions at implementation time and preserve exact resolved versions in package-lock.json. Continue npm rather than adding another package manager. Owner decision: use Zustand for global client state. Keep small focused stores for authentication/session state in memory and the booking draft (tripId/selected seatIds), plus cross-component UI state only where needed. useState/useReducer still handle component-local state; React Hook Form owns form state; TanStack Query owns fetched server data. Do not copy API query results into Zustand. A selected seat in the store is a draft, never a reservation. Revalidate against the backend before creating a hold. Clear draft state after completion, expiry, logout or an incompatible trip change as appropriate. Do not persist access/refresh tokens, passwords, verification codes, passenger/contact information or checkout URLs in browser storage. If search/theme preferences are persisted, use a narrow allowlist and handle hydration deliberately. Create scoped store instances through a client provider when integrating with Next.js; avoid request-specific mutable server-module singletons and do not read or mutate client stores from Server Components.
+Install current compatible stable versions at implementation time and preserve exact resolved versions in package-lock.json. Continue npm rather than adding another package manager. Owner decision (2026-10-21): no Zustand or additional global client store. TanStack Query owns fetched server data, including the current user under authKeys.me; React Hook Form owns form state; useState/useReducer own local UI state and the selected-seat draft. A selected seat is never a reservation: backend availability and ownership remain authoritative. Keep shareable search/filter/page state in the URL. Do not persist access/refresh tokens, passwords, verification codes, passenger/contact information or checkout URLs in browser storage. SSR QueryClient instances are request-scoped; only the safe user view is hydrated, never credentials.
 
 Public search/details use Server Components where useful. TanStack Query owns live interactive reads; do not create two independent caches for the same data. Query strings hold search/date/page state so reload/back/share work. Seat/payment reads must remain fresh rather than being statically cached. Browser access tokens stay in memory; refresh tokens remain in the backend HttpOnly cookie. The API client coordinates refresh and does not blindly repeat booking/checkout/refund writes after an uncertain response. Coordinate refresh across tabs before declaring session integration complete. Keep database and Paymob secrets exclusively in the backend.
 
@@ -715,7 +714,7 @@ Validated production build/TypeScript, root ESLint, isolated ordering checks and
 | حماية التنقل          | middleware منظمة، تُشغَّل من proxy.ts                                          |
 | الصلاحيات النهائية    | Backend، مع تحقق Actions الخاصة من الجلسة والصلاحيات                           |
 | متابعة الدفع          | استثناء GET الحالي؛ لا ننفذ polling المتكرر عبر Actions                        |
-| Zustand               | المقاعد المختارة والمسودة المشتركة، وليس نسخة من بيانات TanStack أو قيم RHF    |
+| الحالة المحلية | useState/useReducer؛ لا Zustand أو متجر مستخدم إضافي |
 | الاختبارات            | لا ملفات اختبارات آلية جديدة حاليًا؛ تحقق الأنواع وLint والبناء وتجربة المتصفح |
 | Git                   | commits مترابطة؛ لا push قبل موافقة صريحة؛ لا أسرار أو ملفات build             |
 
@@ -723,7 +722,7 @@ Validated production build/TypeScript, root ESLint, isolated ordering checks and
 
 ## 3. الأدوات
 
-نحتفظ بـNext.js، React، TypeScript، Tailwind، next-intl، TanStack Query، Zustand، React Hook Form، Zod، Lucide وfetch.
+نحتفظ بـNext.js، React، TypeScript، Tailwind، next-intl، TanStack Query، React Hook Form، Zod، Lucide وfetch.
 
 عند تنفيذ الأساس نضيف shadcn ومكوّناته وتبعياته حسب الحاجة، و`@hookform/resolvers` لربط Zod بالنماذج، و`clsx`/`tailwind-merge` لدالة `cn` إذا احتاج إعداد shadcn ذلك. لا Axios أو مكتبة حالة بديلة، ولا تثبيت كل مكوّنات shadcn مقدمًا.
 
@@ -933,7 +932,7 @@ Component/Form
 | ---------------------------------- | ------------------ |
 | قيم وأخطاء النموذج                 | React Hook Form    |
 | بيانات السيرفر التفاعلية           | TanStack Query     |
-| المقاعد المختارة والمسودة المشتركة | Zustand داخل seats |
+| المقاعد المختارة داخل تدفق الحجز | useState داخل useSeatBooking |
 | البحث والفلاتر ورقم الصفحة         | URL                |
 | فتح نافذة/إظهار كلمة المرور        | useState           |
 | التوكنات                           | HttpOnly Cookies   |
@@ -1077,7 +1076,7 @@ Form يهيئ useForm وzodResolver وFormProvider وhandleSubmit ويعرض خ�
 
 - توحيد HTTP إلى Express في shared/lib/api.ts، وإدارة Cookies واستخراج التوكنات في session.ts، وApiResult/invokeAction في apiResult.ts. حذف apiClient/apiFetch/authCookies القديمة وFeature API wrappers.
 - Actions وHooks للقراءات التفاعلية: المستخدم الحالي والكتالوج والبحث وتفاصيل الرحلة والمقاعد وسجل الحجوزات والتذكرة، بالإضافة إلى Actions الكتابة الموجودة. مفاتيح auth والحجوزات قرب ميزاتها؛ لا مفاتيح ميزات داخل queryClient.ts.
-- SSR يهيئ بيانات البداية؛ ملفات lib/*.server.ts داخلية لهذا الغرض. كل fetch يستخدم no-store؛ كاش الواجهة في TanStack فقط. المقاعد تتحدث بدون router.refresh أو فقد اختيارات Zustand وأسماء الركاب.
+- SSR يهيئ بيانات البداية؛ ملفات lib/*.server.ts داخلية لهذا الغرض. كل fetch يستخدم no-store؛ كاش الواجهة في TanStack فقط. المقاعد تتحدث بدون router.refresh أو فقد اختيارات المقاعد وأسماء الركاب.
 - متابعة الدفع عبر GET ثابت محفوظة، وكذلك منع إعادة الكتابة والدفع غير المؤكد وIdempotency-Key وحماية ترتيب ردود الدفع. التذكرة المرسلة للعميل تتضمن صورة QR فقط دون حقل payload منفصل.
 - لا تغيير في Backend أو قاعدة البيانات أو Paymob. لا تغييرات UI شاملة أو إعداد shadcn/RHF المشترك بعد؛ هذه تبدأ في الدفعة التالية.
 - التحقق: نجحت TypeScript وESLint وبناء الإنتاج و17 حالة معزولة للجلسة والـActions ومنع إعادة الكتابة، وتجربة متصفح للإصدار المبني مع Backend وهمي: بحث واختيار مقعد وlogin/returnTo وحفظ اسم الراكب عند تحديث المقاعد وإنشاء حجز وهمي وعرض الحجز والتذكرة والسجل بالعربية والإنجليزية والخروج. لا أخطاء متصفح، ولا عمليات على DB أو Paymob أو ملفات اختبارات داخل المشروع. يبقى تنسيق refresh بين runtimes والطلبات المتأخرة قرار نشر مستقل. لا push دون موافقة.
@@ -1229,3 +1228,12 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - أصبح مجلد password-recovery يحتوي ثلاثة ملفات فقط: PasswordRecovery لإطار Server، وPasswordRecoveryFlow لطلب الرمز والانتقال request/reset/done، وResetPasswordForm لتغيير كلمة المرور.
 - دُمج ForgotPasswordForm داخل PasswordRecoveryFlow، وأصبحت ResetPasswordActions دالة مكوّن محلية داخل ResetPasswordForm بدل ملف مستقل؛ تبقى حقول Form مباشرة وأدوات النماذج وHooks وSchemas المشتركة كما هي.
 - حفظ البريد بين الخطوات دون إضافته للرابط، وreturnTo، ومسار إدخال رمز موجود، ومهلة إعادة الإرسال ومسح الرمز القديم والتركيز، ورسائل الفشل والنتيجة غير المؤكدة. لا تغيير في Backend أو سياسة الجلسة.
+
+### إزالة Zustand وتثبيت مسؤوليات الحالة — 2026-10-21
+
+- قرار المالك الحالي يحل محل الملاحظات التاريخية عن Zustand: أزيلت الحزمة من apps/web/package.json وpackage-lock.json، وحُذف seats/store/bookingStore.ts. أُلغي تعديل متجر المستخدم المعلّق قبل حفظه في Git؛ لا AuthStoreContext أو متجر مستخدم ثانٍ.
+- بيانات المستخدم في TanStack تحت authKeys.me. useAuth يشارك القراءة والكاش، وتُحدّث البيانات عبر setQueryData عند الدخول أو رد تحديث حساب لاحق. resetAuthCache يلغي الطلبات ويزيل بيانات الحساب السابق عند الخروج أو انتهاء الجلسة أو تغيير كلمة المرور. SSR يهيّئ كاش المستخدم الآمن عبر QueryClient خاص بالطلب وHydrationBoundary؛ التوكنات في HttpOnly فقط.
+- AccountProfile يقرأ نفس useAuth، فتتحدث بطاقة الحساب مع الكاش دون قراءة مستخدم مستقلة في صفحة الحساب. لا إضافة endpoint أو نموذج لتعديل الملف الشخصي في هذه الدفعة.
+- selectedIds وtoggle/reset داخل useSeatBooking باستخدام useState وتحديث وظيفي. يُستعاد فقط المقعد الموجود والمتاح من returnTo، وتبقى حالة النموذج وأسماء الركاب عند تغيير الاختيار؛ فشل الحجز لا يمسح الاختيارات، ونجاحه يمسحها. Backend يظل مسؤولًا عن التوافر والحجز الفعلي.
+- التوزيع المعتمد: TanStack لبيانات API والمستخدم، وRHF للنماذج، وuseState للحالة المحلية، وURL للبحث والفلاتر ورقم الصفحة. لا تعديل في Backend أو Refresh أو تدفق الدفع، ولا تغيير في اتفاق Server Actions خلال هذه الدفعة.
+- التحقق: نجحت فحوص ESLint وTypeScript وبناء الإنتاج و6 فحوص معزولة للكاش. غطت معاينة بواجهة خلفية وهمية اختيار المقاعد وحفظ اسم الراكب وتسجيل الدخول والعودة للحجز وصفحة الحساب وإعادة تحميلها والخروج، دون أخطاء JavaScript أو اتصال بقاعدة البيانات أو Paymob؛ لم تضاف ملفات اختبارات للمستودع.
