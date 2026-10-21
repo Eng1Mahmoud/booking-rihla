@@ -1182,3 +1182,12 @@ useAuth now recognizes TanStack query errors as unavailable and retries the sess
 Passenger booking/checkout/status/ticket limits now use the authenticated user id. Public auth/session/recovery limits can distinguish clients behind Next using a signed IP context bound to timestamp, HTTP method and exact request URL. Configure an independent 32-byte hexadecimal API_CLIENT_CONTEXT_SECRET on API and Next, and TRUSTED_CLIENT_IP_HEADER (for example x-real-ip) on Next. The ingress must overwrite that header with one validated client IP and prevent direct Next-origin access; never trust arbitrary browser X-Forwarded-For. Missing or invalid signatures fall back to the API's normal trusted-network IP and do not grant a separate quota. With the feature disabled, anonymous callers behind Next still share its network quota. Production ingress settings cannot be inferred from local code and require explicit deployment configuration. No real secrets are added to example files.
 
 Rate-limit counters remain process-local. Multi-API deployments must use a shared limiter store or a trusted ingress enforcing the intended aggregate limits; signed client identity fixes attribution, not distributed counter storage. Keep direct API exposure restricted. No provider/payment behavior is changed.
+
+
+### توحيد التحقق في متابعة الدفع — 2026-10-21
+
+- يستخدم GET /api/payments/[bookingId]/status الآن parseSchema نفسه المستخدم في Server Actions؛ قواعد bookingId ورفض query parameters داخل paymentStatusInputSchema في ميزة الحجوزات.
+- يقبل parseSchema لغة اختيارية لمسارات Route Handlers التي تعمل خارج [locale]. عند عدم تمريرها، يقرأ لغة الصفحة كما كان في Actions. لا يُقرأ getLocale عند نجاح التحقق أو عند تمرير اللغة صراحة؛ ورسالة الخطأ العامة تدعم ar وar-EG وen دون كشف المدخلات أو Zod issues.
+- الحفاظ على CSRF وملكية الحجز وHttpOnly وتجديد الجلسة، وCache-Control الخاص، وحذف checkoutUrl من قراءة الحالة. لا تغيير في دورة الدفع أو استدعاءات Paymob أو إعادة محاولة mutations؛ status يبقى HTTP status ولا يُضاف إلى JSON.
+- التحقق: نجح TypeScript وESLint وبناء Next.js. نجحت 17 حالة مؤقتة للمساعد وRoute Handler باستخدام NextRequest/NextResponse الفعليين، و10 حالات regression لتحويلات Zod وActions. لا اختبارات محفوظة داخل المشروع ولا اتصالات بقاعدة البيانات أو Paymob.
+- الدفعة تخص توحيد التحقق فقط؛ تعديلات الواجهة الأخرى الموجودة مسبقًا خارج نطاقها. لا push دون موافقة.

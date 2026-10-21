@@ -81,10 +81,9 @@ export function validationError(locale: string): ApiResult<never> {
     success: false,
     status: 400,
     code: 'VALIDATION_ERROR',
-    message:
-      locale === 'ar'
-        ? 'راجع البيانات المدخلة وحاول مجددًا.'
-        : 'Check your details and try again.',
+    message: locale.startsWith('ar')
+      ? 'راجع البيانات المدخلة وحاول مجددًا.'
+      : 'Check your details and try again.',
   };
 }
 

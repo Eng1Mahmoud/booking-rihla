@@ -10,9 +10,14 @@ type ParseResult<T> =
 export async function parseSchema<T>(
   schema: z.ZodType<T>,
   input: unknown,
+  // Route Handlers supply their language; Actions use the current page locale.
+  locale?: string,
 ): Promise<ParseResult<T>> {
   const parsed = await schema.safeParseAsync(input);
   if (parsed.success) return { success: true, data: parsed.data };
   // Do not serialize Zod issues or echo the submitted values.
-  return { success: false, error: validationError(await getLocale()) };
+  return {
+    success: false,
+    error: validationError(locale ?? (await getLocale())),
+  };
 }

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { z } from 'zod';
+import { parseSchema } from '@/shared/lib/parseSchema';
+import { paymentStatusInputSchema } from '@/features/bookings/schemas/bookingSchema';
 import { apiFetch } from '@/shared/lib/api';
 import {
   readAuthCookies,
@@ -40,21 +41,18 @@ export async function GET(
     );
   }
   const { bookingId } = await context.params;
-  if (!z.uuid().safeParse(bookingId).success || request.nextUrl.search) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'VALIDATION_ERROR',
-        message: locale.startsWith('ar')
-          ? 'راجع البيانات المدخلة وحاول مجددًا.'
-          : 'Check your details and try again.',
-      },
-      { status: 400, headers },
-    );
+  const parsed = await parseSchema(
+    paymentStatusInputSchema,
+    { bookingId, search: request.nextUrl.search },
+    locale,
+  );
+  if (!parsed.success) {
+    const { status, ...body } = parsed.error;
+    return NextResponse.json(body, { status, headers });
   }
   let renewed: AuthTokens | null | undefined;
   const result = await apiFetch<BookingPayment>(
-    'bookings/' + bookingId + '/payment',
+    'bookings/' + parsed.data.bookingId + '/payment',
     {
       locale,
       session: readAuthCookies(request),
