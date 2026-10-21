@@ -57,7 +57,7 @@ export function PasswordRecovery({
         </h1>
         <p className="text-muted-foreground">{t('introText')}</p>
       </div>
-      <div className="rounded-2xl border bg-card p-6 sm:p-9">
+      <div className="rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
         {step === 'done' ? (
           <div className="grid gap-5">
             <div role="status" className="space-y-4">

@@ -1,18 +1,45 @@
 'use client';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { BusFront, Check } from 'lucide-react';
 import { AuthForm } from './AuthForm';
 import { safeReturnPath } from '../lib/safeReturnPath';
+
 export function LoginScreen({ returnTo }: { returnTo: string }) {
   const t = useTranslations('Auth');
+  const home = useTranslations('Home');
   return (
-    <section className="mx-auto grid w-[calc(100%_-_2rem)] max-w-[980px] gap-8 py-10 md:grid-cols-2 md:items-center md:gap-14 md:py-16">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-semibold leading-relaxed md:text-4xl">
+    <section className="mx-auto grid w-[calc(100%-2rem)] max-w-[1100px] gap-6 py-7 md:grid-cols-2 md:items-stretch md:gap-12 md:py-12">
+      <div className="relative isolate flex flex-col justify-end overflow-hidden rounded-[2rem] bg-secondary-foreground p-7 text-white md:min-h-[580px] md:p-9">
+        <Image
+          src="/images/rihla-coastal-journey.webp"
+          alt=""
+          fill
+          sizes="(min-width: 768px) 520px, 100vw"
+          className="-z-20 hidden object-cover object-[70%_center] md:block"
+        />
+        <div
+          className="absolute inset-0 -z-10 bg-linear-to-t from-[#112f45] via-[#112f45]/55 to-[#112f45]/5"
+          aria-hidden="true"
+        />
+        <BusFront
+          size={32}
+          strokeWidth={1.5}
+          className="mb-5 text-white/85"
+          aria-hidden="true"
+        />
+        <h1 className="max-w-sm text-3xl font-semibold leading-[1.5] text-white md:text-4xl">
           {t('welcome')}
         </h1>
-        <p className="text-muted-foreground">{t('welcomeText')}</p>
+        <p className="mt-4 max-w-sm text-sm leading-8 text-white/80">
+          {t('welcomeText')}
+        </p>
+        <p className="mt-6 hidden items-center gap-2 text-sm text-white/85 md:flex">
+          <Check size={17} aria-hidden="true" />
+          {home('heroBooking')}
+        </p>
       </div>
-      <div className="rounded-2xl border bg-card p-6 sm:p-9">
+      <div className="self-center rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
         <AuthForm returnTo={safeReturnPath(returnTo)} />
       </div>
     </section>
