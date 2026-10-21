@@ -1,7 +1,9 @@
 import { dehydrate } from '@tanstack/react-query';
 import { createQueryClient } from '@/shared/lib/queryClient';
-import { authKeys } from '@/features/auth/hooks/auth.queries';
-import { getAuthSession } from '@/features/auth/lib/auth.server';
+import { authKeys } from '@/features/auth/hooks/queryKeys';
+import { getCurrentUser } from '@/features/auth/lib/auth.server';
+import type { AuthSession } from '@/features/auth/types/auth';
+import { errorMessage } from '@/shared/lib/apiResult';
 import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
@@ -15,6 +17,7 @@ import { routing } from '@/i18n/routing';
 import { SiteHeader } from '@/shared/components/layout/SiteHeader';
 import { SiteFooter } from '@/shared/components/layout/SiteFooter';
 import { AccountMenu } from '@/features/auth/components/AccountMenu';
+import { HeaderNavigation } from '@/features/auth/components/HeaderNavigation';
 export const metadata: Metadata = {
   title: 'Rihla | Bus booking',
   description: 'Find a bus trip and choose your seat.',
@@ -31,7 +34,13 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   // Request-local QueryClient: hydrate only the safe user view, never credentials.
   const queryClient = createQueryClient();
-  queryClient.setQueryData(authKeys.me, await getAuthSession());
+  let session: AuthSession;
+  try {
+    session = { user: await getCurrentUser() };
+  } catch (error) {
+    session = { user: null, error: errorMessage(error, locale) };
+  }
+  queryClient.setQueryData(authKeys.me, session);
   return (
     <html
       lang={locale}
@@ -42,7 +51,10 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <AppProviders state={dehydrate(queryClient)}>
             <div className="flex min-h-screen flex-col">
-              <SiteHeader accountMenu={<AccountMenu />} />
+              <SiteHeader
+                accountMenu={<AccountMenu />}
+                navigation={<HeaderNavigation />}
+              />
               <main className="flex-1">{children}</main>
               <SiteFooter />
             </div>

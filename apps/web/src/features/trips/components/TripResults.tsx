@@ -55,7 +55,7 @@ export function TripResults({
   return (
     <div className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] py-6 md:pt-8 md:pb-16">
       <section
-        className="premium-search-sheet rounded-[1.75rem] border border-border/70 bg-card p-5 md:p-7"
+        className="shadow-[0_20px_60px_-36px_#112f4555,0_3px_12px_-8px_#112f4525] rounded-[1.75rem] border border-border/70 bg-card p-5 md:p-7"
         aria-label={t('title')}
       >
         <TripSearchForm

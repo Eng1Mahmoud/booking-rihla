@@ -1,5 +1,7 @@
-import type { Trip, LocalName } from '@/features/trips/types/trip';
-export function displayName(item: LocalName, locale: 'ar' | 'en') {
+export function displayName(
+  item: { nameAr: string; nameEn: string },
+  locale: 'ar' | 'en',
+) {
   return locale === 'ar' ? item.nameAr : item.nameEn;
 }
 export function formatTime(value: string, locale: 'ar' | 'en') {
@@ -23,11 +25,4 @@ export function formatPrice(piastres: number, locale: 'ar' | 'en') {
     style: 'currency',
     currency: 'EGP',
   }).format(piastres / 100);
-}
-export function routeLabel(trip: Trip, locale: 'ar' | 'en') {
-  return (
-    displayName(trip.route.originStation.city, locale) +
-    ' — ' +
-    displayName(trip.route.destinationStation.city, locale)
-  );
 }

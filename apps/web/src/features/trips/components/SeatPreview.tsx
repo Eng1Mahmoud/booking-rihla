@@ -55,14 +55,18 @@ export function SeatPreview() {
               onClick={() => setSelected(seat)}
               style={{ gridColumn: (index % 4) + (index % 4 > 1 ? 2 : 1) }}
               className={cn(
-                'home-preview-seat relative flex min-h-11 min-w-0 items-center justify-center rounded-t-lg rounded-b-sm border-2 border-white/60 border-b-4 text-sm font-medium hover:bg-white/15 disabled:border-white/15 disabled:bg-white/10 disabled:text-white/40 disabled:opacity-100',
+                'motion-safe:transition-colors motion-safe:duration-180 relative flex min-h-11 min-w-0 items-center justify-center rounded-t-lg rounded-b-sm border-2 border-white/60 border-b-4 text-sm font-medium hover:bg-white/15 disabled:border-white/15 disabled:bg-white/10 disabled:text-white/40 disabled:opacity-100',
                 selected === seat &&
                   'border-white bg-white text-secondary-foreground hover:bg-white',
               )}
             >
               <span
                 key={selected === seat ? 'selected' : 'available'}
-                className={selected === seat ? 'home-seat-selected' : ''}
+                className={
+                  selected === seat
+                    ? 'inline-block motion-safe:animate-[home-seat-select_240ms_ease-out]'
+                    : ''
+                }
               >
                 {format.number(seat)}
               </span>

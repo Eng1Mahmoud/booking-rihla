@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ArrowLeft,
 } from 'lucide-react';
-import { PageIntro } from '@/shared/components/layout/PageIntro';
 import { Link } from '@/i18n/navigation';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
@@ -59,12 +58,8 @@ export function FaqContent() {
   };
   return (
     <>
-      <PageIntro
-        title={t('title')}
-        description={t('intro')}
-        eyebrow={t('eyebrow')}
-      >
-        <div className="relative mt-7 max-w-xl">
+      <div className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] pt-7">
+        <div className="relative max-w-xl">
           <label htmlFor="faq-search" className="sr-only">
             {t('searchLabel')}
           </label>
@@ -82,7 +77,7 @@ export function FaqContent() {
             className="h-14 bg-card ps-12"
           />
         </div>
-      </PageIntro>
+      </div>
       <div className="mx-auto grid w-[calc(100%-2rem)] max-w-[1240px] gap-8 py-8 md:grid-cols-[240px_1fr] md:gap-12 md:py-12">
         <aside className="self-start md:sticky md:top-28">
           <nav
@@ -212,17 +207,6 @@ export function FaqContent() {
               </Button>
             </div>
           )}
-          <div className="mt-10 flex flex-col gap-4 border-t pt-7 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="font-semibold">{t('ctaTitle')}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('ctaText')}
-              </p>
-            </div>
-            <Button asChild size="lg">
-              <Link href="/#trip-search-title">{t('cta')}</Link>
-            </Button>
-          </div>
         </div>
       </div>
     </>

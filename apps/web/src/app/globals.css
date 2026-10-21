@@ -130,47 +130,6 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .home-hero-title {
-    animation: home-enter 600ms ease-out both;
-  }
-  .home-hero-intro {
-    animation: home-enter 600ms 100ms ease-out both;
-  }
-  .home-hero-links {
-    animation: home-enter 600ms 180ms ease-out both;
-  }
-  .home-route-line {
-    transform-origin: left;
-    animation: home-route-draw 900ms 200ms ease-out both;
-  }
-  [dir='rtl'] .home-route-line {
-    transform-origin: right;
-  }
-  .home-preview-seat {
-    transition:
-      background-color 180ms,
-      border-color 180ms,
-      color 180ms;
-  }
-  .home-seat-selected {
-    display: inline-block;
-    animation: home-seat-select 240ms ease-out;
-  }
-  .home-faq-chevron {
-    transition: transform 200ms ease;
-  }
-  .home-route-link .home-route-arrow {
-    transition: transform 180ms ease;
-  }
-  .home-route-link:hover .home-route-arrow {
-    transform: translateX(4px);
-  }
-  [dir='rtl'] .home-route-link:hover .home-route-arrow {
-    transform: translateX(-4px);
-  }
-}
-
 @layer base {
   html[lang='en'] body {
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -179,47 +138,5 @@
     outline: 3px solid var(--ocean);
     outline-offset: 4px;
     border-radius: 6px;
-  }
-}
-.site-nav-link {
-  position: relative;
-}
-.site-nav-link::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  bottom: 4px;
-  height: 2px;
-  border-radius: 4px;
-  background: var(--ocean);
-  transform: scaleX(0);
-}
-.site-nav-link[aria-current='page']::after,
-.site-nav-link:hover::after {
-  transform: scaleX(1);
-}
-.premium-search-sheet {
-  box-shadow:
-    0 20px 60px -36px #112f4555,
-    0 3px 12px -8px #112f4525;
-}
-.premium-ticket {
-  box-shadow: 0 8px 28px -20px #112f4540;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .premium-hero-image {
-    animation: home-enter 700ms 100ms ease-out both;
-  }
-  .site-nav-link::after {
-    transition: transform 180ms ease;
-  }
-  .premium-ticket {
-    transition:
-      box-shadow 180ms ease,
-      border-color 180ms ease;
-  }
-  .premium-ticket:hover {
-    box-shadow: 0 12px 36px -22px #112f4555;
-    border-color: #006f7b55;
   }
 }

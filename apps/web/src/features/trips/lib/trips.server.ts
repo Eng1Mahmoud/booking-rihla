@@ -25,7 +25,7 @@ async function listCatalog<T>(
     message: 'Catalog pagination limit reached',
   };
 }
-export async function readTripCatalog(
+export async function getTripCatalog(
   context?: 'action',
 ): Promise<ApiResult<TripCatalog>> {
   const [cities, stations] = await Promise.all([
@@ -37,7 +37,7 @@ export async function readTripCatalog(
     return { ...stations, data: undefined };
   return { ...cities, data: { cities: cities.data, stations: stations.data } };
 }
-export function readTrips(search: Search, context?: 'action') {
+export function getTrips(search: Search, context?: 'action') {
   const query = new URLSearchParams({
     travelDate: search.travelDate,
     limit: '21',

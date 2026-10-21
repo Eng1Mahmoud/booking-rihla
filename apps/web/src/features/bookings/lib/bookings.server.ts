@@ -4,17 +4,6 @@ import { apiFetch } from '@/shared/lib/api';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import type { Booking, BookingPayment, BookingDetails } from '../types/booking';
 
-export async function getBookings(offset: number) {
-  const user = await requireCurrentUser();
-  const result = unwrapApiResult(
-    await apiFetch<{
-      items: Booking[];
-      pagination: { limit: number; offset: number };
-    }>('bookings?limit=20&offset=' + offset),
-  );
-  return { ...result, userId: user.id };
-}
-
 export async function getBookingDetails(id: string): Promise<BookingDetails> {
   const user = await requireCurrentUser();
   const [booking, payment, availability] = await Promise.all([

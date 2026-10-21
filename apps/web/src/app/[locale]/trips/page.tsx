@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
-import { readTripCatalog, readTrips } from '@/features/trips/lib/trips.server';
+import { getTripCatalog, getTrips } from '@/features/trips/lib/trips.server';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import { TripResults } from '@/features/trips/components/TripResults';
 import { searchSchema } from '@/features/trips/schemas/searchSchema';
@@ -32,8 +32,8 @@ export default async function TripsPage({
   let data;
   try {
     data = await Promise.all([
-      readTripCatalog().then(unwrapApiResult),
-      readTrips(search)
+      getTripCatalog().then(unwrapApiResult),
+      getTrips(search)
         .then(unwrapApiResult)
         .then((page) => page.items),
     ]);

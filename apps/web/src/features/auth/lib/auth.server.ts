@@ -2,14 +2,9 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { apiFetch } from '@/shared/lib/api';
-import {
-  ApiError,
-  unwrapApiResult,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+import { ApiError, unwrapApiResult } from '@/shared/lib/apiResult';
 import { readAuthCookies } from '@/shared/lib/session';
-import { getLocale } from 'next-intl/server';
-import type { AuthUser, AuthSession } from '../types/auth';
+import type { AuthUser } from '../types/auth';
 
 // React cache deduplicates within this render only, never between users.
 export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
@@ -25,12 +20,4 @@ export async function requireCurrentUser() {
   const user = await getCurrentUser();
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED');
   return user;
-}
-
-export async function getAuthSession(): Promise<AuthSession> {
-  try {
-    return { user: await getCurrentUser() };
-  } catch (error) {
-    return { user: null, error: errorMessage(error, await getLocale()) };
-  }
 }

@@ -1,5 +1,13 @@
+import { z } from 'zod';
 import { notFound } from 'next/navigation';
-import { PaymentResult } from '@/features/bookings/components/PaymentResult';
+import { Button } from '@/shared/components/ui/button';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
+import { BookingDetail } from '@/features/bookings/components/BookingDetail';
+import { getBookingDetails } from '@/features/bookings/lib/bookings.server';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import { ReadError } from '@/shared/components/feedback/ReadError';
+
 export const metadata = {
   referrer: 'no-referrer' as const,
   robots: { index: false, follow: false },
@@ -12,16 +20,45 @@ export default async function PaymentResultPage({
   const { bookingId } = await searchParams;
   if (
     bookingId !== undefined &&
-    (typeof bookingId !== 'string' ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        bookingId,
-      ))
+    (typeof bookingId !== 'string' || !z.uuid().safeParse(bookingId).success)
   )
     notFound();
+  const t = await getTranslations('PaymentResult');
+  let initial;
+  if (bookingId) {
+    try {
+      initial = await getBookingDetails(bookingId);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'BOOKING_NOT_FOUND')
+        notFound();
+      return <ReadError message={errorMessage(error, await getLocale())} />;
+    }
+  }
   // Provider query flags never determine payment status.
   return (
     <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
-      <PaymentResult bookingId={bookingId} />
+      <>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
+          <h1 className="text-[26px] font-semibold md:text-[29px]">
+            {t('title')}
+          </h1>
+        </div>
+        <p className="text-muted-foreground mb-6">{t('note')}</p>
+        {initial ? (
+          <BookingDetail
+            key={initial.booking.id}
+            initial={initial}
+            afterCheckout
+          />
+        ) : (
+          <section className="rounded-2xl border bg-card grid justify-items-start gap-[18px] p-7">
+            <p>{t('chooseBooking')}</p>
+            <Button size="lg" asChild>
+              <Link href="/bookings">{t('bookings')}</Link>
+            </Button>
+          </section>
+        )}
+      </>
     </div>
   );
 }

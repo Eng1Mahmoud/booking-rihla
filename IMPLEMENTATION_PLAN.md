@@ -813,16 +813,20 @@ apps/web/
 
 ### توزيع ملفات الميزات
 
-| Feature  | Actions                                     | Hooks                                                                                  | أمثلة المكوّنات                                                                         |
-| -------- | ------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| auth     | auth.actions.ts                             | useCurrentUser/useLogin/useRegister/useEmailVerification/usePasswordRecovery/useLogout | LoginForm/RegisterForm/VerifyEmailForm/ForgotPasswordForm/ResetPasswordForm/AccountMenu |
-| trips    | trips.actions.ts                            | useTripSearch/useTripDetails/useTripCatalog                                            | TripSearchForm/TripResults/TripCard/TripDetails                                         |
-| seats    | seats.actions.ts                            | useTripSeats                                                                           | SeatBooking/SeatMap/SeatButton/SeatLegend/PassengerForm/SelectionSummary                |
-| bookings | bookings.actions.ts                         | useBookings/useBookingDetails/useCreateBooking/useCheckout/useBookingPayment           | BookingHistory/BookingDetails/BookingSummary/BookingCountdown/PaymentResult             |
-| tickets  | tickets.actions.ts                          | useTicket                                                                              | TicketView                                                                              |
-| account  | يستخدم بيانات auth؛ لا قراءة مكررة للمستخدم | عند حاجة فعلية فقط                                                                     | AccountProfile/AccountNavigation                                                        |
+| Feature | Actions | Hooks | المكوّنات/الصفحات الأساسية |
+| --- | --- | --- | --- |
+| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | AuthForm/LoginForm/RegisterForm/VerifyEmailForm/PasswordRecovery/AccountMenu/HeaderNavigation؛ إطار صفحة الدخول على السيرفر |
+| trips | trips.actions.ts | useTripCatalog/useTripSearch/useTripDetails | HomeHero/PopularRoutes/HomeSections على السيرفر؛ HomeSearch/TripSearchForm/TripResults/TripDetails للأجزاء التفاعلية |
+| seats | seats.actions.ts | useSeatBooking | SeatBooking للعرض؛ SeatMap/SeatIcon/PassengerForm؛ hook يملك الاختيار والتوافر وإنشاء الحجز |
+| bookings | bookings.actions.ts | useBookings/useCreateBooking/useCheckout/useBookingPayment | BookingDetail يعرض المحتوى الثابت على السيرفر ويمرره إلى BookingPayment؛ BookingHistory/PaymentStatus/PaymentChecking |
+| tickets | tickets.actions.ts | useTicket | صفحة السيرفر تقرأ التذكرة وتزيل QR payload ثم تمرر البيانات إلى TicketView |
+| account | يستخدم Auth | useLogout من Auth | بيانات الحساب في صفحة السيرفر؛ AccountSessions لإجراءات الجلسة فقط وAccountNavigation للتنقل |
+| stations | يستخدم كتالوج Trips | useTripCatalog من Trips | مقدمة وخاتمة صفحة السيرفر، StationDirectory للفلاتر والنتائج |
+| faqs | لا اتصال API | حالة محلية للبحث والتصنيف | مقدمة وخاتمة صفحة السيرفر، FaqContent للبحث والإجابات |
 
-داخل كل Feature مجلدات `actions/hooks/components/schemas/types/lib/store` بحسب الحاجة فقط. مفاتيح وإعدادات TanStack في `hooks/<feature>.queries.ts` عندما يستحق حجمها فصلها. أدوات مثل `seatLayout.ts` و`paymentState.ts` داخل Feature المالكة.
+داخل Feature مجلدات actions/hooks/components/schemas/types/lib/store حسب الحاجة فقط. أسماء مفاتيح TanStack موحّدة في hooks/queryKeys.ts لكل ميزة تملك طلبات: auth/trips/seats/bookings/tickets. تستخدمها Hooks والتهيئة والتحديث والإبطال؛ مفاتيح البيانات الخاصة تتضمن هوية المستخدم واللغة ومعرّف المورد. لا ملف Query Keys لميزة لا تملك طلبات خاصة بها.
+
+القراءة الأولية التي تستخدمها صفحة واحدة تبقى داخل صفحة Server Component عبر apiFetch. تبقى ملفات lib/*.server.ts عندما تُشارك قراءة فعلية بين أكثر من صفحة أو Action، مثل تجميع كتالوج المدن/المحطات وتفاصيل الحجز. لا HTTP client ثانٍ ولا Route Handler عام. إعداد retry: false موحد في queryClient.ts، وstaleTime الخاص بالميزة قريب من hook.
 
 مكوّنات المشروع PascalCase، والـHooks تبدأ بـuse. مكوّنات shadcn تحت ui تحتفظ بأسماء ملفات CLI مثل `button.tsx`.
 
@@ -1191,3 +1195,17 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - الحفاظ على CSRF وملكية الحجز وHttpOnly وتجديد الجلسة، وCache-Control الخاص، وحذف checkoutUrl من قراءة الحالة. لا تغيير في دورة الدفع أو استدعاءات Paymob أو إعادة محاولة mutations؛ status يبقى HTTP status ولا يُضاف إلى JSON.
 - التحقق: نجح TypeScript وESLint وبناء Next.js. نجحت 17 حالة مؤقتة للمساعد وRoute Handler باستخدام NextRequest/NextResponse الفعليين، و10 حالات regression لتحويلات Zod وActions. لا اختبارات محفوظة داخل المشروع ولا اتصالات بقاعدة البيانات أو Paymob.
 - الدفعة تخص توحيد التحقق فقط؛ تعديلات الواجهة الأخرى الموجودة مسبقًا خارج نطاقها. لا push دون موافقة.
+
+
+### مراجعة وتبسيط هيكل الويب — 2026-10-21
+
+- دُققت جميع ملفات TS/TSX الحالية ومراجعها. كانت صفحات app الخمس عشرة Server Components بالفعل؛ المشكلة كانت اتساع حدود بعض مكوّنات Client. بقيت الصفحات على السيرفر، مع نقل إطار تسجيل الدخول وبيانات الحساب وأجزاء الحجز الثابتة وروابط الوجهات ومقدمات/خواتيم المحطات وFAQ إلى السيرفر. يبدأ العرض ببيانات الصفحة ثم يستخدم التفاعل TanStack + Server Actions + apiFetch؛ متابعة الدفع فقط عبر GET الخاص بها.
+- أسماء مفاتيح TanStack في hooks/queryKeys.ts داخل ميزاتها. أزيلت مصفوفات المفاتيح من hooks، ووُحّد retry الافتراضي بدل تكراره، ووُحدت عملية resetAuthCache عند الدخول والخروج وانتهاء الجلسة دون إبقاء بيانات الحساب السابق.
+- حُذفت الملفات الوسيطة أحادية الاستخدام AuthSessionSync وLoginScreen وRequireAuth وAccountProfile وPaymentResult وtickets.server بعد نقل المسؤوليات إلى Provider أو الصفحة أو تدفق اختيار المقاعد. دُمج useTripSeats داخل useSeatBooking، وقُسّم HomeContent إلى بحث تفاعلي وروابط وجهات على السيرفر، وأعيدت تسمية auth.queries/bookings.queries إلى queryKeys. لا وظائف حجز/تذكرة/جلسة محذوفة.
+- auth.server.ts يحتوي فقط getCurrentUser وrequireCurrentUser. بقي safeReturnPath لأنه يتحقق من وجهة الرجوع، وبقيت session/refreshSession/parseSchema لأنها مسؤوليات فعلية مشتركة. لا حذف لـi18n/request.ts؛ يستخدمه next.config.ts عبر إعداد next-intl وإن لم يظهر في import graph العادي. أزيلت routeLabel غير المستخدمة.
+- BookingDetail مكوّن Server يمرّر العرض الثابت كـchildren إلى BookingPayment. نُقل توقيت/حالة الدفع إلى useBookingPayment، ومنطق المقاعد إلى useSeatBooking؛ بقيت حماية ترتيب ردود الدفع وIdempotency-Key وعدم إعادة الكتابة مجهولة النتيجة. تعرض صفحة نتيجة الدفع عنوان h1 واحدًا. عرض مجموعات المحطات دالة محلية مسماة بدل JSX متداخل طويل دون ملف إضافي.
+- shared لا يستورد تفاصيل Features؛ HeaderNavigation المعتمد على Auth داخل auth/components ويحقنه Layout في SiteHeader عبر navigation prop، مثل AccountMenu. format.ts يتعامل مع شكل بيانات عام. التنسيقات الخاصة بالمكوّنات داخل Tailwind في JSX؛ globals.css للثيم والأساس وkeyframes فقط.
+- التحقق: TypeScript وESLint وبناء الإنتاج. نجحت 67 حالة مؤقتة: 17 API/Actions، و10 parsing، و17 payment-handler، و17 Middleware، و6 query/cache/returnTo. تجربة إنتاج مع Backend وهمي غطّت المحطات وFAQ، اختيار المقعد كزائر ثم login/returnTo، حفظ أسماء الركاب عند التحديث والإضافة، إنشاء حجز وهمي، الحساب وإظهار/إلغاء تأكيد الخروج من الجميع، سجل الحجوزات والتذكرة وQR، وانتقال نتيجة الدفع من processing إلى confirmed والعربية. لا بيانات مشروع أو Paymob أو ملفات اختبارات محفوظة في المستودع.
+- هذا تنظيم للميزات الموجودة؛ المكوّنات التي تحتاج state أو Query hooks أو النماذج أو polling تظل Client. لا تحويل تلقائي لكل المكوّنات إلى Server، ولا تغيير Backend أو سياسة الجلسة أو خوارزمية الدفع. لا push دون طلب جديد.
+
+فحص المتصفح النهائي: قائمة الجوال بعد حقن Navigation عبر props، ومجموعات المحطات، ونتيجة الدفع بالعربية عند عرض 390px؛ لا تجاوز أفقي ولا أخطاء JavaScript، وعنوان h1 واحد في نتيجة الدفع. أُغلقت المعاينة المؤقتة بعد التحقق.

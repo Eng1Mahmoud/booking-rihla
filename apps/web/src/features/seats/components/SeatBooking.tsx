@@ -1,25 +1,16 @@
 'use client';
-import { Button } from '@/shared/components/ui/button';
-import { useState, useRef, useEffect } from 'react';
-import { useStore } from 'zustand';
-import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { RefreshCw, ArrowRight } from 'lucide-react';
-import { createBookingStore } from '@/features/seats/store/bookingStore';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useRouter, Link } from '@/i18n/navigation';
-import {
-  ApiError,
-  isUncertainRequestError,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+import { Button } from '@/shared/components/ui/button';
+import { QueryError } from '@/shared/components/feedback/QueryError';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { formatPrice } from '@/shared/lib/format';
+import { Link } from '@/i18n/navigation';
 import type { SeatList, Trip } from '@/features/trips/types/trip';
-import { RequireAuth } from '@/features/auth/components/RequireAuth';
-import { useSearchParams } from 'next/navigation';
-import { PassengerForm } from '@/features/seats/components/PassengerForm';
-import { SeatMap } from '@/features/seats/components/SeatMap';
-import { useTripSeats } from '../hooks/useTripSeats';
+import { PassengerForm } from './PassengerForm';
+import { SeatMap } from './SeatMap';
+import { useSeatBooking } from '../hooks/useSeatBooking';
+
 export function SeatBooking({
   trip,
   initialSeats,
@@ -27,84 +18,27 @@ export function SeatBooking({
   trip: Trip;
   initialSeats: SeatList;
 }) {
-  const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Seats');
-  const router = useRouter();
-  const createBooking = useCreateBooking();
-  const summaryRef = useRef<HTMLElement>(null);
-  const searchParams = useSearchParams();
-  const [store] = useState(() => {
-    const store = createBookingStore();
-    const ids = (searchParams.get('seats') ?? '')
-      .split(',')
-      .slice(0, initialSeats.seats.length);
-    for (const seat of initialSeats.seats) {
-      if (seat.isAvailable && ids.includes(seat.id))
-        store.getState().toggle(seat.id);
-    }
-    return store;
-  });
-  const selectedIds = useStore(store, (state) => state.selectedIds);
-  const { user, status } = useAuth();
-  const [phase, setPhase] = useState<'select' | 'details'>(
-    store.getState().selectedIds.length ? 'details' : 'select',
-  );
-  useEffect(() => {
-    if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
-      summaryRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
-  }, [phase]);
-  const [error, setError] = useState('');
-  const [uncertain, setUncertain] = useState(false);
-  const seatQuery = useTripSeats(initialSeats);
-  const refreshing = seatQuery.isFetching;
-  const refreshSeats = () => {
-    void seatQuery.refetch();
-  };
-  const seats = seatQuery.data.seats;
-  const selected = seats.filter(
-    (seat) => selectedIds.includes(seat.id) && seat.isAvailable,
-  );
+  const auth = useTranslations('Auth');
+  const locale = useLocale() as 'ar' | 'en';
+  const {
+    user,
+    status,
+    reloadSession,
+    phase,
+    setPhase,
+    summaryRef,
+    error,
+    uncertain,
+    seatQuery,
+    selectedIds,
+    selected,
+    toggle,
+    reserve,
+    refreshSeats,
+  } = useSeatBooking(trip, initialSeats);
   const changed = selectedIds.length !== selected.length;
   const total = selected.length * trip.pricePiastres;
-  function toggle(id: string) {
-    store.getState().toggle(id);
-    // Keep the details form mounted when selection changes, preserving the remaining names.
-    setError('');
-  }
-  async function reserve(input: {
-    contactPhone: string;
-    passengers: { seatId: string; name: string }[];
-  }) {
-    setError('');
-    // The backend checks current seat availability atomically when it creates the reservation.
-    if (
-      !input.passengers.length ||
-      input.passengers.some(
-        (person) =>
-          !seats.some((seat) => seat.id === person.seatId && seat.isAvailable),
-      )
-    ) {
-      setError(t('conflict'));
-      return;
-    }
-    try {
-      const result = await createBooking.mutateAsync({
-        tripId: trip.id,
-        ...input,
-      });
-      store.getState().clear();
-      router.push('/bookings/' + result.data.id);
-    } catch (cause) {
-      if (isUncertainRequestError(cause)) {
-        setUncertain(true);
-        setError(t('uncertain'));
-        return;
-      }
-      setError(errorMessage(cause, locale));
-      if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE')
-        refreshSeats();
-    }
-  }
   return (
     <div className="grid items-start gap-5 pb-[85px] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
       <section className="rounded-[14px] border bg-card px-3.5 py-[22px] md:p-[22px] min-[1001px]:p-7">
@@ -123,9 +57,12 @@ export function SeatBooking({
             className="size-10 shrink-0 bg-card text-muted-foreground"
             onClick={refreshSeats}
             aria-label={t('refresh')}
-            disabled={refreshing}
+            disabled={seatQuery.isFetching}
           >
-            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
+            <RefreshCw
+              size={18}
+              className={seatQuery.isFetching ? 'animate-spin' : ''}
+            />
           </Button>
         </div>
         {seatQuery.isError && (
@@ -137,7 +74,7 @@ export function SeatBooking({
           </p>
         )}
         <SeatMap
-          seats={seats}
+          seats={seatQuery.data.seats}
           selectedIds={selected.map((seat) => seat.id)}
           layout={seatQuery.data.seatLayout}
           onToggle={toggle}
@@ -229,25 +166,23 @@ export function SeatBooking({
               {t('notReserved')}
             </p>
           </>
+        ) : status === 'unavailable' ? (
+          <QueryError
+            message={auth('sessionUnavailable')}
+            onRetry={() => void reloadSession()}
+          />
+        ) : user ? (
+          <PassengerForm
+            key={user.id}
+            seats={selected}
+            user={user}
+            disabled={!selected.length}
+            onReserve={reserve}
+          />
         ) : (
-          <RequireAuth
-            returnTo={
-              '/trips/' +
-              trip.id +
-              '?seats=' +
-              encodeURIComponent(selectedIds.join(','))
-            }
-          >
-            {user && (
-              <PassengerForm
-                key={user.id}
-                seats={selected}
-                user={user}
-                disabled={!selected.length}
-                onReserve={reserve}
-              />
-            )}
-          </RequireAuth>
+          <p className="py-15 text-center text-muted-foreground" role="status">
+            {auth('checkingSession')}
+          </p>
         )}
       </aside>
       {phase === 'select' && (

@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { BookingDetail } from '@/features/bookings/components/BookingDetail';
@@ -10,12 +11,7 @@ export default async function BookingPage({
   params: Promise<{ bookingId: string }>;
 }) {
   const { bookingId } = await params;
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      bookingId,
-    )
-  )
-    notFound();
+  if (!z.uuid().safeParse(bookingId).success) notFound();
   let initial;
   try {
     initial = await getBookingDetails(bookingId);

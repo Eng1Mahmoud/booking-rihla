@@ -18,36 +18,27 @@ import {
 import { ApiError, invokeAction } from '@/shared/lib/apiResult';
 import type { LoginInput, RegisterInput } from '../types/auth';
 import type { RecoveryValues } from '../schemas/recoverySchema';
-import type { AuthSession } from '../types/auth';
-import { authKeys } from '@/features/auth/hooks/auth.queries';
+import type { AuthSession, AuthUser } from '../types/auth';
+import { authKeys } from '@/features/auth/hooks/queryKeys';
 import { useRouter } from 'next/navigation';
-export async function clearAuthCache(client: QueryClient) {
+export async function resetAuthCache(
+  client: QueryClient,
+  user: AuthUser | null = null,
+) {
   await client.cancelQueries();
-  client.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
-  client.setQueryData<AuthSession>(authKeys.me, { user: null });
-}
-export function useCurrentUser() {
-  // SSR supplies the first safe user view; TanStack refreshes through a Server Action.
-  return useQuery<AuthSession>({
-    queryKey: authKeys.me,
-    queryFn: () => invokeAction(getCurrentUserAction),
-    staleTime: 60000,
-    retry: false,
+  client.removeQueries({
+    predicate: (query) => query.queryKey[0] !== authKeys.all[0],
   });
+  client.setQueryData<AuthSession>(authKeys.me, { user });
 }
 export function useLogin() {
   const client = useQueryClient();
   return useMutation({
-    mutationKey: ['auth', 'useLogin'],
+    mutationKey: authKeys.mutation('login'),
     mutationFn: async (input: LoginInput) =>
       (await invokeAction(() => loginAction(input))).user,
-    retry: false,
     onSuccess: async (user) => {
-      await client.cancelQueries();
-      client.removeQueries({
-        predicate: (entry) => entry.queryKey[0] !== 'auth',
-      });
-      client.setQueryData<AuthSession>(authKeys.me, { user });
+      await resetAuthCache(client, user);
     },
   });
 }
@@ -55,17 +46,20 @@ export function useLogout() {
   const client = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationKey: ['auth', 'useLogout'],
+    mutationKey: authKeys.mutation('logout'),
     mutationFn: (all: boolean = false) => invokeAction(() => logoutAction(all)),
-    retry: false,
     onSuccess: async () => {
-      await clearAuthCache(client);
+      await resetAuthCache(client);
       router.refresh();
     },
   });
 }
 export function useAuth() {
-  const query = useCurrentUser();
+  const query = useQuery<AuthSession>({
+    queryKey: authKeys.me,
+    queryFn: () => invokeAction(getCurrentUserAction),
+    staleTime: 60000,
+  });
   const client = useQueryClient();
   const router = useRouter();
   const expired =
@@ -85,7 +79,7 @@ export function useAuth() {
   return {
     user: status === 'signed-in' ? (query.data?.user ?? null) : null,
     status,
-    clearSession: () => clearAuthCache(client),
+    clearSession: () => resetAuthCache(client),
     reloadSession: async () => {
       const result = await query.refetch();
       if (result.isSuccess) router.refresh();
@@ -95,41 +89,36 @@ export function useAuth() {
 
 export function useRegister() {
   return useMutation({
-    mutationKey: ['auth', 'useRegister'],
+    mutationKey: authKeys.mutation('register'),
     mutationFn: (input: RegisterInput) =>
       invokeAction(() => registerAction(input)),
-    retry: false,
   });
 }
 export function useVerifyEmail() {
   return useMutation({
-    mutationKey: ['auth', 'useVerifyEmail'],
+    mutationKey: authKeys.mutation('verify-email'),
     mutationFn: (input: Parameters<typeof verifyEmailAction>[0]) =>
       invokeAction(() => verifyEmailAction(input)),
-    retry: false,
   });
 }
 export function useResendVerification() {
   return useMutation({
-    mutationKey: ['auth', 'useResendVerification'],
+    mutationKey: authKeys.mutation('resend-verification'),
     mutationFn: (input: Parameters<typeof resendVerificationAction>[0]) =>
       invokeAction(() => resendVerificationAction(input)),
-    retry: false,
   });
 }
 export function useForgotPassword() {
   return useMutation({
-    mutationKey: ['auth', 'useForgotPassword'],
+    mutationKey: authKeys.mutation('forgot-password'),
     mutationFn: (input: { email: string }) =>
       invokeAction(() => forgotPasswordAction(input)),
-    retry: false,
   });
 }
 export function useResetPassword() {
   return useMutation({
-    mutationKey: ['auth', 'useResetPassword'],
+    mutationKey: authKeys.mutation('reset-password'),
     mutationFn: (input: RecoveryValues) =>
       invokeAction(() => resetPasswordAction(input)),
-    retry: false,
   });
 }

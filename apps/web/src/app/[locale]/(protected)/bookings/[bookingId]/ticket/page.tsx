@@ -1,8 +1,12 @@
+import { z } from 'zod';
 import { Button } from '@/shared/components/ui/button';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { TicketView } from '@/features/tickets/components/TicketView';
-import { getTicket } from '@/features/tickets/lib/tickets.server';
+import { requireCurrentUser } from '@/features/auth/lib/auth.server';
+import { apiFetch } from '@/shared/lib/api';
+import { unwrapApiResult } from '@/shared/lib/apiResult';
+import type { Ticket } from '@/features/tickets/types/ticket';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { Link } from '@/i18n/navigation';
 import { ReadError } from '@/shared/components/feedback/ReadError';
@@ -13,15 +17,17 @@ export default async function TicketPage({
   params: Promise<{ bookingId: string }>;
 }) {
   const { bookingId } = await params;
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      bookingId,
-    )
-  )
-    notFound();
+  if (!z.uuid().safeParse(bookingId).success) notFound();
   let ticket;
   try {
-    ticket = await getTicket(bookingId);
+    const user = await requireCurrentUser();
+    const { qr, ...data } = unwrapApiResult(
+      await apiFetch<Ticket>('bookings/' + bookingId + '/ticket'),
+    );
+    ticket = {
+      ticket: { ...data, qr: { imageDataUrl: qr.imageDataUrl } },
+      userId: user.id,
+    };
   } catch (error) {
     if (error instanceof ApiError && error.code === 'BOOKING_NOT_FOUND')
       notFound();

@@ -1589,3 +1589,8 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 ### Payment status input validation (2026-10-21)
 
 The payment-status GET handler shares parseSchema with feature Actions. Its feature-owned schema validates the booking UUID and rejects query parameters. The handler supplies its request language explicitly; Actions keep using the current page locale. Validation stays one general message with no submitted values or Zod issues, including Arabic regional locales. Authentication, CSRF, HttpOnly renewal, private no-store responses, and checkout URL redaction remain in place. TypeScript, ESLint, production build and 27 temporary isolated checks passed; no DB or Paymob calls or repository test files were added.
+
+
+### Web structure simplification (2026-10-21)
+
+All 15 app pages render on the server and supply initial feature data. Static login/account/booking and public-page content now stay outside client interaction boundaries. Feature hooks share hooks/queryKeys.ts; global query/mutation retry settings live in queryClient.ts. Six one-use wrapper files were inlined; seat logic moved into useSeatBooking and live payment logic into useBookingPayment. Auth-dependent navigation is composed by the layout, so shared UI no longer imports feature internals. Component styling uses inline Tailwind utilities, with only theme/base/keyframes in global CSS. Auth/session/redirect protection and payment ordering/idempotency are retained. See the current feature table and audit in IMPLEMENTATION_PLAN.md for exact responsibilities and verification.

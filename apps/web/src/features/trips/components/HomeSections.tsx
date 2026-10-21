@@ -183,7 +183,7 @@ export async function HomeSections({ catalog }: { catalog?: TripCatalog }) {
                 <span>{faq('questions.' + key + '.q')}</span>
                 <ChevronDown
                   size={19}
-                  className="home-faq-chevron shrink-0 text-primary group-open:rotate-180"
+                  className="motion-safe:transition-transform motion-safe:duration-200 shrink-0 text-primary group-open:rotate-180"
                   aria-hidden="true"
                 />
               </summary>

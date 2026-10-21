@@ -3,8 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { HeaderNavigation } from './HeaderNavigation';
-export async function SiteHeader({ accountMenu }: { accountMenu: ReactNode }) {
+export async function SiteHeader({
+  accountMenu,
+  navigation,
+}: {
+  accountMenu: ReactNode;
+  navigation: ReactNode;
+}) {
   const t = await getTranslations('Header');
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-card/95 backdrop-blur-xl">
@@ -25,7 +30,7 @@ export async function SiteHeader({ accountMenu }: { accountMenu: ReactNode }) {
             </small>
           </span>
         </Link>
-        <HeaderNavigation />
+        {navigation}
         <div className="ms-auto flex items-center gap-4 md:gap-6">
           <div className="hidden lg:block">
             <LanguageSwitcher />

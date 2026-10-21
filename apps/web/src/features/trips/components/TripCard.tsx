@@ -18,7 +18,7 @@ export function TripCard({
     (Date.parse(trip.arrivalAt) - Date.parse(trip.departureAt)) / 60000,
   );
   return (
-    <article className="premium-ticket grid min-w-0 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card md:grid-cols-[110px_minmax(0,1fr)_170px] xl:grid-cols-[140px_minmax(0,1fr)_190px]">
+    <article className="shadow-[0_8px_28px_-20px_#112f4540] motion-safe:transition-[box-shadow,border-color] motion-safe:duration-180 motion-safe:hover:shadow-[0_12px_36px_-22px_#112f4555] motion-safe:hover:border-[#006f7b55] grid min-w-0 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card md:grid-cols-[110px_minmax(0,1fr)_170px] xl:grid-cols-[140px_minmax(0,1fr)_190px]">
       <div className="flex items-center gap-3 border-b bg-secondary/45 px-4 py-3 md:flex-col md:justify-center md:border-e md:border-b-0 md:p-5">
         <BusFront
           size={23}

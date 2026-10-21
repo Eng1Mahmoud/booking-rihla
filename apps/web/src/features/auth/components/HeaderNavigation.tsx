@@ -21,7 +21,7 @@ import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
 
 export function HeaderNavigation() {
   const t = useTranslations('Header');
@@ -80,7 +80,7 @@ export function HeaderNavigation() {
             href={link.href}
             aria-current={active(link.href) ? 'page' : undefined}
             className={cn(
-              'site-nav-link inline-flex min-h-11 shrink-0 items-center whitespace-nowrap font-medium hover:text-primary',
+              'relative after:absolute after:inset-x-0 after:bottom-1 after:h-0.5 after:rounded after:bg-primary after:scale-x-0 aria-[current=page]:after:scale-x-100 hover:after:scale-x-100 motion-safe:after:transition-transform motion-safe:after:duration-180 inline-flex min-h-11 shrink-0 items-center whitespace-nowrap font-medium hover:text-primary',
               active(link.href) && 'font-medium text-primary',
             )}
           >

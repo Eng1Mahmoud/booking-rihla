@@ -12,20 +12,20 @@ export async function HomeHero() {
     >
       <div className="grid items-center gap-7 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
         <div className="py-3 lg:py-8">
-          <p className="home-hero-intro mb-5 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-secondary px-3.5 py-1.5 text-xs font-medium text-primary">
+          <p className="motion-safe:animate-[home-enter_600ms_100ms_ease-out_both] mb-5 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-secondary px-3.5 py-1.5 text-xs font-medium text-primary">
             <MapPin size={14} aria-hidden="true" />
             {t('place')}
           </p>
           <h1
             id="home-title"
-            className="home-hero-title max-w-xl text-[36px] font-semibold leading-[1.4] tracking-tight sm:text-[44px] lg:text-[58px] lg:leading-[1.3]"
+            className="motion-safe:animate-[home-enter_600ms_ease-out_both] max-w-xl text-[36px] font-semibold leading-[1.4] tracking-tight sm:text-[44px] lg:text-[58px] lg:leading-[1.3]"
           >
             {t('title')}
           </h1>
-          <p className="home-hero-intro mt-5 max-w-lg text-sm leading-8 text-muted-foreground md:text-base">
+          <p className="motion-safe:animate-[home-enter_600ms_100ms_ease-out_both] mt-5 max-w-lg text-sm leading-8 text-muted-foreground md:text-base">
             {t('intro')}
           </p>
-          <div className="home-hero-links mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 md:mt-8">
+          <div className="motion-safe:animate-[home-enter_600ms_180ms_ease-out_both] mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 md:mt-8">
             <Button asChild size="lg" className="rounded-full px-7">
               <a href="#trip-search-title">
                 {t('readySearch')}
@@ -52,7 +52,7 @@ export async function HomeHero() {
             ))}
           </ul>
         </div>
-        <div className="premium-hero-image relative isolate h-[210px] overflow-hidden rounded-[1.75rem] bg-secondary sm:h-[310px] lg:h-[490px] lg:rounded-ss-[6rem]">
+        <div className="motion-safe:animate-[home-enter_700ms_100ms_ease-out_both] relative isolate h-[210px] overflow-hidden rounded-[1.75rem] bg-secondary sm:h-[310px] lg:h-[490px] lg:rounded-ss-[6rem]">
           <Image
             src="/images/rihla-coastal-journey.webp"
             alt=""

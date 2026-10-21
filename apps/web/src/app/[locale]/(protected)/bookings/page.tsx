@@ -1,7 +1,10 @@
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
-import { getBookings } from '@/features/bookings/lib/bookings.server';
+import { requireCurrentUser } from '@/features/auth/lib/auth.server';
+import { apiFetch } from '@/shared/lib/api';
+import { unwrapApiResult } from '@/shared/lib/apiResult';
+import type { Booking } from '@/features/bookings/types/booking';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
@@ -16,7 +19,13 @@ export default async function BookingsPage({
   const offset = Number(raw);
   let result;
   try {
-    result = await getBookings(offset);
+    const user = await requireCurrentUser();
+    const page = unwrapApiResult(
+      await apiFetch<{ items: Booking[] }>(
+        'bookings?limit=20&offset=' + offset,
+      ),
+    );
+    result = { ...page, userId: user.id };
   } catch (error) {
     return (
       <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">

@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
@@ -19,12 +20,7 @@ export default async function TripPage({
     getTranslations('Detail'),
     getTranslations('Trips'),
   ]);
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      tripId,
-    )
-  )
-    notFound();
+  if (!z.uuid().safeParse(tripId).success) notFound();
   let data;
   try {
     data = await Promise.all([
