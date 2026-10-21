@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { Form } from '@/shared/components/forms/Form';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
-import { ForgotPasswordForm } from './ForgotPasswordForm';
+import { useForgotPassword } from '../../hooks/useAuth';
+import { recoveryEmailSchema } from '../../schemas/recoverySchema';
 import { ResetPasswordForm } from './ResetPasswordForm';
 
-// Like AuthFlow, this component chooses the step; each form owns its submission.
 export function PasswordRecoveryFlow({
   initialStep,
   returnTo,
@@ -16,9 +19,11 @@ export function PasswordRecoveryFlow({
   returnTo: string;
 }) {
   const t = useTranslations('Recovery');
+  const forgotPassword = useForgotPassword();
   const [step, setStep] = useState<'request' | 'reset' | 'done'>(initialStep);
   const [requestedEmail, setRequestedEmail] = useState<string | null>(null);
   const loginHref = '/login?returnTo=' + encodeURIComponent(returnTo);
+
   if (step === 'done')
     return (
       <div className="grid gap-5">
@@ -32,6 +37,7 @@ export function PasswordRecoveryFlow({
         </Button>
       </div>
     );
+
   return (
     <>
       <h2 className="mb-3 text-2xl font-semibold">
@@ -41,13 +47,32 @@ export function PasswordRecoveryFlow({
         {t(step === 'request' ? 'requestNote' : 'resetNote')}
       </p>
       {step === 'request' ? (
-        <ForgotPasswordForm
-          returnTo={returnTo}
-          onRequested={(email) => {
-            setRequestedEmail(email);
+        <Form
+          schema={recoveryEmailSchema}
+          defaultValues={{ email: '' }}
+          onSubmit={async (values) => {
+            await forgotPassword.mutateAsync(values);
+            // Keep the email between steps without putting it in the URL.
+            setRequestedEmail(values.email);
             setStep('reset');
           }}
-        />
+        >
+          <FormInput<{ email: string }>
+            name="email"
+            label={t('email')}
+            type="email"
+            dir="ltr"
+            autoComplete="email"
+            maxLength={254}
+          />
+          <SubmitButton pendingText={t('working')}>{t('send')}</SubmitButton>
+          <Link
+            href={'/reset-password?returnTo=' + encodeURIComponent(returnTo)}
+            className="text-center text-sm font-semibold text-primary hover:underline"
+          >
+            {t('haveCode')}
+          </Link>
+        </Form>
       ) : (
         <ResetPasswordForm
           initialEmail={requestedEmail ?? ''}
