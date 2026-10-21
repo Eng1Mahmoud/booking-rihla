@@ -60,7 +60,6 @@ export function useAuth() {
     queryFn: () => invokeAction(getCurrentUserAction),
     staleTime: 60000,
   });
-  const client = useQueryClient();
   const router = useRouter();
   const expired =
     query.isError &&
@@ -79,7 +78,6 @@ export function useAuth() {
   return {
     user: status === 'signed-in' ? (query.data?.user ?? null) : null,
     status,
-    clearSession: () => resetAuthCache(client),
     reloadSession: async () => {
       const result = await query.refetch();
       if (result.isSuccess) router.refresh();
@@ -116,9 +114,11 @@ export function useForgotPassword() {
   });
 }
 export function useResetPassword() {
+  const client = useQueryClient();
   return useMutation({
     mutationKey: authKeys.mutation('reset-password'),
     mutationFn: (input: RecoveryValues) =>
       invokeAction(() => resetPasswordAction(input)),
+    onSuccess: () => resetAuthCache(client),
   });
 }

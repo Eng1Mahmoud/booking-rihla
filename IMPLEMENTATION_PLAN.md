@@ -815,7 +815,7 @@ apps/web/
 
 | Feature | Actions | Hooks | المكوّنات/الصفحات الأساسية |
 | --- | --- | --- | --- |
-| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | AuthForm/LoginForm/RegisterForm/VerifyEmailForm/PasswordRecovery/AccountMenu/HeaderNavigation؛ إطار صفحة الدخول على السيرفر |
+| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | AuthForm/LoginForm/RegisterForm/VerifyEmailForm/PasswordRecoveryForm/ForgotPasswordForm/ResetPasswordForm/AccountMenu/HeaderNavigation؛ إطار صفحات الدخول والاستعادة على السيرفر |
 | trips | trips.actions.ts | useTripCatalog/useTripSearch/useTripDetails | HomeHero/PopularRoutes/HomeSections على السيرفر؛ HomeSearch/TripSearchForm/TripResults/TripDetails للأجزاء التفاعلية |
 | seats | seats.actions.ts | useSeatBooking | SeatBooking للعرض؛ SeatMap/SeatIcon/PassengerForm؛ hook يملك الاختيار والتوافر وإنشاء الحجز |
 | bookings | bookings.actions.ts | useBookings/useCreateBooking/useCheckout/useBookingPayment | BookingDetail يعرض المحتوى الثابت على السيرفر ويمرره إلى BookingPayment؛ BookingHistory/PaymentStatus/PaymentChecking |
@@ -1209,3 +1209,11 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - هذا تنظيم للميزات الموجودة؛ المكوّنات التي تحتاج state أو Query hooks أو النماذج أو polling تظل Client. لا تحويل تلقائي لكل المكوّنات إلى Server، ولا تغيير Backend أو سياسة الجلسة أو خوارزمية الدفع. لا push دون طلب جديد.
 
 فحص المتصفح النهائي: قائمة الجوال بعد حقن Navigation عبر props، ومجموعات المحطات، ونتيجة الدفع بالعربية عند عرض 390px؛ لا تجاوز أفقي ولا أخطاء JavaScript، وعنوان h1 واحد في نتيجة الدفع. أُغلقت المعاينة المؤقتة بعد التحقق.
+
+### توحيد نمط نماذج استعادة كلمة المرور — 2026-10-21
+
+- كانت PasswordRecovery تجمع إطار الصفحة ونموذجَي الطلب والتغيير والانتقال بين الحالات داخل Client Component واحد. أصبحت إطار Server يعرض المقدمة والثيم، مع PasswordRecoveryForm صغير لإدارة request/reset/done، وForgotPasswordForm وResetPasswordForm مستقلين على نمط LoginForm وRegisterForm. كل نموذج يستخدم Form/FormInput/SubmitButton المشتركة وmutation hook المخصص.
+- قواعد التغيير داخل recoverySchema.ts مرة واحدة؛ createRecoveryResetSchema يخصص رسالة عدم التطابق فقط للواجهة، بينما recoveryResetSchema يحافظ على تحقق Server Action نفسه. لا تركيب shape داخل JSX ولا تكرار قواعد كلمة المرور في المكوّن.
+- تنظيف كاش الجلسة بعد نجاح التغيير داخل useResetPassword.onSuccess، مثل مسؤولية Hooks الدخول والخروج؛ أزيل clearSession غير المستخدم من useAuth ولم يعد النموذج يشترك في قراءة المستخدم الحالي لهذا الغرض. الفشل لا ينظف الكاش، والنتيجة مجهولة المصير لا تعاد تلقائيًا ولا تعلن نجاحًا.
+- حفظ البريد المعالج بين الخطوات، وreturnTo، ومهلة إعادة الإرسال 60 ثانية، ومسح الرمز السابق وتركيز الحقل عند طلب رمز جديد. يُزال خطأ البريد القديم بعد تصحيحه. لا تغيير endpoint أو Backend أو قواعد الاستعادة.
+- التحقق: ESLint وبناء الإنتاج مع TypeScript، و8 حالات معزولة للـSchema والنماذج وTanStack MutationObserver، بالإضافة إلى 10 parsing و6 query/cache regressions. تجربة المتصفح مع Backend وهمي غطت الطلب والانتقال، رفض البريد الفارغ ثم تصحيحه وإعادة الإرسال ومسح الرمز والمهلة وحفظ returnTo؛ لا أخطاء JavaScript، ولا حساب/بريد/قاعدة بيانات أو تغيير كلمة مرور حقيقي، ولا اختبارات محفوظة في المستودع.

@@ -1594,3 +1594,8 @@ The payment-status GET handler shares parseSchema with feature Actions. Its feat
 ### Web structure simplification (2026-10-21)
 
 All 15 app pages render on the server and supply initial feature data. Static login/account/booking and public-page content now stay outside client interaction boundaries. Feature hooks share hooks/queryKeys.ts; global query/mutation retry settings live in queryClient.ts. Six one-use wrapper files were inlined; seat logic moved into useSeatBooking and live payment logic into useBookingPayment. Auth-dependent navigation is composed by the layout, so shared UI no longer imports feature internals. Component styling uses inline Tailwind utilities, with only theme/base/keyframes in global CSS. Auth/session/redirect protection and payment ordering/idempotency are retained. See the current feature table and audit in IMPLEMENTATION_PLAN.md for exact responsibilities and verification.
+
+
+### Consistent password recovery forms (2026-10-21)
+
+PasswordRecovery is a server-rendered screen. PasswordRecoveryForm selects the request/reset/success step; ForgotPasswordForm and ResetPasswordForm use the same shared Form controls and mutation-hook pattern as LoginForm/RegisterForm. The schema factory only customizes the localized password-mismatch message; constraints remain shared with server validation. useResetPassword clears session query data on success, so forms no longer read the current session merely to clear it. Resend cooldown, returnTo and uncertain-result handling are retained. Verification used isolated fixtures without changing any real password.
