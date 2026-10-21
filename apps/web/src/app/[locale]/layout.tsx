@@ -33,8 +33,12 @@ export default async function LocaleLayout({
   const queryClient = createQueryClient();
   queryClient.setQueryData(authKeys.me, await getAuthSession());
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <body className="min-h-screen">
+    <html
+      lang={locale}
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+      className="scroll-pt-24 lg:scroll-pt-[100px]"
+    >
+      <body id="top" className="min-h-screen">
         <NextIntlClientProvider>
           <AppProviders state={dehydrate(queryClient)}>
             <div className="flex min-h-screen flex-col">

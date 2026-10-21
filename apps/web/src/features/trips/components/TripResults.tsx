@@ -53,9 +53,9 @@ export function TripResults({
     { day: 'numeric', month: 'short', timeZone: 'Africa/Cairo' },
   );
   return (
-    <div className="mx-auto w-[calc(100%-2rem)] max-w-[1180px] py-6 md:pt-8 md:pb-16">
+    <div className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] py-6 md:pt-8 md:pb-16">
       <section
-        className="rounded-xl border bg-card p-5 shadow-sm md:p-7"
+        className="premium-search-sheet rounded-[1.75rem] border border-border/70 bg-card p-5 md:p-7"
         aria-label={t('title')}
       >
         <TripSearchForm

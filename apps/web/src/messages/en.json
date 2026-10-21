@@ -3,22 +3,40 @@
     "home": "Home",
     "navigation": "Main navigation",
     "search": "Find a trip",
-    "bookings": "My bookings"
+    "bookings": "My bookings",
+    "stations": "Stations",
+    "faqs": "FAQs",
+    "about": "About",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuTitle": "Main menu",
+    "menuDescription": "Plan your journey and find the details you need.",
+    "language": "Language",
+    "account": "My account"
   },
   "Footer": {
-    "note": "Development version — schedules and fares are examples.",
-    "photo": "Photo: Bahaa Mourad / Unsplash"
+    "navigation": "Footer navigation",
+    "home": "Home",
+    "search": "Find your next trip",
+    "description": "Choose your trip and seat, and keep track of your booking in one place.",
+    "copyright": "© {year} Rihla. All rights reserved.",
+    "stations": "Stations",
+    "faqs": "FAQs",
+    "about": "About",
+    "explore": "Plan your journey",
+    "discover": "About & help",
+    "backToTop": "Back to top"
   },
   "Home": {
-    "title": "Your destination. Your choice of seat.",
-    "intro": "Choose your time and station, and see exactly where you will sit before booking.",
-    "place": "North Coast, Egypt",
+    "title": "Your next journey starts here.",
+    "intro": "Find your departure, choose your seat, and keep every detail of your journey in one place.",
+    "place": "Bus journeys across Egypt",
     "findTrip": "Find your next journey",
     "oneWay": "One way",
     "apiUnavailable": "Trips could not be loaded. Please refresh this page shortly.",
     "noCities": "No cities are available to search right now.",
-    "destinations": "Where next?",
-    "destinationsText": "Journeys between Egyptian cities. Choose a route to see departure times.",
+    "destinations": "A new place. A new perspective.",
+    "destinationsText": "Start with a city search. Choose your date to find available departures.",
     "viewTrips": "View departures",
     "cityNames": {
       "Cairo": "Cairo",
@@ -32,7 +50,39 @@
     "step2Title": "Know where you will sit",
     "step2Text": "See the aisle and front of the bus, then choose your seat.",
     "step3Title": "Your booking in one place",
-    "step3Text": "Review your journey, passenger details and payment in your booking."
+    "step3Text": "Review your journey, passenger details and payment in your booking.",
+    "routeSearch": "Route search",
+    "howLink": "See how booking works",
+    "howTitle": "From your first search to your next journey.",
+    "howText": "Choose a departure, find your seat and keep the details together. Here’s how it works.",
+    "seatPreviewTitle": "Find your favourite seat",
+    "seatPreviewIntro": "Try selecting a seat in this example.",
+    "busFront": "Front of bus",
+    "previewSeat": "Preview seat {number}",
+    "previewUnavailable": "Preview seat {number}, unavailable",
+    "previewAvailableLegend": "Available",
+    "previewSelectedLegend": "Selected",
+    "previewUnavailableLegend": "Unavailable",
+    "previewSelection": "Seat {number} selected in the preview",
+    "previewNote": "Example layout only. Your trip shows its actual seats and availability; this does not make a reservation.",
+    "stationsTitle": "A good journey starts at the right station.",
+    "stationsText": "Get to know the stations in your city before you set off. Browse the directory and search for a station on the map by name.",
+    "stationsLink": "Explore all stations",
+    "stationTip": "Check the departure station in your trip details and confirm the exact boarding point before travelling.",
+    "stationCount": "{count, plural, one {# station} other {# stations}}",
+    "faqTitle": "Before you set off",
+    "faqText": "A few useful answers about booking, payment and your ticket.",
+    "faqLink": "All questions and answers",
+    "readyTitle": "Where will your next journey take you?",
+    "readyText": "Choose your departure, destination and travel date to get started.",
+    "readySearch": "Find a trip",
+    "aboutLink": "Get to know Rihla",
+    "metaTitle": "Rihla | Your next journey starts here",
+    "heroStation": "Choose your station",
+    "heroSeat": "Pick your seat",
+    "heroBooking": "Keep track of your booking",
+    "heroImageLabel": "A seat that feels like yours",
+    "routeFrom": "From {city}"
   },
   "Search": {
     "from": "From",
@@ -326,5 +376,137 @@
     "retry": "Try again",
     "notFound": "This page could not be found.",
     "home": "Back to home"
+  },
+  "Stations": {
+    "metaTitle": "Stations | Rihla",
+    "eyebrow": "Before your journey",
+    "title": "Find your station. Plan your journey.",
+    "intro": "All our stations, in one place. Search by station or city and find the right starting point for your trip.",
+    "filters": "Find a station",
+    "searchLabel": "Station or city",
+    "searchPlaceholder": "For example: Cairo or Sidi Gaber",
+    "cityLabel": "City",
+    "allCities": "All cities",
+    "results": "{count, plural, =0 {No matching stations} one {# station} other {# stations}}",
+    "cityCount": "{count, plural, one {# station} other {# stations}}",
+    "clear": "Clear filters",
+    "map": "Search on map",
+    "mapFor": "Search for {station}, {city} on the map (opens in a new tab)",
+    "mapNote": "Map links search by station and city name. Confirm the departure point for your specific trip before travelling.",
+    "otherCity": "Other stations",
+    "noResults": "No stations match your search.",
+    "noResultsText": "Try another name or select all cities.",
+    "empty": "Stations will appear here soon.",
+    "emptyText": "Check back for available departure stations.",
+    "error": "We could not load stations. Please try again.",
+    "loading": "Loading stations",
+    "ctaTitle": "Know where you’re starting?",
+    "ctaText": "Choose your destination and date to see available trips.",
+    "cta": "Find your trip"
+  },
+  "FAQ": {
+    "metaTitle": "FAQs | Rihla",
+    "eyebrow": "A little clarity before you go",
+    "title": "Good questions. Clear answers.",
+    "intro": "From choosing a seat to finding your ticket, here’s what you need to know for your next journey.",
+    "searchLabel": "Search questions and answers",
+    "searchPlaceholder": "What would you like to know? Try payment or ticket",
+    "categoriesLabel": "FAQ topics",
+    "all": "All questions",
+    "categories": {
+      "booking": "Booking & seats",
+      "payment": "Payment & refunds",
+      "ticket": "Tickets",
+      "station": "Stations",
+      "account": "Your account"
+    },
+    "results": "{count, plural, =0 {No matching questions} one {# question} other {# questions}}",
+    "clear": "Show all questions",
+    "noResults": "No answers match your search.",
+    "noResultsText": "Try a simpler keyword or choose another topic.",
+    "stationTitle": "Looking for your station?",
+    "stationText": "Browse stations by city and search for their location on the map.",
+    "stationLink": "Explore stations",
+    "ctaTitle": "Ready for your next journey?",
+    "ctaText": "Start with where you’re going and when.",
+    "cta": "Find a trip",
+    "questions": {
+      "account": {
+        "q": "Do I need an account to book?",
+        "a": "You can browse trips and stations without an account. Sign in to confirm a booking and follow your payment and ticket. If you create a new account, verify your email first."
+      },
+      "seat": {
+        "q": "How do I choose my seat?",
+        "a": "Open a trip and choose from the available seats on the bus layout, then enter passenger names and a contact number. Selecting a seat alone does not reserve it; complete your booking and payment before the deadline."
+      },
+      "cancellation": {
+        "q": "Can I cancel my booking or change my trip?",
+        "a": "Passenger cancellation and trip changes are currently unavailable. If the operator cancels a trip, any full refund due is shown in your booking details. The time for funds to reach your account depends on the payment provider and bank."
+      },
+      "deadline": {
+        "q": "How long do I have to pay?",
+        "a": "After creating a temporary seat reservation, you have up to 10 minutes to pay. The deadline may be earlier if the trip departs sooner, so check the time shown in your booking. If it expires, search again and choose from the seats still available."
+      },
+      "pending": {
+        "q": "I paid, but the status still says “Checking”. What should I do?",
+        "a": "Do not pay again. Open your booking, follow the latest status and use the payment status refresh when needed. Your booking and ticket are confirmed after payment verification; returning from the payment page alone does not confirm success."
+      },
+      "issued": {
+        "q": "When will my ticket be available?",
+        "a": "A ticket is available after payment and booking confirmation for a trip that has not been cancelled. Sign in, open My bookings and select the booking to view your ticket, passenger names and seat numbers."
+      },
+      "qr": {
+        "q": "Is the QR code alone enough to board?",
+        "a": "The code identifies the ticket; it is not, by itself, boarding authorization. Open the ticket page to check its current status and follow the operator’s instructions for your trip."
+      },
+      "location": {
+        "q": "How do I find my departure station?",
+        "a": "Your departure station is named in the trip and booking details. The stations page groups stations by city and provides map searches by name. Confirm the departure point for your specific trip before travelling."
+      },
+      "city": {
+        "q": "What is the difference between searching by city and station?",
+        "a": "Choosing a city searches across its stations. Choosing a specific station limits the search to that station. Check the departure and arrival stations in the trip details before booking."
+      },
+      "password": {
+        "q": "I forgot my password. How do I get back in?",
+        "a": "Choose Forgot password on the sign-in page and enter your account email. Use the most recent code you received; it expires after 10 minutes. After resetting your password, sign in with the new one."
+      }
+    }
+  },
+  "About": {
+    "metaTitle": "About | Rihla",
+    "eyebrow": "About Rihla",
+    "title": "A clearer journey, from the first choice.",
+    "intro": "Rihla is a platform for booking intercity bus trips in Egypt. Choose your station, departure and seat, with your booking and ticket details in one place.",
+    "cta": "Start your journey",
+    "journeyTitle": "From your starting point to your destination.",
+    "origin": "Departure station",
+    "destination": "Your destination",
+    "journeyText": "Find a trip, reserve a seat and follow your ticket. Connected steps that keep your journey details together.",
+    "purposeTitle": "Less searching around. More clarity.",
+    "purposeText": "We bring together the details you need before travelling: departure and arrival stations, schedules, fares and available seats. You can explore trips and stations before signing in.",
+    "purposeDetail": "When you book, choose your seat and enter the passenger details. After payment, follow your booking status and open your ticket in your account once confirmed.",
+    "howTitle": "From search to ticket.",
+    "howText": "A clear place for each step, so you can follow your journey without losing the details.",
+    "stepNumber": "Step {number}",
+    "steps": {
+      "trip": {
+        "title": "Find your trip",
+        "text": "Choose your departure and arrival city or station and your travel date, then review the schedules and fares."
+      },
+      "seat": {
+        "title": "Choose your seat",
+        "text": "See the bus layout, pick from the available seats and add passenger names and a contact number."
+      },
+      "ticket": {
+        "title": "Follow your booking",
+        "text": "Pay within the deadline shown and check the status in your account. Your ticket appears after payment and booking confirmation."
+      }
+    },
+    "exploreTitle": "A little more to know before you go.",
+    "stationsTitle": "Explore the stations",
+    "stationsText": "Browse stations by city and search for your station on the map.",
+    "faqsTitle": "Find an answer",
+    "faqsText": "Read about booking, payment and tickets, and understand your next step."
   }
 }

@@ -18,8 +18,8 @@ export function TripCard({
     (Date.parse(trip.arrivalAt) - Date.parse(trip.departureAt)) / 60000,
   );
   return (
-    <article className="grid min-w-0 overflow-hidden rounded-xl border bg-card md:grid-cols-[110px_minmax(0,1fr)_170px] xl:grid-cols-[140px_minmax(0,1fr)_190px]">
-      <div className="flex items-center gap-3 border-b bg-muted/50 px-4 py-3 md:flex-col md:justify-center md:border-e md:border-b-0 md:p-5">
+    <article className="premium-ticket grid min-w-0 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card md:grid-cols-[110px_minmax(0,1fr)_170px] xl:grid-cols-[140px_minmax(0,1fr)_190px]">
+      <div className="flex items-center gap-3 border-b bg-secondary/45 px-4 py-3 md:flex-col md:justify-center md:border-e md:border-b-0 md:p-5">
         <BusFront
           size={23}
           aria-hidden="true"
@@ -82,7 +82,7 @@ export function TripCard({
           </ul>
         )}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed px-5 py-4 md:flex-col md:justify-center md:gap-1 md:border-s md:border-t-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed bg-secondary/25 px-5 py-4 md:flex-col md:justify-center md:gap-1 md:border-s md:border-t-0">
         <div className="md:text-center">
           <strong className="block whitespace-nowrap text-xl font-semibold xl:text-2xl">
             {formatPrice(trip.pricePiastres, locale)}

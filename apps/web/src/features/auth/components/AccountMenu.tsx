@@ -22,7 +22,7 @@ export function AccountMenu() {
         <>
           <Link
             href="/account"
-            className="flex items-center gap-2 text-sm hover:text-primary"
+            className="flex min-h-11 items-center gap-2 rounded-full border border-primary/15 bg-secondary/60 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary"
             aria-label={t('account')}
           >
             <UserRound size={18} />
@@ -31,7 +31,8 @@ export function AccountMenu() {
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="icon-lg"
+            className="size-11"
             disabled={busy}
             aria-label={t('logout')}
             onClick={async () => {
@@ -62,7 +63,7 @@ export function AccountMenu() {
           href={
             '/login?returnTo=' + encodeURIComponent(safeReturnPath(pathname))
           }
-          className="flex items-center gap-2 text-sm hover:text-primary"
+          className="flex min-h-11 items-center gap-2 rounded-full border border-primary/15 bg-secondary/60 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary"
           aria-label={t('login')}
           onClick={(event) => {
             event.preventDefault();

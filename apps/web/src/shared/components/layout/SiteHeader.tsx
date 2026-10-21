@@ -3,18 +3,19 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { HeaderNavigation } from './HeaderNavigation';
 export async function SiteHeader({ accountMenu }: { accountMenu: ReactNode }) {
   const t = await getTranslations('Header');
   return (
-    <header className="sticky top-0 z-40 border-b bg-card">
-      <div className="mx-auto flex h-18 w-[calc(100%-2rem)] max-w-[1180px] items-center gap-4 md:h-21 md:gap-12">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-card/95 backdrop-blur-xl">
+      <div className="mx-auto flex h-19 w-[calc(100%-2rem)] max-w-[1240px] items-center gap-3 lg:h-22 lg:gap-7 xl:gap-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2.5 text-[22px] font-semibold leading-tight text-foreground md:text-[25px]"
+          className="inline-flex items-center gap-2.5 text-[24px] font-semibold leading-tight text-foreground md:text-[25px]"
           dir="ltr"
           aria-label={t('home')}
         >
-          <span className="flex h-10 w-9 items-center justify-center rounded-lg border-[1.5px] border-current md:h-11 md:w-10">
+          <span className="flex h-10 w-9 items-center justify-center rounded-xl bg-primary text-white md:h-11 md:w-10">
             <BusFront size={24} />
           </span>
           <span>
@@ -24,19 +25,11 @@ export async function SiteHeader({ accountMenu }: { accountMenu: ReactNode }) {
             </small>
           </span>
         </Link>
-        <nav
-          className="hidden gap-7 text-sm md:flex"
-          aria-label={t('navigation')}
-        >
-          <Link href="/" className="hover:text-primary">
-            {t('search')}
-          </Link>
-          <Link href="/bookings" className="hover:text-primary">
-            {t('bookings')}
-          </Link>
-        </nav>
+        <HeaderNavigation />
         <div className="ms-auto flex items-center gap-4 md:gap-6">
-          <LanguageSwitcher />
+          <div className="hidden lg:block">
+            <LanguageSwitcher />
+          </div>
           {accountMenu}
         </div>
       </div>

@@ -1,7 +1,9 @@
 'use client';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
-export function LanguageSwitcher() {
+export function LanguageSwitcher({
+  onNavigate,
+}: { onNavigate?: () => void } = {}) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -14,6 +16,7 @@ export function LanguageSwitcher() {
       dir="ltr"
       onClick={(event) => {
         event.preventDefault();
+        onNavigate?.();
         router.replace(pathname + window.location.search, { locale: other });
       }}
     >
