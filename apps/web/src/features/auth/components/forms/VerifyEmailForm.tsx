@@ -6,8 +6,8 @@ import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
-import { verifyEmailSchema } from '../schemas/authSchema';
-import { useVerifyEmail, useResendVerification } from '../hooks/useAuth';
+import { verifyEmailSchema } from '../../schemas/authSchema';
+import { useVerifyEmail, useResendVerification } from '../../hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
 const codeSchema = verifyEmailSchema.pick({ code: true });
 export function VerifyEmailForm({

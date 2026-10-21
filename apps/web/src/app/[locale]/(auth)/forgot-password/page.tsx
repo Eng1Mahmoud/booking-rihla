@@ -1,4 +1,4 @@
-import { PasswordRecovery } from '@/features/auth/components/PasswordRecovery';
+import { PasswordRecovery } from '@/features/auth/components/password-recovery/PasswordRecovery';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 export const metadata = {
   referrer: 'no-referrer' as const,

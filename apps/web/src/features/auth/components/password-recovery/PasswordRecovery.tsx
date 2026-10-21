@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { KeyRound } from 'lucide-react';
-import { PasswordRecoveryForm } from './PasswordRecoveryForm';
+import { PasswordRecoveryFlow } from './PasswordRecoveryFlow';
 
 export async function PasswordRecovery({
   initialStep,
@@ -20,7 +20,7 @@ export async function PasswordRecovery({
         <p className="text-muted-foreground">{t('introText')}</p>
       </div>
       <div className="rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
-        <PasswordRecoveryForm initialStep={initialStep} returnTo={returnTo} />
+        <PasswordRecoveryFlow initialStep={initialStep} returnTo={returnTo} />
       </div>
     </section>
   );

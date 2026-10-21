@@ -815,7 +815,7 @@ apps/web/
 
 | Feature | Actions | Hooks | المكوّنات/الصفحات الأساسية |
 | --- | --- | --- | --- |
-| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | AuthForm/LoginForm/RegisterForm/VerifyEmailForm/PasswordRecoveryForm/ForgotPasswordForm/ResetPasswordForm/AccountMenu/HeaderNavigation؛ إطار صفحات الدخول والاستعادة على السيرفر |
+| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | forms: AuthFlow/LoginForm/RegisterForm/VerifyEmailForm؛ password-recovery: PasswordRecovery/PasswordRecoveryFlow/ForgotPasswordForm/ResetPasswordForm/ResetPasswordActions؛ navigation: AccountMenu/HeaderNavigation؛ إطار صفحات الدخول والاستعادة على السيرفر |
 | trips | trips.actions.ts | useTripCatalog/useTripSearch/useTripDetails | HomeHero/PopularRoutes/HomeSections على السيرفر؛ HomeSearch/TripSearchForm/TripResults/TripDetails للأجزاء التفاعلية |
 | seats | seats.actions.ts | useSeatBooking | SeatBooking للعرض؛ SeatMap/SeatIcon/PassengerForm؛ hook يملك الاختيار والتوافر وإنشاء الحجز |
 | bookings | bookings.actions.ts | useBookings/useCreateBooking/useCheckout/useBookingPayment | BookingDetail يعرض المحتوى الثابت على السيرفر ويمرره إلى BookingPayment؛ BookingHistory/PaymentStatus/PaymentChecking |
@@ -1217,3 +1217,9 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - تنظيف كاش الجلسة بعد نجاح التغيير داخل useResetPassword.onSuccess، مثل مسؤولية Hooks الدخول والخروج؛ أزيل clearSession غير المستخدم من useAuth ولم يعد النموذج يشترك في قراءة المستخدم الحالي لهذا الغرض. الفشل لا ينظف الكاش، والنتيجة مجهولة المصير لا تعاد تلقائيًا ولا تعلن نجاحًا.
 - حفظ البريد المعالج بين الخطوات، وreturnTo، ومهلة إعادة الإرسال 60 ثانية، ومسح الرمز السابق وتركيز الحقل عند طلب رمز جديد. يُزال خطأ البريد القديم بعد تصحيحه. لا تغيير endpoint أو Backend أو قواعد الاستعادة.
 - التحقق: ESLint وبناء الإنتاج مع TypeScript، و8 حالات معزولة للـSchema والنماذج وTanStack MutationObserver، بالإضافة إلى 10 parsing و6 query/cache regressions. تجربة المتصفح مع Backend وهمي غطت الطلب والانتقال، رفض البريد الفارغ ثم تصحيحه وإعادة الإرسال ومسح الرمز والمهلة وحفظ returnTo؛ لا أخطاء JavaScript، ولا حساب/بريد/قاعدة بيانات أو تغيير كلمة مرور حقيقي، ولا اختبارات محفوظة في المستودع.
+
+### تنظيم مكوّنات المصادقة — 2026-10-21
+
+- جُمعت مكوّنات الدخول والتسجيل وتأكيد البريد في components/forms، والاستعادة في components/password-recovery، والقوائم في components/navigation.
+- أُعيدت تسمية AuthForm إلى AuthFlow وPasswordRecoveryForm إلى PasswordRecoveryFlow لأنهما يديران الانتقال بين النماذج. فُصل ResetPasswordActions في ملف مسمى داخل مجلد الاستعادة؛ يستخدم useFormContext لنفس النموذج وتبقى الحقول مباشرة داخل Form.
+- حُدثت الاستيرادات دون ملفات إعادة تصدير أو تغيير في API أو سلوك المصادقة.

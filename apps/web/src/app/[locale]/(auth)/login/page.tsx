@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { BusFront, Check } from 'lucide-react';
 import { getCurrentUser } from '@/features/auth/lib/auth.server';
 import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
-import { AuthForm } from '@/features/auth/components/AuthForm';
+import { AuthFlow } from '@/features/auth/components/forms/AuthFlow';
 export default async function LoginPage({
   searchParams,
 }: {
@@ -51,7 +51,7 @@ export default async function LoginPage({
           </p>
         </div>
         <div className="self-center rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
-          <AuthForm returnTo={returnTo} />
+          <AuthFlow returnTo={returnTo} />
         </div>
       </section>
     </div>

@@ -4,8 +4,8 @@ import { Link } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { recoveryEmailSchema } from '../schemas/recoverySchema';
-import { useForgotPassword } from '../hooks/useAuth';
+import { recoveryEmailSchema } from '../../schemas/recoverySchema';
+import { useForgotPassword } from '../../hooks/useAuth';
 
 export function ForgotPasswordForm({
   returnTo,

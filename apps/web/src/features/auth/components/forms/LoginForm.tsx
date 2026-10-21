@@ -4,10 +4,10 @@ import { Link } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { useLogin } from '../hooks/useAuth';
-import { loginSchema } from '../schemas/authSchema';
-import { safeReturnPath } from '../lib/safeReturnPath';
-import type { LoginInput } from '../types/auth';
+import { useLogin } from '../../hooks/useAuth';
+import { loginSchema } from '../../schemas/authSchema';
+import { safeReturnPath } from '../../lib/safeReturnPath';
+import type { LoginInput } from '../../types/auth';
 export function LoginForm({ returnTo }: { returnTo: string }) {
   const t = useTranslations('Auth'),
     locale = useLocale(),

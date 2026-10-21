@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { registerSchema } from '../schemas/authSchema';
-import { useRegister } from '../hooks/useAuth';
+import { registerSchema } from '../../schemas/authSchema';
+import { useRegister } from '../../hooks/useAuth';
 type Values = z.input<typeof registerSchema>;
 export function RegisterForm({
   onRegistered,

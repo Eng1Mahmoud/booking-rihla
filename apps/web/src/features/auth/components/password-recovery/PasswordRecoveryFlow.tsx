@@ -7,8 +7,8 @@ import { Button } from '@/shared/components/ui/button';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
 
-// Like AuthForm, this component chooses the step; each form owns its submission.
-export function PasswordRecoveryForm({
+// Like AuthFlow, this component chooses the step; each form owns its submission.
+export function PasswordRecoveryFlow({
   initialStep,
   returnTo,
 }: {
