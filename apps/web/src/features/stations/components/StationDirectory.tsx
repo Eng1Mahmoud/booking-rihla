@@ -14,7 +14,6 @@ import { QueryError } from '@/shared/components/feedback/QueryError';
 import { useTripCatalog } from '@/features/trips/hooks/useTrips';
 import type { TripCatalog, Station, City } from '@/features/trips/types/trip';
 import { displayName } from '@/shared/lib/format';
-import { searchText } from '@/shared/lib/searchText';
 
 export function StationDirectory({ initial }: { initial?: TripCatalog }) {
   const t = useTranslations('Stations');
@@ -23,17 +22,14 @@ export function StationDirectory({ initial }: { initial?: TripCatalog }) {
   const [search, setSearch] = useState('');
   const [cityId, setCityId] = useState('');
   const catalog = query.data;
-  const term = searchText(search);
   const cityMap = new Map(catalog?.cities.map((city) => [city.id, city]));
   const grouped = new Map<string, Station[]>();
   for (const station of catalog?.stations ?? []) {
     const city = cityMap.get(station.cityId);
     if (cityId && cityId !== station.cityId) continue;
     if (
-      term &&
-      !searchText(
-        [station.nameAr, station.nameEn, city?.nameAr, city?.nameEn].join(' '),
-      ).includes(term)
+      search &&
+      ![station.nameAr, station.nameEn, city?.nameAr, city?.nameEn].join(' ').includes(search)
     )
       continue;
     const group = grouped.get(station.cityId) ?? [];

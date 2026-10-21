@@ -16,7 +16,6 @@ import { Link } from '@/i18n/navigation';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
-import { searchText } from '@/shared/lib/searchText';
 
 const categories = [
   {
@@ -34,17 +33,14 @@ export function FaqContent() {
   const t = useTranslations('FAQ');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
-  const term = searchText(search);
   const groups = categories
     .filter((group) => category === 'all' || group.id === category)
     .map((group) => ({
       ...group,
       questions: group.questions.filter(
         (id) =>
-          !term ||
-          searchText(
-            t('questions.' + id + '.q') + ' ' + t('questions.' + id + '.a'),
-          ).includes(term),
+          !search ||
+          t('questions.' + id + '.q') + ' ' + t('questions.' + id + '.a').includes(search),
       ),
     }))
     .filter((group) => group.questions.length);
@@ -166,7 +162,7 @@ export function FaqContent() {
                     {group.questions.map((id) => (
                       <details
                         key={id}
-                        open={term ? true : undefined}
+                        open={search ? true : undefined}
                         className="group"
                       >
                         <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary md:text-base [&::-webkit-details-marker]:hidden">
