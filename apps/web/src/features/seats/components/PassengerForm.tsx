@@ -10,6 +10,7 @@ import {
   type PassengerValues,
 } from '../schemas/passengerSchema';
 import type { FieldPath } from 'react-hook-form';
+
 export function PassengerForm({
   seats,
   user,
@@ -40,7 +41,9 @@ export function PassengerForm({
         })
       }
     >
-      <h3 className="font-semibold">{t('passengerDetails')}</h3>
+      <h3 id="passenger-details-heading" className="font-semibold">
+        {t('passengerDetails')}
+      </h3>
       {seats.map((seat, index) => (
         <FormInput<PassengerValues>
           key={seat.id}
@@ -49,6 +52,7 @@ export function PassengerForm({
           autoComplete={index === 0 ? 'name' : 'off'}
           maxLength={100}
           defaultValue={index === 0 ? user.name : ''}
+          autoFocus={index === 0}
         />
       ))}
       <FormInput<PassengerValues>
