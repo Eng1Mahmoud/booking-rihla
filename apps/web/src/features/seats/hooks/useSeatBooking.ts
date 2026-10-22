@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
@@ -24,20 +23,9 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   const router = useRouter();
   const createBooking = useCreateBooking();
   const summaryRef = useRef<HTMLElement>(null);
-  const searchParams = useSearchParams();
-  // Restore only seats that still exist and are available after returning from login.
-  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
-    const ids = (searchParams.get('seats') ?? '')
-      .split(',')
-      .slice(0, initialSeats.seats.length);
-    return initialSeats.seats
-      .filter((seat) => seat.isAvailable && ids.includes(seat.id))
-      .map((seat) => seat.id);
-  });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user, status, reloadSession } = useAuth();
-  const [phase, setPhase] = useState<'select' | 'details'>(
-    selectedIds.length ? 'details' : 'select',
-  );
+  const [phase, setPhase] = useState<'select' | 'details'>('select');
   useEffect(() => {
     if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
       summaryRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -62,7 +50,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     setSelectedIds((ids) =>
       ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id],
     );
-    // Keep the details form mounted when selection changes, preserving the remaining names.
     setError('');
   }
   async function reserve(input: {
@@ -70,7 +57,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     passengers: { seatId: string; name: string }[];
   }) {
     setError('');
-    // The backend checks current seat availability atomically when it creates the reservation.
     if (
       !input.passengers.length ||
       input.passengers.some(
@@ -100,16 +86,10 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     }
   }
 
-  // Browsing is public; continuing to passenger details requires sign-in.
   useEffect(() => {
     if (phase !== 'details' || status !== 'guest') return;
-    const returnTo =
-      '/trips/' +
-      trip.id +
-      '?seats=' +
-      encodeURIComponent(selectedIds.join(','));
-    router.replace('/login?returnTo=' + encodeURIComponent(returnTo));
-  }, [phase, status, selectedIds, trip.id, router]);
+    router.replace('/login');
+  }, [phase, status, router]);
 
   return {
     user,
