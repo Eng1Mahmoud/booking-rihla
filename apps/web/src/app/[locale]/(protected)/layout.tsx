@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { getSignedInUser } from '@/features/auth/lib/auth.server';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
@@ -21,9 +20,7 @@ export default async function ProtectedLayout({
     return <ReadError message={errorMessage(error, locale)} />;
   }
   if (!user) {
-    const path = safeReturnPath(
-      (await headers()).get('x-bus-return-to') ?? '/account',
-    );
+    const path = (await headers()).get('x-bus-return-to') ?? '/account';
     redirect(
       '/' + locale + '/login?returnTo=' + encodeURIComponent(path),
     );
