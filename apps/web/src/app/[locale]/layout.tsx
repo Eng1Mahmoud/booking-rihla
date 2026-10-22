@@ -1,7 +1,7 @@
 import { dehydrate } from '@tanstack/react-query';
 import { createQueryClient } from '@/shared/lib/queryClient';
 import { authKeys } from '@/features/auth/hooks/queryKeys';
-import { getCurrentUser } from '@/features/auth/lib/auth.server';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import type { AuthSession } from '@/features/auth/types/auth';
 import { errorMessage } from '@/shared/lib/apiResult';
 import '@fontsource/ibm-plex-sans-arabic/400.css';
@@ -32,11 +32,10 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  // Request-local QueryClient: hydrate only the safe user view, never credentials.
   const queryClient = createQueryClient();
   let session: AuthSession;
   try {
-    session = { user: await getCurrentUser() };
+    session = { user: await getSignedInUser() };
   } catch (error) {
     session = { user: null, error: errorMessage(error, locale) };
   }
