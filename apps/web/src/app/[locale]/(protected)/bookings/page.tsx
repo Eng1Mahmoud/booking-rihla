@@ -1,7 +1,10 @@
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
-import { requireCurrentUser, readApi } from '@/features/auth/lib/auth.server';
+import {
+  requireSignedInUser,
+  fetchWithAccessToken,
+} from '@/features/auth/lib/auth.server';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import type { Booking } from '@/features/bookings/types/booking';
 import { ReadError } from '@/shared/components/feedback/ReadError';
@@ -18,9 +21,11 @@ export default async function BookingsPage({
   const offset = Number(raw);
   let result;
   try {
-    const user = await requireCurrentUser();
+    const user = await requireSignedInUser();
     const page = unwrapApiResult(
-      await readApi<{ items: Booking[] }>('bookings?limit=20&offset=' + offset),
+      await fetchWithAccessToken<{ items: Booking[] }>(
+        'bookings?limit=20&offset=' + offset,
+      ),
     );
     result = { ...page, userId: user.id };
   } catch (error) {
