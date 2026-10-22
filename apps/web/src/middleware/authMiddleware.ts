@@ -11,10 +11,16 @@ import {
 import type { AuthUser } from '@/features/auth/types/auth';
 import { matchProtectedPath, parsePathLocale } from './roleRoutes';
 
-function redirectToLoginPage(request: NextRequest, locale: string) {
-  const redirect = NextResponse.redirect(
-    new URL('/' + locale + '/login', request.url),
-  );
+function redirectToLoginPage(
+  request: NextRequest,
+  locale: string,
+  path: string,
+) {
+  const login = new URL('/' + locale + '/login', request.url);
+  const returnTo = path + request.nextUrl.search;
+  if (returnTo && returnTo !== '/')
+    login.searchParams.set('returnTo', returnTo);
+  const redirect = NextResponse.redirect(login);
   redirect.headers.set('Cache-Control', 'private, no-store');
   clearSessionCookies(redirect);
   return redirect;
@@ -28,10 +34,7 @@ function clearInvalidSessionOnPublicPage(request: NextRequest) {
   return next;
 }
 
-function sessionUnavailableResponse(
-  locale: string,
-  renewed?: AuthTokens,
-) {
+function sessionUnavailableResponse(locale: string, renewed?: AuthTokens) {
   const response = new NextResponse(
     locale === 'ar'
       ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
@@ -72,7 +75,7 @@ export async function authMiddleware(
   let renewed: AuthTokens | undefined;
 
   if (!session.access && !session.refresh) {
-    return rule ? redirectToLoginPage(request, locale) : response;
+    return rule ? redirectToLoginPage(request, locale, path) : response;
   }
 
   try {
@@ -85,7 +88,7 @@ export async function authMiddleware(
 
     if (result.status === 401) {
       return rule
-        ? redirectToLoginPage(request, locale)
+        ? redirectToLoginPage(request, locale, path)
         : clearInvalidSessionOnPublicPage(request);
     }
     if (!result.success) return sessionUnavailableResponse(locale, renewed);
