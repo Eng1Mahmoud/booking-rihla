@@ -14,7 +14,7 @@ import {
 } from '@/shared/lib/apiResult';
 import type { AuthUser } from '../types/auth';
 
-type Session = { access?: string; refresh?: string };
+type SessionCookies = { access?: string; refresh?: string };
 type ReadOptions = Pick<ApiOptions, 'locale' | 'requestHeaders' | 'signal'>;
 export type AuthTokens = {
   accessToken: string;
@@ -25,25 +25,29 @@ export type AuthTokens = {
 type SessionRead<T> = { result: ApiResult<T>; tokens?: AuthTokens | null };
 type CookieTarget = { cookies: Pick<NextResponse['cookies'], 'set'> };
 const production = process.env.NODE_ENV === 'production';
+
 export const authCookies = {
   access: production ? '__Host-bus_access' : 'bus_web_access',
   refresh: production ? '__Host-bus_refresh' : 'bus_web_refresh',
 };
+
 const cookieOptions = {
   httpOnly: true,
   secure: production,
   sameSite: 'lax' as const,
   path: '/',
 };
-export function readAuthCookies(request: {
+
+export function readSessionCookies(request: {
   cookies: { get(name: string): { value: string } | undefined };
-}): Session {
+}): SessionCookies {
   return {
     access: request.cookies.get(authCookies.access)?.value,
     refresh: request.cookies.get(authCookies.refresh)?.value,
   };
 }
-export function saveAuthCookies(target: CookieTarget, tokens: AuthTokens) {
+
+export function writeSessionCookies(target: CookieTarget, tokens: AuthTokens) {
   target.cookies.set(authCookies.access, tokens.accessToken, {
     ...cookieOptions,
     maxAge: tokens.expiresIn,
@@ -53,22 +57,26 @@ export function saveAuthCookies(target: CookieTarget, tokens: AuthTokens) {
     expires: tokens.refreshExpiresAt,
   });
 }
-export function clearAuthCookies(target: CookieTarget) {
+
+export function clearSessionCookies(target: CookieTarget) {
   for (const name of Object.values(authCookies))
     target.cookies.set(name, '', {
       ...cookieOptions,
       maxAge: 0,
-      // Keep deletion explicit when Next forwards proxy cookies into an Action.
       expires: new Date(0),
     });
 }
-// Only Actions/Route Handlers call this. Proxy writes to its outgoing response.
-export async function updateAuthCookies(tokens: AuthTokens | null | undefined) {
+
+/** Server Actions / Route Handlers only. Middleware writes cookies on its response. */
+export async function syncSessionCookies(
+  tokens: AuthTokens | null | undefined,
+) {
   if (tokens === undefined) return;
   const target = { cookies: await cookies() };
-  if (tokens) saveAuthCookies(target, tokens);
-  else clearAuthCookies(target);
+  if (tokens) writeSessionCookies(target, tokens);
+  else clearSessionCookies(target);
 }
+
 const tokensSchema = z.object({
   user: z.object({
     id: z.string(),
@@ -80,7 +88,11 @@ const tokensSchema = z.object({
   accessToken: z.string().min(1),
   expiresIn: z.number().int().positive().max(3600),
 });
-export function sessionTokens(headers: Headers, result: ApiResult<unknown>) {
+
+export function parseLoginSession(
+  headers: Headers,
+  result: ApiResult<unknown>,
+) {
   const parsed = tokensSchema.safeParse(result.data);
   const cookie = headers
     .getSetCookie()
@@ -106,8 +118,8 @@ export function sessionTokens(headers: Headers, result: ApiResult<unknown>) {
   };
 }
 
-// Runtime-local deduplication; PostgreSQL coordinates rotation across API replicas.
 const refreshes = new Map<string, Promise<SessionRead<AuthUser>>>();
+
 async function refreshSession(
   token: string,
   options: ReadOptions,
@@ -118,7 +130,6 @@ async function refreshSession(
   const running = refreshes.get(token);
   if (running) return running;
   const pending = (async (): Promise<SessionRead<AuthUser>> => {
-    // A caller's AbortSignal must not cancel a shared rotation.
     const { result, headers } = await requestApi('auth/refresh', {
       method: 'POST',
       body: {},
@@ -131,7 +142,7 @@ async function refreshSession(
         result: { ...result, data: undefined },
         tokens: isUnauthenticated(result) ? null : undefined,
       };
-    const session = sessionTokens(headers, result);
+    const session = parseLoginSession(headers, result);
     return session
       ? { result: { ...result, data: session.user }, tokens: session.tokens }
       : { result: apiFailure(502, 'UPSTREAM_ERROR', locale) };
@@ -140,10 +151,10 @@ async function refreshSession(
   return pending;
 }
 
-// A GET can renew once. The caller owns writing cookies, including after a failed retry.
-export async function readWithSession<T>(
+/** GET with one refresh attempt. Caller writes cookies. */
+export async function fetchWithSessionRefresh<T>(
   path: string,
-  session: Session,
+  session: SessionCookies,
   { locale, signal, requestHeaders }: ReadOptions = {},
 ): Promise<SessionRead<T>> {
   const options = { locale, signal, requestHeaders };
@@ -166,44 +177,51 @@ export async function readWithSession<T>(
   return { result, tokens };
 }
 
-// SSR is read-only. Proxy has already renewed cookies before this render.
-export async function readApi<T>(path: string, options: ReadOptions = {}) {
-  const session = readAuthCookies({ cookies: await cookies() });
+/** SSR read with access token only (middleware already refreshed). */
+export async function fetchWithAccessToken<T>(
+  path: string,
+  options: ReadOptions = {},
+) {
+  const session = readSessionCookies({ cookies: await cookies() });
   return apiFetch<T>(path, { ...options, accessToken: session.access });
 }
 
-// Authenticated Actions/Route Handlers: verify before writes, never replay a mutation.
-export async function authenticatedFetch<T = unknown>(
+/** Actions/Route Handlers: verify session before mutations; never replay uncertain writes. */
+export async function fetchWhenSignedIn<T = unknown>(
   path: string,
   options: Omit<ApiOptions, 'accessToken' | 'refreshToken'> = {},
 ): Promise<ApiResult<T>> {
-  const session = readAuthCookies({ cookies: await cookies() });
+  const session = readSessionCookies({ cookies: await cookies() });
   if (!options.method || options.method === 'GET') {
-    const read = await readWithSession<T>(path, session, options);
-    await updateAuthCookies(read.tokens);
+    const read = await fetchWithSessionRefresh<T>(path, session, options);
+    await syncSessionCookies(read.tokens);
     return read.result;
   }
-  const checked = await readWithSession<AuthUser>('auth/me', session, options);
-  await updateAuthCookies(checked.tokens);
+  const checked = await fetchWithSessionRefresh<AuthUser>(
+    'auth/me',
+    session,
+    options,
+  );
+  await syncSessionCookies(checked.tokens);
   if (!checked.result.success) return { ...checked.result, data: undefined };
   const result = await apiFetch<T>(path, {
     ...options,
     accessToken: checked.tokens?.accessToken ?? session.access,
   });
-  if (isUnauthenticated(result)) await updateAuthCookies(null);
+  if (isUnauthenticated(result)) await syncSessionCookies(null);
   return result;
 }
 
-// Request-local memoization; no cached identity is shared between users.
-export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
-  if (!readAuthCookies({ cookies: await cookies() }).access) return null;
-  const result = await readApi<AuthUser>('auth/me');
+export const getSignedInUser = cache(async (): Promise<AuthUser | null> => {
+  if (!readSessionCookies({ cookies: await cookies() }).access) return null;
+  const result = await fetchWithAccessToken<AuthUser>('auth/me');
   if (result.status === 401) return null;
   const { id, name, email, phone, role } = unwrapApiResult(result);
   return { id, name, email, phone, role };
 });
-export async function requireCurrentUser() {
-  const user = await getCurrentUser();
+
+export async function requireSignedInUser() {
+  const user = await getSignedInUser();
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED');
   return user;
 }
