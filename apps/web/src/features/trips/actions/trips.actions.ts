@@ -1,6 +1,6 @@
 'use server';
 import { z } from 'zod';
-import { readApi } from '@/features/auth/lib/auth.server';
+import { fetchWithAccessToken } from '@/features/auth/lib/auth.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { searchSchema, type Search } from '../schemas/searchSchema';
 import { getTripCatalog, getTrips } from '../lib/trips.server';
@@ -20,5 +20,5 @@ export async function getTripsAction(input: Search) {
 export async function getTripDetailsAction(id: string) {
   const parsed = await parseSchema(z.uuid(), id);
   if (!parsed.success) return parsed.error;
-  return readApi<Trip>('trips/' + parsed.data + '/details');
+  return fetchWithAccessToken<Trip>('trips/' + parsed.data + '/details');
 }
