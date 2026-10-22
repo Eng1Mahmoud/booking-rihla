@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
@@ -18,6 +20,13 @@ export default async function ProtectedLayout({
   } catch (error) {
     return <ReadError message={errorMessage(error, locale)} />;
   }
-  if (!user) redirect('/' + locale + '/login');
+  if (!user) {
+    const path = safeReturnPath(
+      (await headers()).get('x-bus-return-to') ?? '/account',
+    );
+    redirect(
+      '/' + locale + '/login?returnTo=' + encodeURIComponent(path),
+    );
+  }
   return children;
 }
