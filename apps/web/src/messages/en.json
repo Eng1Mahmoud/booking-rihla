@@ -381,7 +381,8 @@
     "securityHint": "Manage where you are signed in and recover access to your account.",
     "password": "Password",
     "passwordHint": "To reset your password, request a verification code at your registered email address.",
-    "recoverPassword": "Reset your password"
+    "recoverPassword": "Reset your password",
+    "payments": "Payments & refunds"
   },
   "Forms": {
     "invalid": "Check this field and try again.",
@@ -523,5 +524,30 @@
     "stationsText": "Browse stations by city and search for your station on the map.",
     "faqsTitle": "Find an answer",
     "faqsText": "Read about booking, payment and tickets, and understand your next step."
+  },
+  "PaymentHistory": {
+    "title": "Payments & refunds",
+    "intro": "Review your payment attempts and any recorded refunds. Open a booking for its latest payment details.",
+    "refresh": "Refresh",
+    "attemptNote": "A payment attempt is not proof of a charge. Check its status below; this page does not start or repeat a payment.",
+    "bookingAndDate": "Booking & attempt date",
+    "payment": "Payment",
+    "refund": "Refund",
+    "attemptDate": "Attempt date",
+    "viewBooking": "View booking",
+    "cancelledByCompany": "Trip cancelled by the operator",
+    "refundUpdated": "Refund last updated:",
+    "noRefund": "No refund recorded",
+    "emptyTitle": "No payment activity yet",
+    "emptyNote": "Payment attempts will appear here when you start payment for a booking.",
+    "endTitle": "No more payment attempts",
+    "endNote": "Return to the first page to review your most recent activity.",
+    "firstPage": "First page",
+    "findTrip": "Find a trip",
+    "pagination": "Payment history pages",
+    "previous": "Previous",
+    "next": "Next",
+    "timeZone": "All dates and times are shown in Cairo time.",
+    "loading": "Loading payment history…"
   }
 }

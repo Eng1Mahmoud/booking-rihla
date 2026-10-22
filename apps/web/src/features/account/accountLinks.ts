@@ -1,8 +1,8 @@
-import { UserRound, Ticket, ShieldCheck } from 'lucide-react';
+import { UserRound, Ticket, ShieldCheck, CreditCard } from 'lucide-react';
 
-// Add payment history here when its page and API are complete.
 export const accountLinks = [
   { href: '/account', label: 'profile', Icon: UserRound },
   { href: '/bookings', label: 'bookings', Icon: Ticket },
+  { href: '/account/payments', label: 'payments', Icon: CreditCard },
   { href: '/account/security', label: 'security', Icon: ShieldCheck },
 ] as const;

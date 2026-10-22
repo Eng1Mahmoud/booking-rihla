@@ -1,3 +1,8 @@
+import { createAccountRouter } from './routes/accountRoutes.ts';
+import {
+  accountPaymentService,
+  type AccountPaymentService,
+} from './services/accountPaymentService.ts';
 import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
 import { parsePaymobCheckoutEnv } from './config/paymob.ts';
 import { createOperationRouter } from './routes/operationRoutes.ts';
@@ -118,6 +123,7 @@ export function createApp(
     tripDetails?: TripDetailsService;
     auth?: AuthService;
     sessions?: SessionService;
+    accountPayments?: AccountPaymentService;
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
     tickets?: TicketService;
@@ -229,6 +235,13 @@ export function createApp(
     }
     sendSuccess(response.set('Cache-Control', 'no-store'), { checkoutEnabled });
   });
+  app.use(
+    '/api/v1/account',
+    createAccountRouter(
+      services.accountPayments ?? accountPaymentService,
+      services.sessions ?? sessionService,
+    ),
+  );
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
   app.use(
     '/api/v1/auth',
