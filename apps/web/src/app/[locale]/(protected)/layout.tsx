@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { getCurrentUser } from '@/features/auth/lib/auth.server';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 import { errorMessage } from '@/shared/lib/apiResult';
 
+/** Second-line RSC guard; middleware already enforces protected paths. */
 export default async function ProtectedLayout({
   children,
 }: {
@@ -15,15 +14,10 @@ export default async function ProtectedLayout({
   const locale = await getLocale();
   let user;
   try {
-    user = await getCurrentUser();
+    user = await getSignedInUser();
   } catch (error) {
     return <ReadError message={errorMessage(error, locale)} />;
   }
-  if (!user) {
-    const path = safeReturnPath(
-      (await headers()).get('x-bus-return-to') ?? '/account',
-    );
-    redirect('/' + locale + '/login?returnTo=' + encodeURIComponent(path));
-  }
+  if (!user) redirect('/' + locale + '/login');
   return children;
 }
