@@ -39,11 +39,17 @@ export function SeatBooking({
   } = useSeatBooking(trip, initialSeats);
   const total = selected.length * trip.pricePiastres;
   return (
-    <div className="grid items-start gap-5 pb-[85px] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
-      <section className="rounded-[14px] border bg-card px-3.5 py-[22px] md:p-[22px] min-[1001px]:p-7">
+    <div className="grid items-start gap-5 pb-[calc(88px+env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
+      <section
+        className="rounded-[14px] border bg-card px-3.5 py-[22px] md:p-[22px] min-[1001px]:p-7"
+        aria-labelledby="seat-map-heading"
+      >
         <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
           <div>
-            <h2 className="text-[21px] font-semibold md:text-[23px]">
+            <h2
+              id="seat-map-heading"
+              className="text-[21px] font-semibold md:text-[23px]"
+            >
               {t('title')}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground md:text-[13px]">
@@ -53,7 +59,7 @@ export function SeatBooking({
           <Button
             variant="outline"
             type="button"
-            className="size-10 shrink-0 bg-card text-muted-foreground"
+            className="size-10 shrink-0 bg-card text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
             onClick={refreshSeats}
             aria-label={t('refresh')}
             disabled={seatQuery.isFetching}
@@ -81,10 +87,14 @@ export function SeatBooking({
       </section>
       <aside
         ref={summaryRef}
-        className="scroll-mt-[110px] rounded-[14px] border bg-card p-[22px] md:sticky md:top-28 md:p-6"
+        tabIndex={-1}
+        className="scroll-mt-[110px] rounded-[14px] border bg-card p-[22px] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:sticky md:top-28 md:p-6"
+        aria-labelledby="seat-summary-heading"
       >
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold">{t('summary')}</h2>
+          <h2 id="seat-summary-heading" className="text-xl font-semibold">
+            {t('summary')}
+          </h2>
           <span className="inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-primary">
             {t('selectedCount', { count: selected.length })}
           </span>
@@ -105,7 +115,7 @@ export function SeatBooking({
                 key={seat.id}
                 type="button"
                 onClick={() => toggle(seat.id)}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs text-sky-800 hover:bg-sky-100"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs text-sky-800 hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {t('seatNumber', { number: seat.number })}
                 <span aria-hidden="true" className="text-lg leading-none">
@@ -180,8 +190,12 @@ export function SeatBooking({
         )}
       </aside>
       {phase === 'select' && (
-        <div className="fixed inset-x-0 bottom-0 z-25 flex items-center justify-between gap-4 border-t bg-card px-[18px] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_#092b4710] md:hidden">
-          <div className="grid gap-0.5">
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-4 border-t bg-card/95 px-[18px] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_#092b4710] backdrop-blur-sm md:hidden"
+          role="region"
+          aria-label={t('summary')}
+        >
+          <div className="grid min-w-0 gap-0.5">
             <span className="text-xs text-muted-foreground">
               {t('selectedCount', { count: selected.length })}
             </span>
@@ -192,6 +206,7 @@ export function SeatBooking({
           <Button
             size="lg"
             type="button"
+            className="shrink-0"
             disabled={!selected.length || status === 'loading'}
             onClick={() => setPhase('details')}
           >
