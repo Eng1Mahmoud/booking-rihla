@@ -2,12 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { paymentStatusInputSchema } from '@/features/bookings/schemas/bookingSchema';
 import { apiFetch } from '@/shared/lib/api';
-import { authenticatedFetch } from '@/features/auth/lib/auth.server';
+import { fetchWhenSignedIn } from '@/features/auth/lib/auth.server';
 import type { BookingPayment } from '@/features/bookings/types/booking';
 
 export const runtime = 'nodejs';
 
-// The only browser read endpoint: owner-scoped payment status, never provider reconciliation.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ bookingId: string }> },
@@ -45,7 +44,7 @@ export async function GET(
     const { status, ...body } = parsed.error;
     return NextResponse.json(body, { status, headers });
   }
-  const result = await authenticatedFetch<BookingPayment>(
+  const result = await fetchWhenSignedIn<BookingPayment>(
     'bookings/' + parsed.data.bookingId + '/payment',
     {
       locale,
