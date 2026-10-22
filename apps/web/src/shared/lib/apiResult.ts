@@ -26,17 +26,14 @@ export function isUncertainRequestError(error: unknown) {
     (error.code === 'NETWORK_ERROR' || error.status >= 500)
   );
 }
-// Backend messages are localized; only unavailable transport needs a fallback.
+
+// Prefer API message; known code fallbacks live in appErrors (lazy to avoid cycles).
 export function errorMessage(error: unknown, locale: string) {
-  const fallback =
-    locale === 'ar'
-      ? 'تعذر إكمال الطلب. حاول مجددًا.'
-      : 'Could not complete the request. Please try again.';
-  if (!(error instanceof ApiError) || error.message === error.code)
-    return fallback;
-  return error.requestId
-    ? error.message + ' (' + error.requestId + ')'
-    : error.message;
+  // Dynamic import is async; keep sync path by inlining the resolver call pattern.
+  // appErrors imports ApiError only as a type/value of this module — safe at runtime.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { resolveErrorMessage } = require('./appErrors') as typeof import('./appErrors');
+  return resolveErrorMessage(error, locale);
 }
 
 // Server reads and client action adapters use the same error shape.
