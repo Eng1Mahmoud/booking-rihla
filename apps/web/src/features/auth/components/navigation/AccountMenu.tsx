@@ -1,7 +1,7 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { useState } from 'react';
@@ -9,10 +9,15 @@ import { Button } from '@/shared/components/ui/button';
 export function AccountMenu() {
   const { user, status, reloadSession } = useAuth();
   const logout = useLogout();
+  const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations('Auth');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const loginHref =
+    pathname && pathname !== '/login'
+      ? '/login?returnTo=' + encodeURIComponent(pathname)
+      : '/login';
   return (
     <div className="relative flex items-center gap-2">
       {status === 'signed-in' ? (
@@ -57,7 +62,7 @@ export function AccountMenu() {
         </Button>
       ) : (
         <Link
-          href="/login"
+          href={loginHref}
           className="flex min-h-11 items-center gap-2 rounded-full border border-primary/15 bg-secondary/60 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary"
           aria-label={t('login')}
         >
