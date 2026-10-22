@@ -7,19 +7,28 @@ import { Link } from '@/i18n/navigation';
 
 export function PaymentChecking({
   reference,
+  mode = 'processing',
   onRefresh,
   refreshing = false,
 }: {
   reference?: string;
+  /** processing = verifying with provider; waiting = not confirmed yet */
+  mode?: 'processing' | 'waiting';
   onRefresh?: () => void;
   refreshing?: boolean;
 }) {
   const t = useTranslations('PaymentResult');
   const booking = useTranslations('Booking');
   const titleId = useId();
+  const title =
+    mode === 'waiting'
+      ? t('outcomes.waiting.title')
+      : t('checkingTitle');
+  const note =
+    mode === 'waiting' ? t('outcomes.waiting.note') : t('checkingNote');
   return (
     <section
-      className="rounded-2xl border bg-card mx-auto mt-6 mb-10 max-w-[620px] px-5 pt-8 pb-6 text-center md:mt-10 md:mb-16 md:px-8 md:pt-11 md:pb-7"
+      className="mx-auto mt-6 mb-10 max-w-[620px] rounded-2xl border bg-card px-5 pt-8 pb-6 text-center md:mt-10 md:mb-16 md:px-8 md:pt-11 md:pb-7"
       aria-labelledby={titleId}
     >
       <div
@@ -36,10 +45,10 @@ export function PaymentChecking({
           className="text-[22px] font-semibold leading-relaxed md:text-[25px]"
           id={titleId}
         >
-          {t('checkingTitle')}
+          {title}
         </h2>
         <p className="mx-auto mt-3 max-w-[380px] text-sm leading-relaxed text-muted-foreground md:text-base">
-          {t('checkingNote')}
+          {note}
         </p>
       </div>
       {reference && (
