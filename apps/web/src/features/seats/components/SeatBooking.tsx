@@ -30,14 +30,13 @@ export function SeatBooking({
     summaryRef,
     error,
     uncertain,
+    availabilityNotice,
     seatQuery,
-    selectedIds,
     selected,
     toggle,
     reserve,
     refreshSeats,
   } = useSeatBooking(trip, initialSeats);
-  const changed = selectedIds.length !== selected.length;
   const total = selected.length * trip.pricePiastres;
   return (
     <div className="grid items-start gap-5 pb-[85px] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
@@ -106,30 +105,25 @@ export function SeatBooking({
                 key={seat.id}
                 type="button"
                 onClick={() => toggle(seat.id)}
-                className="inline-flex cursor-pointer min-h-11 items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs text-sky-800 hover:bg-sky-100"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs text-sky-800 hover:bg-sky-100"
               >
                 {t('seatNumber', { number: seat.number })}
-                <span
-                  className="first-of-type:text-lg first-of-type:leading-none"
-                  aria-hidden="true"
-                >
+                <span aria-hidden="true" className="text-lg leading-none">
                   ×
                 </span>
-                <span className="sr-only first-of-type:text-lg first-of-type:leading-none">
-                  {t('remove')}
-                </span>
+                <span className="sr-only">{t('remove')}</span>
               </button>
             ))
           ) : (
-            <p className="text-muted-foreground text-sm">{t('chooseFirst')}</p>
+            <p className="text-sm text-muted-foreground">{t('chooseFirst')}</p>
           )}
         </div>
-        {changed && (
+        {availabilityNotice && (
           <p
             role="status"
             className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
           >
-            {t('changed')}
+            {availabilityNotice}
           </p>
         )}
         <div className="mt-3 flex items-center justify-between gap-5 border-t py-[18px] text-sm">
@@ -198,7 +192,6 @@ export function SeatBooking({
           <Button
             size="lg"
             type="button"
-
             disabled={!selected.length || status === 'loading'}
             onClick={() => setPhase('details')}
           >
