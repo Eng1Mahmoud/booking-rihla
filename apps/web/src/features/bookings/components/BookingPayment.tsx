@@ -1,52 +1,15 @@
 'use client';
 import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/lib/cn';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  LoaderCircle,
-} from 'lucide-react';
 import type { BookingDetails } from '../types/booking';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { useCheckout } from '../hooks/useBookings';
 import { useBookingPayment } from '../hooks/useBookingPayment';
-import { formatPrice } from '@/shared/lib/format';
-import { Link } from '@/i18n/navigation';
 import { paymentOutcome } from '@/features/bookings/lib/paymentState';
-import { PaymentStatus } from '@/features/bookings/components/PaymentStatus';
+import { remainingHoldSeconds } from '@/features/bookings/lib/holdTimer';
 import { PaymentChecking } from '@/features/bookings/components/PaymentChecking';
-
-function OutcomeIcon({ outcome }: { outcome: string }) {
-  if (outcome === 'paid') return <CheckCircle2 size={21} />;
-  if (outcome === 'processing')
-    return (
-      <LoaderCircle
-        size={21}
-        className="animate-spin motion-reduce:animate-none"
-      />
-    );
-  if (['failed', 'expired', 'cancelled'].includes(outcome))
-    return <XCircle size={21} />;
-  if (['review', 'refundRequired'].includes(outcome))
-    return <AlertTriangle size={21} />;
-  return <Clock size={21} />;
-}
-
-const outcomeTone: Record<string, string> = {
-  paid: 'text-emerald-700',
-  processing: 'text-sky-700',
-  waiting: 'text-amber-800',
-  failed: 'text-destructive',
-  expired: 'text-destructive',
-  cancelled: 'text-destructive',
-  review: 'text-amber-800',
-  refundRequired: 'text-amber-800',
-  refunded: 'text-muted-foreground',
-};
+import { PaymentSidebar } from '@/features/bookings/components/PaymentSidebar';
 
 export function BookingPayment({
   initial,
@@ -70,18 +33,9 @@ export function BookingPayment({
   const booking = initial.booking;
   const payment = query.data?.payment;
   const checkoutEnabled = query.data?.checkoutEnabled ?? false;
-  const seconds =
-    payment?.expiresAt
-      ? Math.max(
-          0,
-          Math.floor(
-            (Date.parse(payment.expiresAt) -
-              Date.parse(payment.serverTime) -
-              Math.max(0, now - query.dataUpdatedAt)) /
-              1000,
-          ),
-        )
-      : 0;
+  const seconds = payment
+    ? remainingHoldSeconds(payment, now, query.dataUpdatedAt)
+    : 0;
   const outcome = payment ? paymentOutcome(payment) : 'waiting';
 
   useEffect(() => {
@@ -90,7 +44,6 @@ export function BookingPayment({
     return () => clearInterval(timer);
   }, [afterCheckout]);
 
-  // When the local hold timer hits zero, refresh once for server expiry state.
   useEffect(() => {
     if (afterCheckout || !payment?.expiresAt || seconds > 0) return;
     if (expiredRefresh.current) return;
@@ -118,7 +71,6 @@ export function BookingPayment({
       </div>
     );
 
-  // Return from Paymob: keep a focused checking screen while unresolved.
   if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
     return (
       <PaymentChecking
@@ -164,103 +116,36 @@ export function BookingPayment({
   return (
     <div className="grid gap-[18px] md:grid-cols-[minmax(0,1fr)_310px] md:gap-6 min-[1001px]:grid-cols-[minmax(0,1fr)_340px]">
       {children}
-      <aside className="h-fit min-w-0 rounded-2xl border bg-card p-6">
-        <div
-          className={cn(
-            'flex items-center gap-2.5 text-sm',
-            outcomeTone[outcome] ?? 'text-amber-800',
-          )}
-        >
-          <OutcomeIcon outcome={outcome} />
-          <strong>{t('statuses.' + payment.bookingStatus)}</strong>
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-5 border-t py-[18px] text-sm">
-          <span>{t('total')}</span>
-          <strong className="text-[22px] font-semibold whitespace-nowrap">
-            {formatPrice(booking.totalPiastres, locale)}
-          </strong>
-        </div>
-        {!afterCheckout &&
+      <PaymentSidebar
+        booking={booking}
+        payment={payment}
+        outcome={outcome}
+        seconds={seconds}
+        showTimer={
+          !afterCheckout &&
           booking.paymentRequired &&
           seconds > 0 &&
-          outcome === 'waiting' && (
-            <div
-              className="mb-4 flex items-center gap-2.5 rounded-lg bg-accent p-3 text-xs text-primary"
-              role="timer"
-            >
-              <Clock size={20} />
-              <span>{t('remaining')}</span>
-              <bdi className="ms-auto text-[21px] font-semibold">
-                {String(Math.floor(seconds / 60)).padStart(2, '0')}:
-                {String(seconds % 60).padStart(2, '0')}
-              </bdi>
-            </div>
-          )}
-        <p className="mb-4 text-sm leading-7 text-muted-foreground">
-          {t('paymentState')} {t('paymentStatuses.' + payment.paymentStatus)}
-        </p>
-        <PaymentStatus payment={payment} />
-        {error && (
-          <p
-            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        {canPay ? (
-          <>
-            <Button
-              size="lg"
-              type="button"
-              disabled={busy}
-              className="w-full"
-              onClick={pay}
-            >
-              {busy ? t('working') : t('pay')}
-            </Button>
-            <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
-              {t('paymentNote')}
-            </p>
-          </>
-        ) : outcome === 'waiting' &&
+          outcome === 'waiting'
+        }
+        canPay={canPay}
+        busy={busy}
+        error={error}
+        locale={locale}
+        holdExpiredMessage={
+          outcome === 'waiting' && booking.paymentRequired && seconds === 0
+        }
+        checkoutUnavailable={
+          outcome === 'waiting' &&
           booking.paymentRequired &&
-          seconds === 0 ? (
-          <p
-            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-            role="status"
-          >
-            {t('expired')}
-          </p>
-        ) : outcome === 'waiting' &&
-          booking.paymentRequired &&
-          !checkoutEnabled ? (
-          <p
-            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-            role="status"
-          >
-            {t('checkoutUnavailable')}
-          </p>
-        ) : null}
-        <Button
-          variant="link"
-          className="mt-4 h-auto min-h-11 w-full px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
-          type="button"
-          onClick={() => {
-            void query.refetch();
-          }}
-          disabled={query.isFetching}
-        >
-          {t('refresh')}
-        </Button>
-        <Button
-          className="mt-3 h-auto min-h-11 w-full px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
-          asChild
-          variant="link"
-        >
-          <Link href="/bookings">{t('myBookings')}</Link>
-        </Button>
-      </aside>
+          !checkoutEnabled &&
+          seconds > 0
+        }
+        refreshing={query.isFetching}
+        onPay={pay}
+        onRefresh={() => {
+          void query.refetch();
+        }}
+      />
     </div>
   );
 }
