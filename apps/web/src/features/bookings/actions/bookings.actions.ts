@@ -1,6 +1,6 @@
 'use server';
 
-import { authenticatedFetch } from '@/features/auth/lib/auth.server';
+import { fetchWhenSignedIn } from '@/features/auth/lib/auth.server';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import {
@@ -16,8 +16,7 @@ import type { Booking, BookingPayment } from '../types/booking';
 export async function createBookingAction(input: CreateBookingInput) {
   const parsed = await parseSchema(createBookingSchema, input);
   if (!parsed.success) return parsed.error;
-  // authenticatedFetch verifies the live session before sending the reservation once.
-  return authenticatedFetch<Booking>('bookings', {
+  return fetchWhenSignedIn<Booking>('bookings', {
     method: 'POST',
     body: parsed.data,
   });
@@ -29,11 +28,10 @@ export async function checkoutAction(
   const parsed = await parseSchema(checkoutSchema, input);
   if (!parsed.success) return parsed.error;
   const { id, prepare, idempotencyKey } = parsed.data;
-  // Check ownership inside the action. Express also enforces it on each mutation.
-  const owned = await authenticatedFetch<Booking>('bookings/' + id);
+  const owned = await fetchWhenSignedIn<Booking>('bookings/' + id);
   if (!owned.success) return { ...owned, data: undefined };
   if (prepare) {
-    const attempt = await authenticatedFetch(
+    const attempt = await fetchWhenSignedIn(
       'bookings/' + id + '/payment-attempt',
       {
         method: 'POST',
@@ -41,14 +39,13 @@ export async function checkoutAction(
         headers: { 'Idempotency-Key': idempotencyKey! },
       },
     );
-    // Only a known existing attempt allows checkout to continue; never retry an uncertain write.
     if (
       !attempt.success &&
       !(attempt.status === 409 && attempt.code === 'PAYMENT_ATTEMPT_EXISTS')
     )
       return { ...attempt, data: undefined };
   }
-  return authenticatedFetch<BookingPayment>('bookings/' + id + '/checkout', {
+  return fetchWhenSignedIn<BookingPayment>('bookings/' + id + '/checkout', {
     method: 'POST',
     body: {},
   });
@@ -59,10 +56,9 @@ export async function refreshPaymentAction(
 ): Promise<ApiResult<BookingPayment>> {
   const parsed = await parseSchema(bookingIdSchema, id);
   if (!parsed.success) return parsed.error;
-  const owned = await authenticatedFetch<Booking>('bookings/' + parsed.data);
+  const owned = await fetchWhenSignedIn<Booking>('bookings/' + parsed.data);
   if (!owned.success) return { ...owned, data: undefined };
-  // One explicit provider inquiry, not the repeating read/polling endpoint.
-  return authenticatedFetch<BookingPayment>(
+  return fetchWhenSignedIn<BookingPayment>(
     'bookings/' + parsed.data + '/payment/refresh',
     {
       method: 'POST',
@@ -74,7 +70,7 @@ export async function refreshPaymentAction(
 export async function getBookingsAction(offset: number) {
   const parsed = await parseSchema(bookingsOffsetSchema, offset);
   if (!parsed.success) return parsed.error;
-  return authenticatedFetch<{
+  return fetchWhenSignedIn<{
     items: Booking[];
     pagination: { limit: number; offset: number };
   }>('bookings?limit=20&offset=' + parsed.data);
