@@ -1,15 +1,17 @@
 import { routing } from '@/i18n/routing';
 import type { UserRole } from '@/features/auth/types/auth';
+
 const allRoles: UserRole[] = ['USER', 'ADMIN', 'SUPER_ADMIN'];
-export const protectedRoutes: { path: string; roles: UserRole[] }[] = [
-  { path: '/dashboard/admins', roles: ['SUPER_ADMIN'] },
-  { path: '/dashboard/audit-logs', roles: ['SUPER_ADMIN'] },
-  { path: '/dashboard', roles: ['ADMIN', 'SUPER_ADMIN'] },
+
+/** Paths that require a signed-in user (locale prefix already stripped). */
+export const protectedPaths: { path: string; roles: UserRole[] }[] = [
   { path: '/account', roles: allRoles },
   { path: '/bookings', roles: allRoles },
   { path: '/checkout/result', roles: allRoles },
 ];
-export function routeInfo(pathname: string) {
+
+/** Split `/ar/...` into locale + path without locale. */
+export function parsePathLocale(pathname: string) {
   const first = pathname.split('/')[1];
   const locale =
     routing.locales.find((value) => value === first) ?? routing.defaultLocale;
@@ -19,11 +21,14 @@ export function routeInfo(pathname: string) {
       first === locale ? pathname.slice(locale.length + 1) || '/' : pathname,
   };
 }
-export function protectedRoute(path: string) {
-  return protectedRoutes.find(
+
+/** Matching protected-path rule, if any. */
+export function matchProtectedPath(path: string) {
+  return protectedPaths.find(
     (route) => path === route.path || path.startsWith(route.path + '/'),
   );
 }
-export function isProtectedRoute(path: string) {
-  return Boolean(protectedRoute(path));
+
+export function isProtectedPath(path: string) {
+  return Boolean(matchProtectedPath(path));
 }
