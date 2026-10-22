@@ -3,7 +3,10 @@ import { Button } from '@/shared/components/ui/button';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { TicketView } from '@/features/tickets/components/TicketView';
-import { requireCurrentUser, readApi } from '@/features/auth/lib/auth.server';
+import {
+  requireSignedInUser,
+  fetchWithAccessToken,
+} from '@/features/auth/lib/auth.server';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import type { Ticket } from '@/features/tickets/types/ticket';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
@@ -19,9 +22,9 @@ export default async function TicketPage({
   if (!z.uuid().safeParse(bookingId).success) notFound();
   let ticket;
   try {
-    const user = await requireCurrentUser();
+    const user = await requireSignedInUser();
     const { qr, ...data } = unwrapApiResult(
-      await readApi<Ticket>('bookings/' + bookingId + '/ticket'),
+      await fetchWithAccessToken<Ticket>('bookings/' + bookingId + '/ticket'),
     );
     ticket = {
       ticket: { ...data, qr: { imageDataUrl: qr.imageDataUrl } },
