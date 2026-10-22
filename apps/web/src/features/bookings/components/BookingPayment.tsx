@@ -67,13 +67,39 @@ export function BookingPayment({
   const checkout = useCheckout();
   const busy = checkout.isPending;
 
+  const booking = initial.booking;
+  const payment = query.data?.payment;
+  const checkoutEnabled = query.data?.checkoutEnabled ?? false;
+  const seconds =
+    payment?.expiresAt
+      ? Math.max(
+          0,
+          Math.floor(
+            (Date.parse(payment.expiresAt) -
+              Date.parse(payment.serverTime) -
+              Math.max(0, now - query.dataUpdatedAt)) /
+              1000,
+          ),
+        )
+      : 0;
+  const outcome = payment ? paymentOutcome(payment) : 'waiting';
+
   useEffect(() => {
     if (afterCheckout) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [afterCheckout]);
 
-  if (query.isError)
+  // When the local hold timer hits zero, refresh once for server expiry state.
+  useEffect(() => {
+    if (afterCheckout || !payment?.expiresAt || seconds > 0) return;
+    if (expiredRefresh.current) return;
+    if (['paid', 'expired', 'cancelled', 'refunded'].includes(outcome)) return;
+    expiredRefresh.current = true;
+    void query.refetch();
+  }, [afterCheckout, seconds, payment?.expiresAt, outcome, query]);
+
+  if (query.isError || !payment)
     return (
       <div
         className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
@@ -91,30 +117,6 @@ export function BookingPayment({
         </Button>
       </div>
     );
-
-  const booking = initial.booking;
-  const { payment, checkoutEnabled } = query.data;
-  const seconds = payment.expiresAt
-    ? Math.max(
-        0,
-        Math.floor(
-          (Date.parse(payment.expiresAt) -
-            Date.parse(payment.serverTime) -
-            Math.max(0, now - query.dataUpdatedAt)) /
-            1000,
-        ),
-      )
-    : 0;
-  const outcome = paymentOutcome(payment);
-
-  // When the local hold timer hits zero, refresh once for server expiry state.
-  useEffect(() => {
-    if (afterCheckout || seconds > 0 || !payment.expiresAt) return;
-    if (expiredRefresh.current) return;
-    if (['paid', 'expired', 'cancelled', 'refunded'].includes(outcome)) return;
-    expiredRefresh.current = true;
-    void query.refetch();
-  }, [afterCheckout, seconds, payment.expiresAt, outcome, query]);
 
   // Return from Paymob: keep a focused checking screen while unresolved.
   if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
