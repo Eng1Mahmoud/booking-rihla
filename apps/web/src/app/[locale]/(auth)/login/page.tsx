@@ -4,9 +4,19 @@ import Image from 'next/image';
 import { BusFront, Check } from 'lucide-react';
 import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import { AuthFlow } from '@/features/auth/components/forms/AuthFlow';
-export default async function LoginPage() {
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const query = await searchParams;
+  const returnTo =
+    typeof query.returnTo === 'string' && query.returnTo.startsWith('/')
+      ? query.returnTo
+      : '/';
   const user = await getSignedInUser().catch(() => null);
-  if (user) redirect('/' + (await getLocale()));
+  if (user) redirect('/' + (await getLocale()) + (returnTo === '/' ? '' : returnTo));
   const [t, home] = await Promise.all([
     getTranslations('Auth'),
     getTranslations('Home'),
@@ -44,7 +54,7 @@ export default async function LoginPage() {
           </p>
         </div>
         <div className="self-center rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
-          <AuthFlow />
+          <AuthFlow returnTo={returnTo} />
         </div>
       </section>
     </div>
