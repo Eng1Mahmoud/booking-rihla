@@ -6,9 +6,8 @@ import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { useLogin } from '../../hooks/useAuth';
 import { loginSchema } from '../../schemas/authSchema';
-import { safeReturnPath } from '../../lib/safeReturnPath';
 import type { LoginInput } from '../../types/auth';
-export function LoginForm({ returnTo }: { returnTo: string }) {
+export function LoginForm() {
   const t = useTranslations('Auth'),
     locale = useLocale(),
     login = useLogin();
@@ -18,7 +17,7 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
       defaultValues={{ email: '', password: '' }}
       onSubmit={async (values) => {
         await login.mutateAsync(values);
-        window.location.replace('/' + locale + safeReturnPath(returnTo));
+        window.location.replace('/' + locale);
       }}
     >
       <FormInput<LoginInput>
@@ -38,10 +37,7 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
       />
       <SubmitButton pendingText={t('working')}>{t('login')}</SubmitButton>
       <Link
-        href={
-          '/forgot-password?returnTo=' +
-          encodeURIComponent(safeReturnPath(returnTo))
-        }
+        href="/forgot-password"
         className="text-center text-sm font-semibold text-primary hover:underline"
       >
         {t('forgotPassword')}
