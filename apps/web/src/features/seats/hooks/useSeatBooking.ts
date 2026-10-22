@@ -1,7 +1,8 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -12,18 +13,44 @@ import {
   isUncertainRequestError,
   errorMessage,
 } from '@/shared/lib/apiResult';
-import type { SeatList, Trip } from '@/features/trips/types/trip';
+import type { Seat, SeatList, Trip } from '@/features/trips/types/trip';
 
 import { getTripSeatsAction } from '../actions/seats.actions';
 import { seatKeys } from './queryKeys';
+
+function seatIdsFromQuery(value: string | null, seats: Seat[]) {
+  if (!value) return [] as string[];
+  const available = new Set(
+    seats.filter((seat) => seat.isAvailable).map((seat) => seat.id),
+  );
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const part of value.split(',')) {
+    const id = part.trim();
+    if (!id || seen.has(id) || !available.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
 
 export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Seats');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const createBooking = useCreateBooking();
   const summaryRef = useRef<HTMLElement>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const restoredRef = useRef(false);
+
+  const initialSelected = useMemo(
+    () => seatIdsFromQuery(searchParams.get('seats'), initialSeats.seats),
+    // Only seed from the first URL; later query changes are ignored.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialSelected);
   const { user, status, reloadSession } = useAuth();
   const [phase, setPhase] = useState<'select' | 'details'>('select');
   const [error, setError] = useState('');
@@ -44,6 +71,19 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   });
 
   const seats = seatQuery.data.seats;
+
+  // After login return: keep restored seats and open passenger details when signed in.
+  useEffect(() => {
+    if (restoredRef.current || status === 'loading') return;
+    const fromQuery = seatIdsFromQuery(searchParams.get('seats'), seats);
+    if (!fromQuery.length) {
+      restoredRef.current = true;
+      return;
+    }
+    setSelectedIds(fromQuery);
+    if (status === 'signed-in') setPhase('details');
+    restoredRef.current = true;
+  }, [status, seats, searchParams]);
 
   useEffect(() => {
     const availableIds = new Set(
