@@ -13,16 +13,13 @@ import { ResetPasswordForm } from './ResetPasswordForm';
 
 export function PasswordRecoveryFlow({
   initialStep,
-  returnTo,
 }: {
   initialStep: 'request' | 'reset';
-  returnTo: string;
 }) {
   const t = useTranslations('Recovery');
   const forgotPassword = useForgotPassword();
   const [step, setStep] = useState<'request' | 'reset' | 'done'>(initialStep);
   const [requestedEmail, setRequestedEmail] = useState<string | null>(null);
-  const loginHref = '/login?returnTo=' + encodeURIComponent(returnTo);
 
   if (step === 'done')
     return (
@@ -33,7 +30,7 @@ export function PasswordRecoveryFlow({
           <p className="text-muted-foreground">{t('successNote')}</p>
         </div>
         <Button asChild className="h-12">
-          <Link href={loginHref}>{t('backLogin')}</Link>
+          <Link href="/login">{t('backLogin')}</Link>
         </Button>
       </div>
     );
@@ -52,7 +49,6 @@ export function PasswordRecoveryFlow({
           defaultValues={{ email: '' }}
           onSubmit={async (values) => {
             await forgotPassword.mutateAsync(values);
-            // Keep the email between steps without putting it in the URL.
             setRequestedEmail(values.email);
             setStep('reset');
           }}
@@ -67,7 +63,7 @@ export function PasswordRecoveryFlow({
           />
           <SubmitButton pendingText={t('working')}>{t('send')}</SubmitButton>
           <Link
-            href={'/reset-password?returnTo=' + encodeURIComponent(returnTo)}
+            href="/reset-password"
             className="text-center text-sm font-semibold text-primary hover:underline"
           >
             {t('haveCode')}
@@ -81,7 +77,7 @@ export function PasswordRecoveryFlow({
         />
       )}
       <Link
-        href={loginHref}
+        href="/login"
         className="mt-5 block text-center text-sm font-semibold text-primary hover:underline"
       >
         {t('backLogin')}
