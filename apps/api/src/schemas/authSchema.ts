@@ -25,6 +25,12 @@ export const verifyEmailSchema = z.strictObject({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
+export const updateProfileSchema = registerSchema.pick({
+  name: true,
+  phone: true,
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
 export const loginSchema = registerSchema.pick({ email: true, password: true });
 export const emptySessionSchema = z.strictObject({}).default({});
 export type LoginInput = z.infer<typeof loginSchema>;

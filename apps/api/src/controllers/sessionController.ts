@@ -1,7 +1,11 @@
 import { sendSuccess } from '../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/AppError.ts';
-import { loginSchema, emptySessionSchema } from '../schemas/authSchema.ts';
+import {
+  loginSchema,
+  emptySessionSchema,
+  updateProfileSchema,
+} from '../schemas/authSchema.ts';
 import { parseEnv } from '../config/env.ts';
 import type {
   SessionService,
@@ -97,6 +101,21 @@ export function createSessionController(service: SessionService) {
         );
       const auth = response.locals['auth'] as AuthContext;
       sendSuccess(response, auth.user);
+    },
+    async updateProfile(request: Request, response: Response) {
+      validateJson(request);
+      const input = updateProfileSchema.safeParse(request.body);
+      if (!input.success)
+        throw new AppError(
+          400,
+          'VALIDATION_ERROR',
+          'Provide only name and international phone',
+        );
+      const auth = response.locals['auth'] as AuthContext;
+      sendSuccess(
+        response,
+        await service.updateProfile(auth.user.id, input.data),
+      );
     },
     async logout(request: Request, response: Response) {
       validateEmpty(request);

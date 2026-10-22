@@ -1,4 +1,5 @@
 import { getLocale } from 'next-intl/server';
+import { AccountLayout } from '@/features/account/components/AccountLayout';
 import { notFound } from 'next/navigation';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
 import {
@@ -30,19 +31,19 @@ export default async function BookingsPage({
     result = { ...page, userId: user.id };
   } catch (error) {
     return (
-      <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
+      <AccountLayout>
         <ReadError message={errorMessage(error, await getLocale())} />
-      </div>
+      </AccountLayout>
     );
   }
   return (
-    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
+    <AccountLayout>
       <BookingHistory
         key={result.userId + ':' + offset}
         bookings={result.items}
         userId={result.userId}
         offset={offset}
       />
-    </div>
+    </AccountLayout>
   );
 }

@@ -1,6 +1,10 @@
 import { verify } from 'argon2';
 import { AppError } from '../errors/AppError.ts';
-import type { UserRole, LoginInput } from '../schemas/authSchema.ts';
+import type {
+  UserRole,
+  LoginInput,
+  UpdateProfileInput,
+} from '../schemas/authSchema.ts';
 import { parseSessionEnv } from '../config/env.ts';
 import {
   newRefreshToken,
@@ -206,6 +210,19 @@ export const sessionService = {
     )
       throw unauthorized();
     return { user: publicUser(session.user), sessionId: session.id };
+  },
+  async updateProfile(userId: string, input: UpdateProfileInput) {
+    const { db } = await import('../prisma/db.ts');
+    // Identity comes from requireAuth, never the submitted body. Only these fields can change.
+    const user = await db.orm.public.User.where({
+      id: userId,
+      isActive: true,
+    }).update({
+      name: input.name,
+      phone: input.phone,
+    });
+    if (!user) throw unauthorized();
+    return publicUser(user);
   },
   async logout(token?: string): Promise<void> {
     if (!token) return;

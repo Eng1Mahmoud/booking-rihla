@@ -1,4 +1,7 @@
-import { clientRateLimitKey } from '../utils/clientIdentity.ts';
+import {
+  clientRateLimitKey,
+  userRateLimitKey,
+} from '../utils/clientIdentity.ts';
 import { Router } from 'express';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
@@ -47,6 +50,21 @@ export function createSessionRouter(
     controller.refresh,
   );
   router.get('/me', requireAuth(service), controller.me);
+  router.patch(
+    '/me',
+    sessionCsrf(allowedOrigins),
+    requireAuth(service),
+    rateLimit({
+      limit: 20,
+      windowMs: 60000,
+      keyGenerator: userRateLimitKey,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) =>
+        next(new AppError(429, 'RATE_LIMITED', 'Too many profile updates')),
+    }),
+    controller.updateProfile,
+  );
   router.post(
     '/logout',
     limit(60),

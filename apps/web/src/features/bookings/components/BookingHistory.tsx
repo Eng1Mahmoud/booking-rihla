@@ -7,7 +7,6 @@ import { errorMessage } from '@/shared/lib/apiResult';
 import type { Booking } from '../types/booking';
 import { Link } from '@/i18n/navigation';
 import { displayName, formatDate, formatPrice } from '@/shared/lib/format';
-import { AccountNavigation } from '@/features/account/components/AccountNavigation';
 export function BookingHistory({
   bookings: initial,
   userId,
@@ -25,7 +24,6 @@ export function BookingHistory({
   const bookings = query.data.items;
   return (
     <>
-      <AccountNavigation />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
         <h1 className="text-[26px] font-semibold md:text-[29px]">
           {t('myBookings')}

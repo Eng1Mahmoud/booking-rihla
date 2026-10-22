@@ -366,7 +366,22 @@
     "cancel": "Cancel",
     "working": "Signing out…",
     "loading": "Loading your account…",
-    "retry": "Try again"
+    "retry": "Try again",
+    "security": "Security & sessions",
+    "help": "Need a hand?",
+    "openMenu": "Open account menu",
+    "intro": "Your details, ready for your next journey.",
+    "profileHint": "Keep your name and contact number up to date.",
+    "emailReadOnly": "Your verified sign-in email. Email changes are not available here.",
+    "phoneHint": "Use international format, for example +201012345678.",
+    "save": "Save changes",
+    "saving": "Saving changes…",
+    "saved": "Your details have been saved.",
+    "bookingUnchanged": "Changes apply to your account. Passenger names and contact details on existing bookings stay as recorded.",
+    "securityHint": "Manage where you are signed in and recover access to your account.",
+    "password": "Password",
+    "passwordHint": "To reset your password, request a verification code at your registered email address.",
+    "recoverPassword": "Reset your password"
   },
   "Forms": {
     "invalid": "Check this field and try again.",
