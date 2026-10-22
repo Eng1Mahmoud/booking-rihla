@@ -13,6 +13,7 @@ import { formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
 import type { Booking, BookingPayment } from '../types/booking';
 import { PaymentStatus } from './PaymentStatus';
+import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
 
 function OutcomeIcon({ outcome }: { outcome: string }) {
   if (outcome === 'paid') return <CheckCircle2 size={21} />;
@@ -50,7 +51,7 @@ export function PaymentSidebar({
   showTimer,
   canPay,
   busy,
-  error,
+  payError,
   locale,
   checkoutUnavailable,
   holdExpiredMessage,
@@ -65,7 +66,7 @@ export function PaymentSidebar({
   showTimer: boolean;
   canPay: boolean;
   busy: boolean;
-  error: string;
+  payError: unknown;
   locale: 'ar' | 'en';
   checkoutUnavailable: boolean;
   holdExpiredMessage: boolean;
@@ -108,13 +109,8 @@ export function PaymentSidebar({
         {t('paymentState')} {t('paymentStatuses.' + payment.paymentStatus)}
       </p>
       <PaymentStatus payment={payment} />
-      {error && (
-        <p
-          className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-          role="alert"
-        >
-          {error}
-        </p>
+      {payError != null && (
+        <ErrorNotice error={payError} className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950" />
       )}
       {canPay ? (
         <>
