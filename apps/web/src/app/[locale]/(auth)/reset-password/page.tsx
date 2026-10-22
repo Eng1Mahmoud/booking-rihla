@@ -1,21 +1,12 @@
 import { PasswordRecovery } from '@/features/auth/components/password-recovery/PasswordRecovery';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 export const metadata = {
   referrer: 'no-referrer' as const,
   robots: { index: false, follow: false },
 };
-export default async function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ returnTo?: string | string[] }>;
-}) {
-  const { returnTo } = await searchParams;
+export default function ResetPasswordPage() {
   return (
     <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)]">
-      <PasswordRecovery
-        initialStep="reset"
-        returnTo={safeReturnPath(returnTo)}
-      />
+      <PasswordRecovery initialStep="reset" />
     </div>
   );
 }
