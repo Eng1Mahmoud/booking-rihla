@@ -27,13 +27,97 @@ export function isUncertainRequestError(error: unknown) {
   );
 }
 
-// Prefer API message; known code fallbacks live in appErrors (lazy to avoid cycles).
+/** Fallback when API returns code only (no localized message body). */
+const codeMessages: Record<string, { ar: string; en: string }> = {
+  SEAT_UNAVAILABLE: {
+    ar: 'أحد المقاعد لم يعد متاحًا. اختر مقعدًا آخر ثم أعد المحاولة.',
+    en: 'A selected seat is no longer available. Choose another seat and try again.',
+  },
+  INVALID_SEATS: {
+    ar: 'اختيار المقاعد غير صالح لهذه الرحلة.',
+    en: 'The selected seats are not valid for this trip.',
+  },
+  BOOKING_SEATS_UNAVAILABLE: {
+    ar: 'بعض مقاعد الحجز لم تعد متاحة.',
+    en: 'Some seats on this booking are no longer available.',
+  },
+  TRIP_UNAVAILABLE: {
+    ar: 'هذه الرحلة غير متاحة للحجز حاليًا.',
+    en: 'This trip is not available for booking right now.',
+  },
+  TRIP_NOT_FOUND: {
+    ar: 'الرحلة غير موجودة.',
+    en: 'This trip could not be found.',
+  },
+  TRIP_CANCELLED: {
+    ar: 'تم إلغاء هذه الرحلة.',
+    en: 'This trip was cancelled.',
+  },
+  TRIP_DEPARTED: {
+    ar: 'هذه الرحلة غادرت بالفعل.',
+    en: 'This trip has already departed.',
+  },
+  BOOKING_EXPIRED: {
+    ar: 'انتهت مهلة الحجز. ابحث عن رحلة واختر مقاعد متاحة.',
+    en: 'The booking hold has expired. Search again and choose available seats.',
+  },
+  BOOKING_NOT_FOUND: {
+    ar: 'الحجز غير موجود.',
+    en: 'This booking could not be found.',
+  },
+  BOOKING_NOT_PAYABLE: {
+    ar: 'لا يمكن دفع هذا الحجز في حالته الحالية.',
+    en: 'This booking cannot be paid in its current state.',
+  },
+  PAYMENT_UNAVAILABLE: {
+    ar: 'الدفع الإلكتروني غير متاح حاليًا. راجع حالة حجزك قبل المحاولة مجددًا.',
+    en: 'Online payment is unavailable right now. Check your booking status before trying again.',
+  },
+  PAYMENT_WINDOW_TOO_SHORT: {
+    ar: 'الوقت المتبقي غير كافٍ لبدء الدفع.',
+    en: 'Not enough time remains to start payment.',
+  },
+  PAYMENT_NOT_REQUIRED: {
+    ar: 'هذا الحجز لا يحتاج إلى دفع جديد.',
+    en: 'This booking does not need a new payment.',
+  },
+  CHECKOUT_CLOSED: {
+    ar: 'الدفع لهذا الحجز مغلق حاليًا. راجع حالة الحجز.',
+    en: 'Checkout is closed for this booking. Check its payment status.',
+  },
+  PAYMENT_ATTEMPT_EXISTS: {
+    ar: 'توجد محاولة دفع بالفعل. راجع حالة الحجز قبل البدء من جديد.',
+    en: 'A payment attempt already exists. Check booking status before starting again.',
+  },
+  RATE_LIMITED: {
+    ar: 'محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.',
+    en: 'Too many attempts. Wait a moment and try again.',
+  },
+  NETWORK_ERROR: {
+    ar: 'تعذر الاتصال. تحقق من الشبكة وحاول مجددًا.',
+    en: 'Could not reach the server. Check your connection and try again.',
+  },
+  UNAUTHENTICATED: {
+    ar: 'سجّل الدخول للمتابعة.',
+    en: 'Sign in to continue.',
+  },
+};
+
+// Prefer API message; then known code; then generic fallback.
 export function errorMessage(error: unknown, locale: string) {
-  // Dynamic import is async; keep sync path by inlining the resolver call pattern.
-  // appErrors imports ApiError only as a type/value of this module — safe at runtime.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { resolveErrorMessage } = require('./appErrors') as typeof import('./appErrors');
-  return resolveErrorMessage(error, locale);
+  const ar = locale.startsWith('ar');
+  const fallback = ar
+    ? 'تعذر إكمال الطلب. حاول مجددًا.'
+    : 'Could not complete the request. Please try again.';
+  if (!(error instanceof ApiError)) return fallback;
+  if (error.message && error.message !== error.code) {
+    return error.requestId
+      ? error.message + ' (' + error.requestId + ')'
+      : error.message;
+  }
+  const known = codeMessages[error.code];
+  if (known) return ar ? known.ar : known.en;
+  return fallback;
 }
 
 // Server reads and client action adapters use the same error shape.
