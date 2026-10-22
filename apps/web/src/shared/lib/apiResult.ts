@@ -29,6 +29,10 @@ export function isUncertainRequestError(error: unknown) {
 
 /** Fallback when API returns code only (no localized message body). */
 const codeMessages: Record<string, { ar: string; en: string }> = {
+  VALIDATION_ERROR: {
+    ar: 'راجع البيانات المدخلة وحاول مجددًا.',
+    en: 'Check your details and try again.',
+  },
   SEAT_UNAVAILABLE: {
     ar: 'أحد المقاعد لم يعد متاحًا. اختر مقعدًا آخر ثم أعد المحاولة.',
     en: 'A selected seat is no longer available. Choose another seat and try again.',
@@ -124,41 +128,42 @@ export function errorMessage(error: unknown, locale: string) {
   return fallback;
 }
 
-// Suggest a link for known passenger errors; the component renders it.
-export function errorCta(error: unknown) {
-  const code = error instanceof ApiError ? error.code : '';
-  switch (code) {
-    case 'TRIP_UNAVAILABLE':
-    case 'TRIP_NOT_FOUND':
-    case 'TRIP_CANCELLED':
-    case 'TRIP_DEPARTED':
-    case 'BOOKING_EXPIRED':
-    case 'PAYMENT_WINDOW_TOO_SHORT':
-      return {
-        href: '/',
-        labelAr: 'ابحث عن رحلة',
-        labelEn: 'Find a trip',
-      };
-    case 'BOOKING_NOT_FOUND':
-    case 'PAYMENT_UNAVAILABLE':
-    case 'CHECKOUT_CLOSED':
-    case 'PAYMENT_ATTEMPT_EXISTS':
-    case 'BOOKING_NOT_PAYABLE':
-      return {
-        href: '/bookings',
-        labelAr: 'حجوزاتي',
-        labelEn: 'My bookings',
-      };
-    case 'UNAUTHENTICATED':
-      return {
-        href: '/login',
-        labelAr: 'تسجيل الدخول',
-        labelEn: 'Sign in',
-      };
-    default:
-      return null;
-  }
-}
+const findTripLink = {
+  href: '/',
+  labelAr: 'ابحث عن رحلة',
+  labelEn: 'Find a trip',
+};
+const myBookingsLink = {
+  href: '/bookings',
+  labelAr: 'حجوزاتي',
+  labelEn: 'My bookings',
+};
+
+// The UI selects a suggested link directly by error code.
+export const errorLinks = new Map<
+  string,
+  { href: string; labelAr: string; labelEn: string }
+>([
+  ['TRIP_UNAVAILABLE', findTripLink],
+  ['TRIP_NOT_FOUND', findTripLink],
+  ['TRIP_CANCELLED', findTripLink],
+  ['TRIP_DEPARTED', findTripLink],
+  ['BOOKING_EXPIRED', findTripLink],
+  ['PAYMENT_WINDOW_TOO_SHORT', findTripLink],
+  ['BOOKING_NOT_FOUND', myBookingsLink],
+  ['PAYMENT_UNAVAILABLE', myBookingsLink],
+  ['CHECKOUT_CLOSED', myBookingsLink],
+  ['PAYMENT_ATTEMPT_EXISTS', myBookingsLink],
+  ['BOOKING_NOT_PAYABLE', myBookingsLink],
+  [
+    'UNAUTHENTICATED',
+    {
+      href: '/login',
+      labelAr: 'تسجيل الدخول',
+      labelEn: 'Sign in',
+    },
+  ],
+]);
 
 // Server reads and client action adapters use the same error shape.
 export function unwrapApiResult<T>(result: ApiResult<T>): T {
@@ -193,30 +198,16 @@ export async function invokeAction<T>(
   return unwrapApiResult(result);
 }
 
-export function validationError(locale: string): ApiResult<never> {
-  return {
-    success: false,
-    status: 400,
-    code: 'VALIDATION_ERROR',
-    message: locale.startsWith('ar')
-      ? 'راجع البيانات المدخلة وحاول مجددًا.'
-      : 'Check your details and try again.',
-  };
-}
-
-// Local failures have no backend message (network/configuration/invalid response).
-export function apiFailure<T>(
+// One builder for local validation, authentication and transport failures.
+export function apiFailure<T = never>(
   status: number,
   code: string,
   locale: string,
 ): ApiResult<T> {
-  const message =
-    status === 401
-      ? locale.startsWith('ar')
-        ? 'سجّل الدخول للمتابعة.'
-        : 'Sign in to continue.'
-      : locale.startsWith('ar')
-        ? 'تعذر إكمال الطلب. حاول مجددًا.'
-        : 'Could not complete the request. Please try again.';
-  return { success: false, status, code, message };
+  return {
+    success: false,
+    status,
+    code,
+    message: errorMessage(new ApiError(status, code), locale),
+  };
 }

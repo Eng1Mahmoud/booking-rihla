@@ -1,7 +1,7 @@
 import 'server-only';
 import type { z } from 'zod';
 import { getLocale } from 'next-intl/server';
-import { validationError, type ApiResult } from './apiResult';
+import { apiFailure, type ApiResult } from './apiResult';
 
 type ParseResult<T> =
   { success: true; data: T } | { success: false; error: ApiResult<never> };
@@ -18,6 +18,6 @@ export async function parseSchema<T>(
   // Do not serialize Zod issues or echo the submitted values.
   return {
     success: false,
-    error: validationError(locale ?? (await getLocale())),
+    error: apiFailure(400, 'VALIDATION_ERROR', locale ?? (await getLocale())),
   };
 }

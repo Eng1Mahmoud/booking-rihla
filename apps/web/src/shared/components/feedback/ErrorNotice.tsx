@@ -2,7 +2,7 @@
 import { useLocale } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { errorCta, errorMessage } from '@/shared/lib/apiResult';
+import { ApiError, errorLinks, errorMessage } from '@/shared/lib/apiResult';
 
 export function ErrorNotice({
   error,
@@ -17,7 +17,8 @@ export function ErrorNotice({
 }) {
   const locale = useLocale();
   const message = errorMessage(error, locale);
-  const cta = errorCta(error);
+  const cta =
+    error instanceof ApiError ? errorLinks.get(error.code) : undefined;
   const ar = locale.startsWith('ar');
 
   return (
