@@ -39,29 +39,28 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     seatQuery,
   } = selection;
 
-  // Mobile: scroll summary into view when opening passenger details.
+  // Mobile scroll + move focus into the summary when opening details.
   useEffect(() => {
-    if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
+    if (phase !== 'details') return;
+    if (window.matchMedia('(max-width: 767px)').matches)
       summaryRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    summaryRef.current?.focus({ preventScroll: true });
   }, [phase]);
 
   // After login with ?seats= restored, open details when signed in.
   useEffect(() => {
     if (status !== 'signed-in' || phase !== 'select') return;
     if (!selectedIds.length) return;
-    // Only auto-open when the URL carried a seats query (post-login return).
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (!params.get('seats')) return;
     setPhase('details');
   }, [status, selectedIds.length, phase]);
 
-  // If pruning removed every seat while in details, go back to select.
   useEffect(() => {
     if (phase === 'details' && selectedIds.length === 0) setPhase('select');
   }, [phase, selectedIds.length]);
 
-  // Guest continuing to passenger details → login, then back to this trip.
   useEffect(() => {
     if (phase !== 'details' || status !== 'guest') return;
     const returnTo =
