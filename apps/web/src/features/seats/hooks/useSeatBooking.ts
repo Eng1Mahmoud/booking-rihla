@@ -39,7 +39,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     seatQuery,
   } = selection;
 
-  // Mobile scroll + move focus into the summary when opening details.
   useEffect(() => {
     if (phase !== 'details') return;
     if (window.matchMedia('(max-width: 767px)').matches)
@@ -47,7 +46,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     summaryRef.current?.focus({ preventScroll: true });
   }, [phase]);
 
-  // After login with ?seats= restored, open details when signed in.
   useEffect(() => {
     if (status !== 'signed-in' || phase !== 'select') return;
     if (!selectedIds.length) return;
@@ -110,10 +108,15 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
         return;
       }
       if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE') {
-        setError(t('conflict'));
+        setError(errorMessage(cause, locale));
         setAvailabilityNotice(t('changed'));
         setPhase('select');
         refreshSeats();
+        return;
+      }
+      if (cause instanceof ApiError && cause.code === 'TRIP_UNAVAILABLE') {
+        setError(errorMessage(cause, locale));
+        setPhase('select');
         return;
       }
       setError(errorMessage(cause, locale));
