@@ -93,6 +93,10 @@ const codeMessages: Record<string, { ar: string; en: string }> = {
     ar: 'محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.',
     en: 'Too many attempts. Wait a moment and try again.',
   },
+  SERVER_ACTION_FAILED: {
+    ar: 'تعذر تنفيذ الطلب على الخادم. أعد تحميل الصفحة وحاول مجددًا.',
+    en: 'The server could not complete the request. Reload the page and try again.',
+  },
   NETWORK_ERROR: {
     ar: 'تعذر الاتصال. تحقق من الشبكة وحاول مجددًا.',
     en: 'Could not reach the server. Check your connection and try again.',
@@ -144,7 +148,10 @@ export async function invokeAction<T>(
   let result: ApiResult<T>;
   try {
     result = await action();
-  } catch {
+  } catch (error) {
+    // Next attaches a digest to server exceptions; they are not connectivity failures.
+    if (error instanceof Error && 'digest' in error)
+      throw new ApiError(500, 'SERVER_ACTION_FAILED');
     throw new ApiError(0, 'NETWORK_ERROR');
   }
   return unwrapApiResult(result);
