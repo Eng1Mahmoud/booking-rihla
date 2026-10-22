@@ -9,12 +9,14 @@ export function intlMiddleware(
   request: NextRequest,
   previousResponse: NextResponse | null,
 ) {
-  // next-intl forwards request.headers, including cookies renewed by authMiddleware.
+  const info = parsePathLocale(request.nextUrl.pathname);
+  // Used by the protected RSC layout as a fallback return path.
+  request.headers.set('x-bus-return-to', info.path + request.nextUrl.search);
   const response = internationalization(request);
   for (const cookie of previousResponse?.cookies.getAll() ?? []) {
     response.cookies.set(cookie);
   }
-  if (isProtectedPath(parsePathLocale(request.nextUrl.pathname).path)) {
+  if (isProtectedPath(info.path)) {
     response.headers.set('Cache-Control', 'private, no-store');
   }
   return response;
