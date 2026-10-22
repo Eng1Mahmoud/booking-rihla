@@ -2,11 +2,7 @@
 import { useLocale } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import {
-  errorCode,
-  errorCta,
-  resolveErrorMessage,
-} from '@/shared/lib/appErrors';
+import { errorCta, errorMessage } from '@/shared/lib/apiResult';
 
 export function ErrorNotice({
   error,
@@ -20,8 +16,8 @@ export function ErrorNotice({
   className?: string;
 }) {
   const locale = useLocale();
-  const message = resolveErrorMessage(error, locale);
-  const cta = errorCta(errorCode(error));
+  const message = errorMessage(error, locale);
+  const cta = errorCta(error);
   const ar = locale.startsWith('ar');
 
   return (
@@ -51,9 +47,7 @@ export function ErrorNotice({
               className="h-auto min-h-11 px-0 py-1 text-primary underline underline-offset-4"
               asChild
             >
-              <Link href={cta.href}>
-                {ar ? cta.labelAr : cta.labelEn}
-              </Link>
+              <Link href={cta.href}>{ar ? cta.labelAr : cta.labelEn}</Link>
             </Button>
           )}
         </div>

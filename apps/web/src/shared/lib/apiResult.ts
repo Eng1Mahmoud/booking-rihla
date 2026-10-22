@@ -124,6 +124,42 @@ export function errorMessage(error: unknown, locale: string) {
   return fallback;
 }
 
+// Suggest a link for known passenger errors; the component renders it.
+export function errorCta(error: unknown) {
+  const code = error instanceof ApiError ? error.code : '';
+  switch (code) {
+    case 'TRIP_UNAVAILABLE':
+    case 'TRIP_NOT_FOUND':
+    case 'TRIP_CANCELLED':
+    case 'TRIP_DEPARTED':
+    case 'BOOKING_EXPIRED':
+    case 'PAYMENT_WINDOW_TOO_SHORT':
+      return {
+        href: '/',
+        labelAr: 'ابحث عن رحلة',
+        labelEn: 'Find a trip',
+      };
+    case 'BOOKING_NOT_FOUND':
+    case 'PAYMENT_UNAVAILABLE':
+    case 'CHECKOUT_CLOSED':
+    case 'PAYMENT_ATTEMPT_EXISTS':
+    case 'BOOKING_NOT_PAYABLE':
+      return {
+        href: '/bookings',
+        labelAr: 'حجوزاتي',
+        labelEn: 'My bookings',
+      };
+    case 'UNAUTHENTICATED':
+      return {
+        href: '/login',
+        labelAr: 'تسجيل الدخول',
+        labelEn: 'Sign in',
+      };
+    default:
+      return null;
+  }
+}
+
 // Server reads and client action adapters use the same error shape.
 export function unwrapApiResult<T>(result: ApiResult<T>): T {
   if (!result.success) {
