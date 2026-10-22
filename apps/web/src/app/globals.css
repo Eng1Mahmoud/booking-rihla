@@ -140,3 +140,23 @@
     border-radius: 6px;
   }
 }
+
+/* Ticket printing hides site navigation without affecting other printed pages. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  body:has([data-ticket-page]) {
+    background: #fff;
+    color: #000;
+  }
+  body:has([data-ticket-page]) [data-site-shell] {
+    display: block;
+    min-height: 0;
+  }
+  body:has([data-ticket-page]) [data-site-shell] > header,
+  body:has([data-ticket-page]) [data-site-shell] > footer {
+    display: none;
+  }
+}

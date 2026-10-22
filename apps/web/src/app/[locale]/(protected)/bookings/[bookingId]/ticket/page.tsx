@@ -29,6 +29,7 @@ export default async function TicketPage({
     ticket = {
       ticket: { ...data, qr: { imageDataUrl: qr.imageDataUrl } },
       userId: user.id,
+      readAt: Date.now(),
     };
   } catch (error) {
     if (error instanceof ApiError && error.code === 'BOOKING_NOT_FOUND')
@@ -37,7 +38,10 @@ export default async function TicketPage({
     const unavailable =
       error instanceof ApiError && error.code === 'TICKET_NOT_FOUND';
     return (
-      <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
+      <div
+        data-ticket-page
+        className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16 print:w-full print:max-w-none print:p-0"
+      >
         <ReadError
           autoRefresh
           title={unavailable ? t('unavailable') : t('error')}
@@ -59,8 +63,16 @@ export default async function TicketPage({
     );
   }
   return (
-    <div className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16">
-      <TicketView initial={ticket.ticket} userId={ticket.userId} />
+    <div
+      data-ticket-page
+      className="mx-auto w-[calc(100%-28px)] max-w-[1180px] md:w-[calc(100%-40px)] pt-6 pb-10 md:pt-9 md:pb-16 print:w-full print:max-w-none print:p-0"
+    >
+      <TicketView
+        key={ticket.userId + ':' + bookingId}
+        initial={ticket.ticket}
+        userId={ticket.userId}
+        readAt={ticket.readAt}
+      />
     </div>
   );
 }

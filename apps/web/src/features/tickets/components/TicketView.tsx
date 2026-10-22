@@ -2,24 +2,25 @@
 import { Button } from '@/shared/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTicket } from '../hooks/useTicket';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
 import Image from 'next/image';
+import { Printer } from 'lucide-react';
 import type { TicketViewData } from '../types/ticket';
 import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
 export function TicketView({
   initial,
   userId,
+  readAt,
 }: {
   initial: TicketViewData;
   userId: string;
+  readAt: number;
 }) {
   const t = useTranslations('Ticket');
   const locale = useLocale() as 'ar' | 'en';
-  const { user } = useAuth();
-  const query = useTicket(initial, userId);
-  if (user?.id !== userId) return null;
+  const query = useTicket(initial, userId, readAt);
+  if (query.user?.id !== userId) return null;
   // A failed refresh must not keep displaying an old usable ticket.
   if (query.isError)
     return (
@@ -61,24 +62,56 @@ export function TicketView({
     : null;
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-5 print:hidden">
         <h1 className="text-[26px] font-semibold md:text-[29px]">
           {t('title')}
         </h1>
-        {back}
+        <div className="flex flex-wrap items-center gap-4">
+          {back}
+          <Button
+            type="button"
+            disabled={query.isFetching || query.busy || !qrImage}
+            onClick={() => void query.printTicket()}
+          >
+            <Printer size={18} aria-hidden="true" />
+            {t(query.busy ? 'preparingPrint' : 'print')}
+          </Button>
+        </div>
       </div>
+      <p
+        className="mb-5 text-sm text-muted-foreground print:hidden"
+        role="status"
+      >
+        {t('printNote')}
+      </p>
+      {query.printStatus === 'error' && (
+        <p role="alert" className="mb-5 text-sm text-destructive print:hidden">
+          {t('printError')}
+        </p>
+      )}
+      {!query.printReady && (
+        <p className="hidden print:block">{t('printFromButton')}</p>
+      )}
       <article
-        className="rounded-2xl border bg-card grid min-w-0 gap-8 p-[22px] md:grid-cols-[minmax(0,1fr)_280px] md:p-8"
+        ref={query.ticketRef}
+        data-print-ready={query.printReady}
+        className="rounded-2xl border bg-card grid min-w-0 gap-8 p-[22px] md:grid-cols-[minmax(0,1fr)_280px] md:p-8 print:hidden print:rounded-none print:border-0 print:p-0 print:text-[14px] print:gap-6 print:grid-cols-[minmax(0,1fr)_55mm] data-[print-ready=true]:print:grid"
         aria-label={t('title')}
       >
-        <section>
-          <p className="inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-primary">
+        <div className="hidden print:col-span-full print:flex print:items-center print:justify-between print:border-b print:pb-3">
+          <strong className="text-2xl" dir="ltr">
+            Rihla.
+          </strong>
+          <span>{t('title')}</span>
+        </div>
+        <section className="min-w-0">
+          <p className="inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-primary print:border print:bg-white print:text-black">
             {t('confirmed')}
           </p>
           <h2 className="my-5 text-[22px] font-semibold md:text-[26px]">
             {city(origin)} — {city(destination)}
           </h2>
-          <dl className="grid gap-5">
+          <dl className="grid gap-5 print:gap-3">
             <div>
               <dt className="mb-1 text-sm text-muted-foreground">
                 {t('reference')}
@@ -131,7 +164,7 @@ export function TicketView({
           <ul className="mt-4 grid list-none gap-2 p-0">
             {ticket.passengers.map((person) => (
               <li
-                className="flex flex-wrap justify-between gap-3 border-b py-3"
+                className="flex flex-wrap justify-between gap-3 border-b py-3 print:break-inside-avoid print:py-2"
                 key={person.seatNumber}
               >
                 <span>{person.name}</span>
@@ -143,10 +176,10 @@ export function TicketView({
           </ul>
           <p className="text-muted-foreground text-sm mt-5">{t('timeZone')}</p>
         </section>
-        <aside className="self-start border-t pt-5 text-center md:border-t-0 md:pt-0">
+        <aside className="self-start border-t pt-5 text-center md:border-t-0 md:pt-0 print:break-inside-avoid print:border-0 print:pt-0">
           {qrImage ? (
             <Image
-              className="mx-auto block h-auto max-w-full"
+              className="mx-auto block h-auto max-w-full print:w-[55mm]"
               unoptimized
               src={qrImage}
               width={256}
@@ -168,8 +201,8 @@ export function TicketView({
             size="lg"
             variant="outline"
             type="button"
-            className="bg-card"
-            disabled={query.isFetching}
+            className="bg-card print:hidden"
+            disabled={query.isFetching || query.busy}
             onClick={() => void query.refetch()}
           >
             {t('refresh')}

@@ -340,7 +340,12 @@
     "refresh": "Refresh ticket",
     "unavailable": "No valid ticket is available",
     "unavailableNote": "A ticket is available only for a paid, confirmed booking on a trip that has not been cancelled. Open your booking to check its status.",
-    "error": "Could not load your ticket"
+    "error": "Could not load your ticket",
+    "print": "Print ticket",
+    "preparingPrint": "Preparing to print…",
+    "printNote": "We check the current ticket status before printing. Print it or save as PDF from your browser’s dialog.",
+    "printError": "Could not prepare the ticket for printing. Check that the QR code is visible, then try again.",
+    "printFromButton": "Close the print dialog and use the page’s Print ticket button to check ticket validity and prepare the QR code."
   },
   "Recovery": {
     "introTitle": "Get back to your account",

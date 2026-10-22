@@ -49,7 +49,7 @@ export default async function LocaleLayout({
       <body id="top" className="min-h-screen">
         <NextIntlClientProvider>
           <AppProviders state={dehydrate(queryClient)}>
-            <div className="flex min-h-screen flex-col">
+            <div data-site-shell className="flex min-h-screen flex-col">
               <SiteHeader
                 accountMenu={<AccountMenu />}
                 navigation={<HeaderNavigation />}
