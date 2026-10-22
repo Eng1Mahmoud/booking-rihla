@@ -7,17 +7,22 @@ import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { useLogin } from '../../hooks/useAuth';
 import { loginSchema } from '../../schemas/authSchema';
 import type { LoginInput } from '../../types/auth';
-export function LoginForm() {
+
+export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
   const t = useTranslations('Auth'),
     locale = useLocale(),
     login = useLogin();
+  const destination =
+    returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
   return (
     <Form
       schema={loginSchema}
       defaultValues={{ email: '', password: '' }}
       onSubmit={async (values) => {
         await login.mutateAsync(values);
-        window.location.replace('/' + locale);
+        window.location.replace(
+          '/' + locale + (destination === '/' ? '' : destination),
+        );
       }}
     >
       <FormInput<LoginInput>
@@ -37,7 +42,11 @@ export function LoginForm() {
       />
       <SubmitButton pendingText={t('working')}>{t('login')}</SubmitButton>
       <Link
-        href="/forgot-password"
+        href={
+          destination === '/'
+            ? '/forgot-password'
+            : '/forgot-password?returnTo=' + encodeURIComponent(destination)
+        }
         className="text-center text-sm font-semibold text-primary hover:underline"
       >
         {t('forgotPassword')}
