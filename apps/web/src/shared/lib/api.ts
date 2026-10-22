@@ -33,8 +33,7 @@ export async function requestApi<T = unknown>(
     result: apiFailure<T>(status, code, locale),
     headers: new Headers(),
   });
-  if (!/^[a-zA-Z0-9-]+(?:\/[a-zA-Z0-9-]+)*$/.test(path.split('?')[0]))
-    return failure(404, 'NOT_FOUND');
+
   try {
     const base = process.env.API_BASE_URL;
     if (!base) throw new Error('API_BASE_URL is required');
