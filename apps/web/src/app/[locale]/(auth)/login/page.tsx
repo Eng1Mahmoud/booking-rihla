@@ -2,18 +2,11 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import { BusFront, Check } from 'lucide-react';
-import { getCurrentUser } from '@/features/auth/lib/auth.server';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import { AuthFlow } from '@/features/auth/components/forms/AuthFlow';
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ returnTo?: string }>;
-}) {
-  const query = await searchParams;
-  const returnTo = safeReturnPath(query.returnTo);
-  const user = await getCurrentUser().catch(() => null);
-  if (user) redirect('/' + (await getLocale()) + returnTo);
+export default async function LoginPage() {
+  const user = await getSignedInUser().catch(() => null);
+  if (user) redirect('/' + (await getLocale()));
   const [t, home] = await Promise.all([
     getTranslations('Auth'),
     getTranslations('Home'),
@@ -51,7 +44,7 @@ export default async function LoginPage({
           </p>
         </div>
         <div className="self-center rounded-[1.75rem] border border-white bg-card p-6 shadow-[0_20px_70px_-45px_#112f4550] sm:p-9">
-          <AuthFlow returnTo={returnTo} />
+          <AuthFlow />
         </div>
       </section>
     </div>
