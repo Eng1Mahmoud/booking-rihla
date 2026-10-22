@@ -1,9 +1,17 @@
 import type { BookingPayment } from '@/features/bookings/types/booking';
+
 export function isPaymentPending(status: string) {
   return ['INITIALIZING', 'AWAITING_PAYMENT', 'UNKNOWN', 'PROCESSING'].includes(
     status,
   );
 }
+
+/** True when the temporary seat hold has ended on the server clock. */
+export function isHoldExpired(payment: BookingPayment) {
+  if (!payment.expiresAt) return false;
+  return Date.parse(payment.expiresAt) <= Date.parse(payment.serverTime);
+}
+
 export function paymentOutcome(payment: BookingPayment) {
   if (payment.bookingStatus === 'CANCELLED') return 'cancelled';
   if (payment.paymentStatus === 'REFUNDED') return 'refunded';
@@ -19,7 +27,11 @@ export function paymentOutcome(payment: BookingPayment) {
   if (payment.paymentStatus === 'FAILED') return 'failed';
   if (
     payment.paymentStatus === 'EXPIRED' ||
-    payment.bookingStatus === 'EXPIRED'
+    payment.bookingStatus === 'EXPIRED' ||
+    (isHoldExpired(payment) &&
+      ['NOT_STARTED', 'PREPARED', 'AWAITING_PAYMENT'].includes(
+        payment.paymentStatus,
+      ))
   )
     return 'expired';
   return 'waiting';
