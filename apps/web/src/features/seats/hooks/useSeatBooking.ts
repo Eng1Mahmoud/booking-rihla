@@ -28,7 +28,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   const [phase, setPhase] = useState<'select' | 'details'>('select');
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
-  /** Shown when seats left the selection because they became unavailable. */
   const [availabilityNotice, setAvailabilityNotice] = useState('');
 
   useEffect(() => {
@@ -46,7 +45,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
 
   const seats = seatQuery.data.seats;
 
-  // Drop selected seats that are no longer available after a refresh/poll.
   useEffect(() => {
     const availableIds = new Set(
       seats.filter((seat) => seat.isAvailable).map((seat) => seat.id),
@@ -71,7 +69,6 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   function toggle(id: string) {
     const seat = seats.find((item) => item.id === id);
     if (!seat) return;
-    // Ignore clicks on seats that became unavailable (button is also disabled).
     if (!seat.isAvailable && !selectedIds.includes(id)) return;
 
     setSelectedIds((ids) =>
@@ -124,10 +121,17 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     }
   }
 
+  // Guest continuing to passenger details → login, then back to this trip.
   useEffect(() => {
     if (phase !== 'details' || status !== 'guest') return;
-    router.replace('/login');
-  }, [phase, status, router]);
+    const returnTo =
+      '/trips/' +
+      trip.id +
+      (selectedIds.length
+        ? '?seats=' + encodeURIComponent(selectedIds.join(','))
+        : '');
+    router.replace('/login?returnTo=' + encodeURIComponent(returnTo));
+  }, [phase, status, selectedIds, trip.id, router]);
 
   return {
     user,
