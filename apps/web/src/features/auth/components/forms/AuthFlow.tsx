@@ -7,7 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { VerifyEmailForm } from './VerifyEmailForm';
-export function AuthFlow({ returnTo }: { returnTo: string }) {
+export function AuthFlow() {
   const t = useTranslations('Auth');
   const busy = useIsMutating({ mutationKey: authKeys.all }) > 0;
   const [mode, setMode] = useState<'login' | 'register' | 'verify'>('login');
@@ -60,7 +60,7 @@ export function AuthFlow({ returnTo }: { returnTo: string }) {
           {t('verified')}
         </p>
       )}
-      {mode === 'login' && <LoginForm returnTo={returnTo} />}
+      {mode === 'login' && <LoginForm />}
       {mode === 'register' && (
         <RegisterForm
           onRegistered={(value) => {
