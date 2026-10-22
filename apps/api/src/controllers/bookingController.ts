@@ -41,10 +41,10 @@ export function createBookingController(service: BookingService) {
         throw new AppError(
           400,
           'VALIDATION_ERROR',
-          'Provide only valid limit and offset pagination',
+          'Provide only a supported booking filter and valid limit/offset pagination',
         );
       const data = await service.list(owner(response).user.id, query.data);
-      sendSuccess(response, { items: data, pagination: query.data });
+      sendSuccess(response, data);
     },
     async getById(request: Request, response: Response) {
       const id = bookingIdSchema.safeParse(request.params.id);

@@ -242,7 +242,27 @@
       "REVIEW": "Under review"
     },
     "checkingAvailability": "Checking payment availability…",
-    "checkoutUnavailable": "Online payment is currently unavailable. Check the recorded payment status above."
+    "checkoutUnavailable": "Online payment is currently unavailable. Check the recorded payment status above.",
+    "historyFilterLabel": "Filter bookings",
+    "historyFilters": {
+      "all": "All",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    },
+    "historyNotes": {
+      "all": "All your bookings, ordered from newest to oldest.",
+      "upcoming": "Active bookings for trips that have not departed, including bookings awaiting payment or confirmation.",
+      "past": "Confirmed bookings for trips whose departure time has passed.",
+      "expired": "Bookings whose payment deadline has passed. Payments still being verified remain under All.",
+      "cancelled": "Bookings for trips cancelled by the operator. Open a booking to check its refund status."
+    },
+    "historyEmpty": "No bookings in this category",
+    "historyEmptyNote": "Choose another category to see your other bookings.",
+    "historyEnd": "No more bookings on this page",
+    "historyEndNote": "Return to the first page to see the latest bookings in this category.",
+    "historyFirstPage": "First page"
   },
   "PaymentResult": {
     "title": "Payment result",

@@ -1,6 +1,12 @@
+import type { BookingFilter } from '../schemas/bookingSchema';
+
 export const bookingKeys = {
-  list: (userId: string, locale: string, offset: number) =>
-    ['bookings', 'list', userId, locale, offset] as const,
+  list: (
+    userId: string,
+    locale: string,
+    offset: number,
+    filter: BookingFilter = 'all',
+  ) => ['bookings', 'list', userId, locale, offset, filter] as const,
   payment: (
     userId: string,
     locale: string,

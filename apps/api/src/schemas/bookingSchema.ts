@@ -19,7 +19,16 @@ export const createBookingSchema = z
     'Choose each seat only once',
   );
 export const bookingIdSchema = z.uuid();
-export const bookingListQuerySchema = paginationQuerySchema;
+export const bookingFilterSchema = z.enum([
+  'all',
+  'upcoming',
+  'past',
+  'expired',
+  'cancelled',
+]);
+export const bookingListQuerySchema = paginationQuerySchema.extend({
+  filter: bookingFilterSchema.default('all'),
+});
 export const bookingDetailsQuerySchema = z.strictObject({});
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type BookingListQuery = z.infer<typeof bookingListQuerySchema>;

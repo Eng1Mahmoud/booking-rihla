@@ -27,6 +27,18 @@ export const paymentStatusInputSchema = z.strictObject({
   search: z.literal(''),
 });
 export const bookingsOffsetSchema = z.number().int().min(0).max(100000);
+export const bookingFilterSchema = z.enum([
+  'all',
+  'upcoming',
+  'past',
+  'expired',
+  'cancelled',
+]);
+export const bookingsListInputSchema = z.strictObject({
+  offset: bookingsOffsetSchema,
+  filter: bookingFilterSchema.default('all'),
+});
+export type BookingFilter = z.infer<typeof bookingFilterSchema>;
 export const checkoutSchema = z
   .strictObject({
     id: bookingIdSchema,

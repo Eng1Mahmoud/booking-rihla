@@ -1,34 +1,41 @@
 import { getLocale } from 'next-intl/server';
-import { AccountLayout } from '@/features/account/components/AccountLayout';
 import { notFound } from 'next/navigation';
+import { AccountLayout } from '@/features/account/components/AccountLayout';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
+import { bookingsListInputSchema } from '@/features/bookings/schemas/bookingSchema';
+import type { BookingListPage } from '@/features/bookings/types/booking';
 import {
   requireSignedInUser,
   fetchWithAccessToken,
 } from '@/features/auth/lib/auth.server';
-import { unwrapApiResult } from '@/shared/lib/apiResult';
-import type { Booking } from '@/features/bookings/types/booking';
+import { unwrapApiResult, errorMessage } from '@/shared/lib/apiResult';
 import { ReadError } from '@/shared/components/feedback/ReadError';
-import { errorMessage } from '@/shared/lib/apiResult';
 
 export default async function BookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ offset?: string }>;
+  searchParams: Promise<{ offset?: string; filter?: string }>;
 }) {
-  const { offset: raw = '0' } = await searchParams;
-  if (typeof raw !== 'string' || !/^\d+$/.test(raw) || Number(raw) > 100000)
-    notFound();
-  const offset = Number(raw);
-  let result;
+  const { offset: raw = '0', filter = 'all' } = await searchParams;
+  if (typeof raw !== 'string' || !/^\d+$/.test(raw)) notFound();
+  const input = bookingsListInputSchema.safeParse({
+    offset: Number(raw),
+    filter,
+  });
+  if (!input.success) notFound();
+  let initial, userId, readAt;
   try {
     const user = await requireSignedInUser();
-    const page = unwrapApiResult(
-      await fetchWithAccessToken<{ items: Booking[] }>(
-        'bookings?limit=20&offset=' + offset,
+    initial = unwrapApiResult(
+      await fetchWithAccessToken<BookingListPage>(
+        'bookings?limit=20&offset=' +
+          input.data.offset +
+          '&filter=' +
+          input.data.filter,
       ),
     );
-    result = { ...page, userId: user.id };
+    userId = user.id;
+    readAt = Date.now();
   } catch (error) {
     return (
       <AccountLayout>
@@ -39,10 +46,10 @@ export default async function BookingsPage({
   return (
     <AccountLayout>
       <BookingHistory
-        key={result.userId + ':' + offset}
-        bookings={result.items}
-        userId={result.userId}
-        offset={offset}
+        key={userId + ':' + input.data.filter + ':' + input.data.offset}
+        initial={initial}
+        userId={userId}
+        readAt={readAt}
       />
     </AccountLayout>
   );

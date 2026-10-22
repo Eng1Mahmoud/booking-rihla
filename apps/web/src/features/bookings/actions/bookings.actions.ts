@@ -6,12 +6,17 @@ import { parseSchema } from '@/shared/lib/parseSchema';
 import {
   createBookingSchema,
   bookingIdSchema,
-  bookingsOffsetSchema,
+  bookingsListInputSchema,
+  type BookingFilter,
   checkoutSchema,
   type CreateBookingInput,
   type CheckoutInput,
 } from '../schemas/bookingSchema';
-import type { Booking, BookingPayment } from '../types/booking';
+import type {
+  Booking,
+  BookingPayment,
+  BookingListPage,
+} from '../types/booking';
 
 export async function createBookingAction(input: CreateBookingInput) {
   const parsed = await parseSchema(createBookingSchema, input);
@@ -67,11 +72,16 @@ export async function refreshPaymentAction(
   );
 }
 
-export async function getBookingsAction(offset: number) {
-  const parsed = await parseSchema(bookingsOffsetSchema, offset);
+export async function getBookingsAction(
+  offset: number,
+  filter: BookingFilter = 'all',
+) {
+  const parsed = await parseSchema(bookingsListInputSchema, { offset, filter });
   if (!parsed.success) return parsed.error;
-  return fetchWhenSignedIn<{
-    items: Booking[];
-    pagination: { limit: number; offset: number };
-  }>('bookings?limit=20&offset=' + parsed.data);
+  return fetchWhenSignedIn<BookingListPage>(
+    'bookings?limit=20&offset=' +
+      parsed.data.offset +
+      '&filter=' +
+      parsed.data.filter,
+  );
 }

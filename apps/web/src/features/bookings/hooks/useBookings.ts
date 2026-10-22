@@ -9,7 +9,7 @@ import {
 import type { CreateBookingInput } from '../schemas/bookingSchema';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { bookingKeys } from './queryKeys';
-import type { Booking } from '../types/booking';
+import type { BookingListPage } from '../types/booking';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function useCreateBooking() {
@@ -30,17 +30,25 @@ export function useCheckout() {
   });
 }
 export function useBookings(
-  initial: Booking[],
+  initial: BookingListPage,
   userId: string,
-  offset: number,
+  readAt: number,
 ) {
   const locale = useLocale();
   const { user } = useAuth();
-  return useQuery({
-    queryKey: bookingKeys.list(userId, locale, offset),
-    queryFn: () => invokeAction(() => getBookingsAction(offset)),
-    initialData: { items: initial, pagination: { limit: 20, offset } },
+  const { offset, filter } = initial.pagination;
+  const query = useQuery({
+    queryKey: bookingKeys.list(userId, locale, offset, filter),
+    queryFn: () => invokeAction(() => getBookingsAction(offset, filter)),
+    initialData: initial,
+    initialDataUpdatedAt: readAt,
     enabled: user?.id === userId,
     staleTime: 0,
   });
+  return {
+    ...query,
+    user,
+    data: query.dataUpdatedAt < readAt ? initial : query.data,
+    isError: query.isError && query.errorUpdatedAt >= readAt,
+  };
 }

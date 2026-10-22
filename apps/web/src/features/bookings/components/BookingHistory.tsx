@@ -2,26 +2,40 @@
 import { Button } from '@/shared/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import { useBookings } from '../hooks/useBookings';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { errorMessage } from '@/shared/lib/apiResult';
-import type { Booking } from '../types/booking';
+import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import {
+  bookingFilterSchema,
+  type BookingFilter,
+} from '../schemas/bookingSchema';
+import type { BookingListPage } from '../types/booking';
 import { Link } from '@/i18n/navigation';
 import { displayName, formatDate, formatPrice } from '@/shared/lib/format';
+function historyHref(filter: BookingFilter, offset = 0) {
+  return (
+    '/bookings?' +
+    new URLSearchParams({
+      filter,
+      ...(offset ? { offset: String(offset) } : {}),
+    })
+  );
+}
+
 export function BookingHistory({
-  bookings: initial,
+  initial,
   userId,
-  offset,
+  readAt,
 }: {
-  bookings: Booking[];
+  initial: BookingListPage;
   userId: string;
-  offset: number;
+  readAt: number;
 }) {
   const locale = useLocale() as 'ar' | 'en';
   const t = useTranslations('Booking');
-  const { user } = useAuth();
-  const query = useBookings(initial, userId, offset);
-  if (user?.id !== userId) return null;
+  const query = useBookings(initial, userId, readAt);
+  if (query.user?.id !== userId) return null;
   const bookings = query.data.items;
+  const { offset, limit, filter, hasMore } = query.data.pagination;
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-5">
@@ -36,24 +50,65 @@ export function BookingHistory({
           <Link href="/">{t('findTrip')}</Link>
         </Button>
       </div>
+      <nav
+        aria-label={t('historyFilterLabel')}
+        className="mb-4 flex flex-wrap gap-1 rounded-xl border bg-card p-1.5"
+      >
+        {bookingFilterSchema.options.map((value) => (
+          <Button
+            key={value}
+            asChild
+            variant="ghost"
+            className="min-h-11 h-auto px-3 text-sm"
+          >
+            <Link
+              href={historyHref(value)}
+              prefetch={false}
+              aria-current={value === filter ? 'page' : undefined}
+              className="aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground"
+            >
+              {t('historyFilters.' + value)}
+            </Link>
+          </Button>
+        ))}
+      </nav>
+      <p className="mb-6 text-sm text-muted-foreground">
+        {t('historyNotes.' + filter)}
+      </p>
       {query.isError && (
-        <p
-          className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-          role="alert"
-        >
-          {errorMessage(query.error, locale)}
-        </p>
+        <div className="mb-5">
+          <ErrorNotice
+            error={query.error}
+            onRetry={() => void query.refetch()}
+          />
+        </div>
       )}
       {bookings.length === 0 ? (
-        <div className="rounded-xl border bg-card px-5 py-10 text-center md:px-6 md:py-14">
-          <h2 className="text-xl font-medium md:text-2xl">{t('noBookings')}</h2>
-          <p className="mt-2.5 text-sm text-muted-foreground">
-            {t('noBookingsText')}
-          </p>
-          <Button size="lg" asChild>
+        <EmptyState
+          title={t(
+            offset
+              ? 'historyEnd'
+              : filter === 'all'
+                ? 'noBookings'
+                : 'historyEmpty',
+          )}
+          description={t(
+            offset
+              ? 'historyEndNote'
+              : filter === 'all'
+                ? 'noBookingsText'
+                : 'historyEmptyNote',
+          )}
+        >
+          <Button asChild variant="outline">
+            <Link href={offset ? historyHref(filter) : historyHref('all')}>
+              {t(offset ? 'historyFirstPage' : 'historyFilters.all')}
+            </Link>
+          </Button>
+          <Button asChild>
             <Link href="/">{t('findTrip')}</Link>
           </Button>
-        </div>
+        </EmptyState>
       ) : (
         <div className="grid gap-3.5">
           {bookings.map((booking) => (
@@ -101,16 +156,16 @@ export function BookingHistory({
         {offset > 0 && (
           <Button size="lg" className="bg-card" asChild variant="outline">
             <Link
-              href={'/bookings?offset=' + Math.max(0, offset - 20)}
+              href={historyHref(filter, Math.max(0, offset - limit))}
               prefetch={false}
             >
               {t('previous')}
             </Link>
           </Button>
         )}
-        {bookings.length === 20 && (
+        {hasMore && offset + limit <= 100000 && (
           <Button size="lg" className="bg-card" asChild variant="outline">
-            <Link href={'/bookings?offset=' + (offset + 20)} prefetch={false}>
+            <Link href={historyHref(filter, offset + limit)} prefetch={false}>
               {t('next')}
             </Link>
           </Button>

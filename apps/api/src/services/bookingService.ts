@@ -31,10 +31,13 @@ function ownBookings(db: typeof database, userId: string) {
 type BookingRecord = NonNullable<
   Awaited<ReturnType<ReturnType<typeof ownBookings>['first']>>
 >;
-export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
+export function serializeBookingSummary(
+  booking: Omit<BookingRecord, 'seats'>,
+  now = Date.now(),
+) {
   if (!booking.trip || !booking.trip.route)
     throw new Error('Reservation trip relation is missing');
-  const status = bookingState(booking);
+  const status = bookingState(booking, now);
   return {
     id: booking.id,
     reference: booking.reference,
@@ -69,9 +72,9 @@ export function serializeBookingSummary(booking: Omit<BookingRecord, 'seats'>) {
     },
   };
 }
-function serializeBooking(booking: BookingRecord) {
+function serializeBooking(booking: BookingRecord, now = Date.now()) {
   return {
-    ...serializeBookingSummary(booking),
+    ...serializeBookingSummary(booking, now),
     passengers: booking.seats.map((seat) => ({
       seatId: seat.seatId,
       seatNumber: seat.seatNumber,
@@ -239,17 +242,65 @@ export const bookingService = {
     if (!booking) throw new Error('Created reservation could not be read');
     return serializeBooking(booking);
   },
-  async list(userId: string, { limit, offset }: BookingListQuery) {
+  async list(
+    userId: string,
+    { limit, offset, filter = 'all' }: BookingListQuery,
+  ) {
     const { db } = await import('../prisma/db.ts');
-    const bookings = await ownBookings(db, userId)
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString();
+    let query = ownBookings(db, userId);
+    if (filter !== 'all')
+      query = query.where((booking) =>
+        booking.trip.some({
+          status: filter === 'cancelled' ? 'CANCELLED' : 'SCHEDULED',
+        }),
+      );
+    if (filter === 'upcoming')
+      query = query
+        .where((booking) =>
+          booking.trip.some((trip) => trip.departureAt.gt(timestamp)),
+        )
+        .where((booking, { fns }) =>
+          fns.or(
+            booking.status.in(['RESERVED', 'CONFIRMED', 'PAYMENT_PROCESSING']),
+            fns.and(
+              booking.status.eq('PENDING_PAYMENT'),
+              booking.expiresAt.gt(timestamp),
+            ),
+          ),
+        );
+    else if (filter === 'past')
+      query = query
+        .where({ status: 'CONFIRMED' })
+        .where((booking) =>
+          booking.trip.some((trip) => trip.departureAt.lte(timestamp)),
+        );
+    else if (filter === 'expired')
+      query = query.where((booking, { fns }) =>
+        fns.or(
+          booking.status.eq('EXPIRED'),
+          fns.and(
+            booking.status.eq('PENDING_PAYMENT'),
+            booking.expiresAt.lte(timestamp),
+          ),
+        ),
+      );
+    // Filter the owner's full history first; one extra row gives an accurate next page.
+    const bookings = await query
       .orderBy([
         (booking) => booking.createdAt.desc(),
         (booking) => booking.id.asc(),
       ])
-      .limit(limit)
+      .limit(limit + 1)
       .offset(offset)
       .all();
-    return bookings.map(serializeBooking);
+    return {
+      items: bookings
+        .slice(0, limit)
+        .map((booking) => serializeBooking(booking, now)),
+      pagination: { limit, offset, filter, hasMore: bookings.length > limit },
+    };
   },
   async findById(userId: string, id: string) {
     const { db } = await import('../prisma/db.ts');

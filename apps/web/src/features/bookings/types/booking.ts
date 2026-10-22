@@ -1,3 +1,4 @@
+import type { BookingFilter } from '../schemas/bookingSchema';
 import type { Trip } from '@/features/trips/types/trip';
 export type Booking = {
   id: string;
@@ -11,6 +12,15 @@ export type Booking = {
   paymentRequired: boolean;
   passengers?: { seatId: string; seatNumber: number; name: string }[];
   trip: Pick<Trip, 'id' | 'departureAt' | 'arrivalAt' | 'route'>;
+};
+export type BookingListPage = {
+  items: Booking[];
+  pagination: {
+    limit: number;
+    offset: number;
+    filter: BookingFilter;
+    hasMore: boolean;
+  };
 };
 export type BookingPayment = {
   bookingId: string;
