@@ -26,12 +26,16 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user, status, reloadSession } = useAuth();
   const [phase, setPhase] = useState<'select' | 'details'>('select');
+  const [error, setError] = useState('');
+  const [uncertain, setUncertain] = useState(false);
+  /** Shown when seats left the selection because they became unavailable. */
+  const [availabilityNotice, setAvailabilityNotice] = useState('');
+
   useEffect(() => {
     if (phase === 'details' && window.matchMedia('(max-width: 767px)').matches)
       summaryRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
   }, [phase]);
-  const [error, setError] = useState('');
-  const [uncertain, setUncertain] = useState(false);
+
   const seatQuery = useQuery({
     queryKey: seatKeys.list(locale, initialSeats.tripId),
     queryFn: () => invokeAction(() => getTripSeatsAction(initialSeats.tripId)),
@@ -39,24 +43,50 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     staleTime: 0,
     refetchInterval: 15000,
   });
+
+  const seats = seatQuery.data.seats;
+
+  // Drop selected seats that are no longer available after a refresh/poll.
+  useEffect(() => {
+    const availableIds = new Set(
+      seats.filter((seat) => seat.isAvailable).map((seat) => seat.id),
+    );
+    setSelectedIds((ids) => {
+      const next = ids.filter((id) => availableIds.has(id));
+      if (next.length === ids.length) return ids;
+      setAvailabilityNotice(t('changed'));
+      if (next.length === 0) setPhase('select');
+      return next;
+    });
+  }, [seatQuery.dataUpdatedAt, seats, t]);
+
   const refreshSeats = () => {
     void seatQuery.refetch();
   };
-  const seats = seatQuery.data.seats;
+
   const selected = seats.filter(
     (seat) => selectedIds.includes(seat.id) && seat.isAvailable,
   );
+
   function toggle(id: string) {
+    const seat = seats.find((item) => item.id === id);
+    if (!seat) return;
+    // Ignore clicks on seats that became unavailable (button is also disabled).
+    if (!seat.isAvailable && !selectedIds.includes(id)) return;
+
     setSelectedIds((ids) =>
       ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id],
     );
     setError('');
+    setAvailabilityNotice('');
   }
+
   async function reserve(input: {
     contactPhone: string;
     passengers: { seatId: string; name: string }[];
   }) {
     setError('');
+    setUncertain(false);
     if (
       !input.passengers.length ||
       input.passengers.some(
@@ -65,6 +95,9 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
       )
     ) {
       setError(t('conflict'));
+      setAvailabilityNotice(t('changed'));
+      setPhase('select');
+      refreshSeats();
       return;
     }
     try {
@@ -80,9 +113,14 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
         setError(t('uncertain'));
         return;
       }
-      setError(errorMessage(cause, locale));
-      if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE')
+      if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE') {
+        setError(t('conflict'));
+        setAvailabilityNotice(t('changed'));
+        setPhase('select');
         refreshSeats();
+        return;
+      }
+      setError(errorMessage(cause, locale));
     }
   }
 
@@ -100,6 +138,7 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
     summaryRef,
     error,
     uncertain,
+    availabilityNotice,
     seatQuery,
     selectedIds,
     selected,
