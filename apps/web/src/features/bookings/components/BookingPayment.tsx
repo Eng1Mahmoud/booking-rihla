@@ -1,15 +1,15 @@
 'use client';
-import { Button } from '@/shared/components/ui/button';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { BookingDetails } from '../types/booking';
-import { errorMessage } from '@/shared/lib/apiResult';
+import { ApiError } from '@/shared/lib/apiResult';
 import { useCheckout } from '../hooks/useBookings';
 import { useBookingPayment } from '../hooks/useBookingPayment';
 import { paymentOutcome } from '@/features/bookings/lib/paymentState';
 import { remainingHoldSeconds } from '@/features/bookings/lib/holdTimer';
 import { PaymentChecking } from '@/features/bookings/components/PaymentChecking';
 import { PaymentSidebar } from '@/features/bookings/components/PaymentSidebar';
+import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
 
 export function BookingPayment({
   initial,
@@ -24,7 +24,7 @@ export function BookingPayment({
   const t = useTranslations('Booking');
   const bookingId = initial.booking.id;
   const [now, setNow] = useState(initial.readAt);
-  const [error, setError] = useState('');
+  const [payError, setPayError] = useState<unknown>(null);
   const expiredRefresh = useRef(false);
   const query = useBookingPayment(initial, afterCheckout);
   const checkout = useCheckout();
@@ -54,21 +54,13 @@ export function BookingPayment({
 
   if (query.isError || !payment)
     return (
-      <div
-        className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-        role="alert"
-      >
-        {errorMessage(query.error, locale)}{' '}
-        <Button
-          variant="link"
-          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
-          onClick={() => {
-            void query.refetch();
-          }}
-        >
-          {t('refresh')}
-        </Button>
-      </div>
+      <ErrorNotice
+        error={query.error ?? new ApiError(0, 'NETWORK_ERROR')}
+        onRetry={() => {
+          void query.refetch();
+        }}
+        retryLabel={t('refresh')}
+      />
     );
 
   if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
@@ -93,7 +85,7 @@ export function BookingPayment({
 
   async function pay() {
     if (!canPay || busy) return;
-    setError('');
+    setPayError(null);
     try {
       const result = await checkout.mutateAsync({
         id: bookingId,
@@ -105,10 +97,10 @@ export function BookingPayment({
         target.origin !== 'https://accept.paymob.com' ||
         target.pathname !== '/unifiedcheckout/'
       )
-        throw new Error('Checkout not ready');
+        throw new ApiError(502, 'PAYMENT_UNAVAILABLE');
       window.location.assign(target.href);
     } catch (cause) {
-      setError(errorMessage(cause, locale));
+      setPayError(cause);
       await query.refetch();
     }
   }
@@ -129,7 +121,7 @@ export function BookingPayment({
         }
         canPay={canPay}
         busy={busy}
-        error={error}
+        payError={payError}
         locale={locale}
         holdExpiredMessage={
           outcome === 'waiting' && booking.paymentRequired && seconds === 0
