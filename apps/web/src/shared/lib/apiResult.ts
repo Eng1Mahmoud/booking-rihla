@@ -52,8 +52,9 @@ export function unwrapApiResult<T>(result: ApiResult<T>): T {
   return result.data as T;
 }
 
-// The server reports an ended session; this event clears the client query cache.
-export const SESSION_EXPIRED_EVENT = 'bus:session-expired';
+export function isUnauthenticated(error: { status: number; code: string }) {
+  return error.status === 401 && error.code === 'UNAUTHENTICATED';
+}
 
 // Adapt action results for forms/React Query; a lost response has an uncertain outcome.
 export async function invokeAction<T>(
@@ -64,14 +65,6 @@ export async function invokeAction<T>(
     result = await action();
   } catch {
     throw new ApiError(0, 'NETWORK_ERROR');
-  }
-  if (
-    !result.success &&
-    result.status === 401 &&
-    result.code === 'UNAUTHENTICATED' &&
-    typeof window !== 'undefined'
-  ) {
-    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   return unwrapApiResult(result);
 }

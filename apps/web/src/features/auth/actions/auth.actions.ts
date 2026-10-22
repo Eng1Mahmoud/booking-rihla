@@ -1,8 +1,10 @@
 'use server';
 
 import { z } from 'zod';
-import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib/apiResult';
+import { cookies } from 'next/headers';
+import { getLocale } from 'next-intl/server';
+import { apiFetch, requestApi } from '@/shared/lib/api';
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import {
   loginSchema,
@@ -15,8 +17,12 @@ import {
   recoveryResetSchema,
   type RecoveryValues,
 } from '../schemas/recoverySchema';
-import { cookies } from 'next/headers';
-import { readAuthCookies } from '@/shared/lib/session';
+import {
+  readAuthCookies,
+  sessionTokens,
+  updateAuthCookies,
+  authenticatedFetch,
+} from '../lib/auth.server';
 import type {
   AuthSession,
   AuthUser,
@@ -24,7 +30,7 @@ import type {
   RegisterInput,
 } from '../types/auth';
 
-// Actions are public POST entrypoints: validate again on the server, not only in the form.
+// Public auth operations still validate on the server, independently of the form.
 async function submit<T>(
   path: string,
   input: unknown,
@@ -32,18 +38,24 @@ async function submit<T>(
 ): Promise<ApiResult<T>> {
   const parsed = await parseSchema(schema, input);
   if (!parsed.success) return parsed.error;
-  // apiFetch keeps tokens private and authenticates protected mutations before sending them.
-  return apiFetch<T>(path, {
+  return apiFetch<T>(path, { method: 'POST', body: parsed.data });
+}
+
+export async function loginAction(
+  input: LoginInput,
+): Promise<ApiResult<{ user: AuthUser }>> {
+  const parsed = await parseSchema(loginSchema, input);
+  if (!parsed.success) return parsed.error;
+  const { result, headers } = await requestApi('auth/login', {
     method: 'POST',
     body: parsed.data,
-    context: 'action',
   });
+  if (!result.success) return { ...result, data: undefined };
+  const session = sessionTokens(headers, result);
+  if (!session) return apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
+  await updateAuthCookies(session.tokens);
+  return { ...result, data: { user: session.user } };
 }
-
-export async function loginAction(input: LoginInput) {
-  return submit<{ user: AuthUser }>('auth/login', input, loginSchema);
-}
-
 export async function registerAction(input: RegisterInput) {
   return submit<{ verificationId: string }>(
     'auth/register',
@@ -51,35 +63,46 @@ export async function registerAction(input: RegisterInput) {
     registerSchema.extend({ language: z.enum(['ar', 'en']) }),
   );
 }
-
 export async function verifyEmailAction(
   input: z.input<typeof verifyEmailSchema>,
 ) {
   return submit('auth/verify-email', input, verifyEmailSchema);
 }
-
 export async function resendVerificationAction(
   input: z.input<typeof resendVerificationSchema>,
 ) {
   return submit('auth/resend-verification', input, resendVerificationSchema);
 }
-
 export async function forgotPasswordAction(input: { email: string }) {
   return submit('auth/forgot-password', input, recoveryEmailSchema);
 }
-
 export async function resetPasswordAction(input: RecoveryValues) {
-  return submit('auth/reset-password', input, recoveryResetSchema);
+  const result = await submit(
+    'auth/reset-password',
+    input,
+    recoveryResetSchema,
+  );
+  if (result.success) await updateAuthCookies(null);
+  return result;
 }
 
 export async function logoutAction(all = false) {
-  // Current-device logout uses the refresh credential; logout-all also requires a live user.
-  // apiFetch checks auth/me inside this action before calling auth/logout-all.
-  return submit(
-    all === true ? 'auth/logout-all' : 'auth/logout',
-    all,
-    z.boolean().transform(() => ({})),
-  );
+  const parsed = await parseSchema(z.boolean(), all);
+  if (!parsed.success) return parsed.error;
+  const session = readAuthCookies({ cookies: await cookies() });
+  if (session.refresh && !/^[a-f0-9]{64}$/.test(session.refresh)) {
+    await updateAuthCookies(null);
+    return apiFailure(401, 'UNAUTHENTICATED', await getLocale());
+  }
+  const result = parsed.data
+    ? await authenticatedFetch('auth/logout-all', { method: 'POST', body: {} })
+    : await apiFetch('auth/logout', {
+        method: 'POST',
+        body: {},
+        refreshToken: session.refresh,
+      });
+  if (result.success) await updateAuthCookies(null);
+  return result;
 }
 
 export async function getCurrentUserAction(): Promise<ApiResult<AuthSession>> {
@@ -92,7 +115,7 @@ export async function getCurrentUserAction(): Promise<ApiResult<AuthSession>> {
       message: 'OK',
       data: { user: null },
     };
-  const result = await apiFetch<AuthUser>('auth/me', { context: 'action' });
+  const result = await authenticatedFetch<AuthUser>('auth/me');
   return {
     ...result,
     data: result.success && result.data ? { user: result.data } : undefined,

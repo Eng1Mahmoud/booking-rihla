@@ -6,9 +6,9 @@ import {
   saveAuthCookies,
   clearAuthCookies,
   type AuthTokens,
-  type SessionUser,
-} from '@/shared/lib/session';
-import { apiFetch } from '@/shared/lib/api';
+  readWithSession,
+} from '@/features/auth/lib/auth.server';
+import type { AuthUser } from '@/features/auth/types/auth';
 import { protectedRoute, routeInfo } from './roleRoutes';
 
 export async function authMiddleware(
@@ -52,15 +52,12 @@ export async function authMiddleware(
   if (!session.access && !session.refresh) return rule ? toLogin() : response;
   try {
     // Express verifies the token, live session and current database role.
-    // apiFetch renews once on an authenticated 401 and retries this GET only.
-    const result = await apiFetch<SessionUser>('auth/me', {
-      session,
+    const read = await readWithSession<AuthUser>('auth/me', session, {
       locale,
       requestHeaders: request.headers,
-      onSession: (tokens) => {
-        renewed = tokens ?? undefined;
-      },
     });
+    const { result } = read;
+    renewed = read.tokens ?? undefined;
     if (result.status === 401) return toLogin();
     if (!result.success) return unavailable();
     const role = z

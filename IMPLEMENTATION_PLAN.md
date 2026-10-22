@@ -705,10 +705,10 @@ Validated production build/TypeScript, root ESLint, isolated ordering checks and
 | النماذج               | React Hook Form وZod مع Form وحقول مشتركة                                      |
 | كاش API               | TanStack Query فقط                                                             |
 | fetch                 | إرسال الطلبات باستخدام `cache: 'no-store'`                                     |
-| طلبات الميزات         | Hook → Server Action → apiFetch مركزي → Backend                                |
+| طلبات الميزات         | Hook → Server Action → auth.server عند الحاجة → api.ts → Backend                                |
 | مجلد api داخل Feature | غير مطلوب؛ لا wrapper يكرر استدعاء Action                                      |
 | خيار auth             | محذوف من واجهة apiFetch                                                        |
-| Access Token          | يضاف تلقائيًا إلى Authorization عند وجوده                                      |
+| Access Token          | تقرأه وحدة auth وتُمرره صراحة إلى عميل HTTP                                      |
 | Refresh Token         | يستخدم فقط في عمليات الجلسة المناسبة                                           |
 | تخزين التوكنات        | HttpOnly Cookies على نطاق تطبيق الويب                                          |
 | حماية التنقل          | middleware منظمة، تُشغَّل من proxy.ts                                          |
@@ -778,8 +778,7 @@ apps/web/
         feedback/
       lib/
         api.ts
-        refreshSession.ts
-        session.ts
+        clientIdentity.ts
         apiResult.ts
         parseSchema.ts
         queryClient.ts
@@ -825,7 +824,7 @@ apps/web/
 
 داخل Feature مجلدات actions/hooks/components/schemas/types/lib/store حسب الحاجة فقط. أسماء مفاتيح TanStack موحّدة في hooks/queryKeys.ts لكل ميزة تملك طلبات: auth/trips/seats/bookings/tickets. تستخدمها Hooks والتهيئة والتحديث والإبطال؛ مفاتيح البيانات الخاصة تتضمن هوية المستخدم واللغة ومعرّف المورد. لا ملف Query Keys لميزة لا تملك طلبات خاصة بها.
 
-القراءة الأولية التي تستخدمها صفحة واحدة تبقى داخل صفحة Server Component عبر apiFetch. تبقى ملفات lib/*.server.ts عندما تُشارك قراءة فعلية بين أكثر من صفحة أو Action، مثل تجميع كتالوج المدن/المحطات وتفاصيل الحجز. لا HTTP client ثانٍ ولا Route Handler عام. إعداد retry: false موحد في queryClient.ts، وstaleTime الخاص بالميزة قريب من hook.
+القراءة الأولية التي تستخدمها صفحة واحدة تبقى داخل صفحة Server Component عبر readApi دون كتابة cookies. تبقى ملفات lib/*.server.ts عندما تُشارك قراءة فعلية بين أكثر من صفحة أو Action، مثل تجميع كتالوج المدن/المحطات وتفاصيل الحجز. لا HTTP client ثانٍ ولا Route Handler عام. إعداد retry: false موحد في queryClient.ts، وstaleTime الخاص بالميزة قريب من hook.
 
 مكوّنات المشروع PascalCase، والـHooks تبدأ بـuse. مكوّنات shadcn تحت ui تحتفظ بأسماء ملفات CLI مثل `button.tsx`.
 
@@ -833,46 +832,38 @@ apps/web/
 
 ## 5. مسؤوليات ملفات الاتصال والجلسة
 
-### api.ts — server-only
+### shared/lib/api.ts — نقل HTTP فقط
 
-- نقطة الدخول المركزية `apiFetch(path, options)` لكل طلب عادي من Action إلى Express.
-- عنوان Backend ثابت من البيئة، وليس من مدخل المستخدم.
-- method وbody وlocale وheaders الإضافية الضرورية مثل Idempotency-Key.
-- Headers والتوكن وJSON وtimeout و`no-store` ورفض redirects.
-- قراءة رد Backend والتحقق من شكله وتحويله إلى ApiResult.
-- تنسيق طلبات login/refresh/logout الخاصة دون كشف التوكنات أو إعادة تنفيذ منطقها في Features.
-- يقرأ الجلسة الحالية ويضيف Bearer إذا وجد Access Token؛ لا خيار auth في الاستدعاء.
-- لا يثق في Authorization/Cookie عشوائيين من المتصفح.
-- لا TanStack ولا JSX ولا toast ولا قواعد أسعار ومقاعد داخل هذا الملف.
+- `requestApi` ينفذ fetch واحدًا إلى API_BASE_URL الثابت، مع JSON واللغة وtimeout/AbortSignal وno-store ورفض redirects والتحقق من envelope.
+- يقبل credentials صراحة من مستدعٍ server-only، ويحذف Authorization/Cookie وبيانات الهوية العشوائية من headers الإضافية. يحافظ على Idempotency-Key وRetry-After وrequestId الآمن وCSRF وتوقيع الهوية عبر clientIdentity.
+- يعيد `{ result, headers }` للسيرفر فقط لاستخراج cookies في login/refresh. `apiFetch` يعيد result وحده للطلبات المعتادة؛ ليست هناك دالة fetch ثانية.
+- لا يقرأ cookies، ولا يصنّف endpoints، ولا يستدعي نفسه للتحقق، ولا يجدد الجلسة أو يعيد إرسال الطلب.
+
+### features/auth/lib/auth.server.ts — الجلسة
+
+دُمجت فيه session.ts وrefreshSession.ts، وحُذف الملفان من shared/lib. يستورد api.ts مباشرة؛ عميل HTTP لا يستورد ميزة Auth.
+
+| الدالة | الاستخدام |
+| --- | --- |
+| readApi | قراءة SSR أو endpoint عام مع access المتاح؛ دون تجديد أو كتابة cookies |
+| authenticatedFetch | Actions وRoute Handler المحمية؛ GET يجدد مرة عند 401/UNAUTHENTICATED، والكتابة تتحقق عبر auth/me قبل إرسال mutation مرة واحدة |
+| readWithSession | نفس سياسة GET للجلسة الصريحة داخل proxy؛ يعيد النتيجة والتوكنات المطلوب حفظها أو null للحذف |
+| sessionTokens / updateAuthCookies | استخراج بيانات login/refresh والتحقق منها، ثم حفظ أو حذف cookies داخل Action/Handler |
+| readAuthCookies / saveAuthCookies / clearAuthCookies | أسماء cookies وخيارات HttpOnly/Secure/Lax/Path؛ proxy يكتب إلى NextResponse ويمرر التجديد لنفس render |
+| getCurrentUser / requireCurrentUser | قراءة المستخدم الآمنة مع React cache داخل الطلب فقط |
+
+فشل الشبكة أو 403 أو 5xx لا يطلق تجديدًا ولا يمسح الجلسة. إذا نجح التجديد وفشل GET التالي مؤقتًا، تُحفظ cookies الجديدة. كتابة مجهولة النتيجة لا تتكرر تلقائيًا. يجمع Map المحلي refresh المتزامن، ويظل تنسيق Express عبر قفل PostgreSQL واسترجاع successor خلال 30 ثانية كما هو؛ الطلبات المتأخرة خارج النافذة تظل مرفوضة وفق السياسة الحالية.
+
+### features/auth/actions/auth.actions.ts — نتائج العمليات صريحة
+
+الدخول: validate → requestApi('auth/login') → sessionTokens → updateAuthCookies → user فقط. الخروج الحالي يرسل refresh إلى الإبطال؛ الخروج من الجميع يمر عبر authenticatedFetch. النجاح المؤكد في الخروج أو reset-password يمسح cookies؛ بقية عمليات التسجيل والتحقق والاستعادة تستخدم submit الصغير المشترك للتحقق والإرسال.
 
 ```ts
-apiFetch('cities');
-apiFetch('bookings', { method: 'POST', body: data });
+// داخل Server Component: قراءة فقط.
+const booking = await readApi<Booking>('bookings/' + id);
+// داخل Action بعد التحقق من المدخلات: تحقق/تجديد ثم كتابة واحدة.
+return authenticatedFetch<Booking>('bookings', { method: 'POST', body: data });
 ```
-
-هذه أمثلة للعقد المقترح، وليست تنفيذًا مكتملًا. اللغة تُستخرج أو تُمرر بحسب سياق الطلب، دون تكرار الإعداد داخل كل Feature.
-
-لا واجهة `apiMutation` إلزامية إضافية للميزات. المساعدات الداخلية الصغيرة مسموحة لتوضيح النقل والجلسة، وليست عملاء HTTP مستقلين.
-
-### refreshSession.ts — server-only
-
-- مسؤولية تجديد الجلسة مستقلة عن إعدادات الطلبات العامة.
-- التحقق من Refresh Token، وتنفيذ عملية auth/refresh، واستخراج التوكنات الجديدة والتحقق منها.
-- Map لدمج الطلبات المتزامنة للتوكن نفسه داخل runtime واحد، وحذف المدخل في finally.
-- إعادة نتيجة آمنة للمستخدم مع التوكنات كقيمة داخلية للسيرفر فقط؛ apiFetch يحفظها قبل إرجاع ApiResult للعميل.
-- يستخدم نقل HTTP الممرر من api.ts للحفاظ على إعدادات العنوان والـHeaders والمهلة وno-store في مكان واحد. لا fetch ثانٍ أو import دائري أو Cookie writes داخل هذا المساعد.
-- فشل عابر لا ينهي الجلسة؛ 401 المؤكد يؤدي إلى حذف Cookies لدى المستدعي. تنسيق عدة runtimes والطلبات المتأخرة ما زال غير محلول.
-
-### session.ts — server-only
-
-- أنواع بيانات الجلسة والتوكنات، وأسماء Cookies وخياراتها.
-- قراءة Cookies الطلب الحالي، حفظ التوكنات الجديدة، وحذف Cookies عند انتهاء الجلسة المؤكد.
-- استخراج التوكنات والتحقق من شكلها في رد Backend الخاص بالمصادقة.
-- أدوات الكتابة تعمل مع السياق الصحيح: Cookie store للـActions، وresponse للـProxy/Handler.
-- HttpOnly، وSecure في الإنتاج، وSameSite=Lax، وPath=/، مع أسماء الإنتاج المناسبة.
-- لا fetch ولا استيراد api.ts ولا كاش مستخدم مشترك.
-
-الاتجاه دون اعتماد دائري: api.ts يستدعي refreshSession.ts وsession.ts؛ وrefreshSession.ts يستخدم session.ts وapiResult.ts، ولا يستورد api.ts. يحفظ session.ts الـCookies فقط؛ تنسيق التجديد في refreshSession.ts عبر النقل المركزي الممرر من api.ts.
 
 ### apiResult.ts — مشترك للسيرفر والمتصفح
 
@@ -880,7 +871,7 @@ apiFetch('bookings', { method: 'POST', body: data });
 - `ApiError` موحد للواجهة.
 - مساعد `invokeAction` يحول نتيجة Action الفاشلة إلى خطأ يفهمه TanStack ويعيد البيانات عند النجاح.
 - يعالج تعذر الوصول إلى Action دون إعادة إرسال العملية تلقائيًا.
-- لا أسرار أو Cookie APIs أو استيرادات server-only.
+- لا أسرار أو Cookie APIs أو استيرادات server-only أو window events. يعالج AppProviders انتهاء الجلسة عبر QueryCache/MutationCache، ويفرغ resetAuthCache بيانات الحساب قبل router.refresh.
 - التفرع البرمجي حسب code، والعرض حسب message المترجمة؛ requestId للأخطاء غير المتوقعة.
 
 ### parseSchema.ts — server-only
@@ -898,7 +889,8 @@ apiFetch('bookings', { method: 'POST', body: data });
 Component/Form
   → Feature hook: useQuery أو useMutation
   → Feature Server Action
-  → apiFetch
+  → auth.server: authenticatedFetch للعمليات المحمية
+  → api.ts: apiFetch / requestApi
   → Express
   → ApiResult
   → invokeAction
@@ -1237,3 +1229,12 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - selectedIds وtoggle/reset داخل useSeatBooking باستخدام useState وتحديث وظيفي. يُستعاد فقط المقعد الموجود والمتاح من returnTo، وتبقى حالة النموذج وأسماء الركاب عند تغيير الاختيار؛ فشل الحجز لا يمسح الاختيارات، ونجاحه يمسحها. Backend يظل مسؤولًا عن التوافر والحجز الفعلي.
 - التوزيع المعتمد: TanStack لبيانات API والمستخدم، وRHF للنماذج، وuseState للحالة المحلية، وURL للبحث والفلاتر ورقم الصفحة. لا تعديل في Backend أو Refresh أو تدفق الدفع، ولا تغيير في اتفاق Server Actions خلال هذه الدفعة.
 - التحقق: نجحت فحوص ESLint وTypeScript وبناء الإنتاج و6 فحوص معزولة للكاش. غطت معاينة بواجهة خلفية وهمية اختيار المقاعد وحفظ اسم الراكب وتسجيل الدخول والعودة للحجز وصفحة الحساب وإعادة تحميلها والخروج، دون أخطاء JavaScript أو اتصال بقاعدة البيانات أو Paymob؛ لم تضاف ملفات اختبارات للمستودع.
+
+### تبسيط API/Auth — 2026-10-22
+
+- نُفذت خطة تقليل الطبقات: HTTP في api.ts، وإدارة الجلسة في auth.server.ts، ونتائج العمليات في Actions. حُذف session.ts وrefreshSession.ts وتصنيف endpoints داخل النقل وخيارات context/onSession وتمرير HTTP callback إلى refresh.
+- حذف cookies يحدد Max-Age=0 وExpires في الماضي معًا؛ هذا يمنع إعادة إنشاء cookies فارغة عند نسخ Next للـproxy cookies إلى رد Server Action.
+- انتهت سلسلة window event/listener؛ QueryCache وMutationCache يعالجان UNAUTHENTICATED مركزيًا. المصالحة الصريحة للدفع تستخدم useMutation، ويبقى polling GET قراءة فقط مع حماية ترتيب النتائج.
+- تظل TanStack وServer Actions للقراءات التفاعلية، وlive backend role checks داخل proxy، وSSR read-only، وHttpOnly، وملكية الحجز، وidempotency، وعدم إعادة الكتابة غير المؤكدة. قواعد Express والتجديد عبر PostgreSQL لم تتغير.
+- التحقق: 38 فحصًا معزولًا للسيرفر والـActions والـproxy والـRoute Handler، و8 للكاش، و15 فحصًا في Chromium على بناء الإنتاج مع API محاكي. تشمل الدخول والتسجيل والتحقق والاستعادة والخروج من جهاز/جميع الأجهزة، وعودة cookies المجددة مع next-intl، و503 بعد التجديد، والتزامن، وتغيير الحساب دون بيانات قديمة، وتجديد GET الدفع دون كشف checkout URL. لا DB أو بريد أو Paymob حقيقي ولا ملفات اختبارات جديدة في Git.
+- نجح TypeScript وESLint وبناء الإنتاج داخل Node 24 Docker. فحص التنسيق العام له ملاحظات سابقة في المستودع؛ تُراجع منفصلة عن سلوك المصادقة. لا push دون موافقة صريحة.

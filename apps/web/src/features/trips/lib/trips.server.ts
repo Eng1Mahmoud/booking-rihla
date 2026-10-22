@@ -1,18 +1,14 @@
 import 'server-only';
-import { apiFetch } from '@/shared/lib/api';
+import { readApi } from '@/features/auth/lib/auth.server';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import type { Trip, City, Station, TripCatalog } from '../types/trip';
 import type { Search } from '../schemas/searchSchema';
 
-async function listCatalog<T>(
-  path: string,
-  context?: 'action',
-): Promise<ApiResult<T[]>> {
+async function listCatalog<T>(path: string): Promise<ApiResult<T[]>> {
   const items: T[] = [];
   for (let offset = 0; offset <= 100000; offset += 100) {
-    const page = await apiFetch<{ items: T[] }>(
+    const page = await readApi<{ items: T[] }>(
       path + '?limit=100&offset=' + offset,
-      { context },
     );
     if (!page.success || !page.data) return { ...page, data: undefined };
     items.push(...page.data.items);
@@ -25,19 +21,17 @@ async function listCatalog<T>(
     message: 'Catalog pagination limit reached',
   };
 }
-export async function getTripCatalog(
-  context?: 'action',
-): Promise<ApiResult<TripCatalog>> {
+export async function getTripCatalog(): Promise<ApiResult<TripCatalog>> {
   const [cities, stations] = await Promise.all([
-    listCatalog<City>('cities', context),
-    listCatalog<Station>('stations', context),
+    listCatalog<City>('cities'),
+    listCatalog<Station>('stations'),
   ]);
   if (!cities.success || !cities.data) return { ...cities, data: undefined };
   if (!stations.success || !stations.data)
     return { ...stations, data: undefined };
   return { ...cities, data: { cities: cities.data, stations: stations.data } };
 }
-export function getTrips(search: Search, context?: 'action') {
+export function getTrips(search: Search) {
   const query = new URLSearchParams({
     travelDate: search.travelDate,
     limit: '21',
@@ -50,5 +44,5 @@ export function getTrips(search: Search, context?: 'action') {
     'destinationStationId',
   ] as const)
     if (search[key]) query.set(key, search[key]);
-  return apiFetch<{ items: Trip[] }>('trips/search?' + query, { context });
+  return readApi<{ items: Trip[] }>('trips/search?' + query);
 }

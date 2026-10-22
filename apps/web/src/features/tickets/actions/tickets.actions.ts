@@ -1,6 +1,6 @@
 'use server';
 import { z } from 'zod';
-import { apiFetch } from '@/shared/lib/api';
+import { authenticatedFetch } from '@/features/auth/lib/auth.server';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import type { Ticket, TicketViewData } from '../types/ticket';
@@ -9,9 +9,9 @@ export async function getTicketAction(
 ): Promise<ApiResult<TicketViewData>> {
   const parsed = await parseSchema(z.uuid(), id);
   if (!parsed.success) return parsed.error;
-  const result = await apiFetch<Ticket>('bookings/' + parsed.data + '/ticket', {
-    context: 'action',
-  });
+  const result = await authenticatedFetch<Ticket>(
+    'bookings/' + parsed.data + '/ticket',
+  );
   if (!result.success || !result.data) return { ...result, data: undefined };
   const { qr, ...ticket } = result.data;
   return {

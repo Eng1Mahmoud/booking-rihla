@@ -1,12 +1,11 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { useLocale } from 'next-intl';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ApiError,
   invokeAction,
   unwrapApiResult,
-  SESSION_EXPIRED_EVENT,
 } from '@/shared/lib/apiResult';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { refreshPaymentAction } from '../actions/bookings.actions';
@@ -67,6 +66,24 @@ export function useBookingPayment(
   });
   // A fresh server snapshot wins over an older browser cache immediately.
   const data = query.dataUpdatedAt < initial.readAt ? initialState : query.data;
+  const { mutate: refreshPayment } = useMutation({
+    mutationFn: () =>
+      invokeAction(() => refreshPaymentAction(initial.booking.id)),
+    onSuccess: (payment) => {
+      client.setQueryData<PaymentState>(key, (current) => ({
+        payment:
+          current &&
+          Date.parse(current.payment.serverTime) >
+            Date.parse(payment.serverTime)
+            ? current.payment
+            : payment,
+        checkoutEnabled: current?.checkoutEnabled ?? data.checkoutEnabled,
+      }));
+    },
+    onError: () => {
+      void client.invalidateQueries({ queryKey: key });
+    },
+  });
   useEffect(() => {
     if (
       !afterCheckout ||
@@ -79,30 +96,15 @@ export function useBookingPayment(
     const id = initial.userId + ':' + initial.booking.id;
     if (checked.current === id) return;
     checked.current = id;
-    // One explicit reconciliation action on return; status polling itself never calls Paymob.
-    void invokeAction(() => refreshPaymentAction(initial.booking.id))
-      .then((payment) => {
-        client.setQueryData<PaymentState>(key, (current) => ({
-          payment:
-            current &&
-            Date.parse(current.payment.serverTime) >
-              Date.parse(payment.serverTime)
-              ? current.payment
-              : payment,
-          checkoutEnabled: current?.checkoutEnabled ?? data.checkoutEnabled,
-        }));
-      })
-      .catch(() => {
-        void client.invalidateQueries({ queryKey: key });
-      });
+    // One explicit reconciliation action on return; status polling never calls Paymob.
+    refreshPayment();
   }, [
     afterCheckout,
     user?.id,
     initial.userId,
     initial.booking.id,
-    client,
+    refreshPayment,
     data,
-    key,
   ]);
   return {
     ...query,
@@ -138,7 +140,5 @@ async function pollPayment(
   const result = await response.json().catch(() => null);
   if (!result || typeof result.success !== 'boolean')
     throw new ApiError(502, 'UPSTREAM_ERROR');
-  if (response.status === 401 && result.code === 'UNAUTHENTICATED')
-    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   return unwrapApiResult<PaymentState>({ ...result, status: response.status });
 }

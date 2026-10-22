@@ -2,12 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { paymentStatusInputSchema } from '@/features/bookings/schemas/bookingSchema';
 import { apiFetch } from '@/shared/lib/api';
-import {
-  readAuthCookies,
-  saveAuthCookies,
-  clearAuthCookies,
-  type AuthTokens,
-} from '@/shared/lib/session';
+import { authenticatedFetch } from '@/features/auth/lib/auth.server';
 import type { BookingPayment } from '@/features/bookings/types/booking';
 
 export const runtime = 'nodejs';
@@ -50,17 +45,12 @@ export async function GET(
     const { status, ...body } = parsed.error;
     return NextResponse.json(body, { status, headers });
   }
-  let renewed: AuthTokens | null | undefined;
-  const result = await apiFetch<BookingPayment>(
+  const result = await authenticatedFetch<BookingPayment>(
     'bookings/' + parsed.data.bookingId + '/payment',
     {
       locale,
-      session: readAuthCookies(request),
       requestHeaders: request.headers,
       signal: request.signal,
-      onSession: (tokens) => {
-        renewed = tokens;
-      },
     },
   );
   const { status, retryAfter, ...body } = result;
@@ -78,7 +68,5 @@ export async function GET(
   }
   const response = NextResponse.json({ ...body, data }, { status, headers });
   if (retryAfter) response.headers.set('Retry-After', retryAfter);
-  if (renewed === null) clearAuthCookies(response);
-  else if (renewed) saveAuthCookies(response, renewed);
   return response;
 }
