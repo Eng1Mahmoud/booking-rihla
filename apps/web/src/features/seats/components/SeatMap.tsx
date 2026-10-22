@@ -1,11 +1,12 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { Check, DoorOpen, Toilet } from 'lucide-react';
-import { useId } from 'react';
+import { useId, useRef, type KeyboardEvent } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { seatPosition } from '@/features/seats/lib/seatLayout';
 import type { Seat, SeatList } from '@/features/trips/types/trip';
 import { SeatIcon, SteeringWheel } from '@/features/seats/components/SeatIcon';
+
 export function SeatMap({
   seats,
   selectedIds,
@@ -28,7 +29,36 @@ export function SeatMap({
         Number.isInteger(seat.number) && seat.number >= 1 && seat.number <= 44,
     );
   const descriptionId = useId();
+  const mapLabelId = useId();
   const selected = new Set(selectedIds);
+  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  function focusSeat(id: string) {
+    buttonRefs.current.get(id)?.focus();
+  }
+
+  function onSeatKeyDown(event: KeyboardEvent<HTMLButtonElement>, seat: Seat) {
+    const step =
+      event.key === 'ArrowRight'
+        ? 1
+        : event.key === 'ArrowLeft'
+          ? -1
+          : event.key === 'ArrowDown'
+            ? 4
+            : event.key === 'ArrowUp'
+              ? -4
+              : 0;
+    if (!step) return;
+    event.preventDefault();
+    const targetNumber = seat.number + step;
+    const next = seats.find(
+      (item) =>
+        item.number === targetNumber &&
+        (item.isAvailable || selected.has(item.id)),
+    );
+    if (next) focusSeat(next.id);
+  }
+
   return (
     <>
       <div className="my-[22px] flex flex-wrap justify-center gap-[18px] text-xs text-muted-foreground md:mt-7 md:gap-6">
@@ -53,7 +83,13 @@ export function SeatMap({
             : 'my-6',
         )}
         dir="ltr"
+        role="group"
+        aria-labelledby={mapLabelId}
+        aria-describedby={descriptionId}
       >
+        <span id={mapLabelId} className="sr-only">
+          {t('title')}
+        </span>
         {physical && (
           <div className="relative mb-5 flex h-[110px] items-start justify-between gap-2.5 rounded-t-[28px] border-t-4 border-[#dce8ef] px-[3px] pt-2">
             <div className="flex w-full items-start justify-between">
@@ -110,10 +146,14 @@ export function SeatMap({
               <button
                 key={seat.id}
                 type="button"
-                // The seat number determines its physical row/column in both languages.
+                ref={(node) => {
+                  if (node) buttonRefs.current.set(seat.id, node);
+                  else buttonRefs.current.delete(seat.id);
+                }}
                 style={position}
                 className={cn(
                   'relative flex h-[61px] min-w-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[9px] border transition-colors duration-150 md:h-16',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                   isSelected
                     ? 'border-primary bg-primary text-white shadow-[0_2px_0_#045d88]'
                     : seat.isAvailable
@@ -122,7 +162,6 @@ export function SeatMap({
                 )}
                 disabled={!seat.isAvailable}
                 aria-pressed={isSelected}
-                aria-describedby={descriptionId}
                 aria-label={
                   t('seatLabel', {
                     number: seat.number,
@@ -137,6 +176,7 @@ export function SeatMap({
                     : '')
                 }
                 onClick={() => onToggle(seat.id)}
+                onKeyDown={(event) => onSeatKeyDown(event, seat)}
               >
                 <SeatIcon className="size-[30px] md:size-[33px]" />
                 <span
