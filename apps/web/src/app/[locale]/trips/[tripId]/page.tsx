@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import { ApiError } from '@/shared/lib/apiResult';
-import { readApi } from '@/features/auth/lib/auth.server';
+import { fetchWithAccessToken } from '@/features/auth/lib/auth.server';
 import { unwrapApiResult } from '@/shared/lib/apiResult';
 import type { Trip, SeatList } from '@/features/trips/types/trip';
 import { TripDetails } from '@/features/trips/components/TripDetails';
@@ -24,8 +24,12 @@ export default async function TripPage({
   let data;
   try {
     data = await Promise.all([
-      readApi<Trip>('trips/' + tripId + '/details').then(unwrapApiResult),
-      readApi<SeatList>('trips/' + tripId + '/seats').then(unwrapApiResult),
+      fetchWithAccessToken<Trip>('trips/' + tripId + '/details').then(
+        unwrapApiResult,
+      ),
+      fetchWithAccessToken<SeatList>('trips/' + tripId + '/seats').then(
+        unwrapApiResult,
+      ),
     ]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
