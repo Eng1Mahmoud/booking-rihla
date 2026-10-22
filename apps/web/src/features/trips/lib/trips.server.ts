@@ -1,5 +1,5 @@
 import 'server-only';
-import { readApi } from '@/features/auth/lib/auth.server';
+import { fetchWithAccessToken } from '@/features/auth/lib/auth.server';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import type { Trip, City, Station, TripCatalog } from '../types/trip';
 import type { Search } from '../schemas/searchSchema';
@@ -7,7 +7,7 @@ import type { Search } from '../schemas/searchSchema';
 async function listCatalog<T>(path: string): Promise<ApiResult<T[]>> {
   const items: T[] = [];
   for (let offset = 0; offset <= 100000; offset += 100) {
-    const page = await readApi<{ items: T[] }>(
+    const page = await fetchWithAccessToken<{ items: T[] }>(
       path + '?limit=100&offset=' + offset,
     );
     if (!page.success || !page.data) return { ...page, data: undefined };
@@ -44,5 +44,5 @@ export function getTrips(search: Search) {
     'destinationStationId',
   ] as const)
     if (search[key]) query.set(key, search[key]);
-  return readApi<{ items: Trip[] }>('trips/search?' + query);
+  return fetchWithAccessToken<{ items: Trip[] }>('trips/search?' + query);
 }
