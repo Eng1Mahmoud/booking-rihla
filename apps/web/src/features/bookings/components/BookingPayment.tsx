@@ -1,9 +1,15 @@
 'use client';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Clock, CheckCircle2 } from 'lucide-react';
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  LoaderCircle,
+} from 'lucide-react';
 import type { BookingDetails } from '../types/booking';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { useCheckout } from '../hooks/useBookings';
@@ -13,6 +19,35 @@ import { Link } from '@/i18n/navigation';
 import { paymentOutcome } from '@/features/bookings/lib/paymentState';
 import { PaymentStatus } from '@/features/bookings/components/PaymentStatus';
 import { PaymentChecking } from '@/features/bookings/components/PaymentChecking';
+
+function OutcomeIcon({ outcome }: { outcome: string }) {
+  if (outcome === 'paid') return <CheckCircle2 size={21} />;
+  if (outcome === 'processing')
+    return (
+      <LoaderCircle
+        size={21}
+        className="animate-spin motion-reduce:animate-none"
+      />
+    );
+  if (['failed', 'expired', 'cancelled'].includes(outcome))
+    return <XCircle size={21} />;
+  if (['review', 'refundRequired'].includes(outcome))
+    return <AlertTriangle size={21} />;
+  return <Clock size={21} />;
+}
+
+const outcomeTone: Record<string, string> = {
+  paid: 'text-emerald-700',
+  processing: 'text-sky-700',
+  waiting: 'text-amber-800',
+  failed: 'text-destructive',
+  expired: 'text-destructive',
+  cancelled: 'text-destructive',
+  review: 'text-amber-800',
+  refundRequired: 'text-amber-800',
+  refunded: 'text-muted-foreground',
+};
+
 export function BookingPayment({
   initial,
   afterCheckout = false,
@@ -27,14 +62,17 @@ export function BookingPayment({
   const bookingId = initial.booking.id;
   const [now, setNow] = useState(initial.readAt);
   const [error, setError] = useState('');
+  const expiredRefresh = useRef(false);
   const query = useBookingPayment(initial, afterCheckout);
   const checkout = useCheckout();
   const busy = checkout.isPending;
+
   useEffect(() => {
     if (afterCheckout) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [afterCheckout]);
+
   if (query.isError)
     return (
       <div
@@ -53,6 +91,7 @@ export function BookingPayment({
         </Button>
       </div>
     );
+
   const booking = initial.booking;
   const { payment, checkoutEnabled } = query.data;
   const seconds = payment.expiresAt
@@ -67,16 +106,28 @@ export function BookingPayment({
       )
     : 0;
   const outcome = paymentOutcome(payment);
-  // A return from checkout never offers another charge while verification is pending.
+
+  // When the local hold timer hits zero, refresh once for server expiry state.
+  useEffect(() => {
+    if (afterCheckout || seconds > 0 || !payment.expiresAt) return;
+    if (expiredRefresh.current) return;
+    if (['paid', 'expired', 'cancelled', 'refunded'].includes(outcome)) return;
+    expiredRefresh.current = true;
+    void query.refetch();
+  }, [afterCheckout, seconds, payment.expiresAt, outcome, query]);
+
+  // Return from Paymob: keep a focused checking screen while unresolved.
   if (afterCheckout && ['waiting', 'processing'].includes(outcome)) {
     return (
       <PaymentChecking
         reference={booking.reference}
+        mode={outcome === 'waiting' ? 'waiting' : 'processing'}
         onRefresh={() => void query.refetch()}
         refreshing={query.isFetching}
       />
     );
   }
+
   const canPay =
     !afterCheckout &&
     checkoutEnabled &&
@@ -85,6 +136,7 @@ export function BookingPayment({
     ['NOT_STARTED', 'PREPARED', 'AWAITING_PAYMENT'].includes(
       payment.paymentStatus,
     );
+
   async function pay() {
     if (!canPay || busy) return;
     setError('');
@@ -106,21 +158,18 @@ export function BookingPayment({
       await query.refetch();
     }
   }
+
   return (
     <div className="grid gap-[18px] md:grid-cols-[minmax(0,1fr)_310px] md:gap-6 min-[1001px]:grid-cols-[minmax(0,1fr)_340px]">
       {children}
-      <aside className="rounded-2xl border bg-card h-fit min-w-0 p-6">
+      <aside className="h-fit min-w-0 rounded-2xl border bg-card p-6">
         <div
           className={cn(
             'flex items-center gap-2.5 text-sm',
-            outcome === 'paid' ? 'text-emerald-700' : 'text-amber-800',
+            outcomeTone[outcome] ?? 'text-amber-800',
           )}
         >
-          {outcome === 'paid' ? (
-            <CheckCircle2 size={21} />
-          ) : (
-            <Clock size={21} />
-          )}
+          <OutcomeIcon outcome={outcome} />
           <strong>{t('statuses.' + payment.bookingStatus)}</strong>
         </div>
         <div className="mt-3 flex items-center justify-between gap-5 border-t py-[18px] text-sm">
@@ -129,26 +178,29 @@ export function BookingPayment({
             {formatPrice(booking.totalPiastres, locale)}
           </strong>
         </div>
-        {!afterCheckout && booking.paymentRequired && seconds > 0 && (
-          <div
-            className="mb-4 flex items-center gap-2.5 rounded-lg bg-accent p-3 text-xs text-primary"
-            role="timer"
-          >
-            <Clock size={20} />
-            <span>{t('remaining')}</span>
-            <bdi className="ms-auto text-[21px] font-semibold">
-              {String(Math.floor(seconds / 60)).padStart(2, '0')}:
-              {String(seconds % 60).padStart(2, '0')}
-            </bdi>
-          </div>
-        )}
-        <p className="text-muted-foreground text-sm leading-7 mb-4">
+        {!afterCheckout &&
+          booking.paymentRequired &&
+          seconds > 0 &&
+          outcome === 'waiting' && (
+            <div
+              className="mb-4 flex items-center gap-2.5 rounded-lg bg-accent p-3 text-xs text-primary"
+              role="timer"
+            >
+              <Clock size={20} />
+              <span>{t('remaining')}</span>
+              <bdi className="ms-auto text-[21px] font-semibold">
+                {String(Math.floor(seconds / 60)).padStart(2, '0')}:
+                {String(seconds % 60).padStart(2, '0')}
+              </bdi>
+            </div>
+          )}
+        <p className="mb-4 text-sm leading-7 text-muted-foreground">
           {t('paymentState')} {t('paymentStatuses.' + payment.paymentStatus)}
         </p>
         <PaymentStatus payment={payment} />
         {error && (
           <p
-            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950 mb-4"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
             role="alert"
           >
             {error}
@@ -172,7 +224,10 @@ export function BookingPayment({
         ) : outcome === 'waiting' &&
           booking.paymentRequired &&
           seconds === 0 ? (
-          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950">
+          <p
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+            role="status"
+          >
             {t('expired')}
           </p>
         ) : outcome === 'waiting' &&
@@ -187,7 +242,7 @@ export function BookingPayment({
         ) : null}
         <Button
           variant="link"
-          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal w-full mt-4"
+          className="mt-4 h-auto min-h-11 w-full px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
           type="button"
           onClick={() => {
             void query.refetch();
@@ -197,7 +252,7 @@ export function BookingPayment({
           {t('refresh')}
         </Button>
         <Button
-          className="h-auto min-h-11 px-0 py-2 text-primary underline underline-offset-4 whitespace-normal w-full mt-3"
+          className="mt-3 h-auto min-h-11 w-full px-0 py-2 text-primary underline underline-offset-4 whitespace-normal"
           asChild
           variant="link"
         >
