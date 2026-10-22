@@ -1,17 +1,14 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { UserRound, LogOut } from 'lucide-react';
-import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 export function AccountMenu() {
   const { user, status, reloadSession } = useAuth();
   const logout = useLogout();
-  const pathname = usePathname();
-  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('Auth');
   const [error, setError] = useState('');
@@ -60,22 +57,9 @@ export function AccountMenu() {
         </Button>
       ) : (
         <Link
-          href={
-            '/login?returnTo=' + encodeURIComponent(safeReturnPath(pathname))
-          }
+          href="/login"
           className="flex min-h-11 items-center gap-2 rounded-full border border-primary/15 bg-secondary/60 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary"
           aria-label={t('login')}
-          onClick={(event) => {
-            event.preventDefault();
-            const destination =
-              pathname === '/login'
-                ? new URLSearchParams(window.location.search).get('returnTo')
-                : pathname + window.location.search + window.location.hash;
-            router.push(
-              '/login?returnTo=' +
-                encodeURIComponent(safeReturnPath(destination)),
-            );
-          }}
         >
           <UserRound size={18} />
           <span className="hidden sm:inline">{t('login')}</span>
