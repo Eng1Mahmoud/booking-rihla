@@ -2,86 +2,112 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
   authCookies,
-  readAuthCookies,
-  saveAuthCookies,
-  clearAuthCookies,
+  readSessionCookies,
+  writeSessionCookies,
+  clearSessionCookies,
   type AuthTokens,
-  readWithSession,
+  fetchWithSessionRefresh,
 } from '@/features/auth/lib/auth.server';
 import type { AuthUser } from '@/features/auth/types/auth';
-import { protectedRoute, routeInfo } from './roleRoutes';
+import { matchProtectedPath, parsePathLocale } from './roleRoutes';
 
+function redirectToLoginPage(request: NextRequest, locale: string) {
+  const redirect = NextResponse.redirect(
+    new URL('/' + locale + '/login', request.url),
+  );
+  redirect.headers.set('Cache-Control', 'private, no-store');
+  clearSessionCookies(redirect);
+  return redirect;
+}
+
+function clearInvalidSessionOnPublicPage(request: NextRequest) {
+  request.cookies.delete(authCookies.access);
+  request.cookies.delete(authCookies.refresh);
+  const next = NextResponse.next({ request: { headers: request.headers } });
+  clearSessionCookies(next);
+  return next;
+}
+
+function sessionUnavailableResponse(
+  locale: string,
+  renewed?: AuthTokens,
+) {
+  const response = new NextResponse(
+    locale === 'ar'
+      ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
+      : 'Could not verify your session right now. Please try again.',
+    {
+      status: 503,
+      headers: { 'Cache-Control': 'private, no-store', 'Retry-After': '5' },
+    },
+  );
+  if (renewed) writeSessionCookies(response, renewed);
+  return response;
+}
+
+function redirectToForbiddenPage(
+  request: NextRequest,
+  locale: string,
+  renewed?: AuthTokens,
+) {
+  const forbidden = NextResponse.redirect(
+    new URL('/' + locale + '/forbidden', request.url),
+  );
+  forbidden.headers.set('Cache-Control', 'private, no-store');
+  if (renewed) writeSessionCookies(forbidden, renewed);
+  return forbidden;
+}
+
+/**
+ * Edge guard: renew session cookies when needed and block protected paths.
+ * RSC pages may still call getSignedInUser as a second check.
+ */
 export async function authMiddleware(
   request: NextRequest,
   response: NextResponse | null,
 ): Promise<NextResponse | null> {
-  const { locale, path } = routeInfo(request.nextUrl.pathname);
-  const rule = protectedRoute(path);
-  const session = readAuthCookies(request);
+  const { locale, path } = parsePathLocale(request.nextUrl.pathname);
+  const rule = matchProtectedPath(path);
+  const session = readSessionCookies(request);
   let renewed: AuthTokens | undefined;
-  const toLogin = () => {
-    if (!rule) {
-      // Public pages remain public, but an invalid session must not reach the render cache.
-      request.cookies.delete(authCookies.access);
-      request.cookies.delete(authCookies.refresh);
-      const next = NextResponse.next({ request: { headers: request.headers } });
-      clearAuthCookies(next);
-      return next;
-    }
-    const login = new URL('/' + locale + '/login', request.url);
-    login.searchParams.set('returnTo', path + request.nextUrl.search);
-    const redirect = NextResponse.redirect(login);
-    redirect.headers.set('Cache-Control', 'private, no-store');
-    clearAuthCookies(redirect);
-    return redirect;
-  };
-  const unavailable = () => {
-    const unavailableResponse = new NextResponse(
-      locale === 'ar'
-        ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
-        : 'Could not verify your session right now. Please try again.',
-      {
-        status: 503,
-        headers: { 'Cache-Control': 'private, no-store', 'Retry-After': '5' },
-      },
-    );
-    // Rotation may have succeeded before the next backend read failed. Keep the new pair.
-    if (renewed) saveAuthCookies(unavailableResponse, renewed);
-    return unavailableResponse;
-  };
-  if (!session.access && !session.refresh) return rule ? toLogin() : response;
+
+  if (!session.access && !session.refresh) {
+    return rule ? redirectToLoginPage(request, locale) : response;
+  }
+
   try {
-    // Express verifies the token, live session and current database role.
-    const read = await readWithSession<AuthUser>('auth/me', session, {
+    const read = await fetchWithSessionRefresh<AuthUser>('auth/me', session, {
       locale,
       requestHeaders: request.headers,
     });
     const { result } = read;
     renewed = read.tokens ?? undefined;
-    if (result.status === 401) return toLogin();
-    if (!result.success) return unavailable();
+
+    if (result.status === 401) {
+      return rule
+        ? redirectToLoginPage(request, locale)
+        : clearInvalidSessionOnPublicPage(request);
+    }
+    if (!result.success) return sessionUnavailableResponse(locale, renewed);
+
     const role = z
       .enum(['USER', 'ADMIN', 'SUPER_ADMIN'])
       .safeParse(result.data?.role);
-    if (!role.success) return unavailable();
+    if (!role.success) return sessionUnavailableResponse(locale, renewed);
+
     if (rule && !rule.roles.includes(role.data)) {
-      const forbidden = NextResponse.redirect(
-        new URL('/' + locale + '/forbidden', request.url),
-      );
-      forbidden.headers.set('Cache-Control', 'private, no-store');
-      if (renewed) saveAuthCookies(forbidden, renewed);
-      return forbidden;
+      return redirectToForbiddenPage(request, locale, renewed);
     }
+
     if (!renewed) return response;
-    // Forward the renewed Cookie header to this render, not just the next navigation.
+
     request.cookies.set(authCookies.access, renewed.accessToken);
     request.cookies.set(authCookies.refresh, renewed.refreshToken);
     const next = NextResponse.next({ request: { headers: request.headers } });
-    saveAuthCookies(next, renewed);
+    writeSessionCookies(next, renewed);
     return next;
   } catch {
-    // A failed check must not allow a protected page through or expose exception details.
     console.error(JSON.stringify({ event: 'web_session_verification_failed' }));
-    return unavailable();
+    return sessionUnavailableResponse(locale, renewed);
   }
 }
