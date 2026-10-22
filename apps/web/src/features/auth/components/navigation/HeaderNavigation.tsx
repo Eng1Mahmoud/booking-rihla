@@ -20,7 +20,6 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { safeReturnPath } from '@/features/auth/lib/safeReturnPath';
 import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
 
 export function HeaderNavigation() {
@@ -30,7 +29,6 @@ export function HeaderNavigation() {
   const { status } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [returnTo, setReturnTo] = useState('/');
   const links = [
     { href: '/', label: 'search', Icon: Search },
     { href: '/stations', label: 'stations', Icon: MapPin },
@@ -58,16 +56,6 @@ export function HeaderNavigation() {
     return () => desktop.removeEventListener('change', closeOnDesktop);
   }, [open]);
 
-  function changeOpen(next: boolean) {
-    if (next)
-      setReturnTo(
-        safeReturnPath(
-          pathname + window.location.search + window.location.hash,
-        ),
-      );
-    setOpen(next);
-  }
-
   return (
     <>
       <nav
@@ -88,7 +76,7 @@ export function HeaderNavigation() {
           </Link>
         ))}
       </nav>
-      <Dialog.Root open={open} onOpenChange={changeOpen}>
+      <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger asChild>
           <Button
             type="button"
@@ -179,9 +167,7 @@ export function HeaderNavigation() {
               {status === 'guest' && (
                 <Dialog.Close asChild>
                   <Button asChild size="lg" className="w-full">
-                    <Link
-                      href={'/login?returnTo=' + encodeURIComponent(returnTo)}
-                    >
+                    <Link href="/login">
                       <LogIn size={18} aria-hidden="true" />
                       {auth('login')}
                     </Link>
