@@ -1,4 +1,4 @@
-name: Backend CI
+name: Application CI
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   checks:
-    name: API quality
+    name: API and web quality
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -37,11 +37,21 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Lint API
+      - name: Lint API and web
         run: npm run lint
 
-      - name: Check TypeScript
+      - name: Check API TypeScript
         run: npm run typecheck
 
       - name: Build API
         run: npm run build
+
+      - name: Check web TypeScript
+        run: npm run typecheck:web
+
+      - name: Build web
+        run: npm run build:web
+        env:
+          API_BASE_URL: http://127.0.0.1:4000/api/v1
+          SITE_ORIGIN: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: '1'
