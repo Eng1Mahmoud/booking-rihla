@@ -1,3 +1,4 @@
+import { processMailBatch } from './mailDeliveryService.ts';
 import {
   sendDepartureReminderMail,
   type SendDepartureReminderMail,
@@ -49,27 +50,11 @@ export async function processDepartureReminders(
     ])
     .limit(20)
     .all();
-  const counts = { sent: 0, failed: 0, discarded: 0 };
-  for (const candidate of pending) {
-    const outcome = await db.transaction(async (tx) => {
-      // Same Ticket lock as ticket delivery. Re-read after waiting for another worker.
-      await tx.execute(
-        db.raw
-          .sql`SELECT "id" FROM "public"."Ticket" WHERE "id" = ${candidate.id} FOR UPDATE`
-          .affectedCount()
-          .build(),
-      );
-      const message = await tx.orm.public.Ticket.where({
-        id: candidate.id,
-      }).first();
-      const current = clock();
-      if (
-        !message ||
-        message.reminderSentAt ||
-        message.reminderDiscardedAt ||
-        Date.parse(message.reminderNextAttemptAt) > current
-      )
-        return null;
+  return processMailBatch(
+    db,
+    pending,
+    'reminder',
+    async ({ tx, message, exhausted, current }) => {
       const booking = await ticketRecords(tx)
         .where({ id: message.bookingId })
         .first();
@@ -81,7 +66,7 @@ export async function processDepartureReminders(
         ? departureReminderState(
             ticket.issuedAt,
             ticket.trip.departureAt,
-            current,
+            current!,
           )
         : 'SKIP';
       if (state === 'WAITING') return null;
@@ -89,36 +74,15 @@ export async function processDepartureReminders(
         !ticket ||
         !user?.isActive ||
         !user.emailVerifiedAt ||
-        message.reminderAttempts >= 5 ||
+        exhausted ||
         state === 'SKIP'
       ) {
-        await tx.orm.public.Ticket.where({ id: message.id }).update({
-          reminderDiscardedAt: new Date(current).toISOString(),
-        });
         return 'discarded' as const;
       }
-      try {
+      return async () => {
         await send({ email: user.email, language: user.language, ticket });
-        await tx.orm.public.Ticket.where({ id: message.id }).update({
-          reminderSentAt: new Date(clock()).toISOString(),
-          reminderAttempts: message.reminderAttempts + 1,
-        });
-        return 'sent' as const;
-      } catch {
-        const attempts = message.reminderAttempts + 1;
-        await tx.orm.public.Ticket.where({ id: message.id }).update({
-          reminderAttempts: attempts,
-          reminderNextAttemptAt: new Date(
-            clock() + Math.min(900000, 30000 * 2 ** (attempts - 1)),
-          ).toISOString(),
-          ...(attempts >= 5
-            ? { reminderDiscardedAt: new Date(clock()).toISOString() }
-            : {}),
-        });
-        return 'failed' as const;
-      }
-    });
-    if (outcome) counts[outcome]++;
-  }
-  return counts;
+      };
+    },
+    clock,
+  );
 }
