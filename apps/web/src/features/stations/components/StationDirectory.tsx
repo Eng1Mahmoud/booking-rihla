@@ -29,7 +29,9 @@ export function StationDirectory({ initial }: { initial?: TripCatalog }) {
     if (cityId && cityId !== station.cityId) continue;
     if (
       search &&
-      ![station.nameAr, station.nameEn, city?.nameAr, city?.nameEn].join(' ').includes(search)
+      ![station.nameAr, station.nameEn, city?.nameAr, city?.nameEn]
+        .join(' ')
+        .includes(search)
     )
       continue;
     const group = grouped.get(station.cityId) ?? [];

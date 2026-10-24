@@ -21,9 +21,7 @@ export function PaymentChecking({
   const booking = useTranslations('Booking');
   const titleId = useId();
   const title =
-    mode === 'waiting'
-      ? t('outcomes.waiting.title')
-      : t('checkingTitle');
+    mode === 'waiting' ? t('outcomes.waiting.title') : t('checkingTitle');
   const note =
     mode === 'waiting' ? t('outcomes.waiting.note') : t('checkingNote');
   return (

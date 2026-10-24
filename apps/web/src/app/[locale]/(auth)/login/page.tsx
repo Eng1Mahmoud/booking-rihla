@@ -16,7 +16,8 @@ export default async function LoginPage({
       ? query.returnTo
       : '/';
   const user = await getSignedInUser().catch(() => null);
-  if (user) redirect('/' + (await getLocale()) + (returnTo === '/' ? '' : returnTo));
+  if (user)
+    redirect('/' + (await getLocale()) + (returnTo === '/' ? '' : returnTo));
   const [t, home] = await Promise.all([
     getTranslations('Auth'),
     getTranslations('Home'),

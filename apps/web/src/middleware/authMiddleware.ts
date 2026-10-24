@@ -17,7 +17,8 @@ export async function authMiddleware(
 ): Promise<NextResponse | null> {
   const { path, locale } = getRouteDetails(request.nextUrl.pathname);
   const protectedRoute = getProtectedRoute(path);
-  const isServerAction = request.method === 'POST' && request.headers.has('next-action');
+  const isServerAction =
+    request.method === 'POST' && request.headers.has('next-action');
   let response = previousResponse ?? NextResponse.next();
 
   // Public navigation skips authentication; Actions still need session renewal.

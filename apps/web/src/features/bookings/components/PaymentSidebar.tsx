@@ -110,7 +110,10 @@ export function PaymentSidebar({
       </p>
       <PaymentStatus payment={payment} />
       {payError != null && (
-        <ErrorNotice error={payError} className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950" />
+        <ErrorNotice
+          error={payError}
+          className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
+        />
       )}
       {canPay ? (
         <>

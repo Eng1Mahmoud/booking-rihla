@@ -6,10 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { invokeAction } from '@/shared/lib/apiResult';
 import type { SeatList } from '@/features/trips/types/trip';
 import { getTripSeatsAction } from '../actions/seats.actions';
-import {
-  availableSeatsByIds,
-  seatIdsFromQuery,
-} from '../lib/seatSelection';
+import { availableSeatsByIds, seatIdsFromQuery } from '../lib/seatSelection';
 import { seatKeys } from './queryKeys';
 
 /**

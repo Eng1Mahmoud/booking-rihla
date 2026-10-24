@@ -21,9 +21,7 @@ export default async function ProtectedLayout({
   }
   if (!user) {
     const path = (await headers()).get('x-bus-return-to') ?? '/account';
-    redirect(
-      '/' + locale + '/login?returnTo=' + encodeURIComponent(path),
-    );
+    redirect('/' + locale + '/login?returnTo=' + encodeURIComponent(path));
   }
   return children;
 }
