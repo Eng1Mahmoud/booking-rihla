@@ -40,9 +40,11 @@ export function FaqContent() {
       questions: group.questions.filter(
         (id) =>
           !search ||
-          t('questions.' + id + '.q') +
+          (
+            t('questions.' + id + '.q') +
             ' ' +
-            t('questions.' + id + '.a').includes(search),
+            t('questions.' + id + '.a')
+          ).includes(search),
       ),
     }))
     .filter((group) => group.questions.length);
