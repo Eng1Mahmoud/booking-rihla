@@ -20,6 +20,7 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useLoginHref } from '@/features/auth/hooks/useLoginHref';
 import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
 
 export function HeaderNavigation() {
@@ -28,6 +29,7 @@ export function HeaderNavigation() {
   const locale = useLocale();
   const { status } = useAuth();
   const pathname = usePathname();
+  const loginHref = useLoginHref();
   const [open, setOpen] = useState(false);
   const links = [
     { href: '/', label: 'search', Icon: Search },
@@ -167,7 +169,7 @@ export function HeaderNavigation() {
               {status === 'guest' && (
                 <Dialog.Close asChild>
                   <Button asChild size="lg" className="w-full">
-                    <Link href="/login">
+                    <Link href={loginHref}>
                       <LogIn size={18} aria-hidden="true" />
                       {auth('login')}
                     </Link>

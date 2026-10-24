@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ChevronDown, LogOut, LogIn } from 'lucide-react';
-import { Link, usePathname } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { useAuth, useLogout } from '../../hooks/useAuth';
+import { useLoginHref } from '../../hooks/useLoginHref';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -19,16 +20,12 @@ import { accountLinks } from '@/features/account/accountLinks';
 export function AccountMenu() {
   const { user, status, reloadSession } = useAuth();
   const logout = useLogout();
-  const pathname = usePathname();
+  const loginHref = useLoginHref();
   const locale = useLocale();
   const t = useTranslations('Account');
   const auth = useTranslations('Auth');
   const [error, setError] = useState('');
   const [open, setOpen] = useState(false);
-  const loginHref =
-    pathname && pathname !== '/login'
-      ? '/login?returnTo=' + encodeURIComponent(pathname)
-      : '/login';
 
   async function signOut() {
     setError('');
