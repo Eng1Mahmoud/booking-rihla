@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { RefreshCw, ArrowRight } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -37,6 +38,10 @@ export function SeatBooking({
     reserve,
     refreshSeats,
   } = useSeatBooking(trip, initialSeats);
+  const [hasOpenedDetails, setHasOpenedDetails] = useState(false);
+  useEffect(() => {
+    if (phase === 'details') setHasOpenedDetails(true);
+  }, [phase]);
   const total = selected.length * trip.pricePiastres;
   return (
     <div className="grid items-start gap-5 pb-[calc(88px+env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_330px] md:pb-0 min-[1001px]:grid-cols-[minmax(0,1fr)_360px] min-[1001px]:gap-7">
@@ -175,18 +180,22 @@ export function SeatBooking({
             message={auth('sessionUnavailable')}
             onRetry={() => void reloadSession()}
           />
-        ) : user ? (
-          <PassengerForm
-            key={user.id}
-            seats={selected}
-            user={user}
-            disabled={!selected.length}
-            onReserve={reserve}
-          />
-        ) : (
+        ) : !user ? (
           <p className="py-15 text-center text-muted-foreground" role="status">
             {auth('checkingSession')}
           </p>
+        ) : null}
+        {/* Keep the draft mounted through seat conflicts; removed seats unregister. */}
+        {hasOpenedDetails && user && !uncertain && (
+          <div hidden={phase !== 'details'}>
+            <PassengerForm
+              key={user.id}
+              seats={selected}
+              user={user}
+              disabled={!selected.length}
+              onReserve={reserve}
+            />
+          </div>
         )}
       </aside>
       {phase === 'select' && (
