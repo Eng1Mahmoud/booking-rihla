@@ -1,31 +1,32 @@
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { Armchair, ArrowLeft, Check, MapPin } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
-export async function HomeHero() {
+export async function HomeHero({ children }: { children: ReactNode }) {
   const t = await getTranslations('Home');
   return (
     <section
-      className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] pt-5 pb-10 md:pt-8 md:pb-14"
+      className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] pt-6 md:pt-8"
       aria-labelledby="home-title"
     >
-      <div className="grid items-center gap-7 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
-        <div className="py-3 lg:py-8">
-          <p className="motion-safe:animate-[home-enter_600ms_100ms_ease-out_both] mb-5 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-secondary px-3.5 py-1.5 text-xs font-medium text-primary">
-            <MapPin size={14} aria-hidden="true" />
-            {t('place')}
-          </p>
+      <div className="grid items-center gap-7 lg:grid-cols-[0.95fr_1.05fr] lg:gap-x-10 lg:gap-y-10">
+        <div className="lg:py-8">
           <h1
             id="home-title"
-            className="motion-safe:animate-[home-enter_600ms_ease-out_both] max-w-xl text-[36px] font-semibold leading-[1.4] tracking-tight sm:text-[44px] lg:text-[58px] lg:leading-[1.3]"
+            className="max-w-xl text-balance text-[36px] font-semibold leading-[1.4] tracking-tight sm:text-[44px] lg:text-[58px] lg:leading-[1.3]"
           >
             {t('title')}
           </h1>
-          <p className="motion-safe:animate-[home-enter_600ms_100ms_ease-out_both] mt-5 max-w-lg text-sm leading-8 text-muted-foreground md:text-base">
+          <p className="mt-4 max-w-lg text-sm leading-8 text-muted-foreground md:text-base">
             {t('intro')}
           </p>
-          <div className="motion-safe:animate-[home-enter_600ms_180ms_ease-out_both] mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 md:mt-8">
+          <p className="mt-3 flex items-center gap-2 text-xs text-primary">
+            <MapPin size={14} aria-hidden="true" />
+            {t('place')}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 md:mt-8">
             <Button asChild size="lg" className="rounded-full px-7">
               <a href="#trip-search-title">
                 {t('readySearch')}
@@ -43,7 +44,7 @@ export async function HomeHero() {
               {t('howLink')}
             </a>
           </div>
-          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground md:mt-8">
+          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground md:mt-8">
             {['heroStation', 'heroSeat', 'heroBooking'].map((key) => (
               <li key={key} className="inline-flex items-center gap-1.5">
                 <Check size={14} className="text-primary" aria-hidden="true" />
@@ -52,7 +53,10 @@ export async function HomeHero() {
             ))}
           </ul>
         </div>
-        <div className="motion-safe:animate-[home-enter_700ms_100ms_ease-out_both] relative isolate h-[210px] overflow-hidden rounded-[1.75rem] bg-secondary sm:h-[310px] lg:h-[490px] lg:rounded-ss-[6rem]">
+        <div className="relative z-10 lg:col-span-2 lg:row-start-2">
+          {children}
+        </div>
+        <div className="motion-safe:animate-[home-enter_700ms_100ms_ease-out_both] lg:col-start-2 lg:row-start-1 relative isolate h-[210px] overflow-hidden rounded-[1.75rem] bg-secondary sm:h-[310px] lg:h-[490px] lg:rounded-ss-[6rem]">
           <Image
             src="/images/rihla-coastal-journey.webp"
             alt=""

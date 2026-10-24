@@ -20,11 +20,12 @@ export default async function HomePage() {
   const today = cairoDate();
   return (
     <>
-      <HomeHero />
-      <HomeSearch
-        initial={catalog.success ? catalog.data : undefined}
-        today={today}
-      />
+      <HomeHero>
+        <HomeSearch
+          initial={catalog.success ? catalog.data : undefined}
+          today={today}
+        />
+      </HomeHero>
       <PopularRoutes
         catalog={catalog.success ? catalog.data : undefined}
         today={today}

@@ -83,7 +83,7 @@ export function TripSearchForm({
             }),
         );
       }}
-      className="grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-start gap-x-3 gap-y-4 lg:grid-cols-[1fr_auto_1fr_1fr_auto]"
+      className="grid-cols-[minmax(0,1fr)] items-start gap-x-3 gap-y-4 sm:grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] lg:grid-cols-[1fr_auto_1fr_1fr_auto]"
     >
       {(form) => (
         <>
@@ -102,7 +102,7 @@ export function TripSearchForm({
             type="button"
             variant="outline"
             size="icon"
-            className="mx-auto mt-8 size-11 rounded-full"
+            className="mx-auto size-11 rounded-full sm:mt-8"
             aria-label={t('swap')}
             onClick={() => {
               const { origin, destination } = form.getValues();
@@ -110,20 +110,26 @@ export function TripSearchForm({
               form.setValue('destination', origin, { shouldValidate: false });
             }}
           >
-            <ArrowRightLeft size={19} />
+            <ArrowRightLeft
+              size={19}
+              aria-hidden="true"
+              className="rotate-90 sm:rotate-0"
+            />
           </Button>
-          <FormSelect<SearchFormValues>
-            name="destination"
-            label={
-              <>
-                <MapPin size={16} />
-                {t('to')}
-              </>
-            }
-          >
-            {options}
-          </FormSelect>
-          <div className="col-span-3 md:col-span-2 lg:col-span-1">
+          <div className="min-w-0">
+            <FormSelect<SearchFormValues>
+              name="destination"
+              label={
+                <>
+                  <MapPin size={16} />
+                  {t('to')}
+                </>
+              }
+            >
+              {options}
+            </FormSelect>
+          </div>
+          <div className="min-w-0 sm:col-span-3 md:col-span-2 lg:col-span-1">
             <FormInput<SearchFormValues>
               name="date"
               label={
@@ -136,7 +142,7 @@ export function TripSearchForm({
               min={today}
             />
           </div>
-          <div className="col-span-3 self-start md:col-span-1 md:mt-8">
+          <div className="self-start sm:col-span-3 md:col-span-1 md:mt-8">
             <SubmitButton>
               <SearchIcon size={19} />
               {t('search')}
