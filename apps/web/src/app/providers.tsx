@@ -3,20 +3,9 @@ import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/shared/lib/apiResult';
 import { resetAuthCache } from '@/features/auth/hooks/useAuth';
-import {
-  QueryClientProvider,
-  HydrationBoundary,
-  type QueryClient,
-  type DehydratedState,
-} from '@tanstack/react-query';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@/shared/lib/queryClient';
-export function AppProviders({
-  children,
-  state,
-}: {
-  children: ReactNode;
-  state: DehydratedState;
-}) {
+export function AppProviders({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [client] = useState(() => {
     let clearing = false;
@@ -37,9 +26,5 @@ export function AppProviders({
     });
     return queries;
   });
-  return (
-    <QueryClientProvider client={client}>
-      <HydrationBoundary state={state}>{children}</HydrationBoundary>
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

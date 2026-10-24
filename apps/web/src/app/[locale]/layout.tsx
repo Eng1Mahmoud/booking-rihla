@@ -1,9 +1,3 @@
-import { dehydrate } from '@tanstack/react-query';
-import { createQueryClient } from '@/shared/lib/queryClient';
-import { authKeys } from '@/features/auth/hooks/queryKeys';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
-import type { AuthSession } from '@/features/auth/types/auth';
-import { errorMessage } from '@/shared/lib/apiResult';
 import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
@@ -32,14 +26,6 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const queryClient = createQueryClient();
-  let session: AuthSession;
-  try {
-    session = { user: await getSignedInUser() };
-  } catch (error) {
-    session = { user: null, error: errorMessage(error, locale) };
-  }
-  queryClient.setQueryData(authKeys.me, session);
   return (
     <html
       lang={locale}
@@ -48,7 +34,7 @@ export default async function LocaleLayout({
     >
       <body id="top" className="min-h-screen">
         <NextIntlClientProvider>
-          <AppProviders state={dehydrate(queryClient)}>
+          <AppProviders>
             <div data-site-shell className="flex min-h-screen flex-col">
               <SiteHeader
                 accountMenu={<AccountMenu />}

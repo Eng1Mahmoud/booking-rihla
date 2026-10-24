@@ -17,9 +17,14 @@ export async function authMiddleware(
 ): Promise<NextResponse | null> {
   const { path, locale } = getRouteDetails(request.nextUrl.pathname);
   const protectedRoute = getProtectedRoute(path);
+  const isServerAction = request.method === 'POST' && request.headers.has('next-action');
+  let response = previousResponse ?? NextResponse.next();
+
+  // Public navigation skips authentication; Actions still need session renewal.
+  if (!protectedRoute && !isServerAction) return response;
+
   const session = getSessionCookies(request.cookies);
   const options = { locale, requestHeaders: request.headers };
-  let response = previousResponse ?? NextResponse.next();
 
   if (!session.access && !session.refresh) {
     return protectedRoute ? handleAuthFailure(401) : response;
@@ -85,8 +90,7 @@ export async function authMiddleware(
   // Preserve renewed cookies when redirecting or showing a temporary error.
   function handleAuthFailure(status: 401 | 403 | 503) {
     // Actions return backend errors through invokeAction; redirects are for page navigation.
-    if (request.method === 'POST' && request.headers.has('next-action'))
-      return response;
+    if (isServerAction) return response;
     let errorResponse: NextResponse;
     if (status === 401 || status === 403) {
       const url = new URL(
