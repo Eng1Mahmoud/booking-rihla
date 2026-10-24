@@ -1,3 +1,8 @@
+import {
+  loadLockedBooking,
+  hasBookingSeats,
+  releaseBookingSeats,
+} from './bookingHoldService.ts';
 import { z } from 'zod';
 import type { PaymentProvider } from '../payments/paymentProvider.ts';
 import {
@@ -125,15 +130,7 @@ export function createPaymentReconciliationService(
             .affectedCount()
             .build(),
         );
-        await tx.execute(
-          db.raw
-            .sql`SELECT "id" FROM "public"."Trip" WHERE "id" = ${initialBooking.tripId} FOR UPDATE`
-            .affectedCount()
-            .build(),
-        );
-        const booking = await tx.orm.public.Booking.where({
-          id: initialBooking.id,
-        }).first();
+        const booking = await loadLockedBooking(tx, db, initialBooking);
         const operation = await tx.orm.public.PaymentSession.where({
           id: paymentSessionId,
         }).first();
@@ -182,11 +179,7 @@ export function createPaymentReconciliationService(
         const user = await tx.orm.public.User.where({
           id: booking.userId,
         }).first();
-        const seats = await tx.orm.public.BookingSeat.where({
-          bookingId: booking.id,
-          tripId: trip.id,
-          releasedAt: null,
-        }).all();
+        const seatsHeld = await hasBookingSeats(tx, booking);
         const review =
           remote.voided ||
           remote.refunded ||
@@ -209,7 +202,7 @@ export function createPaymentReconciliationService(
         if (review) return { state: 'REVIEW' };
         const eligible =
           booking.status === 'PENDING_PAYMENT' &&
-          seats.length === booking.seatCount &&
+          seatsHeld &&
           Date.parse(booking.expiresAt) > Date.now() &&
           trip.status === 'SCHEDULED' &&
           Date.parse(trip.departureAt) > Date.now() &&
@@ -226,10 +219,7 @@ export function createPaymentReconciliationService(
         }
         // A late successful charge never reclaims a released/reallocated seat.
         // Record the debt atomically; only the super admin may send its refund.
-        await tx.orm.public.BookingSeat.where({
-          bookingId: booking.id,
-          releasedAt: null,
-        }).updateAll({ releasedAt: now });
+        await releaseBookingSeats(tx, booking.id, now);
         await tx.orm.public.Booking.where({ id: booking.id }).update({
           status: 'EXPIRED',
         });

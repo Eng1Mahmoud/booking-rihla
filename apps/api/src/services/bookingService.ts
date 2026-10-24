@@ -1,9 +1,8 @@
 import {
   bookingState,
-  expireTripHolds,
-  holdDurationMs,
+  createBookingHold,
+  lockBookingTrip,
 } from './bookingHoldService.ts';
-import { randomBytes } from 'node:crypto';
 import { AppError } from '../errors/AppError.ts';
 import { isUniqueViolation } from '../utils/databaseErrors.ts';
 import type {
@@ -117,12 +116,7 @@ export const bookingService = {
         )
           throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
         // Serializes reservations with each other and trip edits/deletion.
-        await tx.execute(
-          db.raw
-            .sql`SELECT "id" FROM "public"."Trip" WHERE "id" = ${input.tripId} FOR UPDATE`
-            .affectedCount()
-            .build(),
-        );
+        await lockBookingTrip(tx, db, input.tripId);
         const trip = await tx.orm.public.Trip.where({
           id: input.tripId,
         }).first();
@@ -172,62 +166,7 @@ export const bookingService = {
             'TRIP_UNAVAILABLE',
             'This trip cannot accept reservations',
           );
-        const busSeats = await tx.orm.public.BusSeat.where({
-          busId: trip.busId,
-        }).all();
-        const selected = input.passengers.map((passenger) =>
-          busSeats.find((seat) => seat.id === passenger.seatId),
-        );
-        if (
-          selected.some((seat) => !seat) ||
-          new Set(input.passengers.map((p) => p.seatId)).size !==
-            input.passengers.length
-        )
-          throw new AppError(
-            400,
-            'INVALID_SEATS',
-            'Choose distinct seats belonging to this trip bus',
-          );
-        const now = Date.now();
-        await expireTripHolds(tx, db, trip.id, new Date(now).toISOString());
-        const occupied = await tx.orm.public.BookingSeat.where({
-          tripId: trip.id,
-          releasedAt: null,
-        }).all();
-        if (
-          input.passengers.some((passenger) =>
-            occupied.some((seat) => seat.seatId === passenger.seatId),
-          )
-        )
-          throw new AppError(
-            409,
-            'SEAT_UNAVAILABLE',
-            'One or more selected seats are already reserved',
-          );
-        const booking = await tx.orm.public.Booking.create({
-          userId: user.id,
-          tripId: trip.id,
-          status: 'PENDING_PAYMENT',
-          expiresAt: new Date(
-            Math.min(now + holdDurationMs, Date.parse(trip.departureAt)),
-          ).toISOString(),
-          reference: 'BUS-' + randomBytes(8).toString('hex').toUpperCase(),
-          contactPhone: input.contactPhone,
-          seatCount: input.passengers.length,
-          unitPricePiastres: trip.pricePiastres,
-          totalPiastres:
-            BigInt(trip.pricePiastres) * BigInt(input.passengers.length),
-        });
-        await tx.orm.public.BookingSeat.createAll(
-          input.passengers.map((passenger, index) => ({
-            bookingId: booking.id,
-            tripId: trip.id,
-            seatId: passenger.seatId,
-            seatNumber: selected[index]!.number,
-            passengerName: passenger.name,
-          })),
-        );
-        return booking.id;
+        return createBookingHold(tx, db, user.id, trip, input);
       });
     } catch (error) {
       if (isUniqueViolation(error, 'booking_seat_active_unique_225b95a2'))

@@ -1,3 +1,4 @@
+import { loadLockedBooking, hasBookingSeats } from './bookingHoldService.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { AuthContext } from './sessionService.ts';
 import type { db as database } from '../prisma/db.ts';
@@ -59,17 +60,7 @@ export async function withPayableBooking<T>(
       userId: user.id,
     }).first();
     if (!initial) throw missingBooking();
-    await tx.execute(
-      db.raw
-        .sql`SELECT "id" FROM "public"."Trip" WHERE "id" = ${initial.tripId} FOR UPDATE`
-        .affectedCount()
-        .build(),
-    );
-    // Re-read after acquiring the Trip lock; expiry/reallocation may have won the race.
-    const booking = await tx.orm.public.Booking.where({
-      id: bookingId,
-      userId: user.id,
-    }).first();
+    const booking = await loadLockedBooking(tx, db, initial, user.id);
     if (!booking) throw missingBooking();
     if (booking.status === 'EXPIRED') throw expired();
     if (booking.status !== 'PENDING_PAYMENT' || !booking.expiresAt)
@@ -110,12 +101,8 @@ export async function withPayableBooking<T>(
         'TRIP_UNAVAILABLE',
         'This trip cannot accept payments',
       );
-    const seats = await tx.orm.public.BookingSeat.where({
-      bookingId,
-      tripId: trip.id,
-      releasedAt: null,
-    }).all();
-    if (seats.length !== booking.seatCount)
+    const seatsHeld = await hasBookingSeats(tx, booking);
+    if (!seatsHeld)
       throw new AppError(
         409,
         'BOOKING_SEATS_UNAVAILABLE',

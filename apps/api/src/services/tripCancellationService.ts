@@ -1,3 +1,4 @@
+import { lockBookingTrip, releaseBookingSeats } from './bookingHoldService.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { AuthContext } from './sessionService.ts';
 import { recordAudit } from './auditWriter.ts';
@@ -8,12 +9,7 @@ export const tripCancellationService = {
     const { db } = await import('../prisma/db.ts');
     return db.transaction(async (tx) => {
       await requireFinancialActor(tx, db, auth);
-      await tx.execute(
-        db.raw
-          .sql`SELECT "id" FROM "public"."Trip" WHERE "id" = ${tripId} FOR UPDATE`
-          .affectedCount()
-          .build(),
-      );
+      await lockBookingTrip(tx, db, tripId);
       const trip = await tx.orm.public.Trip.where({ id: tripId }).first();
       if (!trip) throw new AppError(404, 'TRIP_NOT_FOUND', 'Trip not found');
       if (trip.status === 'CANCELLED')
@@ -66,10 +62,7 @@ export const tripCancellationService = {
         cancellationReason: reason,
       });
       for (const booking of bookings) {
-        await tx.orm.public.BookingSeat.where({
-          bookingId: booking.id,
-          releasedAt: null,
-        }).updateAll({ releasedAt: now });
+        await releaseBookingSeats(tx, booking.id, now);
         if (
           booking.status === 'PENDING_PAYMENT' ||
           booking.status === 'RESERVED'
