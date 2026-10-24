@@ -3,6 +3,7 @@
 import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
+import { getBookingPaymentState } from '../lib/bookings.server';
 import {
   createBookingSchema,
   bookingIdSchema,
@@ -90,20 +91,5 @@ export async function getPaymentStatusAction(
 ): Promise<ApiResult<PaymentState>> {
   const parsed = await parseSchema(bookingIdSchema, id);
   if (!parsed.success) return parsed.error;
-  // The backend checks authentication and booking ownership on this endpoint.
-  const result = await apiFetch<BookingPayment>(
-    'bookings/' + parsed.data + '/payment',
-  );
-  if (!result.success || !result.data) return { ...result, data: undefined };
-  const availability = await apiFetch<{ checkoutEnabled: boolean }>(
-    'payments/availability',
-  );
-  return {
-    ...result,
-    data: {
-      payment: { ...result.data, checkoutUrl: undefined },
-      checkoutEnabled:
-        availability.success && availability.data?.checkoutEnabled === true,
-    },
-  };
+  return getBookingPaymentState(parsed.data);
 }
