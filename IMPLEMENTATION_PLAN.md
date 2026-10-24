@@ -705,16 +705,16 @@ Validated production build/TypeScript, root ESLint, isolated ordering checks and
 | النماذج               | React Hook Form وZod مع Form وحقول مشتركة                                      |
 | كاش API               | TanStack Query فقط                                                             |
 | fetch                 | إرسال الطلبات باستخدام `cache: 'no-store'`                                     |
-| طلبات الميزات         | Hook → Server Action → auth.server عند الحاجة → api.ts → Backend                                |
+| طلبات الميزات         | Hook → Server Action → auth.server عند الحاجة → api.ts → Backend               |
 | مجلد api داخل Feature | غير مطلوب؛ لا wrapper يكرر استدعاء Action                                      |
 | خيار auth             | محذوف من واجهة apiFetch                                                        |
-| Access Token          | تقرأه وحدة auth وتُمرره صراحة إلى عميل HTTP                                      |
+| Access Token          | تقرأه وحدة auth وتُمرره صراحة إلى عميل HTTP                                    |
 | Refresh Token         | يستخدم فقط في عمليات الجلسة المناسبة                                           |
 | تخزين التوكنات        | HttpOnly Cookies على نطاق تطبيق الويب                                          |
 | حماية التنقل          | middleware منظمة، تُشغَّل من proxy.ts                                          |
 | الصلاحيات النهائية    | Backend، مع تحقق Actions الخاصة من الجلسة والصلاحيات                           |
 | متابعة الدفع          | استثناء GET الحالي؛ لا ننفذ polling المتكرر عبر Actions                        |
-| الحالة المحلية | useState/useReducer؛ لا Zustand أو متجر مستخدم إضافي |
+| الحالة المحلية        | useState/useReducer؛ لا Zustand أو متجر مستخدم إضافي                           |
 | الاختبارات            | لا ملفات اختبارات آلية جديدة حاليًا؛ تحقق الأنواع وLint والبناء وتجربة المتصفح |
 | Git                   | commits مترابطة؛ لا push قبل موافقة صريحة؛ لا أسرار أو ملفات build             |
 
@@ -811,16 +811,16 @@ apps/web/
 
 ### توزيع ملفات الميزات
 
-| Feature | Actions | Hooks | المكوّنات/الصفحات الأساسية |
-| --- | --- | --- | --- |
-| auth | auth.actions.ts | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | forms: AuthFlow/LoginForm/RegisterForm/VerifyEmailForm؛ password-recovery: PasswordRecovery/PasswordRecoveryFlow/ResetPasswordForm؛ navigation: AccountMenu/HeaderNavigation؛ إطار صفحات الدخول والاستعادة على السيرفر |
-| trips | trips.actions.ts | useTripCatalog/useTripSearch/useTripDetails | HomeHero/PopularRoutes/HomeSections على السيرفر؛ HomeSearch/TripSearchForm/TripResults/TripDetails للأجزاء التفاعلية |
-| seats | seats.actions.ts | useSeatBooking | SeatBooking للعرض؛ SeatMap/SeatIcon/PassengerForm؛ hook يملك الاختيار والتوافر وإنشاء الحجز |
-| bookings | bookings.actions.ts | useBookings/useCreateBooking/useCheckout/useBookingPayment | BookingDetail يعرض المحتوى الثابت على السيرفر ويمرره إلى BookingPayment؛ BookingHistory/PaymentStatus/PaymentChecking |
-| tickets | tickets.actions.ts | useTicket | صفحة السيرفر تقرأ التذكرة وتزيل QR payload ثم تمرر البيانات إلى TicketView |
-| account | يستخدم Auth | useLogout من Auth | بيانات الحساب في صفحة السيرفر؛ AccountSessions لإجراءات الجلسة فقط وAccountNavigation للتنقل |
-| stations | يستخدم كتالوج Trips | useTripCatalog من Trips | مقدمة وخاتمة صفحة السيرفر، StationDirectory للفلاتر والنتائج |
-| faqs | لا اتصال API | حالة محلية للبحث والتصنيف | مقدمة وخاتمة صفحة السيرفر، FaqContent للبحث والإجابات |
+| Feature  | Actions             | Hooks                                                                                                          | المكوّنات/الصفحات الأساسية                                                                                                                                                                                             |
+| -------- | ------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| auth     | auth.actions.ts     | useAuth/useLogin/useLogout/useRegister/useVerifyEmail/useResendVerification/useForgotPassword/useResetPassword | forms: AuthFlow/LoginForm/RegisterForm/VerifyEmailForm؛ password-recovery: PasswordRecovery/PasswordRecoveryFlow/ResetPasswordForm؛ navigation: AccountMenu/HeaderNavigation؛ إطار صفحات الدخول والاستعادة على السيرفر |
+| trips    | trips.actions.ts    | useTripCatalog/useTripSearch/useTripDetails                                                                    | HomeHero/PopularRoutes/HomeSections على السيرفر؛ HomeSearch/TripSearchForm/TripResults/TripDetails للأجزاء التفاعلية                                                                                                   |
+| seats    | seats.actions.ts    | useSeatBooking                                                                                                 | SeatBooking للعرض؛ SeatMap/SeatIcon/PassengerForm؛ hook يملك الاختيار والتوافر وإنشاء الحجز                                                                                                                            |
+| bookings | bookings.actions.ts | useBookings/useCreateBooking/useCheckout/useBookingPayment                                                     | BookingDetail يعرض المحتوى الثابت على السيرفر ويمرره إلى BookingPayment؛ BookingHistory/PaymentStatus/PaymentChecking                                                                                                  |
+| tickets  | tickets.actions.ts  | useTicket                                                                                                      | صفحة السيرفر تقرأ التذكرة وتزيل QR payload ثم تمرر البيانات إلى TicketView                                                                                                                                             |
+| account  | يستخدم Auth         | useLogout من Auth                                                                                              | بيانات الحساب في صفحة السيرفر؛ AccountSessions لإجراءات الجلسة فقط وAccountNavigation للتنقل                                                                                                                           |
+| stations | يستخدم كتالوج Trips | useTripCatalog من Trips                                                                                        | مقدمة وخاتمة صفحة السيرفر، StationDirectory للفلاتر والنتائج                                                                                                                                                           |
+| faqs     | لا اتصال API        | حالة محلية للبحث والتصنيف                                                                                      | مقدمة وخاتمة صفحة السيرفر، FaqContent للبحث والإجابات                                                                                                                                                                  |
 
 داخل Feature مجلدات actions/hooks/components/schemas/types/lib/store حسب الحاجة فقط. أسماء مفاتيح TanStack موحّدة في hooks/queryKeys.ts لكل ميزة تملك طلبات: auth/trips/seats/bookings/tickets. تستخدمها Hooks والتهيئة والتحديث والإبطال؛ مفاتيح البيانات الخاصة تتضمن هوية المستخدم واللغة ومعرّف المورد. لا ملف Query Keys لميزة لا تملك طلبات خاصة بها.
 
@@ -834,29 +834,29 @@ apps/web/
 
 ### shared/lib/api.ts — نقل HTTP فقط
 
-- `requestApi` ينفذ fetch واحدًا إلى API_BASE_URL الثابت، مع JSON واللغة وtimeout/AbortSignal وno-store ورفض redirects والتحقق من envelope.
+- `apiFetch` ينفذ fetch واحدًا إلى API_BASE_URL الثابت، مع JSON واللغة وtimeout/AbortSignal وno-store ورفض redirects والتحقق من envelope.
 - يقبل credentials صراحة من مستدعٍ server-only، ويحذف Authorization/Cookie وبيانات الهوية العشوائية من headers الإضافية. يحافظ على Idempotency-Key وRetry-After وrequestId الآمن وCSRF وتوقيع الهوية عبر clientIdentity.
-- يعيد `{ result, headers }` للسيرفر فقط لاستخراج cookies في login/refresh. `apiFetch` يعيد result وحده للطلبات المعتادة؛ ليست هناك دالة fetch ثانية.
+- يعيد دائمًا `{ result, headers }` للسيرفر. الطلبات المعتادة تستخرج result، وlogin/refresh يقرآن headers لاستخراج Set-Cookie؛ لا توجد دالة requestApi أو خيارات تغيّر شكل الرد، ولا تعاد Headers الخام إلى المتصفح.
 - لا يقرأ cookies، ولا يصنّف endpoints، ولا يستدعي نفسه للتحقق، ولا يجدد الجلسة أو يعيد إرسال الطلب.
 
 ### features/auth/lib/auth.server.ts — الجلسة
 
 دُمجت فيه session.ts وrefreshSession.ts، وحُذف الملفان من shared/lib. يستورد api.ts مباشرة؛ عميل HTTP لا يستورد ميزة Auth.
 
-| الدالة | الاستخدام |
-| --- | --- |
-| readApi | قراءة SSR أو endpoint عام مع access المتاح؛ دون تجديد أو كتابة cookies |
-| authenticatedFetch | Actions وRoute Handler المحمية؛ GET يجدد مرة عند 401/UNAUTHENTICATED، والكتابة تتحقق عبر auth/me قبل إرسال mutation مرة واحدة |
-| readWithSession | نفس سياسة GET للجلسة الصريحة داخل proxy؛ يعيد النتيجة والتوكنات المطلوب حفظها أو null للحذف |
-| sessionTokens / updateAuthCookies | استخراج بيانات login/refresh والتحقق منها، ثم حفظ أو حذف cookies داخل Action/Handler |
-| readAuthCookies / saveAuthCookies / clearAuthCookies | أسماء cookies وخيارات HttpOnly/Secure/Lax/Path؛ proxy يكتب إلى NextResponse ويمرر التجديد لنفس render |
-| getCurrentUser / requireCurrentUser | قراءة المستخدم الآمنة مع React cache داخل الطلب فقط |
+| الدالة                                               | الاستخدام                                                                                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| readApi                                              | قراءة SSR أو endpoint عام مع access المتاح؛ دون تجديد أو كتابة cookies                                                        |
+| authenticatedFetch                                   | Actions وRoute Handler المحمية؛ GET يجدد مرة عند 401/UNAUTHENTICATED، والكتابة تتحقق عبر auth/me قبل إرسال mutation مرة واحدة |
+| readWithSession                                      | نفس سياسة GET للجلسة الصريحة داخل proxy؛ يعيد النتيجة والتوكنات المطلوب حفظها أو null للحذف                                   |
+| sessionTokens / updateAuthCookies                    | استخراج بيانات login/refresh والتحقق منها، ثم حفظ أو حذف cookies داخل Action/Handler                                          |
+| readAuthCookies / saveAuthCookies / clearAuthCookies | أسماء cookies وخيارات HttpOnly/Secure/Lax/Path؛ proxy يكتب إلى NextResponse ويمرر التجديد لنفس render                         |
+| getCurrentUser / requireCurrentUser                  | قراءة المستخدم الآمنة مع React cache داخل الطلب فقط                                                                           |
 
 فشل الشبكة أو 403 أو 5xx لا يطلق تجديدًا ولا يمسح الجلسة. إذا نجح التجديد وفشل GET التالي مؤقتًا، تُحفظ cookies الجديدة. كتابة مجهولة النتيجة لا تتكرر تلقائيًا. يجمع Map المحلي refresh المتزامن، ويظل تنسيق Express عبر قفل PostgreSQL واسترجاع successor خلال 30 ثانية كما هو؛ الطلبات المتأخرة خارج النافذة تظل مرفوضة وفق السياسة الحالية.
 
 ### features/auth/actions/auth.actions.ts — نتائج العمليات صريحة
 
-الدخول: validate → requestApi('auth/login') → sessionTokens → updateAuthCookies → user فقط. الخروج الحالي يرسل refresh إلى الإبطال؛ الخروج من الجميع يمر عبر authenticatedFetch. النجاح المؤكد في الخروج أو reset-password يمسح cookies؛ بقية عمليات التسجيل والتحقق والاستعادة تستخدم submit الصغير المشترك للتحقق والإرسال.
+الدخول: validate → apiFetch('auth/login') → readSessionFromResponse → updateSessionCookies → user فقط. الخروج الحالي يرسل refresh إلى الإبطال؛ الخروج من الجميع يمر عبر authenticatedFetch. النجاح المؤكد في الخروج أو reset-password يمسح cookies؛ بقية عمليات التسجيل والتحقق والاستعادة تستخدم submit الصغير المشترك للتحقق والإرسال.
 
 ```ts
 // داخل Server Component: قراءة فقط.
@@ -890,7 +890,7 @@ Component/Form
   → Feature hook: useQuery أو useMutation
   → Feature Server Action
   → auth.server: authenticatedFetch للعمليات المحمية
-  → api.ts: apiFetch / requestApi
+  → api.ts: apiFetch → { result, headers }
   → Express
   → ApiResult
   → invokeAction
@@ -920,14 +920,14 @@ Component/Form
 - بعد mutation نختار cache update أو invalidateQueries حسب الرد، ولا ننفذ تحديثات متعددة بلا حاجة.
 - router.refresh عند الحاجة لإعادة عرض Server Components فقط؛ ليس إبطالًا لكاش TanStack.
 
-| الحالة                             | المسؤول            |
-| ---------------------------------- | ------------------ |
-| قيم وأخطاء النموذج                 | React Hook Form    |
-| بيانات السيرفر التفاعلية           | TanStack Query     |
+| الحالة                           | المسؤول                      |
+| -------------------------------- | ---------------------------- |
+| قيم وأخطاء النموذج               | React Hook Form              |
+| بيانات السيرفر التفاعلية         | TanStack Query               |
 | المقاعد المختارة داخل تدفق الحجز | useState داخل useSeatBooking |
-| البحث والفلاتر ورقم الصفحة         | URL                |
-| فتح نافذة/إظهار كلمة المرور        | useState           |
-| التوكنات                           | HttpOnly Cookies   |
+| البحث والفلاتر ورقم الصفحة       | URL                          |
+| فتح نافذة/إظهار كلمة المرور      | useState                     |
+| التوكنات                         | HttpOnly Cookies             |
 
 كل fetch لبيانات API يستخدم no-store، وردود API في Next تمنع HTTP/CDN caching أيضًا. لا تمنع قراءة Cookies كاش TanStack؛ لكنها قد تجعل server render ديناميكيًا، وهذا مقبول في الخطة.
 
@@ -1178,7 +1178,6 @@ Passenger booking/checkout/status/ticket limits now use the authenticated user i
 
 Rate-limit counters remain process-local. Multi-API deployments must use a shared limiter store or a trusted ingress enforcing the intended aggregate limits; signed client identity fixes attribution, not distributed counter storage. Keep direct API exposure restricted. No provider/payment behavior is changed.
 
-
 ### توحيد التحقق في متابعة الدفع — 2026-10-21
 
 - يستخدم GET /api/payments/[bookingId]/status الآن parseSchema نفسه المستخدم في Server Actions؛ قواعد bookingId ورفض query parameters داخل paymentStatusInputSchema في ميزة الحجوزات.
@@ -1186,7 +1185,6 @@ Rate-limit counters remain process-local. Multi-API deployments must use a share
 - الحفاظ على CSRF وملكية الحجز وHttpOnly وتجديد الجلسة، وCache-Control الخاص، وحذف checkoutUrl من قراءة الحالة. لا تغيير في دورة الدفع أو استدعاءات Paymob أو إعادة محاولة mutations؛ status يبقى HTTP status ولا يُضاف إلى JSON.
 - التحقق: نجح TypeScript وESLint وبناء Next.js. نجحت 17 حالة مؤقتة للمساعد وRoute Handler باستخدام NextRequest/NextResponse الفعليين، و10 حالات regression لتحويلات Zod وActions. لا اختبارات محفوظة داخل المشروع ولا اتصالات بقاعدة البيانات أو Paymob.
 - الدفعة تخص توحيد التحقق فقط؛ تعديلات الواجهة الأخرى الموجودة مسبقًا خارج نطاقها. لا push دون موافقة.
-
 
 ### مراجعة وتبسيط هيكل الويب — 2026-10-21
 
@@ -1281,16 +1279,16 @@ Mobile:        [عنوان] [تنقل أفقي] [المحتوى]
 
 كل المسارات أدناه تحت /ar أو /en.
 
-| المسار | المحتوى والسلوك |
-| --- | --- |
-| /account | عرض الاسم والبريد والهاتف، وروابط الحجوزات والمدفوعات؛ عرض فقط حسب API الحالي، دون زر تعديل وهمي. |
-| /account/security | نقل AccountSessions الحالي: الخروج من الجهاز أو جميع الأجهزة بتأكيد، ورابط استعادة كلمة المرور الموجود؛ لا قائمة أجهزة أو تغيير كلمة مرور أثناء الدخول قبل وجود API لها. |
-| /bookings | سجل الحجوزات الحالي مع فلاتر حقيقية: الكل، القادمة، السابقة، المنتهية، الملغاة من الشركة؛ pagination والفلتر في URL. |
-| /bookings/[bookingId] | التفاصيل والحالة والركاب وروابط الدفع/التذكرة الموجودة داخل تصميم الحساب المشترك. |
-| /account/payments | سجل محاولات الدفع والاستردادات: مرجع الحجز، تاريخ المحاولة، المبلغ بالجنيه، حالة الدفع والاسترداد ومبلغه المسجل، ورابط الحجز. |
-| /bookings/[bookingId]/ticket | العرض الموجود مع زر طباعة وتنسيق ورقة واضح يحافظ على QR والمقاعد والمواعيد ويخفي Header/Footer والتنقل عند الطباعة. |
-| /terms | شروط الاستخدام والحجز والدفع وصلاحية الحجز المؤقت وسياسة الإلغاء والاسترداد والتواصل. |
-| /privacy | البيانات التي نجمعها وأغراضها، Cookies الجلسة، مزود الدفع والبريد، مشاركة البيانات ومدة الاحتفاظ ووسيلة التواصل والطلبات المتعلقة بالبيانات. |
+| المسار                       | المحتوى والسلوك                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| /account                     | عرض الاسم والبريد والهاتف، وروابط الحجوزات والمدفوعات؛ عرض فقط حسب API الحالي، دون زر تعديل وهمي.                                                                        |
+| /account/security            | نقل AccountSessions الحالي: الخروج من الجهاز أو جميع الأجهزة بتأكيد، ورابط استعادة كلمة المرور الموجود؛ لا قائمة أجهزة أو تغيير كلمة مرور أثناء الدخول قبل وجود API لها. |
+| /bookings                    | سجل الحجوزات الحالي مع فلاتر حقيقية: الكل، القادمة، السابقة، المنتهية، الملغاة من الشركة؛ pagination والفلتر في URL.                                                     |
+| /bookings/[bookingId]        | التفاصيل والحالة والركاب وروابط الدفع/التذكرة الموجودة داخل تصميم الحساب المشترك.                                                                                        |
+| /account/payments            | سجل محاولات الدفع والاستردادات: مرجع الحجز، تاريخ المحاولة، المبلغ بالجنيه، حالة الدفع والاسترداد ومبلغه المسجل، ورابط الحجز.                                            |
+| /bookings/[bookingId]/ticket | العرض الموجود مع زر طباعة وتنسيق ورقة واضح يحافظ على QR والمقاعد والمواعيد ويخفي Header/Footer والتنقل عند الطباعة.                                                      |
+| /terms                       | شروط الاستخدام والحجز والدفع وصلاحية الحجز المؤقت وسياسة الإلغاء والاسترداد والتواصل.                                                                                    |
+| /privacy                     | البيانات التي نجمعها وأغراضها، Cookies الجلسة، مزود الدفع والبريد، مشاركة البيانات ومدة الاحتفاظ ووسيلة التواصل والطلبات المتعلقة بالبيانات.                             |
 
 صفحة /faqs الحالية هي المساعدة؛ لا إنشاء /help يكرر محتواها. الروابط الحالية للتسجيل والتحقق داخل /login تظل صالحة؛ لا مسارات إضافية لمجرد مطابقة أسماء الخطة القديمة.
 
@@ -1322,14 +1320,14 @@ Mobile:        [عنوان] [تنقل أفقي] [المحتوى]
 
 ### 7. دفعات التنفيذ وGit
 
-| الدفعة | العمل المتكامل | معيار الانتهاء |
-| --- | --- | --- |
-| A | قائمة الأفاتار + روابط شخصية موحدة + AccountLayout + صفحة الأمان ونقل إجراءات الجلسة | التنقل يعمل على الجوال/سطح المكتب ولوحة المفاتيح، الزائر/المستخدم/تعذر الجلسة واضحون، ولا روابط لميزات غير منفذة. يضاف رابط المدفوعات عند إنجاز B. |
-| B | endpoint سجل المدفوعات + Action/Hook/صفحة + رابط الأفاتار والتنقل | ملكية صحيحة، pagination، حالات دفع واسترداد منفصلة، وفراغ وخطأ وتحميل بالعربية والإنجليزية. |
-| C | فلاتر الحجوزات من Backend حتى URL والواجهة | الفلتر يطبق على كامل السجل، التنقل للخلف يعمل، والتوقيت والحالة لا ينتجان تصنيفًا مضللًا. |
-| D | زر طباعة التذكرة وتنسيق الورقة | QR واضح، تذكرة مؤكدة فقط، لا طباعة عبر cached ticket أُلغي أو تعذر تحديثه، وفحص معاينة الطباعة. لا توليد PDF جديد. |
-| E | صفحات الشروط والخصوصية ومسوداتها وروابطها | تخطيط قراءة واضح وروابط صحيحة وترجمة؛ النشر النهائي للنص بعد المراجعة. |
-| F | مراجعة UX شاملة + إغلاق التنظيف ورسم التدفق | فحص رحلة الزائر والدخول والمقاعد والتعارض والدفع والعودة والتذكرة والخروج والجوال وRTL، وتوثيق تدفق Auth/API بناءً على الكود النهائي. |
+| الدفعة | العمل المتكامل                                                                       | معيار الانتهاء                                                                                                                                     |
+| ------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | قائمة الأفاتار + روابط شخصية موحدة + AccountLayout + صفحة الأمان ونقل إجراءات الجلسة | التنقل يعمل على الجوال/سطح المكتب ولوحة المفاتيح، الزائر/المستخدم/تعذر الجلسة واضحون، ولا روابط لميزات غير منفذة. يضاف رابط المدفوعات عند إنجاز B. |
+| B      | endpoint سجل المدفوعات + Action/Hook/صفحة + رابط الأفاتار والتنقل                    | ملكية صحيحة، pagination، حالات دفع واسترداد منفصلة، وفراغ وخطأ وتحميل بالعربية والإنجليزية.                                                        |
+| C      | فلاتر الحجوزات من Backend حتى URL والواجهة                                           | الفلتر يطبق على كامل السجل، التنقل للخلف يعمل، والتوقيت والحالة لا ينتجان تصنيفًا مضللًا.                                                          |
+| D      | زر طباعة التذكرة وتنسيق الورقة                                                       | QR واضح، تذكرة مؤكدة فقط، لا طباعة عبر cached ticket أُلغي أو تعذر تحديثه، وفحص معاينة الطباعة. لا توليد PDF جديد.                                 |
+| E      | صفحات الشروط والخصوصية ومسوداتها وروابطها                                            | تخطيط قراءة واضح وروابط صحيحة وترجمة؛ النشر النهائي للنص بعد المراجعة.                                                                             |
+| F      | مراجعة UX شاملة + إغلاق التنظيف ورسم التدفق                                          | فحص رحلة الزائر والدخول والمقاعد والتعارض والدفع والعودة والتذكرة والخروج والجوال وRTL، وتوثيق تدفق Auth/API بناءً على الكود النهائي.              |
 
 كل دفعة commit مستقل بعد التحقق؛ لا push دون طلب صريح. التحقق المناسب: TypeScript وESLint والبناء وتجربة متصفح للحالات المتأثرة، وفحوص ملكية/ترقيم/فلترة معزولة عند تغيير API. لا إضافة ملفات اختبارات دائمة وفق طلب المالك، ولا معاملات مالية أو تغيير بيانات حقيقية لتمرير المعاينة. لا حذف التعديلات الموجودة غير المرتبطة بالخطة.
 
@@ -1393,3 +1391,68 @@ Dashboard يبدأ بعد إغلاق هذه الدفعات أو تأجيل بن�
 - أُزيل errorCta واستُبدل بجدول errorLinks من نوع Map. ErrorNotice يفحص ApiError ويقرأ errorLinks.get(error.code) مباشرة؛ الأكواد غير المعروفة، بما فيها أسماء خصائص Object الموروثة، لا تنتج رابطًا. بقيت مجموعات الأكواد والوجهات والنصوص نفسها. استخدام Map هنا بيانات روابط وليس طبقة استدعاء جديدة.
 - الدوال المتبقية: apiFailure لإنشاء نتيجة فشل، unwrapApiResult لاستخراج البيانات أو رمي ApiError، invokeAction لاستدعاء Action وتصنيف فشل النقل/الخادم قبل استخراج النتيجة، errorMessage لرسالة العرض، isUnauthenticated لحالة المصادقة المحددة، وisUncertainRequestError لنتائج الكتابات غير المؤكدة. لم تُدمج القراءة المتزامنة والاستدعاء غير المتزامن في دالة ذات أشكال مدخلات مختلفة.
 - نجح TypeScript للويب وESLint للملفات الثلاثة المعدلة وgit diff --check. أعيد تشغيل 14 فحصًا معزولًا موجودًا لتصنيف أخطاء Actions وparseSchema وعمليات Actions. مقارنة مباشرة مع HEAD أكدت تطابق الروابط الـ12 ونتائج التحقق والمصادقة والنقل المستخدمة حاليًا بالعربية والإنجليزية وar-EG. لم تُجر اتصالات بخدمات حقيقية أو تُضف اختبارات دائمة؛ الحفظ محلي دون push.
+
+### توحيد طلبات HTTP باسم apiFetch — 2026-10-23
+
+- حُذفت الدالة requestApi، وأصبح apiFetch هو منفذ HTTP الوحيد ويعيد دائمًا { result, headers } داخل السيرفر. تستخرج الاستدعاءات المعتادة result؛ ويقرأ تسجيل الدخول وتجديد الجلسة headers أيضًا لاستخراج Refresh Cookie. لا خيارات تغيّر شكل الرد ولا تمرير Headers الخام في نتائج Actions.
+- حُدثت استدعاءات auth.server.ts وauth.actions.ts وقراءة توفر الدفع في Route Handler. بقيت نتائج الميزات من نوع ApiResult، وكذلك بيانات المستخدم الآمنة وCookies وتجديد القراءة مرة واحدة وعدم إعادة إرسال الكتابات.
+- نجح TypeScript للويب وESLint للملفات المعدلة وفحص whitespace، ولم تبق مراجع requestApi في web/src. لم تُرسل طلبات إلى Backend أو Paymob ولم تُجر تعديلات على قاعدة البيانات. التعديلات محلية دون push.
+
+### تقليل دوال جلسة الويب — 2026-10-23
+
+- دُمجت writeSessionCookies وclearSessionCookies وupdateSessionCookies في setSessionCookies(target, tokens)، فأصبح عدد الدوال المسماة مع قارئ المستخدم المخزن داخل render من 11 إلى 9. تمرر Middleware رد NextResponse، وتمرر Actions مخزن cookies الحالي. tokens الجديدة تُحفظ، وnull يمسح، وundefined لا يغيّر شيئًا.
+- جُمعت بداية مسار GET والتحقق السابق للكتابة داخل fetchWhenSignedIn، مع استخدام مخزن cookies واحد. أصبح getSignedInUser يرسل auth/me بالتوكن المقروء مباشرة بدل إعادة قراءة cookies عبر مساعد آخر. بقي فصل قراءة SSR عن تجديد/كتابة cookies، ومحاولة التجديد الواحدة وعدم إعادة إرسال الكتابات وسياسة أخطاء الجلسة كما هي.
+- نجح TypeScript وESLint وgit diff --check. نجحت 10 فحوص مؤقتة داخل الذاكرة باستخدام API وCookies وهميين لحالات الحفظ والمسح وعدم التعديل، والقراءة والتجديد ورفضه وتعذره، والكتابة مرة واحدة، وقراءة SSR دون تجديد، وحفظ التوكنات الجديدة عند فشل القراءة اللاحقة. لم تضف ملفات اختبار أو تُجر اتصالات خارجية أو تغييرات قاعدة بيانات؛ التعديلات محلية دون push.
+
+### 2026-10-23 — مدخل واحد لطلبات الويب
+
+- استبدال fetchWithAccessToken وfetchWithSessionRefresh وfetchWhenSignedIn باستدعاء apiFetch مباشرة في Features والصفحات والـProxy.
+- إضافة Access Token تلقائيًا. Server Components تقرأ فقط؛ Actions وRoute Handlers تستخدم refreshSession: true لتجديد الجلسة وحفظ Cookies عند الحاجة.
+- الـProxy يمرر sessionCookies من الطلب ويحفظ التوكنات المعادة على الاستجابة. تحقق الدور ما زال من Backend.
+- حفظ إعدادات Cookies وقراءة بيانات جلسة الدخول في shared/lib/session.ts لتجنب اعتماد دائري. auth.server.ts أصبح خاصًا بقراءة المستخدم فقط.
+- إبقاء إرسال HTTP وتجديد الجلسة دوال داخلية في api.ts، مع عدم إعادة إرسال العمليات الكتابية. لا تعيد Actions إلا result أو بيانات المستخدم المختارة.
+- فحص نسخة المراجعة بـTypeScript وESLint و18 حالة معزولة دون اتصالات خارجية أو قاعدة بيانات. لا ملفات اختبارات دائمة في المستودع.
+- تنسيق تجديد التوكن بين عدة عمليات سيرفر ما زال خارج نطاق هذه الخطوة.
+
+### 2026-10-23 — حصر تجديد الجلسة في Proxy (يحل محل خيار refreshSession السابق)
+
+- إضافة /api/:path* إلى matcher؛ مسار متابعة الدفع يمر بمصادقة الجلسة دون middleware اللغة.
+- حصر تبادل Refresh Token في authMiddleware. تمرير Cookies الجديدة للطلب الحالي وحفظها في الاستجابة؛ رفض طلبات API العابرة للمواقع قبل التجديد.
+- apiFetch تقرأ Access Token وترسل مرة واحدة فقط. حذف refreshSession وsessionCookies من خياراتها وحذف sendRequest الوسيطة.
+- Actions وServer Components وRoute Handler تستخدم apiFetch بنفس الطريقة. يبقى تحقق Backend من التوكن والصلاحيات إلزاميًا، ولا يعاد تنفيذ الحجز أو الدفع إذا عاد 401 أو فشلت الشبكة.
+- ردود API عند غياب/انتهاء الجلسة JSON 401، وعند تعذر التحقق JSON 503 دون مسح جلسة صالحة. ردود الصفحات تحتفظ بتحويل تسجيل الدخول المعتاد.
+- تصحيح وصف التنسيق: Backend يتضمن بالفعل قفل Session واسترداد التوكن التالي خلال 30 ثانية بشروطه؛ Map في الويب تحسين محلي فقط. لم تتغير سياسة Backend.
+- التحقق: TypeScript وESLint والتنسيق، و21 حالة معزولة باستخدام NextRequest/NextResponse الحقيقيين وHTTP وهمي؛ تشمل matcher وتمرير Cookies وتجديد الجلسة وطلبات Actions وعدم إعادة الكتابة. لم تُستخدم بيانات حقيقية أو Paymob.
+
+### 2026-10-23 — تبسيط رد الجلسة وأدوات Cookies
+
+- Login وRefresh يعيدان التوكنين ومدتي الصلاحية داخل JSON data؛ يلغي هذا استخراج Refresh من Set-Cookie المذكور سابقًا.
+- session.ts يحتوي tokensSchema للتحقق من التوكنات فقط، ويستخدم Login نوع TypeScript لرد Backend دون schema للتحقق من الرد؛ يبقى التحقق من مدخلات المستخدم. بعد Refresh يتحقق Proxy من المستخدم والصلاحيات عبر auth/me. توجد ثلاث دوال Cookies واضحة: getSessionCookies وsetSessionCookies وdeleteSessionCookies، ويستقبل مخزن Cookies مباشرة.
+- Login يحفظ التوكنات في HttpOnly Cookies ويعيد نجاح العملية فقط للواجهة؛ بيانات المستخدم تأتي من auth/me وتُخزّن عبر useAuth في TanStack Query. بعد الدخول تُمسح بيانات الحساب السابق ويُحدّث طلب المستخدم الحالي. Proxy وحده يجدد الجلسة، وapiFetch يقرأ Access لإرسال الطلب.
+- طلب Refresh نفسه يبقى باستخدام Cookie إلى Backend. لا تغيير في قاعدة البيانات أو التدوير أو الصلاحيات. يجب نشر Backend وWeb معًا لتوافق شكل الرد الجديد.
+
+- رد Login وRefresh يحتوي التوكنات ومدد صلاحيتها فقط؛ الدور ما زال ضمن Access Token وتتحقق منه صلاحيات Backend.
+
+### 2026-10-23 — ترتيب تدفق Middleware
+
+- authMiddleware يستدعي apiFetch مباشرة للتحقق والتجديد، ويحفظ Cookies الجديدة فور التجديد ثم يفحص دور المستخدم. حُذفت دالة refreshTokens ومتغيرات status/code الوسيطة وcatch المكرر لأخطاء الاتصال التي يعالجها apiFetch.
+- مساعد reject محلي واحد يختار JSON أو Redirect/خطأ صفحة وينقل Cookies المحفوظة للرد النهائي.
+- حُذفت Map تجميع Refresh في الويب؛ قد تصل عدة طلبات تجديد متزامنة إلى Backend، ويعالجها قفل Session واسترداد التوكن التالي خلال 30 ثانية وفق السياسة الموجودة دون تغييرها.
+- تبقى حماية مصدر الطلب والتحقق من الدور وتمرير Cookies للطلب الحالي. انتهاء الجلسة يمسحها؛ تعطل Backend لا يمسحها.
+
+### 2026-10-24 — توحيد متابعة الدفع مع Server Actions
+
+- متابعة الحالة: TanStack Query → invokeAction → getPaymentStatusAction → apiFetch؛ القراءة محمية بالمصادقة وملكية الحجز في Backend، ولا تستدعي Paymob ولا تعيد checkoutUrl.
+- حذف Route Handler الوحيد /api/payments/[bookingId]/status وpaymentStatusInputSchema غير المستخدم؛ يستخدم Action قاعدة bookingIdSchema الموجودة.
+- حذف isApi وفروع JSON من Middleware، وحذف /api من matcher. Proxy يشغّل authMiddleware ثم intlMiddleware لجميع المسارات المطابقة.
+- الإبقاء على فترات المتابعة 3/5 ثوانٍ وشروط توقفها وحماية الرد الأحدث. إلغاء Query يتجاهل رد Action المتأخر؛ لا يوقف تنفيذ Action على الخادم.
+- هذا الإدخال يحل محل وصف متابعة الدفع عبر GET وفروع API في الإدخالات التاريخية السابقة. callbacks الخاصة بـPaymob تبقى في Express.
+- أخطاء جلسة Action لا تتحول إلى Redirect/HTML داخل Middleware؛ يكتمل Action حتى يتحقق Backend من المصادقة والصلاحيات ويرجع خطأه عبر invokeAction. التحويل إلى Login/Forbidden يخص زيارة الصفحة، ومعالج 401 الموجود يمسح كاش الحساب ويحدّث الصفحة.
+
+### 2026-10-24 — تبسيط API والمصادقة بعد الموافقة على المراجعة
+
+- apiFetch يعيد ApiResult<T> مباشرة؛ حذف غلاف result/headers وتحديث الاستدعاءات الـ36 في 14 ملفًا. بقيت ردود Backend وServer Actions وبيانات status/retryAfter/requestId كما هي.
+- Actions التي تحتاج فقط إرسال النتيجة تستخدم return apiFetch مباشرة. لا توجد دالة HTTP إضافية أو submit وسيطة.
+- logoutAction يقرأ مخزن Cookies مرة واحدة. useAuth يحدد الحالة بشروط if/else بنفس الأولويات.
+- Middleware يستخدم userResult وrefreshResult وhandleAuthFailure لتوضيح المعنى، دون تغيير شروط الدخول أو التجديد أو الدور.
+- parseSchema يقرأ اللغة من الطلب عند خطأ المدخلات؛ حُذف وسيط اللغة الاختياري غير المستخدم. بقي دعم signal في apiFetch وإعدادات Cookies والتحقق من التوكنات وتوقيع سياق IP دون تغيير.

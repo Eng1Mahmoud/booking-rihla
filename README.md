@@ -1416,7 +1416,7 @@ Open http://localhost:3000/ar (or /en). Keep Docker PostgreSQL/Mailpit running. 
 
 The website supports city/station search, trip results, a physical 2+2 seat map, multi-seat selection, login/registration/email verification, passenger details, a ten-minute server-side seat hold, booking history and owned booking/payment status. Seat availability refreshes periodically and is rechecked before reservation. A seat conflict is handled from the API; selection does not reserve a seat.
 
-Interactive browser requests use same-origin Server Actions; payment polling uses the fixed GET /api/payments/[bookingId]/status route. API_BASE_URL is the server-only backend address (default http://127.0.0.1:4000/api/v1); SITE_ORIGIN is the website origin. Configure apps/web/.env.local when overriding them, and include the website origin in API CORS_ORIGINS.
+Interactive browser requests, including payment status polling, use same-origin Server Actions. API_BASE_URL is the server-only backend address (default http://127.0.0.1:4000/api/v1); SITE_ORIGIN is the website origin. Configure apps/web/.env.local when overriding them, and include the website origin in API CORS_ORIGINS.
 
 The payment action checks GET /payments/availability before allowing checkout. This endpoint reports local configuration only, not live provider health. With checkout disabled the server returns PAYMENT_UNAVAILABLE. No browser calculation confirms payment or issues a ticket. Account passwords/tokens and passenger names are not persisted in browser storage.
 
@@ -1456,9 +1456,9 @@ Sign out ends the current session. Sign out of all devices asks for confirmation
 
 ### Website authentication and role-protected routes
 
-Interactive reads and writes use feature TanStack hooks and Server Actions through the server-only apiFetch transport; Server Components prepare initial data through the same transport. The sole website Route Handler is GET /api/payments/[bookingId]/status for owner-scoped payment polling. The old /api/backend/[...path] gateway and browser auth/seat read modules are deleted. Provider callbacks remain in Express, independently of the website route.
+Interactive reads and writes use feature TanStack hooks and Server Actions through the server-only apiFetch transport; Server Components prepare initial data through the same transport. Payment polling uses getPaymentStatusAction; the former website payment Route Handler and generic API gateway are deleted. Provider callbacks remain in Express.
 
-Access and rotating refresh credentials remain in HttpOnly, host-only web cookies (development bus_web_access/bus_web_refresh, production __Host-bus_access/__Host-bus_refresh with Secure, SameSite=Lax, Path=/). Access lasts 15 minutes; refresh retains backend session expiry. Neither token is returned in browser JSON, hydrated query state or browser storage. shared/lib/api.ts contains the sole HTTP transport, requestApi (with server-only response headers) and apiFetch (result only). It sends explicit credentials only to fixed API_BASE_URL. features/auth/lib/auth.server.ts owns cookie extraction/storage and session renewal; auth Actions return safe user data. Server Components never write cookies or refresh sessions during rendering.
+Access and rotating refresh credentials remain in HttpOnly, host-only web cookies (development bus_web_access/bus_web_refresh, production __Host-bus_access/__Host-bus_refresh with Secure, SameSite=Lax, Path=/). Access lasts 15 minutes; refresh retains backend session expiry. Neither token is returned in browser JSON, hydrated query state or browser storage. shared/lib/api.ts exports one HTTP function, apiFetch, which always returns { result, headers }. Ordinary callers return result; login/refresh also read the server-only headers for Set-Cookie. Raw Headers never enter Server Action results. It sends explicit credentials only to fixed API_BASE_URL. features/auth/lib/auth.server.ts owns cookie extraction/storage and session renewal; auth Actions return safe user data. Server Components never write cookies or refresh sessions during rendering.
 
 The locale layout hydrates one safe { user, error? } session view into a request-local TanStack Query cache. useAuth shares authKeys.me and refetches through getCurrentUserAction. QueryCache and MutationCache centrally handle confirmed UNAUTHENTICATED failures, cancel pending queries, remove previous-account data and refresh server content. Invalid login credentials, 403 and transient failures do not sign the user out. Seat selection stays in local useState; RHF owns form fields and URL parameters own search/filter state.
 
@@ -1535,7 +1535,7 @@ The authoritative current plan and implementation progress are in IMPLEMENTATION
 
 Interactive requests follow component → feature hook (TanStack) → specific Server Action → auth.server for protected operations → shared/lib/api.ts → Express. HTTP configuration and envelope parsing stay in api.ts; cookies, read renewal and write preflight stay in features/auth/lib/auth.server.ts. apiResult.ts holds serializable results and invokeAction error conversion. The old session.ts and refreshSession.ts files are merged into auth.server.ts. Middleware continues to read the current role from backend auth/me.
 
-TanStack owns the API data cache. HTTP fetches use no-store. Internal feature lib/*.server.ts readers prepare initial SSR data through the same central transport; they never write cookies during render. Protected read Actions use authenticatedFetch to allow renewal. The browser Action transport is POST even when Express receives GET. The fixed GET /api/payments/:bookingId/status route remains for payment polling; it does not contact Paymob itself.
+TanStack owns the API data cache. HTTP fetches use no-store. Internal feature lib/*.server.ts readers prepare initial SSR data through the same central transport; they never write cookies during render. Protected read Actions use apiFetch after Proxy session renewal. The browser Action transport is POST even when Express receives GET. getPaymentStatusAction reads owner-scoped stored payment status and availability; it does not contact Paymob itself.
 
 Query keys include locale and private owner identity where relevant. Login/logout clear previous query data. No access or refresh credentials enter query data or Action results. The QR view receives its image without a separate raw payload field.
 
@@ -1585,16 +1585,13 @@ Passenger booking/checkout/status/ticket limits now use the authenticated user i
 
 Rate-limit counters remain process-local. Multi-API deployments must use a shared limiter store or a trusted ingress enforcing the intended aggregate limits; signed client identity fixes attribution, not distributed counter storage. Keep direct API exposure restricted. No provider/payment behavior is changed.
 
-
 ### Payment status input validation (2026-10-21)
 
 The payment-status GET handler shares parseSchema with feature Actions. Its feature-owned schema validates the booking UUID and rejects query parameters. The handler supplies its request language explicitly; Actions keep using the current page locale. Validation stays one general message with no submitted values or Zod issues, including Arabic regional locales. Authentication, CSRF, HttpOnly renewal, private no-store responses, and checkout URL redaction remain in place. TypeScript, ESLint, production build and 27 temporary isolated checks passed; no DB or Paymob calls or repository test files were added.
 
-
 ### Web structure simplification (2026-10-21)
 
 All 15 app pages render on the server and supply initial feature data. Static login/account/booking and public-page content now stay outside client interaction boundaries. Feature hooks share hooks/queryKeys.ts; global query/mutation retry settings live in queryClient.ts. Six one-use wrapper files were inlined; seat logic moved into useSeatBooking and live payment logic into useBookingPayment. Auth-dependent navigation is composed by the layout, so shared UI no longer imports feature internals. Component styling uses inline Tailwind utilities, with only theme/base/keyframes in global CSS. Auth/session/redirect protection and payment ordering/idempotency are retained. See the current feature table and audit in IMPLEMENTATION_PLAN.md for exact responsibilities and verification.
-
 
 ### Consistent password recovery forms (2026-10-21)
 
@@ -1637,3 +1634,25 @@ The existing ticket page now offers Print ticket in Arabic and English. Each cli
 The paper layout hides site navigation and interactive controls, uses A4 with 14mm margins and a 55mm QR, and allows passenger rows to continue across pages. Styling stays in Tailwind utilities except the print page/shell rules. The browser can save the print as PDF; no PDF endpoint, dependency, migration or backend policy change was added.
 
 Web TypeScript, feature-file ESLint and production build passed. Sixteen Chromium checks used a synthetic API, including refusal after cancellation/failure, corrupt QR, retry, Arabic RTL and mobile layout. Temporary A4 PDF previews were rendered and reviewed: one page for normal tickets and three nonblank pages for 44 passengers. Automation intercepted window.print and separately exercised the browser print CSS/PDF output; no physical printer, real database/provider call or permanent test file was used. Phase D is complete; terms/privacy drafts and links are next, then the broader UX review.
+
+### Current web API and session flow (2026-10-24)
+
+All Features, server pages and middleware import apiFetch from shared/lib/api.ts for backend HTTP requests. It attaches the current access cookie (or the explicit access token supplied by Proxy), sends once, and returns ApiResult<T> directly. It never refreshes tokens, writes cookies, or retries a request. Simple Actions return apiFetch directly; login saves tokens in HttpOnly cookies and returns success without token or user data.
+
+Proxy covers page URLs and excludes /api, framework assets and files. Every matched request uses authMiddleware followed by intlMiddleware, including Server Action POSTs on page URLs. There are no web Route Handlers. Payment status follows the same TanStack Query → invokeAction → getPaymentStatusAction → apiFetch flow as other feature reads.
+
+Only authMiddleware renews an expired session: read cookies, call backend auth/me, exchange the refresh token on a confirmed UNAUTHENTICATED response, and verify the renewed access token. It forwards both new cookies to the downstream request and sets HttpOnly cookies on the response. Login/reset/logout still manage their own session creation/removal. Protected navigation redirects unauthenticated users to login with returnTo; verification outages return 503 without clearing a valid session. Action POSTs continue after a failed middleware session check so that the backend returns its own authorization/error result through the Action transport; invokeAction and the existing auth error handler process it. Server Actions retain Next.js origin validation, while Express independently checks authentication, roles and ownership for every protected operation.
+
+The backend still authenticates and authorizes every protected read/write. If a token expires or is revoked after Proxy verification, apiFetch returns the backend error without renewing or replaying the operation. There is no refreshSession option or Action-specific request wrapper. Backend requests remain no-store; TanStack owns browser data caching.
+
+authMiddleware calls apiFetch('auth/me'), calls apiFetch('auth/refresh') directly when access is rejected, saves/forwards new cookies, and checks the backend user's role. There is no isApi branch, separate refresh function, status/code staging, or second network-error handler. One local reject helper creates a redirect or temporary error response and carries any renewed cookies across it.
+
+useBookingPayment retains the existing 3/5-second polling intervals and terminal-state stopping conditions. Query cancellation ignores an outstanding Action result; it cannot abort the server-side Action HTTP request. The timestamp comparison prevents an older poll from overwriting newer reconciliation data. Status reads omit checkout URLs and never call Paymob; refreshPaymentAction remains the separate reconciliation operation.
+
+shared/lib/session.ts owns cookie settings and token validation. features/auth/lib/auth.server.ts exports the render-deduplicated getSignedInUser reader; callers needing user.id handle a missing user directly. Proxy no longer maintains an in-flight refresh Map; simultaneous requests may each call refresh. The backend coordinates rotation through its Session row lock and bounded 30-second immediate-successor recovery described above; this change does not alter that policy or extend the recovery window.
+
+### Session response simplification (2026-10-23)
+
+This supersedes the earlier Set-Cookie response parsing described above. Backend login and refresh now return only accessToken, expiresIn, refreshToken and refreshExpiresAt in JSON data. User information comes from auth/me. Login uses a TypeScript response type and saves tokens directly, without a Zod response schema. A missing data payload is handled as an upstream error. Proxy still validates refresh tokens with tokensSchema in session.ts. Proxy ignores user data in the refresh response and verifies the user and role through auth/me. Login saves HttpOnly cookies and returns a success result without token or user data to the browser; Proxy refreshes the session and forwards updated cookies. Tokens never enter client-side query data. After login, useLogin clears the old account cache and invalidates authKeys.me; useAuth loads and caches the current user through getCurrentUserAction (auth/me).
+
+shared/lib/session.ts exposes three cookie functions: getSessionCookies(cookieStore), setSessionCookies(cookieStore, tokens), and deleteSessionCookies(cookieStore). Pass await cookies() in an Action or response.cookies when writing in Proxy. apiFetch reads access only; refresh remains in Proxy. Refresh/logout requests still send the backend refresh cookie; token generation, rotation and expiry are unchanged. Deploy backend and web together for this response-contract change.
