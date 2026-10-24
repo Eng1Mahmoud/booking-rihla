@@ -4,7 +4,7 @@ import type { TicketDetails } from './ticketService.ts';
 import nodemailer from 'nodemailer';
 import { ticketEmail } from '../emails/ticketEmail.ts';
 import type { TicketData } from './ticketService.ts';
-import { parseAuthEnv } from '../config/env.ts';
+import { parseMailEnv } from '../config/env.ts';
 import { verificationEmail } from '../emails/verificationEmail.ts';
 import {
   passwordResetEmail,
@@ -19,7 +19,7 @@ export interface AccountMail {
 }
 export type SendAccountMail = (message: AccountMail) => Promise<void>;
 function mailTransport() {
-  const env = parseAuthEnv(process.env);
+  const env = parseMailEnv(process.env);
   const transport = nodemailer.createTransport({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,

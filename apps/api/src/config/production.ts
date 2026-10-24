@@ -1,4 +1,9 @@
-import { parseEnv, parseAuthEnv, parseSessionEnv } from './env.ts';
+import {
+  parseEnv,
+  parseAuthCodeEnv,
+  parseMailEnv,
+  parseSessionEnv,
+} from './env.ts';
 import {
   parsePaymobEnv,
   parsePaymobCheckoutEnv,
@@ -11,18 +16,19 @@ export function validateProductionEnv(environment: NodeJS.ProcessEnv) {
   if (!env.DATABASE_URL) throw new Error('Production requires DATABASE_URL');
   if (env.CORS_ORIGINS.some((origin) => !origin.startsWith('https://')))
     throw new Error('Production CORS origins must use HTTPS');
-  const mail = parseAuthEnv(environment);
+  const auth = parseAuthCodeEnv(environment);
+  const mail = parseMailEnv(environment);
   const session = parseSessionEnv(environment);
   if (!mail.SMTP_SECURE && !mail.SMTP_REQUIRE_TLS)
     throw new Error('Production SMTP requires TLS');
   if (
-    mail.AUTH_CODE_SECRET.toLowerCase() ===
+    auth.AUTH_CODE_SECRET.toLowerCase() ===
     session.AUTH_ACCESS_SECRET.toLowerCase()
   )
     throw new Error('Authentication secrets must be independent');
   if (
     env.API_CLIENT_CONTEXT_SECRET &&
-    [mail.AUTH_CODE_SECRET, session.AUTH_ACCESS_SECRET].some(
+    [auth.AUTH_CODE_SECRET, session.AUTH_ACCESS_SECRET].some(
       (secret) =>
         secret.toLowerCase() === env.API_CLIENT_CONTEXT_SECRET?.toLowerCase(),
     )
@@ -35,7 +41,7 @@ export function validateProductionEnv(environment: NodeJS.ProcessEnv) {
     const key = checkoutKey(environment).toString('hex');
     if (
       [
-        mail.AUTH_CODE_SECRET.toLowerCase(),
+        auth.AUTH_CODE_SECRET.toLowerCase(),
         session.AUTH_ACCESS_SECRET.toLowerCase(),
       ].includes(key)
     )

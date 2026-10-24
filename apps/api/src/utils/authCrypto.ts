@@ -6,9 +6,9 @@ import {
   randomInt,
   timingSafeEqual,
 } from 'node:crypto';
-import { parseAuthEnv } from '../config/env.ts';
+import { parseAuthCodeEnv } from '../config/env.ts';
 function secret() {
-  return Buffer.from(parseAuthEnv(process.env).AUTH_CODE_SECRET, 'hex');
+  return Buffer.from(parseAuthCodeEnv(process.env).AUTH_CODE_SECRET, 'hex');
 }
 export function newVerificationCode() {
   return randomInt(1000000).toString().padStart(6, '0');

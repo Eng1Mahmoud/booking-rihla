@@ -7,7 +7,11 @@ const originSchema = z
     'Must be an HTTP(S) origin without a path, credentials, query, or fragment',
   );
 
-// Define the environment settings and validate them before starting the server.
+const databaseEnvSchema = z.object({
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
+});
+
+// Server startup validates HTTP settings and the optional database URL together.
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
@@ -24,7 +28,7 @@ const envSchema = z.object({
     .default('4000')
     .transform(Number)
     .pipe(z.number().int().min(1).max(65535)),
-  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
+  DATABASE_URL: databaseEnvSchema.shape.DATABASE_URL,
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:3000,http://localhost:3001')
@@ -46,11 +50,30 @@ export function parseEnv(environment: NodeJS.ProcessEnv) {
   return result.data;
 }
 
-const authEnvSchema = z
+// Database workers do not need HTTP settings such as PORT or CORS_ORIGINS.
+export function parseDatabaseEnv(environment: NodeJS.ProcessEnv) {
+  const result = databaseEnvSchema.safeParse(environment);
+  if (!result.success)
+    throw new Error('Invalid database configuration: DATABASE_URL');
+  return result.data;
+}
+
+const authCodeEnvSchema = z.object({
+  AUTH_CODE_SECRET: z
+    .string()
+    .regex(/^[a-fA-F0-9]{64}$/, 'Must be a 32-byte hexadecimal secret'),
+});
+export function parseAuthCodeEnv(environment: NodeJS.ProcessEnv) {
+  const result = authCodeEnvSchema.safeParse(environment);
+  if (!result.success)
+    throw new Error(
+      'Invalid authentication code configuration: AUTH_CODE_SECRET',
+    );
+  return result.data;
+}
+
+const mailEnvSchema = z
   .object({
-    AUTH_CODE_SECRET: z
-      .string()
-      .regex(/^[a-fA-F0-9]{64}$/, 'Must be a 32-byte hexadecimal secret'),
     SMTP_HOST: z.string().trim().min(1).default('127.0.0.1'),
     SMTP_PORT: z
       .string()
@@ -77,11 +100,11 @@ const authEnvSchema = z
       path: ['SMTP_USER'],
     },
   );
-export function parseAuthEnv(environment: NodeJS.ProcessEnv) {
-  const result = authEnvSchema.safeParse(environment);
+export function parseMailEnv(environment: NodeJS.ProcessEnv) {
+  const result = mailEnvSchema.safeParse(environment);
   if (!result.success)
     throw new Error(
-      'Invalid authentication/mail configuration: ' +
+      'Invalid mail configuration: ' +
         result.error.issues.map((issue) => issue.path.join('.')).join(', '),
     );
   return result.data;
