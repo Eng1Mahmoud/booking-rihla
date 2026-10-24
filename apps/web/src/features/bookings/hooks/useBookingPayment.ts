@@ -2,13 +2,12 @@
 import { useEffect, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ApiError,
-  invokeAction,
-  unwrapApiResult,
-} from '@/shared/lib/apiResult';
+import { invokeAction } from '@/shared/lib/apiResult';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { refreshPaymentAction } from '../actions/bookings.actions';
+import {
+  getPaymentStatusAction,
+  refreshPaymentAction,
+} from '../actions/bookings.actions';
 import { isPaymentPending, paymentOutcome } from '../lib/paymentState';
 import { bookingKeys } from './queryKeys';
 import type { BookingDetails, PaymentState } from '../types/booking';
@@ -36,9 +35,14 @@ export function useBookingPayment(
     initialData: initialState,
     initialDataUpdatedAt: initial.readAt,
     queryFn: async ({ signal }) => {
-      const incoming = await pollPayment(initial.booking.id, signal);
+      signal.throwIfAborted();
+      const incoming = await invokeAction(() =>
+        getPaymentStatusAction(initial.booking.id),
+      );
+      // Actions cannot receive AbortSignal; ignore the result if this query was cancelled.
+      signal.throwIfAborted();
       const current = client.getQueryData<PaymentState>(key);
-      // An older in-flight GET must not replace a newer reconciliation result.
+      // An older in-flight status read must not replace a newer reconciliation result.
       return current &&
         Date.parse(current.payment.serverTime) >
           Date.parse(incoming.payment.serverTime)
@@ -112,33 +116,4 @@ export function useBookingPayment(
     dataUpdatedAt: Math.max(initial.readAt, query.dataUpdatedAt),
     isError: query.isError && query.errorUpdatedAt >= initial.readAt,
   };
-}
-
-// Payment polling keeps its fixed GET endpoint; ordinary feature reads use Actions.
-async function pollPayment(
-  bookingId: string,
-  signal?: AbortSignal,
-): Promise<PaymentState> {
-  let response: Response;
-  try {
-    response = await fetch(
-      '/api/payments/' + encodeURIComponent(bookingId) + '/status',
-      {
-        cache: 'no-store',
-        credentials: 'same-origin',
-        signal,
-        headers: {
-          'Accept-Language': window.location.pathname.startsWith('/ar')
-            ? 'ar'
-            : 'en',
-        },
-      },
-    );
-  } catch {
-    throw new ApiError(0, 'NETWORK_ERROR');
-  }
-  const result = await response.json().catch(() => null);
-  if (!result || typeof result.success !== 'boolean')
-    throw new ApiError(502, 'UPSTREAM_ERROR');
-  return unwrapApiResult<PaymentState>({ ...result, status: response.status });
 }

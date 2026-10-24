@@ -20,11 +20,66 @@ export class ApiError extends Error {
     super(message);
   }
 }
-export function isUncertainRequestError(error: unknown) {
-  return (
-    error instanceof ApiError &&
-    (error.code === 'NETWORK_ERROR' || error.status >= 500)
-  );
+
+// One builder for local validation, authentication and transport failures.
+export function apiFailure<T = never>(
+  status: number,
+  code: string,
+  locale: string,
+): ApiResult<T> {
+  return {
+    success: false,
+    status,
+    code,
+    message: errorMessage(new ApiError(status, code), locale),
+  };
+}
+
+// Locale comes from the current server request or client component.
+// Prefer API message; then known code; then generic fallback.
+export function errorMessage(error: unknown, locale: string) {
+  const ar = locale.startsWith('ar');
+  const fallback = ar
+    ? 'تعذر إكمال الطلب. حاول مجددًا.'
+    : 'Could not complete the request. Please try again.';
+  if (!(error instanceof ApiError)) return fallback;
+  if (error.message && error.message !== error.code) {
+    return error.requestId
+      ? error.message + ' (' + error.requestId + ')'
+      : error.message;
+  }
+  const known = codeMessages[error.code];
+  if (known) return ar ? known.ar : known.en;
+  return fallback;
+}
+
+// Server reads and client action adapters use the same error shape.
+export function getApiDataOrThrow<T>(result: ApiResult<T>): T {
+  if (!result.success) {
+    throw new ApiError(
+      result.status,
+      result.code,
+      result.message,
+      result.requestId,
+    );
+  }
+  return result.data as T;
+}
+
+// Adapt action results for forms/React Query; a lost response has an uncertain outcome.
+export async function invokeAction<T>(
+  action: () => Promise<ApiResult<T>>,
+): Promise<T> {
+  let result: ApiResult<T>;
+  try {
+    result = await action();
+  } catch (error) {
+    // Next attaches a digest to server exceptions; they are not connectivity failures.
+    if (error instanceof Error && 'digest' in error)
+      throw new ApiError(500, 'SERVER_ACTION_FAILED');
+    throw new ApiError(0, 'NETWORK_ERROR');
+  }
+  return getApiDataOrThrow(result);
 }
 
 /** Fallback when API returns code only (no localized message body). */
@@ -111,23 +166,6 @@ const codeMessages: Record<string, { ar: string; en: string }> = {
   },
 };
 
-// Prefer API message; then known code; then generic fallback.
-export function errorMessage(error: unknown, locale: string) {
-  const ar = locale.startsWith('ar');
-  const fallback = ar
-    ? 'تعذر إكمال الطلب. حاول مجددًا.'
-    : 'Could not complete the request. Please try again.';
-  if (!(error instanceof ApiError)) return fallback;
-  if (error.message && error.message !== error.code) {
-    return error.requestId
-      ? error.message + ' (' + error.requestId + ')'
-      : error.message;
-  }
-  const known = codeMessages[error.code];
-  if (known) return ar ? known.ar : known.en;
-  return fallback;
-}
-
 const findTripLink = {
   href: '/',
   labelAr: 'ابحث عن رحلة',
@@ -164,50 +202,3 @@ export const errorLinks = new Map<
     },
   ],
 ]);
-
-// Server reads and client action adapters use the same error shape.
-export function unwrapApiResult<T>(result: ApiResult<T>): T {
-  if (!result.success) {
-    throw new ApiError(
-      result.status,
-      result.code,
-      result.message,
-      result.requestId,
-    );
-  }
-  return result.data as T;
-}
-
-export function isUnauthenticated(error: { status: number; code: string }) {
-  return error.status === 401 && error.code === 'UNAUTHENTICATED';
-}
-
-// Adapt action results for forms/React Query; a lost response has an uncertain outcome.
-export async function invokeAction<T>(
-  action: () => Promise<ApiResult<T>>,
-): Promise<T> {
-  let result: ApiResult<T>;
-  try {
-    result = await action();
-  } catch (error) {
-    // Next attaches a digest to server exceptions; they are not connectivity failures.
-    if (error instanceof Error && 'digest' in error)
-      throw new ApiError(500, 'SERVER_ACTION_FAILED');
-    throw new ApiError(0, 'NETWORK_ERROR');
-  }
-  return unwrapApiResult(result);
-}
-
-// One builder for local validation, authentication and transport failures.
-export function apiFailure<T = never>(
-  status: number,
-  code: string,
-  locale: string,
-): ApiResult<T> {
-  return {
-    success: false,
-    status,
-    code,
-    message: errorMessage(new ApiError(status, code), locale),
-  };
-}

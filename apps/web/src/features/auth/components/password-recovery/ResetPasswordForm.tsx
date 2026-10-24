@@ -6,11 +6,7 @@ import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
-import {
-  ApiError,
-  isUncertainRequestError,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { useForgotPassword, useResetPassword } from '../../hooks/useAuth';
 import {
   createRecoveryResetSchema,
@@ -46,7 +42,10 @@ export function ResetPasswordForm({
           onReset();
         } catch (error) {
           // A lost response may mean the password changed; do not submit again automatically.
-          if (isUncertainRequestError(error))
+          if (
+            error instanceof ApiError &&
+            (error.code === 'NETWORK_ERROR' || error.status >= 500)
+          )
             throw new ApiError(502, 'UPSTREAM_UNAVAILABLE', t('uncertain'));
           throw error;
         }

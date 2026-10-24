@@ -7,4 +7,6 @@ export default function proxy(request: NextRequest) {
   return runMiddlewares(request, [authMiddleware, intlMiddleware]);
 }
 
-export const config = { matcher: '/((?!api|_next|_vercel|.*\\..*).*)' };
+export const config = {
+  matcher: '/((?!api|_next|_vercel|.*\\..*).*)',
+};

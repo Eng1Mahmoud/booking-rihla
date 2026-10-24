@@ -69,7 +69,6 @@ async function tokenResponse(
   refreshToken: string,
 ) {
   return {
-    user: publicUser(user),
     accessToken: await signAccessToken(user.id, session.id, user.role),
     expiresIn: accessLifetimeSeconds,
     refreshToken,

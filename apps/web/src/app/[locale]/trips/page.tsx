@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import { getTripCatalog, getTrips } from '@/features/trips/lib/trips.server';
-import { unwrapApiResult } from '@/shared/lib/apiResult';
+import { getApiDataOrThrow } from '@/shared/lib/apiResult';
 import { TripResults } from '@/features/trips/components/TripResults';
 import { searchSchema } from '@/features/trips/schemas/searchSchema';
 export default async function TripsPage({
@@ -32,9 +32,9 @@ export default async function TripsPage({
   let data;
   try {
     data = await Promise.all([
-      getTripCatalog().then(unwrapApiResult),
+      getTripCatalog().then(getApiDataOrThrow),
       getTrips(search)
-        .then(unwrapApiResult)
+        .then(getApiDataOrThrow)
         .then((page) => page.items),
     ]);
   } catch {

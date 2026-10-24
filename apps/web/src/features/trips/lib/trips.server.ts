@@ -1,5 +1,6 @@
 import 'server-only';
-import { fetchWithAccessToken } from '@/features/auth/lib/auth.server';
+
+import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import type { Trip, City, Station, TripCatalog } from '../types/trip';
 import type { Search } from '../schemas/searchSchema';
@@ -7,7 +8,7 @@ import type { Search } from '../schemas/searchSchema';
 async function listCatalog<T>(path: string): Promise<ApiResult<T[]>> {
   const items: T[] = [];
   for (let offset = 0; offset <= 100000; offset += 100) {
-    const page = await fetchWithAccessToken<{ items: T[] }>(
+    const page = await apiFetch<{ items: T[] }>(
       path + '?limit=100&offset=' + offset,
     );
     if (!page.success || !page.data) return { ...page, data: undefined };
@@ -21,6 +22,7 @@ async function listCatalog<T>(path: string): Promise<ApiResult<T[]>> {
     message: 'Catalog pagination limit reached',
   };
 }
+
 export async function getTripCatalog(): Promise<ApiResult<TripCatalog>> {
   const [cities, stations] = await Promise.all([
     listCatalog<City>('cities'),
@@ -31,7 +33,8 @@ export async function getTripCatalog(): Promise<ApiResult<TripCatalog>> {
     return { ...stations, data: undefined };
   return { ...cities, data: { cities: cities.data, stations: stations.data } };
 }
-export function getTrips(search: Search) {
+
+export async function getTrips(search: Search) {
   const query = new URLSearchParams({
     travelDate: search.travelDate,
     limit: '21',
@@ -44,5 +47,5 @@ export function getTrips(search: Search) {
     'destinationStationId',
   ] as const)
     if (search[key]) query.set(key, search[key]);
-  return fetchWithAccessToken<{ items: Trip[] }>('trips/search?' + query);
+  return apiFetch<{ items: Trip[] }>('trips/search?' + query);
 }

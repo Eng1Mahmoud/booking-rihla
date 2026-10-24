@@ -54,17 +54,6 @@ function validateEmpty(request: Request) {
     );
 }
 export function createSessionController(service: SessionService) {
-  function sendTokens(
-    response: Response,
-    result: Awaited<ReturnType<SessionService['login']>>,
-  ) {
-    const { refreshToken, refreshExpiresAt, ...data } = result;
-    response.cookie(refreshCookieName(), refreshToken, {
-      ...cookieOptions(),
-      expires: new Date(refreshExpiresAt),
-    });
-    sendSuccess(response, data);
-  }
   return {
     async login(request: Request, response: Response) {
       validateJson(request);
@@ -75,7 +64,7 @@ export function createSessionController(service: SessionService) {
           'VALIDATION_ERROR',
           'Provide only a valid email and password (12-128 characters)',
         );
-      sendTokens(response, await service.login(input.data));
+      sendSuccess(response, await service.login(input.data));
     },
     async refresh(request: Request, response: Response) {
       validateEmpty(request);
@@ -85,7 +74,7 @@ export function createSessionController(service: SessionService) {
         throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
       }
       try {
-        sendTokens(response, await service.refresh(token));
+        sendSuccess(response, await service.refresh(token));
       } catch (error) {
         if (error instanceof AppError && error.statusCode === 401)
           response.clearCookie(refreshCookieName(), cookieOptions());

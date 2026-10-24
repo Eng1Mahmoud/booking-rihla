@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/lib/api';
 import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -6,8 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import { ApiError } from '@/shared/lib/apiResult';
-import { fetchWithAccessToken } from '@/features/auth/lib/auth.server';
-import { unwrapApiResult } from '@/shared/lib/apiResult';
+import { getApiDataOrThrow } from '@/shared/lib/apiResult';
 import type { Trip, SeatList } from '@/features/trips/types/trip';
 import { TripDetails } from '@/features/trips/components/TripDetails';
 export default async function TripPage({
@@ -24,11 +24,11 @@ export default async function TripPage({
   let data;
   try {
     data = await Promise.all([
-      fetchWithAccessToken<Trip>('trips/' + tripId + '/details').then(
-        unwrapApiResult,
+      apiFetch<Trip>('trips/' + tripId + '/details').then((result) =>
+        getApiDataOrThrow(result),
       ),
-      fetchWithAccessToken<SeatList>('trips/' + tripId + '/seats').then(
-        unwrapApiResult,
+      apiFetch<SeatList>('trips/' + tripId + '/seats').then((result) =>
+        getApiDataOrThrow(result),
       ),
     ]);
   } catch (error) {

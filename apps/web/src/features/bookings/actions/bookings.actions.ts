@@ -1,6 +1,6 @@
 'use server';
 
-import { fetchWhenSignedIn } from '@/features/auth/lib/auth.server';
+import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import {
@@ -16,12 +16,13 @@ import type {
   Booking,
   BookingPayment,
   BookingListPage,
+  PaymentState,
 } from '../types/booking';
 
 export async function createBookingAction(input: CreateBookingInput) {
   const parsed = await parseSchema(createBookingSchema, input);
   if (!parsed.success) return parsed.error;
-  return fetchWhenSignedIn<Booking>('bookings', {
+  return apiFetch<Booking>('bookings', {
     method: 'POST',
     body: parsed.data,
   });
@@ -33,24 +34,21 @@ export async function checkoutAction(
   const parsed = await parseSchema(checkoutSchema, input);
   if (!parsed.success) return parsed.error;
   const { id, prepare, idempotencyKey } = parsed.data;
-  const owned = await fetchWhenSignedIn<Booking>('bookings/' + id);
+  const owned = await apiFetch<Booking>('bookings/' + id);
   if (!owned.success) return { ...owned, data: undefined };
   if (prepare) {
-    const attempt = await fetchWhenSignedIn(
-      'bookings/' + id + '/payment-attempt',
-      {
-        method: 'POST',
-        body: {},
-        headers: { 'Idempotency-Key': idempotencyKey! },
-      },
-    );
+    const attempt = await apiFetch('bookings/' + id + '/payment-attempt', {
+      method: 'POST',
+      body: {},
+      headers: { 'Idempotency-Key': idempotencyKey! },
+    });
     if (
       !attempt.success &&
       !(attempt.status === 409 && attempt.code === 'PAYMENT_ATTEMPT_EXISTS')
     )
       return { ...attempt, data: undefined };
   }
-  return fetchWhenSignedIn<BookingPayment>('bookings/' + id + '/checkout', {
+  return apiFetch<BookingPayment>('bookings/' + id + '/checkout', {
     method: 'POST',
     body: {},
   });
@@ -61,9 +59,9 @@ export async function refreshPaymentAction(
 ): Promise<ApiResult<BookingPayment>> {
   const parsed = await parseSchema(bookingIdSchema, id);
   if (!parsed.success) return parsed.error;
-  const owned = await fetchWhenSignedIn<Booking>('bookings/' + parsed.data);
+  const owned = await apiFetch<Booking>('bookings/' + parsed.data);
   if (!owned.success) return { ...owned, data: undefined };
-  return fetchWhenSignedIn<BookingPayment>(
+  return apiFetch<BookingPayment>(
     'bookings/' + parsed.data + '/payment/refresh',
     {
       method: 'POST',
@@ -78,10 +76,34 @@ export async function getBookingsAction(
 ) {
   const parsed = await parseSchema(bookingsListInputSchema, { offset, filter });
   if (!parsed.success) return parsed.error;
-  return fetchWhenSignedIn<BookingListPage>(
+  return apiFetch<BookingListPage>(
     'bookings?limit=20&offset=' +
       parsed.data.offset +
       '&filter=' +
       parsed.data.filter,
   );
+}
+
+// Read stored status only. Reconciliation with Paymob remains a separate action.
+export async function getPaymentStatusAction(
+  id: string,
+): Promise<ApiResult<PaymentState>> {
+  const parsed = await parseSchema(bookingIdSchema, id);
+  if (!parsed.success) return parsed.error;
+  // The backend checks authentication and booking ownership on this endpoint.
+  const result = await apiFetch<BookingPayment>(
+    'bookings/' + parsed.data + '/payment',
+  );
+  if (!result.success || !result.data) return { ...result, data: undefined };
+  const availability = await apiFetch<{ checkoutEnabled: boolean }>(
+    'payments/availability',
+  );
+  return {
+    ...result,
+    data: {
+      payment: { ...result.data, checkoutUrl: undefined },
+      checkoutEnabled:
+        availability.success && availability.data?.checkoutEnabled === true,
+    },
+  };
 }

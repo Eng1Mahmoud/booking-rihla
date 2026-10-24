@@ -1,116 +1,114 @@
+import { apiFetch } from '@/shared/lib/api';
 import { NextResponse, type NextRequest } from 'next/server';
-import { z } from 'zod';
 import {
   authCookies,
-  readSessionCookies,
-  writeSessionCookies,
-  clearSessionCookies,
+  getSessionCookies,
+  setSessionCookies,
+  deleteSessionCookies,
+  tokensSchema,
   type AuthTokens,
-  fetchWithSessionRefresh,
-} from '@/features/auth/lib/auth.server';
+} from '@/shared/lib/session';
 import type { AuthUser } from '@/features/auth/types/auth';
-import { matchProtectedPath, parsePathLocale } from './roleRoutes';
+import { getProtectedRoute, getRouteDetails } from './roleRoutes';
 
-function redirectToLoginPage(
-  request: NextRequest,
-  locale: string,
-  path: string,
-) {
-  const login = new URL('/' + locale + '/login', request.url);
-  const returnTo = path + request.nextUrl.search;
-  if (returnTo && returnTo !== '/')
-    login.searchParams.set('returnTo', returnTo);
-  const redirect = NextResponse.redirect(login);
-  redirect.headers.set('Cache-Control', 'private, no-store');
-  clearSessionCookies(redirect);
-  return redirect;
-}
-
-function clearInvalidSessionOnPublicPage(request: NextRequest) {
-  request.cookies.delete(authCookies.access);
-  request.cookies.delete(authCookies.refresh);
-  const next = NextResponse.next({ request: { headers: request.headers } });
-  clearSessionCookies(next);
-  return next;
-}
-
-function sessionUnavailableResponse(locale: string, renewed?: AuthTokens) {
-  const response = new NextResponse(
-    locale === 'ar'
-      ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
-      : 'Could not verify your session right now. Please try again.',
-    {
-      status: 503,
-      headers: { 'Cache-Control': 'private, no-store', 'Retry-After': '5' },
-    },
-  );
-  if (renewed) writeSessionCookies(response, renewed);
-  return response;
-}
-
-function redirectToForbiddenPage(
-  request: NextRequest,
-  locale: string,
-  renewed?: AuthTokens,
-) {
-  const forbidden = NextResponse.redirect(
-    new URL('/' + locale + '/forbidden', request.url),
-  );
-  forbidden.headers.set('Cache-Control', 'private, no-store');
-  if (renewed) writeSessionCookies(forbidden, renewed);
-  return forbidden;
-}
-
-/**
- * Edge guard: renew session cookies when needed and block protected paths.
- * RSC pages may still call getSignedInUser as a second check.
- */
 export async function authMiddleware(
   request: NextRequest,
-  response: NextResponse | null,
+  previousResponse: NextResponse | null,
 ): Promise<NextResponse | null> {
-  const { locale, path } = parsePathLocale(request.nextUrl.pathname);
-  const rule = matchProtectedPath(path);
-  const session = readSessionCookies(request);
-  let renewed: AuthTokens | undefined;
+  const { path, locale } = getRouteDetails(request.nextUrl.pathname);
+  const protectedRoute = getProtectedRoute(path);
+  const session = getSessionCookies(request.cookies);
+  const options = { locale, requestHeaders: request.headers };
+  let response = previousResponse ?? NextResponse.next();
 
   if (!session.access && !session.refresh) {
-    return rule ? redirectToLoginPage(request, locale, path) : response;
+    return protectedRoute ? handleAuthFailure(401) : response;
   }
 
-  try {
-    const read = await fetchWithSessionRefresh<AuthUser>('auth/me', session, {
-      locale,
-      requestHeaders: request.headers,
+  // 1. Check the current session.
+  let userResult = await apiFetch<AuthUser>('auth/me', {
+    ...options,
+    accessToken: session.access ?? null,
+  });
+
+  // 2. If access expired, call refresh directly and save the new cookies.
+  if (
+    userResult.status === 401 &&
+    userResult.code === 'UNAUTHENTICATED' &&
+    session.refresh &&
+    /^[a-f0-9]{64}$/.test(session.refresh)
+  ) {
+    const refreshResult = await apiFetch<AuthTokens>('auth/refresh', {
+      ...options,
+      method: 'POST',
+      body: {},
+      accessToken: null,
+      refreshToken: session.refresh,
     });
-    const { result } = read;
-    renewed = read.tokens ?? undefined;
-
-    if (result.status === 401) {
-      return rule
-        ? redirectToLoginPage(request, locale, path)
-        : clearInvalidSessionOnPublicPage(request);
+    if (refreshResult.success) {
+      const tokens = tokensSchema.safeParse(refreshResult.data);
+      if (!tokens.success) return handleAuthFailure(503);
+      // Forward to the current request as well as the browser's next request.
+      request.cookies.set(authCookies.access, tokens.data.accessToken);
+      request.cookies.set(authCookies.refresh, tokens.data.refreshToken);
+      response = NextResponse.next({ request: { headers: request.headers } });
+      setSessionCookies(response.cookies, tokens.data);
+      response.headers.set('Cache-Control', 'private, no-store');
+      userResult = await apiFetch<AuthUser>('auth/me', {
+        ...options,
+        accessToken: tokens.data.accessToken,
+      });
+    } else {
+      userResult = { ...refreshResult, data: undefined };
     }
-    if (!result.success) return sessionUnavailableResponse(locale, renewed);
+  }
 
-    const role = z
-      .enum(['USER', 'ADMIN', 'SUPER_ADMIN'])
-      .safeParse(result.data?.role);
-    if (!role.success) return sessionUnavailableResponse(locale, renewed);
+  // 3. An expired session is cleared; a backend outage keeps the cookies.
+  if (userResult.status === 401) {
+    request.cookies.delete(authCookies.access);
+    request.cookies.delete(authCookies.refresh);
+    response = NextResponse.next({ request: { headers: request.headers } });
+    deleteSessionCookies(response.cookies);
+    response.headers.set('Cache-Control', 'private, no-store');
+    return protectedRoute ? handleAuthFailure(401) : response;
+  }
+  if (!userResult.success) return handleAuthFailure(503);
 
-    if (rule && !rule.roles.includes(role.data)) {
-      return redirectToForbiddenPage(request, locale, renewed);
+  // 4. Check the role returned by the backend, then allow the request.
+  const role = userResult.data?.role;
+  if (!role || !['USER', 'ADMIN', 'SUPER_ADMIN'].includes(role))
+    return handleAuthFailure(503);
+  if (protectedRoute && !protectedRoute.roles.includes(role))
+    return handleAuthFailure(403);
+  return response;
+
+  // Preserve renewed cookies when redirecting or showing a temporary error.
+  function handleAuthFailure(status: 401 | 403 | 503) {
+    // Actions return backend errors through invokeAction; redirects are for page navigation.
+    if (request.method === 'POST' && request.headers.has('next-action'))
+      return response;
+    let errorResponse: NextResponse;
+    if (status === 401 || status === 403) {
+      const url = new URL(
+        '/' + locale + (status === 401 ? '/login' : '/forbidden'),
+        request.url,
+      );
+      const returnTo = path + request.nextUrl.search;
+      if (status === 401 && returnTo !== '/')
+        url.searchParams.set('returnTo', returnTo);
+      errorResponse = NextResponse.redirect(url);
+    } else {
+      errorResponse = new NextResponse(
+        locale === 'ar'
+          ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
+          : 'Could not verify your session right now. Please try again.',
+        { status },
+      );
     }
-
-    if (!renewed) return response;
-
-    request.cookies.set(authCookies.access, renewed.accessToken);
-    request.cookies.set(authCookies.refresh, renewed.refreshToken);
-    const next = NextResponse.next({ request: { headers: request.headers } });
-    writeSessionCookies(next, renewed);
-    return next;
-  } catch {
-    console.error(JSON.stringify({ event: 'web_session_verification_failed' }));
-    return sessionUnavailableResponse(locale, renewed);
+    for (const cookie of response.cookies.getAll())
+      errorResponse.cookies.set(cookie);
+    errorResponse.headers.set('Cache-Control', 'private, no-store');
+    if (status === 503) errorResponse.headers.set('Retry-After', '5');
+    return errorResponse;
   }
 }

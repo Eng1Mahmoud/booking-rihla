@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/lib/api';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -5,11 +6,12 @@ import { AccountLayout } from '@/features/account/components/AccountLayout';
 import { PaymentHistory } from '@/features/account/components/PaymentHistory';
 import { paymentHistoryOffsetSchema } from '@/features/account/schemas/paymentHistorySchema';
 import type { PaymentHistoryPage } from '@/features/account/types/payment';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import {
-  requireSignedInUser,
-  fetchWithAccessToken,
-} from '@/features/auth/lib/auth.server';
-import { unwrapApiResult, errorMessage } from '@/shared/lib/apiResult';
+  ApiError,
+  getApiDataOrThrow,
+  errorMessage,
+} from '@/shared/lib/apiResult';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -25,9 +27,10 @@ export default async function PaymentsPage({
   if (!offset.success) notFound();
   let initial, userId, readAt;
   try {
-    const user = await requireSignedInUser();
-    initial = unwrapApiResult(
-      await fetchWithAccessToken<PaymentHistoryPage>(
+    const user = await getSignedInUser();
+    if (!user) throw new ApiError(401, 'UNAUTHENTICATED');
+    initial = getApiDataOrThrow(
+      await apiFetch<PaymentHistoryPage>(
         'account/payments?limit=20&offset=' + offset.data,
       ),
     );

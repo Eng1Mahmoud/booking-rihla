@@ -4,11 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
-import {
-  ApiError,
-  isUncertainRequestError,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import type { SeatList, Trip } from '@/features/trips/types/trip';
 import { useSeatSelection } from './useSeatSelection';
 
@@ -101,25 +97,28 @@ export function useSeatBooking(trip: Trip, initialSeats: SeatList) {
       });
       clearSelection();
       router.push('/bookings/' + result.id);
-    } catch (cause) {
-      if (isUncertainRequestError(cause)) {
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.code === 'NETWORK_ERROR' || error.status >= 500)
+      ) {
         setUncertain(true);
         setError(t('uncertain'));
         return;
       }
-      if (cause instanceof ApiError && cause.code === 'SEAT_UNAVAILABLE') {
-        setError(errorMessage(cause, locale));
+      if (error instanceof ApiError && error.code === 'SEAT_UNAVAILABLE') {
+        setError(errorMessage(error, locale));
         setAvailabilityNotice(t('changed'));
         setPhase('select');
         refreshSeats();
         return;
       }
-      if (cause instanceof ApiError && cause.code === 'TRIP_UNAVAILABLE') {
-        setError(errorMessage(cause, locale));
+      if (error instanceof ApiError && error.code === 'TRIP_UNAVAILABLE') {
+        setError(errorMessage(error, locale));
         setPhase('select');
         return;
       }
-      setError(errorMessage(cause, locale));
+      setError(errorMessage(error, locale));
     }
   }
 

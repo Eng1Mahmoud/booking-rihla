@@ -1,21 +1,21 @@
 import 'server-only';
-import {
-  requireSignedInUser,
-  fetchWithAccessToken,
-} from '@/features/auth/lib/auth.server';
-import { unwrapApiResult } from '@/shared/lib/apiResult';
+
+import { apiFetch } from '@/shared/lib/api';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { ApiError, getApiDataOrThrow } from '@/shared/lib/apiResult';
 import type { Booking, BookingPayment, BookingDetails } from '../types/booking';
 
 export async function getBookingDetails(id: string): Promise<BookingDetails> {
-  const user = await requireSignedInUser();
+  const user = await getSignedInUser();
+  if (!user) throw new ApiError(401, 'UNAUTHENTICATED');
   const [booking, payment, availability] = await Promise.all([
-    fetchWithAccessToken<Booking>('bookings/' + id),
-    fetchWithAccessToken<BookingPayment>('bookings/' + id + '/payment'),
-    fetchWithAccessToken<{ checkoutEnabled: boolean }>('payments/availability'),
+    apiFetch<Booking>('bookings/' + id),
+    apiFetch<BookingPayment>('bookings/' + id + '/payment'),
+    apiFetch<{ checkoutEnabled: boolean }>('payments/availability'),
   ]);
   return {
-    booking: unwrapApiResult(booking),
-    payment: { ...unwrapApiResult(payment), checkoutUrl: undefined },
+    booking: getApiDataOrThrow(booking),
+    payment: { ...getApiDataOrThrow(payment), checkoutUrl: undefined },
     checkoutEnabled:
       availability.success && availability.data?.checkoutEnabled === true,
     userId: user.id,

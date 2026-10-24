@@ -18,27 +18,25 @@ import {
 import { ApiError, invokeAction } from '@/shared/lib/apiResult';
 import type { LoginInput, RegisterInput } from '../types/auth';
 import type { RecoveryValues } from '../schemas/recoverySchema';
-import type { AuthSession, AuthUser } from '../types/auth';
+import type { AuthSession } from '../types/auth';
 import { authKeys } from '@/features/auth/hooks/queryKeys';
 import { useRouter } from 'next/navigation';
-export async function resetAuthCache(
-  client: QueryClient,
-  user: AuthUser | null = null,
-) {
+export async function resetAuthCache(client: QueryClient) {
   await client.cancelQueries();
   client.removeQueries({
     predicate: (query) => query.queryKey[0] !== authKeys.all[0],
   });
-  client.setQueryData<AuthSession>(authKeys.me, { user });
+  client.setQueryData<AuthSession>(authKeys.me, { user: null });
 }
 export function useLogin() {
   const client = useQueryClient();
   return useMutation({
     mutationKey: authKeys.mutation('login'),
-    mutationFn: async (input: LoginInput) =>
-      (await invokeAction(() => loginAction(input))).user,
-    onSuccess: async (user) => {
-      await resetAuthCache(client, user);
+    mutationFn: (input: LoginInput) => invokeAction(() => loginAction(input)),
+    onSuccess: async () => {
+      await resetAuthCache(client);
+      // Fetch user data through auth/me, never from the login response.
+      await client.invalidateQueries({ queryKey: authKeys.me });
     },
   });
 }
@@ -66,15 +64,11 @@ export function useAuth() {
     query.error instanceof ApiError &&
     query.error.status === 401 &&
     query.error.code === 'UNAUTHENTICATED';
-  const status = expired
-    ? 'guest'
-    : query.isError || query.data?.error
-      ? 'unavailable'
-      : query.data?.user
-        ? 'signed-in'
-        : query.data
-          ? 'guest'
-          : 'loading';
+  let status: 'guest' | 'unavailable' | 'signed-in' | 'loading' = 'loading';
+  if (expired) status = 'guest';
+  else if (query.isError || query.data?.error) status = 'unavailable';
+  else if (query.data?.user) status = 'signed-in';
+  else if (query.data) status = 'guest';
   return {
     user: status === 'signed-in' ? (query.data?.user ?? null) : null,
     status,

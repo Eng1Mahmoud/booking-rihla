@@ -1,14 +1,16 @@
+import { apiFetch } from '@/shared/lib/api';
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { AccountLayout } from '@/features/account/components/AccountLayout';
 import { BookingHistory } from '@/features/bookings/components/BookingHistory';
 import { bookingsListInputSchema } from '@/features/bookings/schemas/bookingSchema';
 import type { BookingListPage } from '@/features/bookings/types/booking';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import {
-  requireSignedInUser,
-  fetchWithAccessToken,
-} from '@/features/auth/lib/auth.server';
-import { unwrapApiResult, errorMessage } from '@/shared/lib/apiResult';
+  ApiError,
+  getApiDataOrThrow,
+  errorMessage,
+} from '@/shared/lib/apiResult';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export default async function BookingsPage({
@@ -25,9 +27,10 @@ export default async function BookingsPage({
   if (!input.success) notFound();
   let initial, userId, readAt;
   try {
-    const user = await requireSignedInUser();
-    initial = unwrapApiResult(
-      await fetchWithAccessToken<BookingListPage>(
+    const user = await getSignedInUser();
+    if (!user) throw new ApiError(401, 'UNAUTHENTICATED');
+    initial = getApiDataOrThrow(
+      await apiFetch<BookingListPage>(
         'bookings?limit=20&offset=' +
           input.data.offset +
           '&filter=' +

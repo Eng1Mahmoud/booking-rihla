@@ -2,20 +2,21 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 type Middleware = (
   request: NextRequest,
-  response: NextResponse | null,
+  previousResponse: NextResponse | null,
 ) => NextResponse | null | Promise<NextResponse | null>;
 
 export default async function runMiddlewares(
   request: NextRequest,
   middlewares: Middleware[],
 ): Promise<NextResponse> {
-  let response: NextResponse | null = null;
+  let currentResponse: NextResponse | null = null;
 
+  // Run in the order supplied by proxy.ts, passing each response to the next step.
   for (const middleware of middlewares) {
-    response = await middleware(request, response);
-    // A redirect or error ends the chain; later middleware must not replace it.
-    if (response && !response.ok) return response;
+    currentResponse = await middleware(request, currentResponse);
+    // Stop on redirects and errors so later middleware cannot replace them.
+    if (currentResponse && !currentResponse.ok) return currentResponse;
   }
 
-  return response ?? NextResponse.next();
+  return currentResponse ?? NextResponse.next();
 }

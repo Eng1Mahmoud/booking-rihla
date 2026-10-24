@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { getLocale } from 'next-intl/server';
-import { apiFetch, requestApi } from '@/shared/lib/api';
+import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import {
@@ -18,11 +18,11 @@ import {
   type RecoveryValues,
 } from '../schemas/recoverySchema';
 import {
-  readSessionCookies,
-  parseLoginSession,
-  syncSessionCookies,
-  fetchWhenSignedIn,
-} from '../lib/auth.server';
+  getSessionCookies,
+  type AuthTokens,
+  deleteSessionCookies,
+  setSessionCookies,
+} from '@/shared/lib/session';
 import type {
   AuthSession,
   AuthUser,
@@ -30,87 +30,96 @@ import type {
   RegisterInput,
 } from '../types/auth';
 
-async function submit<T>(
-  path: string,
-  input: unknown,
-  schema: z.ZodType,
-): Promise<ApiResult<T>> {
-  const parsed = await parseSchema(schema, input);
-  if (!parsed.success) return parsed.error;
-  return apiFetch<T>(path, { method: 'POST', body: parsed.data });
-}
-
-export async function loginAction(
-  input: LoginInput,
-): Promise<ApiResult<{ user: AuthUser }>> {
+export async function loginAction(input: LoginInput): Promise<ApiResult<void>> {
   const parsed = await parseSchema(loginSchema, input);
   if (!parsed.success) return parsed.error;
-  const { result, headers } = await requestApi('auth/login', {
+  const result = await apiFetch<AuthTokens>('auth/login', {
     method: 'POST',
     body: parsed.data,
   });
   if (!result.success) return { ...result, data: undefined };
-  const session = parseLoginSession(headers, result);
-  if (!session) return apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
-  await syncSessionCookies(session.tokens);
-  return { ...result, data: { user: session.user } };
+  if (!result.data) return apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
+  setSessionCookies(await cookies(), result.data);
+  return { ...result, data: undefined };
 }
 
 export async function registerAction(input: RegisterInput) {
-  return submit<{ verificationId: string }>(
-    'auth/register',
-    input,
+  const parsed = await parseSchema(
     registerSchema.extend({ language: z.enum(['ar', 'en']) }),
+    input,
   );
+  if (!parsed.success) return parsed.error;
+  return apiFetch<{ verificationId: string }>('auth/register', {
+    method: 'POST',
+    body: parsed.data,
+  });
 }
 
 export async function verifyEmailAction(
   input: z.input<typeof verifyEmailSchema>,
 ) {
-  return submit('auth/verify-email', input, verifyEmailSchema);
+  const parsed = await parseSchema(verifyEmailSchema, input);
+  if (!parsed.success) return parsed.error;
+  return apiFetch('auth/verify-email', {
+    method: 'POST',
+    body: parsed.data,
+  });
 }
 
 export async function resendVerificationAction(
   input: z.input<typeof resendVerificationSchema>,
 ) {
-  return submit('auth/resend-verification', input, resendVerificationSchema);
+  const parsed = await parseSchema(resendVerificationSchema, input);
+  if (!parsed.success) return parsed.error;
+  return apiFetch('auth/resend-verification', {
+    method: 'POST',
+    body: parsed.data,
+  });
 }
 
 export async function forgotPasswordAction(input: { email: string }) {
-  return submit('auth/forgot-password', input, recoveryEmailSchema);
+  const parsed = await parseSchema(recoveryEmailSchema, input);
+  if (!parsed.success) return parsed.error;
+  return apiFetch('auth/forgot-password', {
+    method: 'POST',
+    body: parsed.data,
+  });
 }
 
 export async function resetPasswordAction(input: RecoveryValues) {
-  const result = await submit(
-    'auth/reset-password',
-    input,
-    recoveryResetSchema,
-  );
-  if (result.success) await syncSessionCookies(null);
+  const parsed = await parseSchema(recoveryResetSchema, input);
+  if (!parsed.success) return parsed.error;
+  const result = await apiFetch('auth/reset-password', {
+    method: 'POST',
+    body: parsed.data,
+  });
+  if (result.success) deleteSessionCookies(await cookies());
   return result;
 }
 
 export async function logoutAction(all = false) {
   const parsed = await parseSchema(z.boolean(), all);
   if (!parsed.success) return parsed.error;
-  const session = readSessionCookies({ cookies: await cookies() });
+  const cookieStore = await cookies();
+  const session = getSessionCookies(cookieStore);
   if (session.refresh && !/^[a-f0-9]{64}$/.test(session.refresh)) {
-    await syncSessionCookies(null);
+    deleteSessionCookies(cookieStore);
     return apiFailure(401, 'UNAUTHENTICATED', await getLocale());
   }
-  const result = parsed.data
-    ? await fetchWhenSignedIn('auth/logout-all', { method: 'POST', body: {} })
-    : await apiFetch('auth/logout', {
-        method: 'POST',
-        body: {},
-        refreshToken: session.refresh,
-      });
-  if (result.success) await syncSessionCookies(null);
+  const result = await apiFetch(
+    parsed.data ? 'auth/logout-all' : 'auth/logout',
+    {
+      method: 'POST',
+      body: {},
+      refreshToken: parsed.data ? undefined : session.refresh,
+    },
+  );
+  if (result.success) deleteSessionCookies(cookieStore);
   return result;
 }
 
 export async function getCurrentUserAction(): Promise<ApiResult<AuthSession>> {
-  const session = readSessionCookies({ cookies: await cookies() });
+  const session = getSessionCookies(await cookies());
   if (!session.access && !session.refresh)
     return {
       success: true,
@@ -119,7 +128,7 @@ export async function getCurrentUserAction(): Promise<ApiResult<AuthSession>> {
       message: 'OK',
       data: { user: null },
     };
-  const result = await fetchWhenSignedIn<AuthUser>('auth/me');
+  const result = await apiFetch<AuthUser>('auth/me');
   return {
     ...result,
     data: result.success && result.data ? { user: result.data } : undefined,

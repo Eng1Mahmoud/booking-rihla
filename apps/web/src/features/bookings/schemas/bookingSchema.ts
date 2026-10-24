@@ -21,11 +21,6 @@ export const createBookingSchema = z
   );
 
 export const bookingIdSchema = z.uuid();
-// Status polling accepts a booking id and no query parameters.
-export const paymentStatusInputSchema = z.strictObject({
-  bookingId: bookingIdSchema,
-  search: z.literal(''),
-});
 export const bookingsOffsetSchema = z.number().int().min(0).max(100000);
 export const bookingFilterSchema = z.enum([
   'all',

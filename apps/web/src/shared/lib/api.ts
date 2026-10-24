@@ -1,20 +1,25 @@
 import 'server-only';
+import { cookies } from 'next/headers';
+import { getSessionCookies } from './session';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { apiFailure, type ApiResult } from './apiResult';
 import { backendClientContext } from './clientIdentity';
 
+// Shared options for all backend requests.
 export type ApiOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
   locale?: string;
-  requestHeaders?: Headers;
-  accessToken?: string;
+  requestHeaders?: Headers; // Incoming browser request headers, used to read its IP.
+  accessToken?: string | null; // null explicitly sends no access token.
   refreshToken?: string;
 };
-const envelopeSchema = z.object({
+
+// Validate the response envelope; each feature defines its own data type.
+const apiResponseSchema = z.object({
   success: z.boolean(),
   code: z.string().min(1),
   message: z.string().min(1),
@@ -22,24 +27,28 @@ const envelopeSchema = z.object({
   requestId: z.uuid().optional(),
 });
 
-// The only HTTP transport. Credentials are supplied by the server-side caller.
-// Raw response headers stay on the server; Actions return only result.
-export async function requestApi<T = unknown>(
+// Send once using the current access cookie. Proxy owns session renewal.
+export async function apiFetch<T = unknown>(
   path: string,
   options: ApiOptions = {},
-): Promise<{ result: ApiResult<T>; headers: Headers }> {
+): Promise<ApiResult<T>> {
   const locale = options.locale ?? (await getLocale());
-  const failure = (status: number, code: string) => ({
-    result: apiFailure<T>(status, code, locale),
-    headers: new Headers(),
-  });
 
   try {
-    const base = process.env.API_BASE_URL;
-    if (!base) throw new Error('API_BASE_URL is required');
-    const url = new URL(base.replace(/\/$/, '') + '/' + path);
+    // Proxy passes its token explicitly; pages and Actions read the current cookie.
+    const accessToken =
+      options.accessToken !== undefined
+        ? options.accessToken
+        : getSessionCookies(await cookies()).access;
+
+    // 1. Build the backend URL and choose the HTTP method.
+    const baseUrl = process.env.API_BASE_URL;
+    if (!baseUrl) throw new Error('API_BASE_URL is required');
+    const url = new URL(baseUrl.replace(/\/$/, '') + '/' + path);
     const method = options.method ?? 'GET';
-    const headers = new Headers(options.headers);
+
+    // 2. Set shared headers. Credentials are supplied by the server-side caller.
+    const outgoingHeaders = new Headers(options.headers);
     for (const name of [
       'Authorization',
       'Cookie',
@@ -48,69 +57,78 @@ export async function requestApi<T = unknown>(
       'X-Web-Client-IP',
       'X-Web-Client-Time',
       'X-Web-Client-Signature',
-    ])
-      headers.delete(name);
-    headers.set('Content-Type', 'application/json');
-    headers.set('Accept-Language', locale);
-    headers.set('X-CSRF-Protection', '1');
-    if (process.env.SITE_ORIGIN) headers.set('Origin', process.env.SITE_ORIGIN);
-    if (options.accessToken)
-      headers.set('Authorization', 'Bearer ' + options.accessToken);
-    if (options.refreshToken)
-      headers.set(
+    ]) {
+      outgoingHeaders.delete(name);
+    }
+    outgoingHeaders.set('Content-Type', 'application/json');
+    outgoingHeaders.set('Accept-Language', locale);
+    outgoingHeaders.set('X-CSRF-Protection', '1');
+    if (process.env.SITE_ORIGIN) {
+      outgoingHeaders.set('Origin', process.env.SITE_ORIGIN);
+    }
+    if (accessToken) {
+      outgoingHeaders.set('Authorization', 'Bearer ' + accessToken);
+    }
+    if (options.refreshToken) {
+      outgoingHeaders.set(
         'Cookie',
         `bus_refresh=${options.refreshToken}; __Secure-bus_refresh=${options.refreshToken}`,
       );
-    const identity = await backendClientContext(
+    }
+
+    // 3. Add signed client IP headers when that feature is enabled.
+    const clientHeaders = await backendClientContext(
       method,
       url,
       options.requestHeaders,
     );
-    for (const [name, value] of Object.entries(identity))
-      headers.set(name, value);
-    const deadline = AbortSignal.timeout(20000);
+    for (const [name, value] of Object.entries(clientHeaders)) {
+      outgoingHeaders.set(name, value);
+    }
+
+    // 4. Keep a supplied string body, or serialize other defined values as JSON.
+    const requestBody =
+      typeof options.body === 'string' || options.body === undefined
+        ? options.body
+        : JSON.stringify(options.body);
+
+    // 5. Send without caching or redirects; stop after 20 seconds or caller abort.
+    const timeoutSignal = AbortSignal.timeout(20000);
     const response = await fetch(url, {
       method,
-      headers,
-      body:
-        typeof options.body === 'string'
-          ? options.body
-          : options.body === undefined
-            ? undefined
-            : JSON.stringify(options.body),
+      headers: outgoingHeaders,
+      body: requestBody,
       cache: 'no-store',
       redirect: 'error',
       signal: options.signal
-        ? AbortSignal.any([options.signal, deadline])
-        : deadline,
+        ? AbortSignal.any([options.signal, timeoutSignal])
+        : timeoutSignal,
     });
-    const parsed = envelopeSchema.safeParse(
-      await response.json().catch(() => null),
-    );
-    if (!parsed.success || parsed.data.success !== response.ok)
-      return failure(502, 'UPSTREAM_ERROR');
-    const { requestId, ...body } = parsed.data;
-    return {
-      headers: response.headers,
-      result: {
-        ...body,
-        data: body.data as T,
-        status: response.status,
-        ...(requestId && response.status >= 500 ? { requestId } : {}),
-        ...(response.headers.get('retry-after')
-          ? { retryAfter: response.headers.get('retry-after')! }
-          : {}),
-      },
-    };
-  } catch {
-    // An uncertain request is never retried here.
-    return failure(502, 'UPSTREAM_UNAVAILABLE');
-  }
-}
 
-export async function apiFetch<T = unknown>(
-  path: string,
-  options: ApiOptions = {},
-) {
-  return (await requestApi<T>(path, options)).result;
+    // 6. Require valid JSON matching our response envelope and HTTP status.
+    const responseBody = await response.json().catch(() => null);
+    const parsed = apiResponseSchema.safeParse(responseBody);
+    if (!parsed.success || parsed.data.success !== response.ok) {
+      return apiFailure(502, 'UPSTREAM_ERROR', locale);
+    }
+
+    // 7. Return the result with HTTP status and retry metadata.
+    const { requestId, ...backendResult } = parsed.data;
+    const result: ApiResult<T> = {
+      ...backendResult,
+      data: backendResult.data as T,
+      status: response.status,
+    };
+    if (requestId && response.status >= 500) {
+      result.requestId = requestId;
+    }
+    const retryAfter = response.headers.get('retry-after');
+    if (retryAfter) {
+      result.retryAfter = retryAfter;
+    }
+    return result;
+  } catch {
+    // A failed response does not prove the operation failed. Never retry here.
+    return apiFailure(502, 'UPSTREAM_UNAVAILABLE', locale);
+  }
 }

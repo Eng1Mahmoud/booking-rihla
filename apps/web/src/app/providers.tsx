@@ -1,7 +1,7 @@
 'use client';
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApiError, isUnauthenticated } from '@/shared/lib/apiResult';
+import { ApiError } from '@/shared/lib/apiResult';
 import { resetAuthCache } from '@/features/auth/hooks/useAuth';
 import {
   QueryClientProvider,
@@ -21,7 +21,12 @@ export function AppProviders({
   const [client] = useState(() => {
     let clearing = false;
     const queries: QueryClient = createQueryClient((error) => {
-      if (!(error instanceof ApiError) || !isUnauthenticated(error) || clearing)
+      if (
+        !(error instanceof ApiError) ||
+        error.status !== 401 ||
+        error.code !== 'UNAUTHENTICATED' ||
+        clearing
+      )
         return;
       clearing = true;
       void resetAuthCache(queries)
