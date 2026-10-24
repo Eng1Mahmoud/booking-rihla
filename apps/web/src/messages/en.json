@@ -25,7 +25,9 @@
     "about": "About",
     "explore": "Plan your journey",
     "discover": "About & help",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "terms": "Terms of use",
+    "privacy": "Privacy policy"
   },
   "Home": {
     "title": "Your next journey starts here.",
@@ -196,7 +198,8 @@
     "retrySession": "Try again",
     "forbiddenTitle": "You do not have access to this page",
     "forbiddenText": "You are signed in, but your account role cannot access this page.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "policyNotice": "Read the <terms>draft terms</terms> and <privacy>draft privacy policy</privacy> for booking rules and how your information is used."
   },
   "Booking": {
     "loading": "Loading your booking…",
@@ -574,5 +577,148 @@
     "next": "Next",
     "timeZone": "All dates and times are shown in Cairo time.",
     "loading": "Loading payment history…"
+  },
+  "Policy": {
+    "eyebrow": "Your journey, explained",
+    "Terms": "Terms of use",
+    "Privacy": "Privacy policy",
+    "navigation": "Policies",
+    "contents": "On this page",
+    "updated": "Last updated:",
+    "updatedDate": "24 October 2026",
+    "draftTitle": "Draft for review",
+    "draftText": "These pages describe the current test version. The operating entity, approved contact channel, data retention periods and confirmed refund timeframes still need to be completed and reviewed before public launch.",
+    "faqs": "Booking questions? Read the FAQs",
+    "backToTop": "Back to top"
+  },
+  "Terms": {
+    "title": "Terms of use & booking",
+    "metaTitle": "Terms of use — draft | Rihla",
+    "intro": "How accounts, seat holds, payments and cancellations work in the current version of Rihla.",
+    "sections": [
+      {
+        "id": "service",
+        "title": "About this version",
+        "paragraphs": [
+          "Rihla is currently a test bus-booking application. Its payment integration supports test transactions only. This draft does not announce a live transport service or authorize real-money payments.",
+          "The legal name and details of the operating entity must be added to the final terms before the service is launched publicly."
+        ]
+      },
+      {
+        "id": "account",
+        "title": "Your account & passenger details",
+        "paragraphs": [
+          "Provide accurate account and passenger information, keep your password private, and use passenger details only when you are authorized to provide them. Email verification is required for booking and payment access.",
+          "You can update your name and phone number in your account and sign out of the current session or all sessions. Booking and payment records belong to the account that created them."
+        ]
+      },
+      {
+        "id": "booking",
+        "title": "Choosing seats & temporary holds",
+        "paragraphs": [
+          "Selecting a seat on screen does not reserve it. A seat hold begins only after the booking request succeeds. A new hold lasts up to ten minutes and never extends beyond the trip departure time. Use the expiry time shown for your booking.",
+          "An unpaid hold expires and its seats become available again. A pending booking is not a confirmed ticket. Review the passengers, route, departure time and total price before continuing; prices are shown in Egyptian pounds."
+        ]
+      },
+      {
+        "id": "payments",
+        "title": "Payment status & confirmation",
+        "paragraphs": [
+          "Payment takes place through the configured payment provider. Returning from its payment page does not, by itself, confirm a successful payment. Follow the recorded status in your booking and avoid starting another payment while the previous result is uncertain.",
+          "A ticket becomes available only after the application verifies full payment and confirms the booking. A late successful charge does not restore an expired hold or take a seat that has been assigned to someone else; it is recorded for a full refund instead."
+        ]
+      },
+      {
+        "id": "tickets",
+        "title": "Your ticket & journey",
+        "paragraphs": [
+          "Review the trip and passenger information before travelling. Journey times are displayed in Cairo time. A printed ticket is a copy of the booking information at the time it was checked; the recorded booking and trip status may subsequently change.",
+          "Boarding arrangements and any operating requirements must be confirmed by the operator in the final service terms. This draft does not create a separate boarding entitlement from a screenshot, printout or QR image."
+        ]
+      },
+      {
+        "id": "cancellation",
+        "title": "Cancellation & refunds",
+        "paragraphs": [
+          "Passenger cancellation and passenger-initiated refund requests are not available in the current version. Expiry of an unpaid hold is different from cancellation of a confirmed booking.",
+          "If the company cancels a trip, a booking with verified full payment is due a full refund through the approved refund process. A refund marked as due or requested has not yet been confirmed as returned. Check the separate refund status in your booking or payment history.",
+          "No fixed refund completion time is promised in this draft. The operator must confirm the applicable process and provider or bank timeframes before public launch."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contact & final review",
+        "paragraphs": [
+          "The approved support channel and operating entity have not yet been finalized for this draft. They must be added before public launch so passengers can raise booking, payment and refund enquiries.",
+          "The final terms also need an effective date and a defined process for notifying passengers about material changes. The date above identifies this draft revision."
+        ]
+      }
+    ]
+  },
+  "Privacy": {
+    "title": "Privacy policy",
+    "metaTitle": "Privacy policy — draft | Rihla",
+    "intro": "The information used for your account, bookings and payments, and the details still to be confirmed before launch.",
+    "providerPolicy": "Read Paymob’s privacy policy",
+    "sections": [
+      {
+        "id": "data",
+        "title": "Information used by the application",
+        "paragraphs": [
+          "Account information includes your name, email address, phone number and selected language. Passwords are stored as password hashes. Account verification, password recovery and session records support secure access.",
+          "Booking information includes passenger names, selected seats, contact phone number, trip details, booking reference, price and status. Payment and refund records include amounts, currency, transaction references and recorded outcomes.",
+          "Technical information, such as request and session identifiers and, where configured, a client IP address, may be processed for authentication, request diagnostics and protection against repeated or abusive requests. Hosting and infrastructure logging practices still need to be documented before launch."
+        ]
+      },
+      {
+        "id": "purposes",
+        "title": "Why this information is used",
+        "paragraphs": [
+          "Information is used to create and protect accounts, verify email ownership, recover access, reserve seats, verify payment results, provide tickets, and record cancellations and refunds.",
+          "Service emails may include verification or recovery codes, password-change notices, tickets, departure reminders, trip-cancellation notices and confirmed refund notifications. The final notice must state the applicable basis for each use of personal information."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Session cookies",
+        "paragraphs": [
+          "Sign-in uses session cookies to keep you authenticated and renew access. Authentication cookies cannot be read by page scripts; production settings also require secure transport. Blocking these cookies can prevent account features from working.",
+          "You can sign out of the current session or all sessions from your account. Signing out does not delete your account, booking history or financial records. Any analytics tools or additional non-essential cookies must be reviewed and described before they are introduced."
+        ]
+      },
+      {
+        "id": "providers",
+        "title": "Payments, email & other providers",
+        "paragraphs": [
+          "When the test payment integration is enabled, the account holder’s name, email address and phone number, together with the booking amount and payment reference, are sent to Paymob to prepare the payment. Payment details are entered on the provider’s payment page; the Rihla booking form does not ask for a card number or security code.",
+          "The configured email provider processes the recipient address and message content to deliver service emails. The final notice must identify the operating entity, hosting and email providers, processing locations, and any applicable international transfers.",
+          "Payment providers have their own privacy information. This draft makes no promise that a provider does not store payment information; review the provider’s notice before using its service."
+        ]
+      },
+      {
+        "id": "access",
+        "title": "Access & sharing",
+        "paragraphs": [
+          "Passengers can access their own bookings and payment history through their account. Authorized administrators have role-based access to records needed for operations, account management, payment review and refunds.",
+          "The final policy must specify recipients, purposes and safeguards for any additional sharing or disclosure. No sale of personal information, marketing programme or new sharing arrangement is authorized by this draft."
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "How long records are kept",
+        "paragraphs": [
+          "Final retention periods for accounts, bookings, financial records, operational logs and backups have not yet been approved. These periods, their reasons and the deletion or anonymization process must be documented before public launch.",
+          "Temporary authentication records have expiry and cleanup rules. These rules do not mean that an account, booking or financial record is automatically deleted when a code expires or a passenger signs out."
+        ]
+      },
+      {
+        "id": "requests",
+        "title": "Your choices & data requests",
+        "paragraphs": [
+          "You can update your name and phone number in your account and end your sessions. Account deletion is not currently available as a self-service feature.",
+          "An approved contact channel for access, correction, deletion and other data-related requests has not yet been added. The final notice must explain how requests are handled, how identity is checked and any applicable limits or response periods. Do not send passwords or full card details in a support request."
+        ]
+      }
+    ]
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { z } from 'zod';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
@@ -61,6 +62,26 @@ export function RegisterForm({
         maxLength={128}
         description={t('passwordHint')}
       />
+      <p className="text-sm leading-7 text-muted-foreground">
+        {t.rich('policyNotice', {
+          terms: (chunks) => (
+            <Link
+              href="/terms"
+              className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+            >
+              {chunks}
+            </Link>
+          ),
+          privacy: (chunks) => (
+            <Link
+              href="/privacy"
+              className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
       <SubmitButton pendingText={t('working')}>{t('register')}</SubmitButton>
     </Form>
   );
