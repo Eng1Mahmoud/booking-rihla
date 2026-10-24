@@ -1330,56 +1330,78 @@ Verification performed without adding persistent automated test code: TypeScript
 
 ## Deployment preparation and local recovery tools
 
-Dockerfile now has separate build, migrations and runtime targets. The final image runs compiled JavaScript as the non-root node user, without the CLI/build dependencies. Its readiness health check uses /api/v1/ready. .dockerignore allows only the package manifests, API source/compiler settings and migration artifacts into the build context; environment files, dependency folders, Git history, build output and backups are excluded.
+Dockerfile has separate build, migrations and runtime targets. The final image runs compiled JavaScript as the non-root node user, without CLI/build dependencies. Its health check uses /api/v1/ready. Environment files, local dependencies, Git history, build output and backups are excluded from the build context.
 
-compose.production.yaml is separate from development compose.yaml. It uses its own project/volume, keeps PostgreSQL unpublished, exposes the API on host loopback only, and runs the email/booking/auth workers separately. Payment/refund workers are explicit profiles, not enabled by default. Application containers are read-only with temporary /tmp storage, no added capabilities, bounded Docker logs and restart policies. Worker sleeps now interrupt promptly on shutdown; an in-flight batch/SMTP operation may still exceed the container grace period and require safe at-least-once recovery.
+compose.yaml is for local PostgreSQL/Mailpit development only. The repository does not contain a production Compose configuration or a root production environment template. Select the deployment platform before defining production networking, database provisioning, process supervision and restart policies. The API and workers are separate processes; starting HTTP does not start workers. Worker sleeps interrupt on shutdown, but an in-flight batch/SMTP operation may exceed the shutdown grace period and require safe at-least-once recovery.
 
-These files prepare deployment; they do not provision a host, publish a site, obtain a TLS certificate or activate LIVE payments. The provider adapter still accepts TEST credentials only. A commercial launch needs provider LIVE implementation/onboarding and a deployment review rather than just changing flags.
+These files prepare deployment; they do not provision a host, publish a site, obtain TLS certificates or activate LIVE payments. The provider adapter still accepts TEST credentials only.
 
 ### Configure and start on an approved server
 
-Fresh setup only: copy root production.env.example to production.env and apps/api/production.env.example to apps/api/production.env. Choose new independent authentication secrets, set PostgreSQL credentials and the matching container DATABASE_URL (host postgres), HTTPS CORS origins and the real SMTP configuration. Keep all Paymob flags false while learning. Neither production.env file is committed. Keep development and production databases separate.
+Use apps/api/production.env.example as the template for host/container environment variables. For the manual Docker examples below, copy it to ignored apps/api/production.env and replace every placeholder. Choose new independent authentication secrets, your deployment database connection string (including provider-required TLS options), HTTPS CORS origins and real SMTP settings. The database must be reachable from the container; localhost inside a container refers to that container. Keep all Paymob flags false while learning. Keep development and production databases separate. The :prod scripts expect environment variables from the host; they do not automatically load production.env.
+
+Run these commands from the repository root after arranging database access and recovery:
 
 ```sh
-docker compose --env-file production.env -f compose.production.yaml config --quiet
-docker compose --env-file production.env -f compose.production.yaml build api migrate
-docker compose --env-file production.env -f compose.production.yaml up -d --wait postgres
-docker compose --env-file production.env -f compose.production.yaml run --rm migrate
-docker compose --env-file production.env -f compose.production.yaml up -d --wait api email-worker booking-worker auth-worker
+docker build --target runtime -t bus-booking-api .
+docker build --target migrations -t bus-booking-migrations .
+
+# Explicit one-shot migration step before starting the application.
+docker run --rm --env-file apps/api/production.env bus-booking-migrations
+
+# HTTP process. This loopback binding assumes HTTPS ingress on the same host.
+docker run --init --name bus-api --env-file apps/api/production.env -p 127.0.0.1:4000:4000 bus-booking-api
 ```
 
-Migrations are an explicit one-shot deployment step and are not run by each API replica. Do not run the demo seed in production. After a backup, apply additive migrations and check readiness before routing traffic. Keep a previously verified image tag for rollback; application rollback is only safe while its database contract remains compatible. Never roll back a schema by dropping financial/history tables.
+These are manual examples, not a platform-specific deployment definition. Open a separate terminal/process for each worker. The same runtime image can run each compiled entry point below. For example:
 
-The API validates production startup before listening: database settings, HTTPS browser origins, independent auth secrets and TLS SMTP must be present; invalid payment activation is rejected. HOST defaults to 127.0.0.1 locally and is overridden to 0.0.0.0 inside containers. TRUST_PROXY_HOPS defaults to 0. Set it to 1 only when exactly one trusted reverse proxy is the only route to the API. Do not publish the container port to all interfaces and blindly trust forwarded headers. Set SMTP_SECURE=true for implicit TLS or SMTP_REQUIRE_TLS=true for mandatory STARTTLS, according to your SMTP provider.
+```sh
+# Workers inherit an HTTP health check; disable it for worker processes.
+docker run --init --name bus-email-worker --no-healthcheck --stop-timeout 45 --env-file apps/api/production.env bus-booking-api node dist/workers/emailWorker.js
+```
 
-After a domain/server is chosen, terminate HTTPS at the trusted proxy and forward only to the loopback API port. Keep web/admin/API on the same site for the existing Strict refresh cookie. DNS, certificates, real SMTP delivery and external uptime alerts are host/account tasks; none was claimed as verified by this local preparation.
+| Role                   | Host command from the repository root, after npm run build | Command inside the runtime image       |
+| ---------------------- | ---------------------------------------------------------- | -------------------------------------- |
+| API                    | npm start                                                  | node dist/server.js (image default)    |
+| Email delivery         | npm run email:worker:prod                                  | node dist/workers/emailWorker.js       |
+| Booking hold expiry    | npm run booking:worker:prod                                | node dist/workers/bookingHoldWorker.js |
+| Authentication cleanup | npm run auth:cleanup:worker:prod                           | node dist/workers/authCleanupWorker.js |
+| Payment inquiry        | npm run payment:worker:prod                                | node dist/workers/paymentWorker.js     |
+| Refund inquiry         | npm run refund:worker:prod                                 | node dist/workers/refundWorker.js      |
+
+Keep existing source-based commands (without :prod) for development. All five compiled workers support a one-shot run, for example `npm run email:worker:prod -- --once`; use the same `--once` suffix with the corresponding Node command inside a container. `npm run admin:bootstrap:prod -- --email verified@example.com` runs the existing first-super-admin promotion for an active, verified account. `npm run ops:status:prod` runs the compiled operations report. Database archive tools remain host-side utilities requiring the source checkout and Docker; they are not runtime-image worker commands.
+
+Enable payment/refund processes only when their required TEST configuration is ready; starting a worker does not activate payment flags. For every worker container, disable the inherited HTTP health check and configure worker monitoring on the chosen host. API readiness proves database access, not worker delivery or successful provider reconciliation. Production scheduling, restart policy, log limits, resource limits and database recovery still require platform-specific setup.
+
+Migrations are an explicit one-shot deployment step, not run by each API replica. Do not run the demo seed in production. After a backup, apply additive migrations and check readiness before routing traffic. Keep a previously verified image tag for rollback; application rollback is only safe while its database contract remains compatible. Never roll back a schema by dropping financial/history tables.
+
+The API validates production startup before listening: database settings, HTTPS browser origins, independent auth secrets and TLS SMTP must be present; invalid payment activation is rejected. HOST defaults to 127.0.0.1 locally and is overridden to 0.0.0.0 inside containers. TRUST_PROXY_HOPS defaults to 0. Set it to 1 only when exactly one trusted reverse proxy is the only route to the API. Set SMTP_SECURE=true for implicit TLS or SMTP_REQUIRE_TLS=true for mandatory STARTTLS, according to your SMTP provider.
+
+Terminate HTTPS at the trusted ingress. The loopback binding above assumes ingress runs on the same host; use the platform's private networking when it does not. The Next.js website stores its own HttpOnly session cookies and calls the API server-side, so the API does not need to share the website's cookie domain. Configure frontend origins and each deployment environment explicitly. DNS, certificates, real SMTP delivery and external uptime alerts are host/account tasks; this local preparation does not verify them.
 
 ### Backup and restore
 
-These are host commands requiring Node.js and Docker Compose. They use PostgreSQL tools inside the running postgres service, without passing a password in shell arguments. Backups contain sensitive account/payment history: restrict filesystem access, encrypt copies stored off-host and set a retention policy. The tool does not encrypt a dump or schedule/ship backups automatically. backups/ and production.env are ignored by Git and excluded from images.
+These host commands require Node.js and Docker Compose. They use PostgreSQL tools inside the running postgres service without passing a password in shell arguments. Backups contain sensitive account/payment history: restrict access, encrypt off-host copies and set a retention policy. The tool does not encrypt, schedule or ship dumps automatically. backups/ and production.env are ignored by Git and excluded from images.
 
 ```sh
 # Development: choose a fresh output filename; existing backups are never overwritten.
 npm run db:backup -- --compose compose.yaml --env-file .env --file backups/bus-2026-10-18.dump
 npm run db:restore -- --compose compose.yaml --env-file .env --file backups/bus-2026-10-18.dump --target restore_bus_20261018
-
-# Production: select the production Compose configuration explicitly.
-npm run db:backup -- --compose compose.production.yaml --env-file production.env --file backups/bus-production-2026-10-18.dump
-npm run db:restore -- --compose compose.production.yaml --env-file production.env --file backups/bus-production-2026-10-18.dump --target restore_bus_20261018
 ```
 
-Restore always creates a new database whose name begins with restore_. It refuses an existing target and never uses --clean or overwrites the application database. pg_restore runs in one transaction and fails on errors. Verify readiness, table counts and financial/seat state in the restored copy before putting the application into maintenance and switching DATABASE_URL. Resume payment workers only after provider reconciliation; old unknown operations must never be resent because a backup was restored. Restore only your own trusted backups. Failed backups retain a .partial file, which must not be treated as a completed archive.
+These commands target the existing development Compose service. Production recovery depends on the chosen database host. The utilities require a Compose configuration with a running postgres service; do not use them for a managed database or an absent production configuration. Verify the selected host's recovery procedure before deployment.
 
-A local pg_dump/pg_restore round trip was verified against a new restore_backend_preparation database: row counts matched across all 28 application/migration tables before the copy was used for isolated manual review checks. The original database was not modified by restoration.
+Restore creates a new database whose name begins with restore_. It refuses an existing target and never uses --clean or overwrites the application database. pg_restore runs in one transaction and fails on errors. Verify readiness, table counts and financial/seat state in the restored copy before putting the application into maintenance and switching DATABASE_URL. Resume payment workers only after provider reconciliation; unknown operations must never be resent because a backup was restored. Restore only trusted backups. A failed backup's .partial file is not a completed archive.
 
 ### Operational checks and manual financial review
 
-npm run ops:status prints aggregate overdue-mail, payment-review, uncertain-refund and pending-refund counts. Exit code 0 means no listed attention conditions, 1 means operator action is needed, and 2 means the database report is unavailable. It contains no customer data or secrets and sends no provider request. For containers:
+npm run ops:status prints aggregate overdue-mail, payment-review, uncertain-refund and pending-refund counts. Use npm run ops:status:prod after building when running compiled files. Exit code 0 means no listed attention conditions, 1 means operator action is needed, and 2 means the database report is unavailable. It contains no customer data or secrets and sends no provider request. For the manual container names above:
 
 ```sh
-docker compose --env-file production.env -f compose.production.yaml ps
-docker compose --env-file production.env -f compose.production.yaml logs --tail 100 api email-worker booking-worker auth-worker
-docker compose --env-file production.env -f compose.production.yaml run --rm --no-deps api node dist/scripts/operationsStatus.js
+docker ps --filter name=bus-
+docker logs --tail 100 bus-api
+docker logs --tail 100 bus-email-worker
+docker run --rm --no-healthcheck --env-file apps/api/production.env bus-booking-api node dist/scripts/operationsStatus.js
 ```
 
 Use host monitoring to check /health, /ready, container restarts and the operations command, and route alerts to a channel chosen by the operator. The operations snapshot is not a worker heartbeat, SMTP delivery receipt, external uptime monitor or bank reconciliation. Durable mail attempts exhausted at five still require operator investigation; a crash can duplicate SMTP delivery, as documented above.

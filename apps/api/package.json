@@ -28,6 +28,13 @@
     "db:backup": "node src/scripts/databaseArchive.ts backup",
     "db:restore": "node src/scripts/databaseArchive.ts restore",
     "ops:status": "node --env-file-if-exists=.env src/scripts/operationsStatus.ts",
+    "email:worker:prod": "node dist/workers/emailWorker.js",
+    "booking:worker:prod": "node dist/workers/bookingHoldWorker.js",
+    "auth:cleanup:worker:prod": "node dist/workers/authCleanupWorker.js",
+    "payment:worker:prod": "node dist/workers/paymentWorker.js",
+    "refund:worker:prod": "node dist/workers/refundWorker.js",
+    "admin:bootstrap:prod": "node dist/scripts/bootstrapAdmin.js",
+    "ops:status:prod": "node dist/scripts/operationsStatus.js",
     "payment:proxy": "node --env-file-if-exists=.env src/scripts/paymobTunnel.ts"
   },
   "dependencies": {
