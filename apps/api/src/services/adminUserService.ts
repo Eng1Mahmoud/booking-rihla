@@ -1,3 +1,4 @@
+import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { recordAudit, type AuditActor } from './auditWriter.ts';
 import type { db as database } from '../prisma/db.ts';
 import type {
@@ -65,12 +66,7 @@ export const adminUserService = {
     if (!candidate) return null;
     return await db.transaction(async (tx) => {
       // Match login/reset/logout-all: email advisory lock -> User -> Session.
-      await tx.execute(
-        db.raw
-          .sql`SELECT pg_advisory_xact_lock(hashtextextended(${candidate.email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, candidate.email);
       await tx.execute(
         db.raw
           .sql`SELECT "id" FROM "public"."User" WHERE "id" = ${id} FOR UPDATE`
@@ -83,11 +79,7 @@ export const adminUserService = {
       await tx.orm.public.User.where({ id }).update({
         isActive: input.isActive,
       });
-      if (!input.isActive)
-        await tx.orm.public.Session.where({
-          userId: id,
-          revokedAt: null,
-        }).updateAll({ revokedAt: new Date().toISOString() });
+      if (!input.isActive) await revokeAccountSessions(tx, id);
       const user = await passengers(tx).where({ id }).first();
       if (!user) throw new Error('Updated passenger account is missing');
       await recordAudit(tx, actor, 'User', id, before, user);

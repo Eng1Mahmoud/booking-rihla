@@ -1,3 +1,4 @@
+import { lockAccountEmail } from './accountSecurity.ts';
 export const authRetentionMs = 24 * 60 * 60 * 1000;
 export function authCleanupCutoffs(now: number) {
   if (
@@ -40,11 +41,7 @@ export async function cleanupAuthData({
     if (!email) continue;
     const cleared = await db.transaction(async (tx) => {
       // Same email advisory lock as verify/resend; keep id and throttle state intact.
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       return tx.orm.public.EmailVerification.where({ id: candidate.id })
         .where((row) => row.expiresAt.lte(expiredAt))
         .where((row) => row.codeHash.isNotNull())
@@ -65,11 +62,7 @@ export async function cleanupAuthData({
     const email = candidate.user?.email;
     if (!email) continue;
     const cleared = await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       return tx.orm.public.PasswordReset.where({ id: candidate.id })
         .where((row) => row.expiresAt.lte(expiredAt))
         .where((row) => row.codeHash.isNotNull())

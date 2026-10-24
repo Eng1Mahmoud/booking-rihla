@@ -1,3 +1,4 @@
+import { lockAccountEmail } from './accountSecurity.ts';
 import { randomUUID } from 'node:crypto';
 import { hash, argon2id } from 'argon2';
 import type { db as database } from '../prisma/db.ts';
@@ -75,12 +76,7 @@ export const authService = {
     });
     const { db } = await import('../prisma/db.ts');
     return await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw
-          .sql`SELECT pg_advisory_xact_lock(hashtextextended(${input.email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, input.email);
       if (await tx.orm.public.User.where({ email: input.email }).first())
         return randomUUID();
       const user = await tx.orm.public.User.create({
@@ -100,11 +96,7 @@ export const authService = {
     parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       const user = await tx.orm.public.User.where({ email }).first();
       if (!user || user.emailVerifiedAt) return;
       const previous = await tx.orm.public.EmailVerification.where({
@@ -129,11 +121,7 @@ export const authService = {
     parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const verified = await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       const user = await tx.orm.public.User.where({ email }).first();
       if (!user || user.emailVerifiedAt) return false;
       const challenge = await tx.orm.public.EmailVerification.where({

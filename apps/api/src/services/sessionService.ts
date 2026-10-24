@@ -1,3 +1,4 @@
+import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { verify } from 'argon2';
 import { AppError } from '../errors/AppError.ts';
 import type {
@@ -80,11 +81,7 @@ export const sessionService = {
     parseSessionEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const result = await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       const user = await tx.orm.public.User.where({ email }).first();
       const validPassword = await verify(
         user?.passwordHash ?? decoyHash,
@@ -239,15 +236,8 @@ export const sessionService = {
     const user = await db.orm.public.User.where({ id: userId }).first();
     if (!user) return;
     await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw
-          .sql`SELECT pg_advisory_xact_lock(hashtextextended(${user.email}, 0))`
-          .affectedCount()
-          .build(),
-      );
-      await tx.orm.public.Session.where({ userId, revokedAt: null }).updateAll({
-        revokedAt: new Date().toISOString(),
-      });
+      await lockAccountEmail(tx, db, user.email);
+      await revokeAccountSessions(tx, userId);
     });
   },
 };

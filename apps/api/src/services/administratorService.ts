@@ -1,3 +1,4 @@
+import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { recordAudit } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { db as database } from '../prisma/db.ts';
@@ -50,12 +51,7 @@ async function changeAdministrator(
     await requireCurrentSuperAdmin(tx, auth);
     const candidate = await userRecords(tx).where({ id }).first();
     if (!candidate) return null;
-    await tx.execute(
-      db.raw
-        .sql`SELECT pg_advisory_xact_lock(hashtextextended(${candidate.email}, 0))`
-        .affectedCount()
-        .build(),
-    );
+    await lockAccountEmail(tx, db, candidate.email);
     await tx.execute(
       db.raw.sql`SELECT "id" FROM "public"."User" WHERE "id" = ${id} FOR UPDATE`
         .affectedCount()
@@ -92,11 +88,7 @@ async function changeAdministrator(
         );
     }
     await tx.orm.public.User.where({ id }).update(input);
-    if (changedRole || !isActive)
-      await tx.orm.public.Session.where({
-        userId: id,
-        revokedAt: null,
-      }).updateAll({ revokedAt: new Date().toISOString() });
+    if (changedRole || !isActive) await revokeAccountSessions(tx, id);
     const updated = await userRecords(tx).where({ id }).first();
     if (!updated) throw new Error('Updated administrator account is missing');
     await recordAudit(tx, auth, 'User', id, target, updated);

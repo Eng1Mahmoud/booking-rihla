@@ -1,3 +1,4 @@
+import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { recordAudit } from './auditWriter.ts';
 import { lockAdministrators } from './administratorLocks.ts';
 import { AppError } from '../errors/AppError.ts';
@@ -9,11 +10,7 @@ export async function bootstrapSuperAdmin(input: string) {
   const { db } = await import('../prisma/db.ts');
   return await db.transaction(async (tx) => {
     await lockAdministrators(tx, db);
-    await tx.execute(
-      db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-        .affectedCount()
-        .build(),
-    );
+    await lockAccountEmail(tx, db, email);
     const existing = await tx.orm.public.User.where({
       role: 'SUPER_ADMIN',
     }).first();
@@ -35,10 +32,7 @@ export async function bootstrapSuperAdmin(input: string) {
     await tx.orm.public.User.where({ id: user.id }).update({
       role: 'SUPER_ADMIN',
     });
-    await tx.orm.public.Session.where({
-      userId: user.id,
-      revokedAt: null,
-    }).updateAll({ revokedAt: new Date().toISOString() });
+    await revokeAccountSessions(tx, user.id);
     await recordAudit(
       tx,
       undefined,

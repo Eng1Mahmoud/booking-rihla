@@ -1,3 +1,4 @@
+import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { hash, argon2id } from 'argon2';
 import { AppError } from '../errors/AppError.ts';
 import { parseAuthCodeEnv } from '../config/env.ts';
@@ -13,11 +14,7 @@ export const passwordResetService = {
     parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       const user = await tx.orm.public.User.where({ email }).first();
       if (!user || !user.isActive) return;
       const previous = await tx.orm.public.PasswordReset.where({
@@ -81,11 +78,7 @@ export const passwordResetService = {
     });
     const { db } = await import('../prisma/db.ts');
     const reset = await db.transaction(async (tx) => {
-      await tx.execute(
-        db.raw.sql`SELECT pg_advisory_xact_lock(hashtextextended(${email}, 0))`
-          .affectedCount()
-          .build(),
-      );
+      await lockAccountEmail(tx, db, email);
       const user = await tx.orm.public.User.where({ email }).first();
       if (!user || !user.isActive) return false;
       const challenge = await tx.orm.public.PasswordReset.where({
@@ -113,10 +106,7 @@ export const passwordResetService = {
         loginFailures: 0,
         lockedUntil: null,
       });
-      await tx.orm.public.Session.where({
-        userId: user.id,
-        revokedAt: null,
-      }).updateAll({ revokedAt: now });
+      await revokeAccountSessions(tx, user.id, now);
       await tx.orm.public.PasswordReset.where({ id: challenge.id }).update({
         codeHash: null,
         consumedAt: now,
