@@ -21,6 +21,10 @@ import type { RecoveryValues } from '../schemas/recoverySchema';
 import type { AuthSession } from '../types/auth';
 import { authKeys } from '@/features/auth/hooks/queryKeys';
 import { useRouter } from 'next/navigation';
+import { useSyncExternalStore } from 'react';
+
+const emptySubscribe = () => () => {};
+
 export async function resetAuthCache(client: QueryClient) {
   await client.cancelQueries();
   client.removeQueries({
@@ -53,6 +57,13 @@ export function useLogout() {
   });
 }
 export function useAuth() {
+  // Another subscriber may fill the cache before this component hydrates.
+  // Keep the server and first client render on the same loading view.
+  const hydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   const query = useQuery<AuthSession>({
     queryKey: authKeys.me,
     queryFn: () => invokeAction(getCurrentUserAction),
@@ -65,7 +76,8 @@ export function useAuth() {
     query.error.status === 401 &&
     query.error.code === 'UNAUTHENTICATED';
   let status: 'guest' | 'unavailable' | 'signed-in' | 'loading' = 'loading';
-  if (expired) status = 'guest';
+  if (!hydrated) status = 'loading';
+  else if (expired) status = 'guest';
   else if (query.isError || query.data?.error) status = 'unavailable';
   else if (query.data?.user) status = 'signed-in';
   else if (query.data) status = 'guest';
