@@ -21,33 +21,33 @@ try {
   const { db } = await import('../prisma/db.ts');
   close = () => db.close();
   const once = process.argv.includes('--once');
+  const queues = [
+    { name: 'booking-notices', process: processBookingNotices },
+    { name: 'account', process: processEmailOutbox },
+    { name: 'tickets', process: processTicketOutbox },
+    { name: 'departure-reminders', process: processDepartureReminders },
+  ];
   console.log(
     once ? 'Processing one email outbox batch' : 'Email worker running',
   );
   do {
-    try {
-      const notices = await processBookingNotices();
-      const account = await processEmailOutbox();
-      const tickets = await processTicketOutbox();
-      const reminders = await processDepartureReminders();
-      const result = {
-        sent: account.sent + tickets.sent + reminders.sent + notices.sent,
-        failed:
-          account.failed + tickets.failed + reminders.failed + notices.failed,
-        discarded:
-          account.discarded +
-          tickets.discarded +
-          reminders.discarded +
-          notices.discarded,
-      };
-      if (result.sent || result.failed || result.discarded)
-        console.log(JSON.stringify(result));
-    } catch {
-      console.error(
-        'Email outbox batch failed; check local database and mail configuration',
-      );
-      if (once) process.exitCode = 1;
+    const result = { sent: 0, failed: 0, discarded: 0 };
+    // A failed queue must not prevent the remaining queues from running.
+    for (const queue of queues) {
+      try {
+        const counts = await queue.process();
+        result.sent += counts.sent;
+        result.failed += counts.failed;
+        result.discarded += counts.discarded;
+      } catch {
+        console.error(
+          `Email queue "${queue.name}" failed; check local database and mail configuration`,
+        );
+        if (once) process.exitCode = 1;
+      }
     }
+    if (result.sent || result.failed || result.discarded)
+      console.log(JSON.stringify(result));
     if (once || stopping) break;
     await setTimeout(2000, undefined, { signal: stop.signal }).catch(() => {});
   } while (!stopping);
