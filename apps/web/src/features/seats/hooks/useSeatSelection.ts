@@ -24,7 +24,6 @@ export function useSeatSelection(initialSeats: SeatList) {
   const initialSelected = useMemo(
     () => seatIdsFromQuery(searchParams.get('seats'), initialSeats.seats),
     // Seed once from the first URL only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
