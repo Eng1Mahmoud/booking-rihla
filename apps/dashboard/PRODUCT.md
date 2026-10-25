@@ -22,8 +22,10 @@ organization and bilingual conventions while serving staff operations.
 The confirmed first batch is a protected shell and read-only daily overview of
 operations and payment outcomes, connected to the existing API. The user approved
 the work-panels design with a side navigation rail, three operational reports,
-and a separate payment report. Later catalog, trip, booking, fleet, user and
-refund-management screens follow in separately reviewed batches.
+and a separate payment report. The next approved batch adds city/station lists, bilingual name search, city
+filtering, pagination, create/edit forms and confirmed deletes with existing
+relationship safeguards. Trip, booking, fleet, user and refund-management
+screens follow in separately reviewed batches.
 
 ## Capabilities and Constraints
 

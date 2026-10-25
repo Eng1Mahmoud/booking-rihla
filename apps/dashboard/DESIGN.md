@@ -174,7 +174,7 @@ The English overview title has a compact display voice; report content and Arabi
 
 ## Layout
 
-The shell starts in one column. Below 1024px the header exposes a menu button; from 1024px a sticky start-side navy rail fills the viewport height with width clamp(200px, 14.25vw, 240px). The header is at least 82px tall. Main padding is 28px 16px, increasing at 768px to 30px 34px.
+The shell starts in one column. Below 1024px the header exposes a menu button; from 1024px a sticky start-side navy rail fills the viewport height with width 256px, increasing to 280px from 1280px. The header is at least 82px tall. Main padding is 28px 16px, increasing at 768px to 30px 34px.
 
 Reports stack below 768px, use two columns at 768px, and three at 1280px. Between 768px and 1279px the capacity panel deliberately spans the full row, with title/note in one half and allocation in the other. Report gaps are 14px; payments sit 16px below operations. Panel insets are 24px, 20px below 640px, and 24px 27px from 1280px. Desktop operational panels have a minimum height of 374px.
 

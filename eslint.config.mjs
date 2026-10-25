@@ -16,6 +16,7 @@ export default defineConfig(
   {
     files: [
       'apps/api/src/**/*.ts',
+      'apps/api/tests/**/*.ts',
       'apps/api/prisma.config.ts',
       'apps/web/src/**/*.ts',
       'apps/web/src/**/*.tsx',

@@ -14,9 +14,7 @@ backups/
 .next/
 *.tsbuildinfo
 
-# impeccable-ignore-start
-# Shared config, design.json, surfaces and critique Markdown stay versioned.
-# Temporary state and per-developer overrides stay local in every workspace.
+
 **/.impeccable/config.local.json
 **/.impeccable/hook.cache.json
 **/.impeccable/hook.pending.json
@@ -34,7 +32,6 @@ backups/
 **/.impeccable/live/pending-manual-edits.json
 **/.impeccable/live/deferred-svelte-component-accepts.json
 **/.impeccable/live/*.png
-# This project keeps generated workflow state and design proposals local too.
 **/.impeccable/build/
 **/.impeccable/mocks/
-# impeccable-ignore-end
+

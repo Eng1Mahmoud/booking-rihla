@@ -437,13 +437,15 @@ Feature batches:
 
 - [ ] D1: Build a separate dashboard application in apps/dashboard, mirroring the feature-based organization of apps/web and its Rihla identity. Give it its own development command, sign-in and independently named session cookies. Keep the passenger application unchanged.
 - [ ] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
-- [ ] Add complete city/station management screens.
+- [x] Add complete city/station management screens.
 - [ ] Add bus types, amenities, fixed template selection, buses, plates, routes, and trip management screens.
 - [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
 - [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
 - [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
 - [ ] Add precisely defined booking/revenue/upcoming-trip/occupancy metrics.
 - [ ] Complete Arabic/English, RTL, themes, accessibility, responsive behavior, and role-specific failure states.
+
+City/station management batch completed locally on 2026-10-25: protected city/station lists, bilingual search, city filtering, 20-row pagination, RHF/Zod forms and confirmed deletes through the existing APIs. Linked-data failures are translated; every Action checks current staff access. Isolated production build, TypeScript, lint/format and synthetic CRUD, permission, failure, responsive and keyboard checks passed. Independent review returned ship for this ordinary extension, and the documentation comparison preserved the existing design system. No real catalog records were changed during verification. The earlier overview native workflow ledger remains open and is not closed by this batch.
 
 Working result: operators manage the platform through the completed backend with tested role restrictions.
 

@@ -1,3 +1,8 @@
+import { createAdminCatalogRouter } from './routes/adminCatalogRoutes.ts';
+import {
+  adminCatalogService,
+  type AdminCatalogService,
+} from './services/adminCatalogService.ts';
 import { createAccountRouter } from './routes/accountRoutes.ts';
 import {
   accountPaymentService,
@@ -113,6 +118,7 @@ export function createApp(
   corsOrigins: string[],
   services: {
     readiness?: ReadinessService;
+    adminCatalog?: AdminCatalogService;
     cities?: CityService;
     stations?: StationService;
     buses?: BusService;
@@ -223,6 +229,13 @@ export function createApp(
     createAmenityRouter(services.amenities ?? amenityService, admin),
   );
 
+  app.use(
+    '/api/v1/admin',
+    createAdminCatalogRouter(
+      services.adminCatalog ?? adminCatalogService,
+      admin,
+    ),
+  );
   app.use('/api/v1/admin', createOperationRouter(superAdmin));
 
   // Public capability only; no keys, account ids, URLs or provider calls.

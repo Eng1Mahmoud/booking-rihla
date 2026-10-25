@@ -23,7 +23,7 @@ export async function DashboardShell({
     '/' +
     (await getLocale());
   return (
-    <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[clamp(200px,14.25vw,240px)_minmax(0,1fr)]">
+    <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
       <a
         href="#dashboard-main"
         className="fixed -top-[100px] start-4 z-100 rounded-[8px] border-2 border-primary bg-card px-5 py-3 focus:top-3"

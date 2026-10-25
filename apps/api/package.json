@@ -35,7 +35,8 @@
     "refund:worker:prod": "node dist/workers/refundWorker.js",
     "admin:bootstrap:prod": "node dist/scripts/bootstrapAdmin.js",
     "ops:status:prod": "node dist/scripts/operationsStatus.js",
-    "payment:proxy": "node --env-file-if-exists=.env src/scripts/paymobTunnel.ts"
+    "payment:proxy": "node --env-file-if-exists=.env src/scripts/paymobTunnel.ts",
+    "test:catalog": "eslint tests/adminCatalog.test.ts --max-warnings=0 && tsc --project tsconfig.test.json && node --test tests/adminCatalog.test.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",
