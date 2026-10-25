@@ -30,6 +30,7 @@ passenger application. No administrator is created automatically.
 - src/features/stations: station list, city filter, editor, data/controller hooks and Actions.
 - src/features/bus-types: bilingual bus-type catalog, codes, editor and protected Actions.
 - src/features/amenities: bilingual amenity catalog, codes, editor and protected Actions.
+- src/features/buses: bus plates/capacity/templates/assignments, filters, editor and Actions.
 - src/shared: the existing web transport/form/UI conventions, scoped to this app.
 - src/i18n and src/messages: Arabic/English routes, RTL/LTR and copy.
 
@@ -76,7 +77,7 @@ The station filter remains linkable through cityId and follows route changes.
 Mutations invalidate all catalog pages, related city names/counts and options.
 
 Tailwind utilities live directly in className; globals.css holds shared theme,
-font and base rules. Buses, seat templates, routes/trips, bookings, staff/users and
+font and base rules. Routes/trips, bookings, staff/users and
 refund features follow in later feature batches.
 Launch readiness and real-service integration testing remain deferred.
 
@@ -268,3 +269,30 @@ skip unless CATALOG_TEST_DATABASE_URL points to the owned disposable test DB.
 The external evidence runner dashboard-review/fleet-metadata/test-api.cjs starts
 and removes its own PostgreSQL container; never point it at the application DB.
 Synthetic production-preview evidence is in the same external evidence directory.
+
+## Buses
+
+/dashboard/buses manages plates, capacity (1-100), active state, optional bus type,
+up to 30 distinct amenities, and the existing STANDARD_2_2 or numbered/null seat
+layout. No new layout code is introduced. Native checkboxes/selects use the shared
+Form/FormInput/FormSelect and existing dialog/focus conventions. BusFormValues
+converts field strings to exact API numbers/nulls in its feature schema; display
+components do not own transport, cache changes, permissions or dialog state.
+
+Protected GET /admin/buses adds literal plate search, busTypeId/isActive filtering,
+stable plate/ID ordering and snapshot-consistent filtered totals. Both staff roles
+can read/manage buses; every Action checks current staff and the API remains
+authoritative. Existing /buses CRUD and seat APIs remain unchanged. Trip-linked
+buses cannot change capacity/layout; booked buses cannot change type/amenities;
+referenced buses cannot be deleted. All refusals and recovery steps are localized.
+
+Bus options are a separately cached fleet query. Server-only readListOptions
+reads all protected metadata pages (100 each), validates totals/unique IDs and
+rejects incomplete/inconsistent results. A failed second page never produces a
+partial picker. Explicit refresh invalidates these options, while successful
+writes invalidate the fleet family. No unrelated city-picker changes are made.
+
+The owner removed test files and most utility scripts after this batch's checks.
+Do not recreate them or add test infrastructure/package commands. Future checks
+use existing build/type/lint commands and manual UI verification. Historical
+results remain in the external evidence directory.

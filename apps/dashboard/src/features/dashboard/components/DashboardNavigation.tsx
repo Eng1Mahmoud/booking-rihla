@@ -58,6 +58,7 @@ function NavigationLinks() {
       {[
         { href: '/dashboard/cities', label: t('cities'), Icon: Building2 },
         { href: '/dashboard/stations', label: t('stations'), Icon: MapPin },
+        { href: '/dashboard/buses', label: t('buses'), Icon: BusFront },
         { href: '/dashboard/bus-types', label: t('busTypes'), Icon: BusFront },
         { href: '/dashboard/amenities', label: t('amenities'), Icon: Wifi },
       ].map(({ href, label, Icon }) => (

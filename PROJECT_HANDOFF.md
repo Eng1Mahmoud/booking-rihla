@@ -128,3 +128,72 @@ checks passed. Synthetic preview/container cleanup and unchanged HEAD verified.
 Evidence: external dashboard-review/fleet-metadata/verification.md, review.md,
 design-comparison.md and final-quality.log. Next API boundaries are recorded in
 next-api-notes.md; no bus implementation or bus/seat mutations have started.
+
+## Latest batch — bus management, 2026-10-25
+
+Starting git status was clean at e4a0184a7c4622e937edcd4eb368eda0ce264cc5;
+the owner had committed the fleet metadata batch. This bus batch remains
+uncommitted. Do not commit/push/deploy; give the owner a commit message after
+each completed feature. Current suggested message:
+feat(fleet): add bus management and seat template selection
+
+Delivered /dashboard/buses as an explicit feature (schemas/types, Actions,
+data/controller hooks, columns/default mapper, presentation/editor/filters).
+Reuses DataTable/useDataTableState, Form/Input/Select, FormDialog, ConfirmDialog,
+focus/error helpers. New shared FormSelect mirrors FormInput and is used for type
+and template; new server-only readListOptions serves both metadata picker domains.
+All picker pages load and validate total/IDs before use; failed/inconsistent
+pages fail explicitly. Mutation/refresh invalidation keeps fleet options current.
+
+The form preserves the API's exact plate normalization, integer capacity 1-100,
+isActive boolean, nullable type, <=30 unique amenities and STANDARD_2_2/null layout.
+Form strings convert through the feature Zod schema; no new layout or DB schema.
+Existing Bus write services and atomic seat resizing/locks remain unchanged.
+Localized errors cover duplicate plates, missing metadata/bus, booked-bus metadata,
+trip-linked seat edits and referenced deletion. Uncertain writes are not replayed.
+
+API: new adminBusSchema/Controller/Service/Routes, protected GET /admin/buses,
+app service injection adminBuses. Single statement returns filtered total/pages
+with joined type/amenities and plate+ID order; search is bound literal plate
+substring. Existing bus list/mutation contracts are unchanged. Activity filter
+uses a bound empty/true/false string converted by NULLIF::boolean because raw
+Prisma interpolation does not accept a JavaScript null. False has explicit tests.
+
+Evidence: registered C: workspace dashboard-review/buses. API runner owns only
+postgres:16-alpine 127.0.0.1:18986/buses_test; 7 HTTP+SQL tests passed, zero skips,
+container removed. Frontend runner builds an isolated source copy without env
+files and uses only synthetic APIs: production build/types, 11 browser groups,
+zero JS errors; 20 ar/en list/editor captures at 1440/1024/768/390/320 plus four
+failure/empty captures. It tests 105 types and 105 amenities (second pages),
+CRUD/defaults/nulls, validation/conflicts/refusals, option failures/inconsistency,
+stale recovery/no uncertain replay, inner scroll, focus, drawer and demotion.
+Preview source copy, server and browser are cleaned. No real app data/providers.
+
+Next bounded batch: inspect Route API contracts and implement route management
+with full station choices, directed uniqueness, duration and relationship errors.
+Then trips, bulk preview/create, bookings/payments/refunds, staff/users/audit.
+Old overview Impeccable native workflow remains OPEN. Do not infer closure from
+this ordinary extension. Prior city picker limit=10 change is preserved and is
+outside this bus batch; buses do not depend on city options.
+
+## Owner verification preference — latest instruction
+
+The owner confirmed removing API tests and most scripts intentionally. Do not
+create any testing files, restore removed tests/scripts, or re-add package commands.
+Finish current features with existing build/type/lint checks and manual UI checks.
+Earlier successful test results are historical evidence only; test:catalog and
+apps/api/tests are no longer available. This instruction supersedes earlier
+test-setup/runner instructions in this handoff. Give a commit message after each
+completed feature, without committing or pushing. Finish buses before starting
+the next route batch. Existing removed files/package edits are preserved.
+
+## Bus review disposition
+
+The independent reviewer found no material visual or functional issue across the
+24 captures and source, but returned fix for provenance of the inherited design
+seed: the local check returns SEED UNKNOWN and original roll output is unavailable.
+The inherited reference is present in overview/cities/fleet briefs; no new roll
+was required or run for this narrow extension. This procedural provenance item
+remains OPEN. Do not claim ship or native overview gate closure. The bus UI and
+server behavior are implemented and checked. Deleted tests/scripts remain absent
+per the owner's explicit instruction; future work must not recreate them.

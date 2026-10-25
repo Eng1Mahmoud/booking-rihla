@@ -5,7 +5,7 @@
 - Explain work to the user in Arabic. Keep code identifiers in the project's existing language.
 - The application source is D:/personal-projects/bus-booking-platform. The Codex registered workspace at C:/Users/engm9/OneDrive/Dokumente/ChatGPT/booking-bus contains supporting evidence and older snapshots; do not edit a stale copy of application source there.
 - Start a fresh session by reading PROJECT_HANDOFF.md, the relevant IMPLEMENTATION_PLAN.md section, and actual git status. Load only the feature context needed.
-- The owner handles commits and pushes. Do not commit, push, publish or deploy unless explicitly requested. Preserve unrelated work.
+- The owner handles commits and pushes. Do not commit, push, publish or deploy unless explicitly requested. Preserve unrelated work. After each completed feature, provide a ready Conventional Commit message.
 
 ## Code quality and patterns
 
@@ -34,5 +34,5 @@
 - API: npm run dev; npm run typecheck; npm run build.
 - Passenger app: npm run dev:web; npm run typecheck:web; npm run lint:web; npm run build:web.
 - Dashboard: npm run dev:dashboard; npm run typecheck:dashboard; npm run lint:dashboard; npm run build:dashboard.
-- API catalog checks: npm run test:catalog --workspace @booking-bus/api. SQL cases require the dedicated disposable test database; without it they skip. See PROJECT_HANDOFF.md for the isolated runner.
+- Owner preference: do not create test files or restore deleted tests/scripts/package commands. Verify with the existing build, type checks, targeted lint/format and manual UI checks; do not add testing infrastructure.
 - Prefer targeted ESLint/Prettier checks for changed files; do not run repository-wide format --write.

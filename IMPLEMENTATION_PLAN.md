@@ -439,7 +439,8 @@ Feature batches:
 - [ ] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
 - [x] Add complete city/station management screens.
 - [x] Add bus type and amenity management screens.
-- [ ] Add fixed template selection, buses, plates, routes, and trip management screens.
+- [x] Add fixed template selection, buses and plate management screens.
+- [ ] Add route and trip management screens.
 - [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
 - [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
 - [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
@@ -456,6 +457,17 @@ assignment/booking safeguards are preserved. Isolated production build/types,
 15 API/PostgreSQL tests and 12 synthetic browser groups passed, including 32
 ar/en table/editor captures at 1440/768/390/320. No app records or real providers
 were used. The old overview native workflow ledger remains open.
+
+Bus management batch completed locally on 2026-10-25: protected paginated bus
+list with literal plate search, type/activity filters, complete metadata options,
+plate/capacity/active/type/amenity editing, existing STANDARD_2_2 or numbered/null
+seat template selection and confirmed deletion. Existing Bus writes and their
+booking/trip/relationship safeguards remain unchanged. Isolated production
+build/types and 7 HTTP/real PostgreSQL tests passed; synthetic browser checks
+include CRUD, defaults/nulls, metadata options beyond the first 100 rows, partial
+and inconsistent option failures, keyboard/focus, demoted staff and ar/en at
+1440/1024/768/390/320. No app records were changed. Old overview native gate stays
+open. Routes and trips are the next separate batch.
 
 Working result: operators manage the platform through the completed backend with tested role restrictions.
 

@@ -26,9 +26,10 @@ and a separate payment report. The next approved batch adds city/station lists, 
 filtering, pagination, create/edit forms and confirmed deletes with existing
 relationship safeguards. The next bounded fleet batch adds bus types and amenities:
 code/name search, complete server pagination, bilingual forms and confirmed
-deletes, preserving assigned-bus and reserved-booking safeguards. Buses, seat
-templates, routes/trips, bookings, users and refund management follow in separate
-batches.
+deletes, preserving assigned-bus and reserved-booking safeguards. The bus batch
+adds plate search, type/activity filters, capacity, active state, optional type
+and amenities, and existing fixed/numbered seat templates, retaining trip/booking
+constraints. Routes/trips, bookings, users and refunds follow in separate batches.
 
 ## Capabilities and Constraints
 

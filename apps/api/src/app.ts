@@ -1,3 +1,8 @@
+import { createAdminBusRouter } from './routes/adminBusRoutes.ts';
+import {
+  adminBusService,
+  type AdminBusService,
+} from './services/adminBusService.ts';
 import { createAdminFleetRouter } from './routes/adminFleetRoutes.ts';
 import {
   adminFleetService,
@@ -125,6 +130,7 @@ export function createApp(
     readiness?: ReadinessService;
     adminCatalog?: AdminCatalogService;
     adminFleet?: AdminFleetService;
+    adminBuses?: AdminBusService;
     cities?: CityService;
     stations?: StationService;
     buses?: BusService;
@@ -235,6 +241,10 @@ export function createApp(
     createAmenityRouter(services.amenities ?? amenityService, admin),
   );
 
+  app.use(
+    '/api/v1/admin',
+    createAdminBusRouter(services.adminBuses ?? adminBusService, admin),
+  );
   app.use(
     '/api/v1/admin',
     createAdminFleetRouter(services.adminFleet ?? adminFleetService, admin),
