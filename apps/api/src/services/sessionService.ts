@@ -6,7 +6,6 @@ import type {
   LoginInput,
   UpdateProfileInput,
 } from '../schemas/authSchema.ts';
-import { parseSessionEnv } from '../config/env.ts';
 import {
   newRefreshToken,
   nextRefreshToken,
@@ -78,7 +77,6 @@ async function tokenResponse(
 }
 export const sessionService = {
   async login({ email, password }: LoginInput) {
-    parseSessionEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const result = await db.transaction(async (tx) => {
       await lockAccountEmail(tx, db, email);
@@ -121,7 +119,6 @@ export const sessionService = {
     return result;
   },
   async refresh(token: string) {
-    parseSessionEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const candidate = await db.orm.public.RefreshToken.where({
       tokenHash: hashRefreshToken(token),

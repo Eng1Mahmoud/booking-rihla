@@ -1,5 +1,4 @@
 import { AppError } from '../errors/AppError.ts';
-import { parsePaymobEnv } from '../config/paymob.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
 import type {
   PaymentProvider,
@@ -235,22 +234,23 @@ export function createRefundService(
   };
 }
 export function configuredRefundService() {
-  if (process.env['PAYMOB_REFUNDS_ENABLED'] !== 'true')
+  if (
+    process.env.PAYMOB_REFUNDS_ENABLED === 'true' &&
+    ![undefined, 'true', 'false'].includes(process.env.PAYMOB_ENABLED)
+  )
+    throw new Error('Invalid payment configuration: PAYMOB_ENABLED');
+  if (
+    process.env.PAYMOB_REFUNDS_ENABLED !== 'true' ||
+    process.env.PAYMOB_ENABLED !== 'true'
+  )
     throw new AppError(
       503,
       'PAYMENT_UNAVAILABLE',
       'Payment is temporarily unavailable',
     );
-  const config = parsePaymobEnv(process.env);
-  if (!config)
-    throw new AppError(
-      503,
-      'PAYMENT_UNAVAILABLE',
-      'Payment is temporarily unavailable',
-    );
-  return createRefundService(createPaymobProvider(config), {
-    integrationId: config.PAYMOB_INTEGRATION_ID,
-    ownerId: config.PAYMOB_OWNER_ID,
+  return createRefundService(createPaymobProvider(), {
+    integrationId: Number(process.env.PAYMOB_INTEGRATION_ID),
+    ownerId: Number(process.env.PAYMOB_OWNER_ID),
   });
 }
 export const refundReadService = {

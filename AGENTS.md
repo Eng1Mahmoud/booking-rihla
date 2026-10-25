@@ -19,6 +19,7 @@
 - Reuse shared DataTable/useDataTableState for tables, including centralized debounced search, filters, pagination and internal horizontal scrolling. Retain table presentation on mobile.
 - Reuse shared ConfirmDialog/useConfirmation for confirmations throughout the application. Keep feature actions and permissions feature-owned.
 - Follow the current API Route -> Controller -> Service -> Prisma pattern; no extra repository layer.
+- Read ordinary environment values directly from process.env at their point of use, with simple defaults. Do not recreate env.ts, generic environment readers or per-setting wrappers. Keep essential startup/security checks in server.ts and payment checks in their owning provider/services; do not recreate config/paymob.ts or config/production.ts. Validate cryptographic keys where they are used.
 
 ## Safety and product constraints
 

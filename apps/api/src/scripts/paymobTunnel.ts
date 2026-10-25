@@ -1,8 +1,7 @@
 import { createServer } from 'node:http';
-import { parseEnv } from '../config/env.ts';
 
 // Development-only ingress: never expose the general API through a quick tunnel.
-if (parseEnv(process.env).NODE_ENV === 'production')
+if (!['development', 'test'].includes(process.env.NODE_ENV ?? 'development'))
   throw new Error('The payment development proxy is disabled in production');
 const webhook = '/api/v1/payments/paymob/webhook';
 const returnPath = '/api/v1/payments/paymob/return';

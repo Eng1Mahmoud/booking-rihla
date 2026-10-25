@@ -6,20 +6,19 @@ import {
   emptySessionSchema,
   updateProfileSchema,
 } from '../schemas/authSchema.ts';
-import { parseEnv } from '../config/env.ts';
 import type {
   SessionService,
   AuthContext,
 } from '../services/sessionService.ts';
 export function refreshCookieName() {
-  return parseEnv(process.env).NODE_ENV === 'production'
+  return process.env.NODE_ENV === 'production'
     ? '__Secure-bus_refresh'
     : 'bus_refresh';
 }
 function cookieOptions() {
   return {
     httpOnly: true,
-    secure: parseEnv(process.env).NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict' as const,
     path: '/api/v1/auth',
   };

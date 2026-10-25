@@ -197,3 +197,63 @@ was required or run for this narrow extension. This procedural provenance item
 remains OPEN. Do not claim ship or native overview gate closure. The bus UI and
 server behavior are implemented and checked. Deleted tests/scripts remain absent
 per the owner's explicit instruction; future work must not recreate them.
+
+## Environment access — final user decision, 2026-10-25
+
+The owner explicitly chose direct process.env reads and removal of env.ts,
+superseding the earlier parser convention and intermediate simplifications.
+apps/api/src/config/env.ts is deleted; all parser imports/calls were removed.
+No replacement environment abstraction or per-setting wrapper was introduced.
+
+HTTP, database, mail, session cookies, payment setup, workers and existing local
+tools read their required values directly with existing defaults. server.ts
+retains CORS, proxy-hop, NODE_ENV and optional client-signing-key checks.
+Database startup requires a PostgreSQL URL. Crypto utilities validate their
+required 32-byte hex keys at use; redundant service prechecks were removed.
+Mail transport retains paired-credential checks, and the email worker retains
+preflight checks to avoid consuming outbox retries on missing configuration.
+Production HTTPS/TLS, secret independence and payment validators remain.
+Financial provider/worker behavior, locks and retry logic are unchanged.
+Existing development-only seed/proxy guards reject production or unknown modes;
+none of those tools were executed.
+
+API typecheck/build and scoped ESLint/Prettier/whitespace checks passed. No test
+files, scripts or dependencies were created or restored. Actual .env files,
+database and providers were not accessed. Native .env-loading/dependency/package
+cleanup and deployment remain separate work. No commit or push.
+Suggested combined commit:
+refactor(api): remove environment configuration wrapper
+
+## Direct payment/production configuration — 2026-10-25
+
+Owner approved deleting config/paymob.ts and config/production.ts too. Both are
+removed; server.ts owns production HTTPS/TLS and independent-secret checks.
+Paymob provider reads process.env directly by default and validates TEST keys,
+merchant ids and URLs once at its boundary, including explicit caller settings.
+Webhook configuration/signature validation stays in its service. Checkout,
+reconciliation and refunds read their flags/scope directly. No parser replacement
+or new configuration module was added. Availability reuses checkout construction
+and now also stays closed for a missing/invalid encryption key.
+
+Financial transaction bodies, retries, locks and signed-event persistence remain
+unchanged. Existing payment inspection source files reuse provider validation;
+no test files, scripts, commands or dependencies were added/restored. API typecheck,
+build and scoped ESLint passed. Inline synthetic checks covered 42 provider cases,
+28 checkout/webhook cases, 21 production cases, forged/disabled callbacks and
+refund/reconciliation gates without database, env-file, network or worker access.
+No commit/push. Suggested combined commit: refactor(api): inline environment configuration.
+
+## Server entry point simplification — 2026-10-25
+
+Owner requested removing most validation from server.ts. It now imports only
+createApp, reads HTTP settings directly, starts the server and handles shutdown.
+Removed startup checks for NODE_ENV, general CORS URL formatting, database,
+auth/client key formatting, and payment/provider configuration. Database, crypto,
+checkout and webhook validators remain at use, so invalid service configuration
+is rejected when that service is used rather than blocking the whole API startup.
+Retained bounded proxy trust, production HTTPS/TLS and secret independence only.
+Graceful shutdown, database close, deadline and server error handling are unchanged.
+API typecheck/build and scoped ESLint/Prettier passed; inline isolated checks
+verified defaults and retained guards. No test files/scripts/dependencies added,
+no DB/network/worker access, no commit/push.
+Suggested commit: refactor(api): simplify server startup

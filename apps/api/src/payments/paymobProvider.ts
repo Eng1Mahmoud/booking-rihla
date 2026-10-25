@@ -1,9 +1,4 @@
 import { z } from 'zod';
-import type { PaymobConfig } from '../config/paymob.ts';
-import {
-  parsePaymobEnv,
-  paymobMinimumCheckoutSeconds,
-} from '../config/paymob.ts';
 import {
   PaymentProviderError,
   type PaymentInput,
@@ -11,6 +6,42 @@ import {
 } from './paymentProvider.ts';
 const origin = 'https://accept.paymob.com';
 const numericId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+// Paymob requires at least one minute before checkout expiration.
+export const paymobMinimumCheckoutSeconds = 60;
+const positiveId = z
+  .string()
+  .regex(/^[1-9]\d*$/)
+  .transform(Number)
+  .pipe(z.number().int().positive().max(Number.MAX_SAFE_INTEGER));
+const secureUrl = z.url({ protocol: /^https$/ }).refine((value) => {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return !url.username && !url.password && !url.hash && !url.search;
+});
+export const paymobConfigSchema = z.object({
+  PAYMOB_SECRET_KEY: z.string().regex(/^(?:egy_)?sk_?test_[A-Za-z0-9_-]+$/),
+  PAYMOB_PUBLIC_KEY: z.string().regex(/^(?:egy_)?pk_?test_[A-Za-z0-9_-]+$/),
+  PAYMOB_API_KEY: z.string().min(1),
+  PAYMOB_HMAC_SECRET: z.string().min(1),
+  PAYMOB_INTEGRATION_ID: positiveId.or(numericId),
+  PAYMOB_OWNER_ID: positiveId.or(numericId),
+  PAYMOB_NOTIFICATION_URL: secureUrl,
+  PAYMOB_RETURN_URL: z.url().refine((value) => {
+    if (!URL.canParse(value)) return false;
+    const url = new URL(value);
+    if (url.username || url.password || url.hash || url.search) return false;
+    const local = ['development', 'test'].includes(
+      process.env.NODE_ENV ?? 'development',
+    );
+    return (
+      url.protocol === 'https:' ||
+      (local &&
+        url.protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))
+    );
+  }),
+});
+
 const amount = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const transactionId = z
   .string()
@@ -69,18 +100,29 @@ const inputSchema = z.object({
 });
 // Dependencies are explicit for transport tests; no SDK or global fetch monkeypatch.
 export function createPaymobProvider(
-  config: PaymobConfig,
+  config: z.input<typeof paymobConfigSchema> = {
+    PAYMOB_SECRET_KEY: process.env.PAYMOB_SECRET_KEY!,
+    PAYMOB_PUBLIC_KEY: process.env.PAYMOB_PUBLIC_KEY!,
+    PAYMOB_API_KEY: process.env.PAYMOB_API_KEY!,
+    PAYMOB_HMAC_SECRET: process.env.PAYMOB_HMAC_SECRET!,
+    PAYMOB_INTEGRATION_ID: process.env.PAYMOB_INTEGRATION_ID!,
+    PAYMOB_OWNER_ID: process.env.PAYMOB_OWNER_ID!,
+    PAYMOB_NOTIFICATION_URL: process.env.PAYMOB_NOTIFICATION_URL!,
+    PAYMOB_RETURN_URL: process.env.PAYMOB_RETURN_URL!,
+  },
   transport: typeof fetch = fetch,
   now: () => number = Date.now,
 ): PaymentProvider {
-  // Revalidate callers too: TypeScript alone cannot prevent live credentials at runtime.
-  config = parsePaymobEnv({
-    ...Object.fromEntries(
-      Object.entries(config).map(([key, value]) => [key, String(value)]),
-    ),
-    PAYMOB_ENABLED: 'true',
-    NODE_ENV: process.env['NODE_ENV'],
-  })!;
+  // Validate explicit callers too; TypeScript cannot reject live keys at runtime.
+  const result = paymobConfigSchema.safeParse(config);
+  if (!result.success)
+    throw new Error(
+      'Invalid payment configuration: ' +
+        [
+          ...new Set(result.error.issues.map((issue) => issue.path.join('.'))),
+        ].join(', '),
+    );
+  const settings = result.data;
   async function request(
     path: string,
     method: 'GET' | 'POST',
@@ -95,7 +137,7 @@ export function createPaymobProvider(
         headers: {
           Authorization: bearer
             ? 'Bearer ' + bearer
-            : 'Token ' + config.PAYMOB_SECRET_KEY,
+            : 'Token ' + settings.PAYMOB_SECRET_KEY,
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
@@ -152,7 +194,7 @@ export function createPaymobProvider(
   }
   async function authToken() {
     const credentials = await request('/api/auth/tokens', 'POST', {
-      api_key: config.PAYMOB_API_KEY,
+      api_key: settings.PAYMOB_API_KEY,
     });
     const parsed = z
       .object({ token: z.string().min(1) })
@@ -171,7 +213,7 @@ export function createPaymobProvider(
       if (remaining < paymobMinimumCheckoutSeconds || remainingMs > 600000)
         throw new PaymentProviderError();
       // The server chooses the booking. Browser callback flags are not evidence.
-      const returnUrl = new URL(config.PAYMOB_RETURN_URL);
+      const returnUrl = new URL(settings.PAYMOB_RETURN_URL);
       returnUrl.searchParams.set('bookingId', input.bookingId);
       const raw = await request('/v1/intention/', 'POST', {
         amount: input.amountPiastres,
@@ -179,7 +221,7 @@ export function createPaymobProvider(
         items: [
           { name: 'Bus booking', amount: input.amountPiastres, quantity: 1 },
         ],
-        payment_methods: [config.PAYMOB_INTEGRATION_ID],
+        payment_methods: [settings.PAYMOB_INTEGRATION_ID],
         special_reference: input.reference,
         expiration: remaining,
         billing_data: {
@@ -188,7 +230,7 @@ export function createPaymobProvider(
           email: input.customer.email,
           phone_number: input.customer.phone,
         },
-        notification_url: config.PAYMOB_NOTIFICATION_URL,
+        notification_url: settings.PAYMOB_NOTIFICATION_URL,
         redirection_url: returnUrl.href,
       });
       const parsed = intentionSchema.safeParse(raw);
@@ -208,14 +250,14 @@ export function createPaymobProvider(
         parsed.data.intention_detail.amount !== input.amountPiastres ||
         parsed.data.special_reference !== input.reference ||
         parsed.data.payment_methods[0]!.integration_id !==
-          config.PAYMOB_INTEGRATION_ID
+          settings.PAYMOB_INTEGRATION_ID
       )
         throw new PaymentProviderError(true);
       if (Date.parse(input.expiresAt) <= now())
         throw new PaymentProviderError(true);
       const result = parsed.data;
       const checkout = new URL('/unifiedcheckout/', origin);
-      checkout.searchParams.set('publicKey', config.PAYMOB_PUBLIC_KEY);
+      checkout.searchParams.set('publicKey', settings.PAYMOB_PUBLIC_KEY);
       checkout.searchParams.set('clientSecret', result.client_secret);
       return {
         intentionId: result.id,
@@ -254,8 +296,8 @@ export function createPaymobProvider(
         .safeParse(raw);
       if (
         !parsed.success ||
-        parsed.data.integration_id !== config.PAYMOB_INTEGRATION_ID ||
-        parsed.data.owner !== config.PAYMOB_OWNER_ID
+        parsed.data.integration_id !== settings.PAYMOB_INTEGRATION_ID ||
+        parsed.data.owner !== settings.PAYMOB_OWNER_ID
       )
         throw new PaymentProviderError();
       return { ...normalize(parsed.data), reference };
@@ -273,8 +315,8 @@ export function createPaymobProvider(
       if (
         !parsed.success ||
         String(parsed.data.id) !== id ||
-        parsed.data.integration_id !== config.PAYMOB_INTEGRATION_ID ||
-        parsed.data.owner !== config.PAYMOB_OWNER_ID
+        parsed.data.integration_id !== settings.PAYMOB_INTEGRATION_ID ||
+        parsed.data.owner !== settings.PAYMOB_OWNER_ID
       )
         throw new PaymentProviderError();
       return normalize(parsed.data);

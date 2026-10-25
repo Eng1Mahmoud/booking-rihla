@@ -1,10 +1,23 @@
 import { randomUUID } from 'node:crypto';
-import {
-  parsePaymobWebhookEnv,
-  type PaymobWebhookConfig,
-} from '../config/paymob.ts';
+import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
 import { verifyPaymobCallback } from '../payments/paymobHmac.ts';
+
+// Receiving signed events stays independent from enabling new checkout.
+const positiveId = z
+  .string()
+  .regex(/^[1-9]\d*$/)
+  .transform(Number)
+  .pipe(z.number().int().positive().max(Number.MAX_SAFE_INTEGER));
+export const paymobWebhookSchema = z.object({
+  PAYMOB_HMAC_SECRET: z.string().min(1),
+  PAYMOB_INTEGRATION_ID: positiveId,
+  PAYMOB_OWNER_ID: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    positiveId.optional(),
+  ),
+});
+type PaymobWebhookConfig = z.output<typeof paymobWebhookSchema>;
 
 export function validatePaymobEvent(
   body: unknown,
@@ -44,11 +57,24 @@ export function validatePaymobEvent(
 
 export const paymobWebhookService = {
   async receive(body: unknown, signature: unknown) {
-    const event = validatePaymobEvent(
-      body,
-      signature,
-      parsePaymobWebhookEnv(process.env),
-    );
+    const flag = process.env.PAYMOB_WEBHOOK_ENABLED;
+    if (flag !== undefined && flag !== 'true' && flag !== 'false')
+      throw new Error('Invalid webhook configuration: PAYMOB_WEBHOOK_ENABLED');
+    let config: PaymobWebhookConfig | null = null;
+    if (flag === 'true') {
+      const result = paymobWebhookSchema.safeParse(process.env);
+      if (!result.success)
+        throw new Error(
+          'Invalid webhook configuration: ' +
+            [
+              ...new Set(
+                result.error.issues.map((issue) => issue.path.join('.')),
+              ),
+            ].join(', '),
+        );
+      config = result.data;
+    }
+    const event = validatePaymobEvent(body, signature, config);
     // Import after validation: disabled/forged callbacks never open the database.
     const { db } = await import('../prisma/db.ts');
     // One atomic statement handles concurrent redelivery. Never store the raw

@@ -1,7 +1,24 @@
-import { inspectPaymobSetup } from '../config/paymob.ts';
+import { paymobConfigSchema } from '../payments/paymobProvider.ts';
+import { z } from 'zod';
 
 // Local inspection only: no database, network, payment or environment-file writes.
-const setup = inspectPaymobSetup(process.env);
+const credentials = paymobConfigSchema
+  .pick({
+    PAYMOB_SECRET_KEY: true,
+    PAYMOB_PUBLIC_KEY: true,
+    PAYMOB_API_KEY: true,
+    PAYMOB_HMAC_SECRET: true,
+    PAYMOB_INTEGRATION_ID: true,
+  })
+  .safeParse(process.env);
+const readiness = paymobConfigSchema.safeParse(process.env);
+const fields = (issues: z.core.$ZodIssue[]) => [
+  ...new Set(issues.map((issue) => issue.path.join('.'))),
+];
+const setup = {
+  credentialIssues: credentials.success ? [] : fields(credentials.error.issues),
+  remainingSettings: readiness.success ? [] : fields(readiness.error.issues),
+};
 if (setup.credentialIssues.length) {
   console.error(
     'Missing or invalid TEST credentials: ' + setup.credentialIssues.join(', '),

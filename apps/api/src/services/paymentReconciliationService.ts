@@ -9,7 +9,6 @@ import {
   verifiedPayment,
   verifiedReferencePayment,
 } from '../payments/paymentVerification.ts';
-import { parsePaymobEnv } from '../config/paymob.ts';
 import { createPaymobProvider } from '../payments/paymobProvider.ts';
 
 type Decision = { state: string };
@@ -274,17 +273,18 @@ export function createPaymentReconciliationService(
   };
 }
 export function configuredPaymentReconciliation() {
-  const flag = process.env['PAYMOB_RECONCILIATION_ENABLED'];
+  const flag = process.env.PAYMOB_RECONCILIATION_ENABLED;
   if (flag === undefined || flag === 'false') return null;
   if (flag !== 'true')
     throw new Error(
       'Invalid payment configuration: PAYMOB_RECONCILIATION_ENABLED',
     );
-  const config = parsePaymobEnv(process.env);
-  if (!config)
+  if (![undefined, 'true', 'false'].includes(process.env.PAYMOB_ENABLED))
+    throw new Error('Invalid payment configuration: PAYMOB_ENABLED');
+  if (process.env.PAYMOB_ENABLED !== 'true')
     throw new Error('Payment reconciliation requires PAYMOB_ENABLED');
-  return createPaymentReconciliationService(createPaymobProvider(config), {
-    integrationId: config.PAYMOB_INTEGRATION_ID,
-    ownerId: config.PAYMOB_OWNER_ID,
+  return createPaymentReconciliationService(createPaymobProvider(), {
+    integrationId: Number(process.env.PAYMOB_INTEGRATION_ID),
+    ownerId: Number(process.env.PAYMOB_OWNER_ID),
   });
 }

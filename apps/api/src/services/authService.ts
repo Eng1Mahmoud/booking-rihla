@@ -8,7 +8,6 @@ import type {
   ResendVerificationInput,
 } from '../schemas/authSchema.ts';
 import { AppError } from '../errors/AppError.ts';
-import { parseAuthCodeEnv } from '../config/env.ts';
 import {
   newVerificationCode,
   hashVerificationCode,
@@ -66,7 +65,6 @@ async function queueVerification(
 }
 export const authService = {
   async register(input: RegisterInput): Promise<string> {
-    parseAuthCodeEnv(process.env);
     // Hash duplicate registrations too; never replace an existing account's password.
     const passwordHash = await hash(input.password, {
       type: argon2id,
@@ -93,7 +91,6 @@ export const authService = {
     email,
     verificationId,
   }: ResendVerificationInput): Promise<void> {
-    parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     await db.transaction(async (tx) => {
       await lockAccountEmail(tx, db, email);
@@ -118,7 +115,6 @@ export const authService = {
     code,
     verificationId,
   }: VerifyEmailInput): Promise<void> {
-    parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     const verified = await db.transaction(async (tx) => {
       await lockAccountEmail(tx, db, email);

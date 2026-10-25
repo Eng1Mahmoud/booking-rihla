@@ -1,5 +1,4 @@
 import { Temporal } from 'temporal-polyfill';
-import { parseEnv } from '../config/env.ts';
 import { buildDemoData } from './demoData.ts';
 import { cairoToday } from '../utils/cairoTime.ts';
 
@@ -20,7 +19,7 @@ export async function seedDemo(
   firstDate = Temporal.PlainDate.from(cairoToday()).add({ days: 1 }).toString(),
   namespace = 'demo',
 ) {
-  if (parseEnv(process.env).NODE_ENV === 'production')
+  if (!['development', 'test'].includes(process.env.NODE_ENV ?? 'development'))
     throw new Error('Demo seed is disabled in production');
   const data = buildDemoData(firstDate, namespace);
   const { db } = await import('../prisma/db.ts');

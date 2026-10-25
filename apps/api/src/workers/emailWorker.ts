@@ -3,7 +3,6 @@ import { processDepartureReminders } from '../services/departureReminderService.
 import { processTicketOutbox } from '../services/ticketOutboxService.ts';
 import 'dotenv/config';
 import { setTimeout } from 'node:timers/promises';
-import { parseAuthCodeEnv, parseMailEnv } from '../config/env.ts';
 import { processEmailOutbox } from '../services/emailOutboxService.ts';
 let stopping = false;
 const stop = new AbortController();
@@ -17,8 +16,10 @@ process.once('SIGTERM', () => {
 });
 let close: (() => Promise<void>) | undefined;
 try {
-  parseAuthCodeEnv(process.env);
-  parseMailEnv(process.env);
+  if (!/^[a-fA-F0-9]{64}$/.test(process.env.AUTH_CODE_SECRET ?? ''))
+    throw new Error('Invalid environment configuration: AUTH_CODE_SECRET');
+  if (Boolean(process.env.SMTP_USER) !== Boolean(process.env.SMTP_PASSWORD))
+    throw new Error('Set SMTP_USER and SMTP_PASSWORD together');
   const { db } = await import('../prisma/db.ts');
   close = () => db.close();
   const once = process.argv.includes('--once');

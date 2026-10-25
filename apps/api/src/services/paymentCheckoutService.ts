@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { configuredPaymentReconciliation } from './paymentReconciliationService.ts';
 import { AppError } from '../errors/AppError.ts';
-import { parsePaymobCheckoutEnv } from '../config/paymob.ts';
 import {
   checkoutKey,
   decryptCheckout,
@@ -144,26 +143,47 @@ async function refreshPayment(userId: string, bookingId: string) {
   await reconciliation.reconcile(operation.id);
   return getPayment(userId, bookingId);
 }
+// Construction validates readiness without database or provider I/O.
+export function configuredPaymentCheckout() {
+  const flag = process.env.PAYMOB_CHECKOUT_ENABLED;
+  if (flag === undefined || flag === 'false') return null;
+  if (flag !== 'true')
+    throw new Error('Invalid payment configuration: PAYMOB_CHECKOUT_ENABLED');
+  if (process.env.PAYMOB_ENABLED !== 'true')
+    throw new Error('Checkout requires PAYMOB_ENABLED');
+  if (process.env.PAYMOB_RECONCILIATION_ENABLED !== 'true')
+    throw new Error('Checkout requires PAYMOB_RECONCILIATION_ENABLED');
+  if (process.env.PAYMOB_REFUNDS_ENABLED !== 'true')
+    throw new Error(
+      'Checkout requires PAYMOB_REFUNDS_ENABLED for unfulfillable payments',
+    );
+  if (process.env.PAYMOB_WEBHOOK_ENABLED !== 'true')
+    throw new Error('Checkout requires owner-scoped PAYMOB_WEBHOOK_ENABLED');
+  const provider = createPaymobProvider();
+  const integrationId = Number(process.env.PAYMOB_INTEGRATION_ID);
+  const ownerId = Number(process.env.PAYMOB_OWNER_ID);
+  const key = checkoutKey(process.env);
+  return createPaymentCheckoutService({
+    sessions: createPaymentSessionService({
+      provider,
+      integrationId,
+      ownerId,
+      encryptionKey: key,
+    }),
+    integrationId,
+    ownerId,
+    publicKey: process.env.PAYMOB_PUBLIC_KEY!,
+    encryptionKey: key,
+  });
+}
 export const paymentCheckoutService = {
   refresh: refreshPayment,
   get: getPayment,
   async start(auth: AuthContext, bookingId: string) {
-    const config = parsePaymobCheckoutEnv(process.env);
-    if (!config)
+    const service = configuredPaymentCheckout();
+    if (!service)
       throw new AppError(503, 'PAYMENT_UNAVAILABLE', 'Checkout is not enabled');
-    const key = checkoutKey(process.env);
-    return createPaymentCheckoutService({
-      sessions: createPaymentSessionService({
-        provider: createPaymobProvider(config),
-        integrationId: config.PAYMOB_INTEGRATION_ID,
-        ownerId: config.PAYMOB_OWNER_ID,
-        encryptionKey: key,
-      }),
-      integrationId: config.PAYMOB_INTEGRATION_ID,
-      ownerId: config.PAYMOB_OWNER_ID,
-      publicKey: config.PAYMOB_PUBLIC_KEY,
-      encryptionKey: key,
-    }).start(auth, bookingId);
+    return service.start(auth, bookingId);
   },
 };
 export type PaymentCheckoutService = typeof paymentCheckoutService;

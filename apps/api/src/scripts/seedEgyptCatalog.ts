@@ -1,12 +1,10 @@
-import { parseEnv } from '../config/env.ts';
 import { buildEgyptCatalog } from './egyptCatalog.ts';
 
 export async function seedEgyptCatalog(reset = false) {
-  const env = parseEnv(process.env);
-  if (env.NODE_ENV === 'production')
+  if (!['development', 'test'].includes(process.env.NODE_ENV ?? 'development'))
     throw new Error('Development seed is disabled in production');
   if (reset) {
-    const url = new URL(env.DATABASE_URL ?? '');
+    const url = new URL(process.env.DATABASE_URL ?? '');
     if (
       !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) ||
       url.pathname !== '/bus_platform'

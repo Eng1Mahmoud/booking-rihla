@@ -1,7 +1,6 @@
 import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
 import { hash, argon2id } from 'argon2';
 import { AppError } from '../errors/AppError.ts';
-import { parseAuthCodeEnv } from '../config/env.ts';
 import {
   newVerificationCode,
   hashPasswordResetCode,
@@ -11,7 +10,6 @@ import {
 import type { ResetPasswordInput } from '../schemas/passwordResetSchema.ts';
 export const passwordResetService = {
   async requestReset(email: string): Promise<void> {
-    parseAuthCodeEnv(process.env);
     const { db } = await import('../prisma/db.ts');
     await db.transaction(async (tx) => {
       await lockAccountEmail(tx, db, email);
@@ -69,7 +67,6 @@ export const passwordResetService = {
     code,
     newPassword,
   }: ResetPasswordInput): Promise<void> {
-    parseAuthCodeEnv(process.env);
     const passwordHash = await hash(newPassword, {
       type: argon2id,
       memoryCost: 65536,

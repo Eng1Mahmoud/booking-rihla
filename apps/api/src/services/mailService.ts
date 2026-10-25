@@ -4,7 +4,6 @@ import type { TicketDetails } from './ticketService.ts';
 import nodemailer from 'nodemailer';
 import { ticketEmail } from '../emails/ticketEmail.ts';
 import type { TicketData } from './ticketService.ts';
-import { parseMailEnv } from '../config/env.ts';
 import { verificationEmail } from '../emails/verificationEmail.ts';
 import {
   passwordResetEmail,
@@ -19,28 +18,29 @@ export interface AccountMail {
 }
 export type SendAccountMail = (message: AccountMail) => Promise<void>;
 function mailTransport() {
-  const env = parseMailEnv(process.env);
+  const user = process.env.SMTP_USER;
+  const password = process.env.SMTP_PASSWORD;
+  if (Boolean(user) !== Boolean(password))
+    throw new Error('Set SMTP_USER and SMTP_PASSWORD together');
   const transport = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    requireTLS: env.SMTP_REQUIRE_TLS,
-    ...(env.SMTP_USER
-      ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD } }
-      : {}),
+    host: process.env.SMTP_HOST?.trim() ?? '127.0.0.1',
+    port: Number(process.env.SMTP_PORT ?? 1025),
+    secure: process.env.SMTP_SECURE === 'true',
+    requireTLS: process.env.SMTP_REQUIRE_TLS === 'true',
+    ...(user ? { auth: { user, pass: password } } : {}),
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
     disableFileAccess: true,
     disableUrlAccess: true,
   });
-  return { env, transport };
+  return { from: process.env.SMTP_FROM ?? 'noreply@bus.local', transport };
 }
 export const sendAccountMail: SendAccountMail = async (message) => {
-  const { env, transport } = mailTransport();
+  const { from, transport } = mailTransport();
   try {
     await transport.sendMail({
-      from: env.SMTP_FROM,
+      from,
       to: message.email,
       messageId: '<account-' + message.id + '@bus.local>',
       ...(message.purpose === 'PASSWORD_CHANGED'
@@ -60,10 +60,10 @@ export type SendTicketMail = (message: {
   ticket: TicketData;
 }) => Promise<void>;
 export const sendTicketMail: SendTicketMail = async (message) => {
-  const { env, transport } = mailTransport();
+  const { from, transport } = mailTransport();
   try {
     await transport.sendMail({
-      from: env.SMTP_FROM,
+      from,
       to: message.email,
       messageId: '<ticket-' + message.ticket.id + '@bus.local>',
       ...ticketEmail(message.ticket, message.language),
@@ -81,10 +81,10 @@ export type SendDepartureReminderMail = (message: {
 export const sendDepartureReminderMail: SendDepartureReminderMail = async (
   message,
 ) => {
-  const { env, transport } = mailTransport();
+  const { from, transport } = mailTransport();
   try {
     await transport.sendMail({
-      from: env.SMTP_FROM,
+      from,
       to: message.email,
       messageId: '<departure-reminder-' + message.ticket.id + '@bus.local>',
       ...departureReminderEmail(message.ticket, message.language),
@@ -103,10 +103,10 @@ export type SendBookingNotice = (message: {
   amountPiastres: string | null;
 }) => Promise<void>;
 export const sendBookingNotice: SendBookingNotice = async (message) => {
-  const { env, transport } = mailTransport();
+  const { from, transport } = mailTransport();
   try {
     await transport.sendMail({
-      from: env.SMTP_FROM,
+      from,
       to: message.email,
       messageId: '<booking-notice-' + message.id + '@bus.local>',
       ...bookingNoticeEmail(message),

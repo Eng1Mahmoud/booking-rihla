@@ -19,7 +19,7 @@ import {
   type AccountPaymentService,
 } from './services/accountPaymentService.ts';
 import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
-import { parsePaymobCheckoutEnv } from './config/paymob.ts';
+import { configuredPaymentCheckout } from './services/paymentCheckoutService.ts';
 import { createOperationRouter } from './routes/operationRoutes.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
 import {
@@ -262,7 +262,7 @@ export function createApp(
   app.get('/api/v1/payments/availability', (_request, response) => {
     let checkoutEnabled = false;
     try {
-      checkoutEnabled = parsePaymobCheckoutEnv(process.env) !== null;
+      checkoutEnabled = configuredPaymentCheckout() !== null;
     } catch {
       /* Keep checkout closed for invalid settings. */
     }

@@ -1,7 +1,7 @@
 import { paymobCheckoutUrlSchema } from '../payments/checkoutUrl.ts';
 import { z } from 'zod';
 import { AppError } from '../errors/AppError.ts';
-import { paymobMinimumCheckoutSeconds } from '../config/paymob.ts';
+import { paymobMinimumCheckoutSeconds } from '../payments/paymobProvider.ts';
 import { encryptCheckout } from '../payments/checkoutEncryption.ts';
 import {
   PaymentProviderError,

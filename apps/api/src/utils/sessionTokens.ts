@@ -1,12 +1,14 @@
 import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { z } from 'zod';
-import { parseSessionEnv } from '../config/env.ts';
 import { userRoleSchema, type UserRole } from '../schemas/authSchema.ts';
 export const accessLifetimeSeconds = 900;
 export const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000;
 function key() {
-  return Buffer.from(parseSessionEnv(process.env).AUTH_ACCESS_SECRET, 'hex');
+  const value = process.env.AUTH_ACCESS_SECRET;
+  if (!value || !/^[a-fA-F0-9]{64}$/.test(value))
+    throw new Error('Invalid environment configuration: AUTH_ACCESS_SECRET');
+  return Buffer.from(value, 'hex');
 }
 export function newRefreshToken() {
   return randomBytes(32).toString('hex');
