@@ -28,6 +28,8 @@ passenger application. No administrator is created automatically.
 - src/features/dashboard: report components, server reads, schemas and types.
 - src/features/cities: city list, editor, columns, data/controller hooks and protected Actions.
 - src/features/stations: station list, city filter, editor, data/controller hooks and Actions.
+- src/features/bus-types: bilingual bus-type catalog, codes, editor and protected Actions.
+- src/features/amenities: bilingual amenity catalog, codes, editor and protected Actions.
 - src/shared: the existing web transport/form/UI conventions, scoped to this app.
 - src/i18n and src/messages: Arabic/English routes, RTL/LTR and copy.
 
@@ -74,8 +76,8 @@ The station filter remains linkable through cityId and follows route changes.
 Mutations invalidate all catalog pages, related city names/counts and options.
 
 Tailwind utilities live directly in className; globals.css holds shared theme,
-font and base rules. Catalog, trip, booking, staff/user and refund features beyond
-cities/stations follow in later feature batches.
+font and base rules. Buses, seat templates, routes/trips, bookings, staff/users and
+refund features follow in later feature batches.
 Launch readiness and real-service integration testing remain deferred.
 
 ## Reusable tables
@@ -240,3 +242,29 @@ The shared folder contains only genuinely reused pieces: dialog presentation,
 confirmation/focus/error hooks, bilingual fields/columns, row actions and list
 feedback/response parsing. Feature Actions validate inputs and call the existing
 staff check; neither feature is configured through a generic CRUD factory.
+
+## Fleet metadata
+
+Bus types and amenities are managed at /dashboard/bus-types and /dashboard/amenities.
+Both staff roles can create, edit and confirm deletion. Each feature owns its
+schema, Actions, data/controller hooks and presentation, reusing DataTable,
+NameFields/NameColumns, FormDialog and ConfirmDialog. No kind-driven CRUD factory.
+
+GET /admin/bus-types and /admin/amenities provide snapshot-consistent items, total
+and pagination. Search covers Arabic/English names and code as literal substrings;
+ordering follows the current name locale with an ID tie-breaker. Existing
+/bus-types and /amenities list/mutation contracts remain unchanged. All Actions
+recheck current staff access and the API enforces authoritative staff roles.
+
+Codes normalize to uppercase, start with A-Z, and allow up to 32 letters, digits
+or underscores. Duplicate codes, reserved-bus edits, assigned-bus deletes and
+missing records have localized errors. Failed writes keep their dialog open;
+uncertain writes are not replayed automatically. Successful writes invalidate
+the fleet query family. Table state includes internal filters: project only
+search/limit/offset into the strict list Action input, as cities already do.
+
+API catalog checks: npm run test:catalog --workspace @booking-bus/api. SQL checks
+skip unless CATALOG_TEST_DATABASE_URL points to the owned disposable test DB.
+The external evidence runner dashboard-review/fleet-metadata/test-api.cjs starts
+and removes its own PostgreSQL container; never point it at the application DB.
+Synthetic production-preview evidence is in the same external evidence directory.

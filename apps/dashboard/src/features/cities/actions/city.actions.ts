@@ -26,7 +26,7 @@ async function listCityOptions(): Promise<ApiResult<City[]>> {
   const items: City[] = [];
   const pageSchema = z.object({ items: z.array(citySchema).max(100) });
   for (let offset = 0; offset <= 100000; offset += 100) {
-    const result = await apiFetch<unknown>('cities?limit=100&offset=' + offset);
+    const result = await apiFetch<unknown>('cities?limit=10&offset=' + offset);
     if (!result.success) return { ...result, data: undefined };
     const parsed = pageSchema.safeParse(result.data);
     if (!parsed.success) return apiFailure(502, 'UPSTREAM_ERROR', locale);

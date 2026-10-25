@@ -24,8 +24,11 @@ operations and payment outcomes, connected to the existing API. The user approve
 the work-panels design with a side navigation rail, three operational reports,
 and a separate payment report. The next approved batch adds city/station lists, bilingual name search, city
 filtering, pagination, create/edit forms and confirmed deletes with existing
-relationship safeguards. Trip, booking, fleet, user and refund-management
-screens follow in separately reviewed batches.
+relationship safeguards. The next bounded fleet batch adds bus types and amenities:
+code/name search, complete server pagination, bilingual forms and confirmed
+deletes, preserving assigned-bus and reserved-booking safeguards. Buses, seat
+templates, routes/trips, bookings, users and refund management follow in separate
+batches.
 
 ## Capabilities and Constraints
 

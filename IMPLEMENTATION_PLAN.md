@@ -438,7 +438,8 @@ Feature batches:
 - [ ] D1: Build a separate dashboard application in apps/dashboard, mirroring the feature-based organization of apps/web and its Rihla identity. Give it its own development command, sign-in and independently named session cookies. Keep the passenger application unchanged.
 - [ ] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
 - [x] Add complete city/station management screens.
-- [ ] Add bus types, amenities, fixed template selection, buses, plates, routes, and trip management screens.
+- [x] Add bus type and amenity management screens.
+- [ ] Add fixed template selection, buses, plates, routes, and trip management screens.
 - [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
 - [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
 - [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
@@ -446,6 +447,15 @@ Feature batches:
 - [ ] Complete Arabic/English, RTL, themes, accessibility, responsive behavior, and role-specific failure states.
 
 City/station management batch completed locally on 2026-10-25: protected city/station lists, bilingual search, city filtering, 20-row pagination, RHF/Zod forms and confirmed deletes through the existing APIs. Linked-data failures are translated; every Action checks current staff access. Isolated production build, TypeScript, lint/format and synthetic CRUD, permission, failure, responsive and keyboard checks passed. Independent review returned ship for this ordinary extension, and the documentation comparison preserved the existing design system. No real catalog records were changed during verification. The earlier overview native workflow ledger remains open and is not closed by this batch.
+
+Bus type/amenity management batch completed locally on 2026-10-25: two explicit
+dashboard features reuse the shared table, form and confirmation patterns.
+Protected admin reads add bilingual/code substring search, stable locale ordering,
+snapshot-consistent totals and pagination; existing fleet mutation contracts and
+assignment/booking safeguards are preserved. Isolated production build/types,
+15 API/PostgreSQL tests and 12 synthetic browser groups passed, including 32
+ar/en table/editor captures at 1440/768/390/320. No app records or real providers
+were used. The old overview native workflow ledger remains open.
 
 Working result: operators manage the platform through the completed backend with tested role restrictions.
 

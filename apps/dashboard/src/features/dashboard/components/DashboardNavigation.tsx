@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Building2,
   MapPin,
+  Wifi,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Link, usePathname } from '@/i18n/navigation';
@@ -57,6 +58,8 @@ function NavigationLinks() {
       {[
         { href: '/dashboard/cities', label: t('cities'), Icon: Building2 },
         { href: '/dashboard/stations', label: t('stations'), Icon: MapPin },
+        { href: '/dashboard/bus-types', label: t('busTypes'), Icon: BusFront },
+        { href: '/dashboard/amenities', label: t('amenities'), Icon: Wifi },
       ].map(({ href, label, Icon }) => (
         <Link
           key={href}
