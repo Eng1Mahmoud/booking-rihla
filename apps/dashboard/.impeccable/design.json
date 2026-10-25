@@ -1,0 +1,491 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T22:53:15.306Z",
+  "title": "Design System: Rihla Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "ocean": {
+        "role": "primary",
+        "displayName": "Ocean",
+        "canonical": "#006f7b",
+        "tonalRamp": [
+          "oklch(15% 0.0851 207.84)",
+          "oklch(26% 0.0851 207.84)",
+          "oklch(38% 0.0851 207.84)",
+          "oklch(49% 0.0851 207.84)",
+          "oklch(61% 0.0851 207.84)",
+          "oklch(72% 0.0851 207.84)",
+          "oklch(84% 0.0851 207.84)",
+          "oklch(95% 0.0851 207.84)"
+        ]
+      },
+      "navy": {
+        "role": "primary",
+        "displayName": "Navy",
+        "canonical": "#112f45",
+        "tonalRamp": [
+          "oklch(15% 0.0537 243.34)",
+          "oklch(26% 0.0537 243.34)",
+          "oklch(38% 0.0537 243.34)",
+          "oklch(49% 0.0537 243.34)",
+          "oklch(61% 0.0537 243.34)",
+          "oklch(72% 0.0537 243.34)",
+          "oklch(84% 0.0537 243.34)",
+          "oklch(95% 0.0537 243.34)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#183648",
+        "tonalRamp": [
+          "oklch(15% 0.0482 237.26)",
+          "oklch(26% 0.0482 237.26)",
+          "oklch(38% 0.0482 237.26)",
+          "oklch(49% 0.0482 237.26)",
+          "oklch(61% 0.0482 237.26)",
+          "oklch(72% 0.0482 237.26)",
+          "oklch(84% 0.0482 237.26)",
+          "oklch(95% 0.0482 237.26)"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#f5f8f8",
+        "tonalRamp": [
+          "oklch(15% 0.0032 197.10)",
+          "oklch(26% 0.0032 197.10)",
+          "oklch(38% 0.0032 197.10)",
+          "oklch(49% 0.0032 197.10)",
+          "oklch(61% 0.0032 197.10)",
+          "oklch(72% 0.0032 197.10)",
+          "oklch(84% 0.0032 197.10)",
+          "oklch(95% 0.0032 197.10)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#566b77",
+        "tonalRamp": [
+          "oklch(15% 0.0315 233.24)",
+          "oklch(26% 0.0315 233.24)",
+          "oklch(38% 0.0315 233.24)",
+          "oklch(49% 0.0315 233.24)",
+          "oklch(61% 0.0315 233.24)",
+          "oklch(72% 0.0315 233.24)",
+          "oklch(84% 0.0315 233.24)",
+          "oklch(95% 0.0315 233.24)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "canonical": "#dce6e8",
+        "tonalRamp": [
+          "oklch(15% 0.0111 211.04)",
+          "oklch(26% 0.0111 211.04)",
+          "oklch(38% 0.0111 211.04)",
+          "oklch(49% 0.0111 211.04)",
+          "oklch(61% 0.0111 211.04)",
+          "oklch(72% 0.0111 211.04)",
+          "oklch(84% 0.0111 211.04)",
+          "oklch(95% 0.0111 211.04)"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Secondary",
+        "canonical": "#eaf3f2",
+        "tonalRamp": [
+          "oklch(15% 0.0096 189.06)",
+          "oklch(26% 0.0096 189.06)",
+          "oklch(38% 0.0096 189.06)",
+          "oklch(49% 0.0096 189.06)",
+          "oklch(61% 0.0096 189.06)",
+          "oklch(72% 0.0096 189.06)",
+          "oklch(84% 0.0096 189.06)",
+          "oklch(95% 0.0096 189.06)"
+        ]
+      },
+      "icon-wash": {
+        "role": "secondary",
+        "displayName": "Icon Wash",
+        "canonical": "#edf8f8",
+        "tonalRamp": [
+          "oklch(15% 0.0116 196.96)",
+          "oklch(26% 0.0116 196.96)",
+          "oklch(38% 0.0116 196.96)",
+          "oklch(49% 0.0116 196.96)",
+          "oklch(61% 0.0116 196.96)",
+          "oklch(72% 0.0116 196.96)",
+          "oklch(84% 0.0116 196.96)",
+          "oklch(95% 0.0116 196.96)"
+        ]
+      },
+      "note-wash": {
+        "role": "secondary",
+        "displayName": "Note Wash",
+        "canonical": "#eef7fb",
+        "tonalRamp": [
+          "oklch(15% 0.0110 225.98)",
+          "oklch(26% 0.0110 225.98)",
+          "oklch(38% 0.0110 225.98)",
+          "oklch(49% 0.0110 225.98)",
+          "oklch(61% 0.0110 225.98)",
+          "oklch(72% 0.0110 225.98)",
+          "oklch(84% 0.0110 225.98)",
+          "oklch(95% 0.0110 225.98)"
+        ]
+      },
+      "note-icon": {
+        "role": "secondary",
+        "displayName": "Note Icon",
+        "canonical": "#157ba9",
+        "tonalRamp": [
+          "oklch(15% 0.1110 235.00)",
+          "oklch(26% 0.1110 235.00)",
+          "oklch(38% 0.1110 235.00)",
+          "oklch(49% 0.1110 235.00)",
+          "oklch(61% 0.1110 235.00)",
+          "oklch(72% 0.1110 235.00)",
+          "oklch(84% 0.1110 235.00)",
+          "oklch(95% 0.1110 235.00)"
+        ]
+      },
+      "focus": {
+        "role": "secondary",
+        "displayName": "Focus",
+        "canonical": "#4eacd8",
+        "tonalRamp": [
+          "oklch(15% 0.1091 231.47)",
+          "oklch(26% 0.1091 231.47)",
+          "oklch(38% 0.1091 231.47)",
+          "oklch(49% 0.1091 231.47)",
+          "oklch(61% 0.1091 231.47)",
+          "oklch(72% 0.1091 231.47)",
+          "oklch(84% 0.1091 231.47)",
+          "oklch(95% 0.1091 231.47)"
+        ]
+      },
+      "nav-current": {
+        "role": "secondary",
+        "displayName": "Nav Current",
+        "canonical": "#0b6372",
+        "tonalRamp": [
+          "oklch(15% 0.0776 213.25)",
+          "oklch(26% 0.0776 213.25)",
+          "oklch(38% 0.0776 213.25)",
+          "oklch(49% 0.0776 213.25)",
+          "oklch(61% 0.0776 213.25)",
+          "oklch(72% 0.0776 213.25)",
+          "oklch(84% 0.0776 213.25)",
+          "oklch(95% 0.0776 213.25)"
+        ]
+      },
+      "nav-hover": {
+        "role": "secondary",
+        "displayName": "Nav Hover",
+        "canonical": "#24485a",
+        "tonalRamp": [
+          "oklch(15% 0.0516 232.02)",
+          "oklch(26% 0.0516 232.02)",
+          "oklch(38% 0.0516 232.02)",
+          "oklch(49% 0.0516 232.02)",
+          "oklch(61% 0.0516 232.02)",
+          "oklch(72% 0.0516 232.02)",
+          "oklch(84% 0.0516 232.02)",
+          "oklch(95% 0.0516 232.02)"
+        ]
+      },
+      "info": {
+        "role": "secondary",
+        "displayName": "Info",
+        "canonical": "#4593d7",
+        "tonalRamp": [
+          "oklch(15% 0.1279 247.63)",
+          "oklch(26% 0.1279 247.63)",
+          "oklch(38% 0.1279 247.63)",
+          "oklch(49% 0.1279 247.63)",
+          "oklch(61% 0.1279 247.63)",
+          "oklch(72% 0.1279 247.63)",
+          "oklch(84% 0.1279 247.63)",
+          "oklch(95% 0.1279 247.63)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Success",
+        "canonical": "#12a96a",
+        "tonalRamp": [
+          "oklch(15% 0.1490 157.68)",
+          "oklch(26% 0.1490 157.68)",
+          "oklch(38% 0.1490 157.68)",
+          "oklch(49% 0.1490 157.68)",
+          "oklch(61% 0.1490 157.68)",
+          "oklch(72% 0.1490 157.68)",
+          "oklch(84% 0.1490 157.68)",
+          "oklch(95% 0.1490 157.68)"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warning",
+        "canonical": "#e9a02c",
+        "tonalRamp": [
+          "oklch(15% 0.1487 73.18)",
+          "oklch(26% 0.1487 73.18)",
+          "oklch(38% 0.1487 73.18)",
+          "oklch(49% 0.1487 73.18)",
+          "oklch(61% 0.1487 73.18)",
+          "oklch(72% 0.1487 73.18)",
+          "oklch(84% 0.1487 73.18)",
+          "oklch(95% 0.1487 73.18)"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Danger",
+        "canonical": "#df5366",
+        "tonalRamp": [
+          "oklch(15% 0.1744 15.58)",
+          "oklch(26% 0.1744 15.58)",
+          "oklch(38% 0.1744 15.58)",
+          "oklch(49% 0.1744 15.58)",
+          "oklch(61% 0.1744 15.58)",
+          "oklch(72% 0.1744 15.58)",
+          "oklch(84% 0.1744 15.58)",
+          "oklch(95% 0.1744 15.58)"
+        ]
+      },
+      "quiet-status": {
+        "role": "secondary",
+        "displayName": "Quiet Status",
+        "canonical": "#94a3b3",
+        "tonalRamp": [
+          "oklch(15% 0.0289 249.95)",
+          "oklch(26% 0.0289 249.95)",
+          "oklch(38% 0.0289 249.95)",
+          "oklch(49% 0.0289 249.95)",
+          "oklch(61% 0.0289 249.95)",
+          "oklch(72% 0.0289 249.95)",
+          "oklch(84% 0.0289 249.95)",
+          "oklch(95% 0.0289 249.95)"
+        ]
+      },
+      "destructive": {
+        "role": "secondary",
+        "displayName": "Destructive",
+        "canonical": "#b42318",
+        "tonalRamp": [
+          "oklch(15% 0.1821 29.51)",
+          "oklch(26% 0.1821 29.51)",
+          "oklch(38% 0.1821 29.51)",
+          "oklch(49% 0.1821 29.51)",
+          "oklch(61% 0.1821 29.51)",
+          "oklch(72% 0.1821 29.51)",
+          "oklch(84% 0.1821 29.51)",
+          "oklch(95% 0.1821 29.51)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "English overview title",
+        "purpose": "Licensed self-hosted English h1 only; Arabic retains IBM Plex Sans Arabic."
+      },
+      "headline": {
+        "displayName": "Report title",
+        "purpose": "Localized report headings."
+      },
+      "metric": {
+        "displayName": "Report metric",
+        "purpose": "Operational and capacity counts; tabular numerals."
+      },
+      "payment": {
+        "displayName": "Gross paid",
+        "purpose": "Exact EGP amount with bidi isolation and wrapping."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Localized operational text and labels."
+      },
+      "note": {
+        "displayName": "Payment basis note",
+        "purpose": "Readable 14px accounting basis and provenance."
+      }
+    },
+    "shadows": [
+      {
+        "name": "primary-action",
+        "value": "0 4px 12px -6px #006f7b70",
+        "purpose": "Existing soft ocean primary-button shadow."
+      },
+      {
+        "name": "outline-action",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Outline button ambient shadow."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px rgb(0 111 123 / 0.5)",
+        "purpose": "Ocean keyboard-focus ring on shared inputs and buttons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "200ms",
+        "purpose": "Button color, border, shadow and transform feedback; reduced-motion disables it."
+      },
+      {
+        "name": "active-translation",
+        "value": "translateY(1px)",
+        "purpose": "Shared button active feedback."
+      },
+      {
+        "name": "loading-pulse",
+        "value": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "purpose": "Tailwind skeleton animation; reduced-motion disables animation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default action; forms raise height to 48px and date controls to 50px on desktop.",
+      "html": "<button class=\"ds-primary\">Apply date</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:8px 16px;height:40px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:500;transition:background-color .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s;cursor:pointer;background:var(--ocean,#006f7b);color:#fff;box-shadow:0 4px 12px -6px #006f7b70}.ds-primary:hover{background:color-mix(in oklab,var(--ocean,#006f7b) 90%,transparent)}.ds-primary:focus-visible{outline:3px solid var(--focus,#4eacd8);outline-offset:4px;border-color:var(--ocean,#006f7b);box-shadow:0 0 0 3px rgb(0 111 123 / .5);}.ds-primary:active{transform:translateY(1px)}.ds-primary:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-outline,.ds-ghost,.ds-field{transition:none;animation:none}}"
+    },
+    {
+      "name": "Outline refresh button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Independent report refresh control, with a 44px minimum target.",
+      "html": "<button class=\"ds-outline\">Refresh</button>",
+      "css": ".ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:8px 16px;height:40px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:500;transition:background-color .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s;cursor:pointer;height:44px;background:var(--canvas,#f5f8f8);color:var(--ink,#183648);border:1px solid var(--border,#dce6e8);box-shadow:0 1px 2px 0 rgb(0 0 0 / .05)}.ds-outline:hover{background:var(--color-accent,#eaf3f2);color:var(--navy,#112f45)}.ds-outline:focus-visible{outline:3px solid var(--focus,#4eacd8);outline-offset:4px;border-color:var(--ocean,#006f7b);box-shadow:0 0 0 3px rgb(0 111 123 / .5);}.ds-outline:active{transform:translateY(1px)}.ds-outline:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-outline,.ds-ghost,.ds-field{transition:none;animation:none}}"
+    },
+    {
+      "name": "Ghost menu button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "44px utility target used for mobile menu and sign out.",
+      "html": "<button class=\"ds-ghost\" aria-label=\"Open navigation\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M4 6h16M4 12h16M4 18h16\"/></svg></button>",
+      "css": ".ds-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:8px 16px;height:40px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:500;transition:background-color .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s;cursor:pointer;width:44px;height:44px;padding:0;background:transparent;color:var(--ink,#183648)}.ds-ghost:hover{background:var(--color-accent,#eaf3f2);color:var(--navy,#112f45)}.ds-ghost:focus-visible{outline:3px solid var(--focus,#4eacd8);outline-offset:4px;border-color:var(--ocean,#006f7b);box-shadow:0 0 0 3px rgb(0 111 123 / .5);}.ds-ghost:active{transform:translateY(1px)}.ds-ghost:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-outline,.ds-ghost,.ds-field{transition:none;animation:none}}"
+    },
+    {
+      "name": "Labeled date field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Actual form override: white surface, linked label and native date semantics.",
+      "html": "<label class=\"ds-label\" for=\"ds-date\">Departure date</label><input class=\"ds-field\" id=\"ds-date\" type=\"date\" value=\"2026-10-25\" min=\"2000-01-01\" max=\"9998-12-31\">",
+      "css": ".ds-label{display:block;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:500;line-height:1.375;margin-bottom:8px;color:var(--ink,#183648)}.ds-field{display:block;width:100%;min-width:0;height:48px;padding:4px 12px;border:1px solid var(--border,#dce6e8);border-radius:12px;background:#fff;color:var(--ink,#183648);font-family:'Segoe UI',Arial,sans-serif;font-size:16px;caret-color:var(--ocean,#006f7b);outline:none;transition:color .15s,box-shadow .15s}.ds-field:focus-visible{border-color:var(--ocean,#006f7b);box-shadow:0 0 0 3px rgb(0 111 123 / .5)}.ds-field[aria-invalid=true]{border-color:var(--color-destructive,#b42318);box-shadow:0 0 0 3px rgb(180 35 24 / .2)}.ds-field:disabled{opacity:.5;pointer-events:none;cursor:not-allowed}@media(min-width:768px){.ds-field{font-size:14px}}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-outline,.ds-ghost,.ds-field{transition:none;animation:none}}"
+    },
+    {
+      "name": "Report navigation",
+      "kind": "nav",
+      "refersTo": "navigation-current",
+      "description": "Start-side navy navigation with a fixed overview current-page state.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Dashboard navigation\"><a href=\"#overview\" aria-current=\"page\">Overview</a><a href=\"#operations\">Operations</a><a href=\"#payments\">Payment outcomes</a></nav>",
+      "css": ".ds-nav{display:grid;gap:5px;padding:14px;background:var(--navy,#112f45);font-family:'Segoe UI',Arial,sans-serif}.ds-nav a{display:flex;align-items:center;gap:16px;min-height:56px;padding:14px 18px;border-radius:10px;color:#fff;font-size:15px;text-decoration:none}.ds-nav a[aria-current=page]{background:#0b6372}.ds-nav a:hover{background:#24485a}.ds-nav a:focus-visible{outline:3px solid var(--focus,#4eacd8);outline-offset:4px}"
+    },
+    {
+      "name": "Operational report panel",
+      "kind": "card",
+      "refersTo": "report-panel",
+      "description": "Flat panel with circular icon and divided metric rows; sample values illustrate its form.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-report-heading\"><span><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 16V3a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13M4 16h16M4 16v4M20 16v4M4 6h16M12 6v7M4 13h16\"/><circle cx=\"7.5\" cy=\"17.5\" r=\".5\"/><circle cx=\"16.5\" cy=\"17.5\" r=\".5\"/></svg></span><h2>Trips</h2></div><dl class=\"ds-metrics\"><div><dt>Total</dt><dd>24</dd></div><div><dt><span class=\"ds-dot\"></span>Upcoming</dt><dd>18</dd></div></dl></section>",
+      "css": ".ds-panel{min-width:0;border:1px solid var(--border,#dce6e8);border-radius:16px;background:#fff;padding:24px;font-family:'Segoe UI',Arial,sans-serif;color:var(--ink,#183648)}.ds-report-heading{display:flex;align-items:center;gap:22px;margin-bottom:12px}.ds-report-heading>span{display:flex;align-items:center;justify-content:center;width:72px;height:72px;flex-shrink:0;border-radius:50%;background:#edf8f8;color:var(--ocean,#006f7b)}.ds-report-heading h2{margin:0;font-size:clamp(21px,1.7vw,27px);font-weight:700;line-height:1.3;color:var(--navy,#112f45)}.ds-metrics{margin:0}.ds-metrics>div{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:48px;border-bottom:1px solid var(--border,#dce6e8)}.ds-metrics>div:last-child{border-bottom:0}.ds-metrics dt{display:flex;align-items:center;gap:13px;color:var(--muted,#566b77);font-size:16px}.ds-metrics dd{margin:0;font-size:28px;font-weight:700;color:var(--navy,#112f45);font-variant-numeric:tabular-nums}.ds-dot{width:13px;height:13px;border-radius:50%;background:var(--ocean,#006f7b)}@media(max-width:639px){.ds-panel{padding:20px}.ds-report-heading{gap:16px}.ds-report-heading>span{width:56px;height:56px}}"
+    },
+    {
+      "name": "Allocation ring",
+      "kind": "custom",
+      "description": "Data-derived allocation percentage with visible text; illustrative 50% sample.",
+      "html": "<div class=\"ds-ring\" role=\"img\" aria-label=\"50% allocated\"><svg viewBox=\"0 0 120 120\" aria-hidden=\"true\"><circle cx=\"60\" cy=\"60\" r=\"50\" fill=\"none\" stroke=\"var(--border,#dce6e8)\" stroke-width=\"11\"/><circle cx=\"60\" cy=\"60\" r=\"50\" fill=\"none\" stroke=\"var(--ocean,#006f7b)\" stroke-width=\"11\" stroke-linecap=\"round\" pathLength=\"100\" stroke-dasharray=\"50 100\" transform=\"rotate(-90 60 60)\"/></svg><strong>50%</strong></div>",
+      "css": ".ds-ring{width:160px;aspect-ratio:1;position:relative;font-family:'Segoe UI',Arial,sans-serif}.ds-ring svg{display:block;width:100%;height:100%}.ds-ring strong{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(24px,2vw,34px);color:var(--navy,#112f45)}@media(max-width:639px){.ds-ring{width:150px}}"
+    },
+    {
+      "name": "Payment basis note",
+      "kind": "custom",
+      "refersTo": "payment-note",
+      "description": "Persistent readable basis and provenance adjacent to payment totals.",
+      "html": "<div class=\"ds-note\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg><div><p>By last recorded settlement update.</p><p>Verified gross paid is not net revenue or bank payouts.</p></div></div>",
+      "css": ".ds-note{display:flex;gap:20px;align-items:center;border-radius:12px;padding:16px 20px;background:#eef7fb;color:var(--navy,#112f45);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.7}.ds-note>svg{color:#157ba9;flex-shrink:0}.ds-note p{margin:0}@media(max-width:639px){.ds-note{flex-wrap:wrap}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Rihla work panels",
+    "overview": "The staff application inherits Rihla's navy shell, teal actions, pale canvas and bilingual UI language. Clear white panels and restrained color separate report groups while keeping dense numeric content easy to scan.\n\nThis record describes the shipped dashboard and login sources, especially src/app/globals.css, the dashboard feature components and shared controls. The approved work-panels direction supplies the name; implemented source supplies the rules. Future management screens have not been implemented or documented here.",
+    "keyCharacteristics": [
+      "Navy structure, teal action and allocation, white bordered report surfaces.",
+      "Locale-aware Arabic and English typography with mirrored start-side navigation.",
+      "Large tabular metrics, labeled status colors and explicit data provenance.",
+      "Flat report surfaces with subtle control feedback."
+    ],
+    "rules": [
+      {
+        "name": "The Labeled Status Rule",
+        "body": "Pair every colored status dot with a visible localized label; the allocation chart also exposes its percentage as text and an accessible name.",
+        "section": "colors"
+      },
+      {
+        "name": "The Exact Amount Rule",
+        "body": "Preserve localized gross-paid currency, both fractional digits and bidi isolation; its visual prominence must not turn gross paid into a claim of net revenue or payouts.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Reports Rule",
+        "body": "Use border and surface tone to separate reports; keep button shadows scoped to their existing control variants.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do preserve the existing Rihla identity, localized labels and logical RTL spacing.",
+      "Do pair status color with text and preserve the allocation chart's visible percentage.",
+      "Do retain payment basis, separate update timestamps and exact localized currency presentation.",
+      "Do keep capacity full-width at tablet sizes and retain readable mobile control targets."
+    ],
+    "donts": [
+      "Don't convert flat report panels into elevated decorative cards.",
+      "Don't use English display typography for Arabic content or general body text.",
+      "Don't remove loading, zero-data or partial-failure feedback when extending the report UI.",
+      "Don't treat preview data or the approved composition image as operational evidence."
+    ]
+  }
+}

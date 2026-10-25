@@ -19,6 +19,8 @@ export default defineConfig(
       'apps/api/prisma.config.ts',
       'apps/web/src/**/*.ts',
       'apps/web/src/**/*.tsx',
+      'apps/dashboard/src/**/*.ts',
+      'apps/dashboard/src/**/*.tsx',
     ],
     extends: [
       js.configs.recommended,

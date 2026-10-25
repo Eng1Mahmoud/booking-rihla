@@ -435,7 +435,8 @@ Reference docs: [Next.js server/client components](https://nextjs.org/docs/app/g
 
 Feature batches:
 
-- [ ] Create apps/admin with protected administrator access and shared schemas/components where useful.
+- [ ] D1: Build a separate dashboard application in apps/dashboard, mirroring the feature-based organization of apps/web and its Rihla identity. Give it its own development command, sign-in and independently named session cookies. Keep the passenger application unchanged.
+- [ ] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
 - [ ] Add complete city/station management screens.
 - [ ] Add bus types, amenities, fixed template selection, buses, plates, routes, and trip management screens.
 - [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
