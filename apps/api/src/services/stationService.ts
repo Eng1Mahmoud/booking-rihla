@@ -1,4 +1,3 @@
-import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isForeignKeyViolation,
@@ -31,15 +30,11 @@ export const stationService = {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.Station.where({ id }).first();
   },
-  async create(
-    input: CreateStationInput,
-    actor?: AuditActor,
-  ): Promise<Station> {
+  async create(input: CreateStationInput): Promise<Station> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
         const saved = await tx.orm.public.Station.create(input);
-        await recordAudit(tx, actor, 'Station', saved.id, null, saved);
         return saved;
       });
     } catch (error) {
@@ -48,11 +43,7 @@ export const stationService = {
       throw error;
     }
   },
-  async update(
-    id: string,
-    input: UpdateStationInput,
-    actor?: AuditActor,
-  ): Promise<Station | null> {
+  async update(id: string, input: UpdateStationInput): Promise<Station | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
@@ -65,7 +56,6 @@ export const stationService = {
         const before = await tx.orm.public.Station.where({ id }).first();
         if (!before) return null;
         const saved = await tx.orm.public.Station.where({ id }).update(input);
-        await recordAudit(tx, actor, 'Station', id, before, saved);
         return saved;
       });
     } catch (error) {
@@ -74,12 +64,11 @@ export const stationService = {
       throw error;
     }
   },
-  async remove(id: string, actor?: AuditActor): Promise<Station | null> {
+  async remove(id: string): Promise<Station | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
         const removed = await tx.orm.public.Station.where({ id }).delete();
-        if (removed) await recordAudit(tx, actor, 'Station', id, removed, null);
         return removed;
       });
     } catch (error) {

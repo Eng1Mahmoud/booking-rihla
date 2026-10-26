@@ -31,6 +31,8 @@ export function DataTable<
   columns,
   data,
   rowCount,
+  hasNextPage,
+  tableClassName,
   getRowId,
   caption,
   search,
@@ -46,6 +48,8 @@ export function DataTable<
   columns: DataTableColumn<TData>[];
   data: TData[];
   rowCount?: number;
+  hasNextPage?: boolean;
+  tableClassName?: string;
   getRowId: (row: TData) => string;
   caption: string;
   search?: DataTableSearch;
@@ -88,8 +92,10 @@ export function DataTable<
   const pending =
     isLoading ||
     state.isSearching ||
-    rowCount === undefined ||
-    (rowCount > 0 && pageIndex * pageSize >= rowCount);
+    (rowCount === undefined && hasNextPage === undefined) ||
+    (rowCount !== undefined &&
+      rowCount > 0 &&
+      pageIndex * pageSize >= rowCount);
   return (
     <div
       data-slot="data-table"
@@ -119,7 +125,10 @@ export function DataTable<
       {!isLoading && table.getRowModel().rows.length > 0 && (
         <Table
           aria-label={caption}
-          className="w-full min-w-160 table-fixed text-[length:inherit] leading-[inherit] text-start"
+          className={cn(
+            'w-full min-w-160 table-fixed text-[length:inherit] leading-[inherit] text-start',
+            tableClassName,
+          )}
         >
           <TableCaption className="sr-only mt-0">{caption}</TableCaption>
           <TableHeader>
@@ -179,7 +188,19 @@ export function DataTable<
           )}
         </div>
       )}
-      <DataTablePagination table={table} pending={pending || isFetching} />
+      <DataTablePagination
+        table={table}
+        pending={pending || isFetching}
+        window={
+          hasNextPage === undefined
+            ? undefined
+            : {
+                hasNextPage,
+                onPageChange: (pageIndex) =>
+                  state.setPagination((current) => ({ ...current, pageIndex })),
+              }
+        }
+      />
     </div>
   );
 }

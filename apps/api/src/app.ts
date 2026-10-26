@@ -47,11 +47,6 @@ import {
 } from './services/paymobWebhookService.ts';
 import { createPaymobWebhookRouter } from './routes/paymobWebhookRoutes.ts';
 import {
-  auditLogService,
-  type AuditLogService,
-} from './services/auditLogService.ts';
-import { createAuditLogRouter } from './routes/auditLogRoutes.ts';
-import {
   administratorService,
   type AdministratorService,
 } from './services/administratorService.ts';
@@ -151,7 +146,6 @@ export function createApp(
     adminStatistics?: AdminStatisticsService;
     adminUsers?: AdminUserService;
     administrators?: AdministratorService;
-    auditLogs?: AuditLogService;
     busTypes?: BusTypeService;
     amenities?: AmenityService;
     paymobWebhook?: PaymobWebhookService;
@@ -333,11 +327,6 @@ export function createApp(
       services.administrators ?? administratorService,
       superAdmin,
     ),
-  );
-
-  app.use(
-    '/api/v1/admin/audit-logs',
-    createAuditLogRouter(services.auditLogs ?? auditLogService, superAdmin),
   );
 
   app.use(

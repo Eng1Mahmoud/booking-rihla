@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'64aad1cb0138fb67cda4693a07a0f8b6dbe012a0a0f1a096044040e5dde52a8c'>;
+  StorageHashBase<'9477561f68d02576a4eda049d586fa2440fab727377d55d7432a42eec75b73ce'>;
 export type ExecutionHash =
-  ExecutionHashBase<'e97525a7717a3af1defed19a478039c83c55451c4080384bda1a5d2a21e8638e'>;
+  ExecutionHashBase<'bae1bdb30b51a81a02cbca1afbddf2cc92077026cb5a7ec411b4bbb66372aa29'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -239,17 +239,6 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
-    };
-    readonly AuditLog: {
-      readonly action: CodecTypes['pg/text@1']['output'];
-      readonly actorId: CodecTypes['pg/text@1']['output'] | null;
-      readonly actorRole: CodecTypes['pg/text@1']['output'] | null;
-      readonly afterJson: CodecTypes['pg/text@1']['output'] | null;
-      readonly beforeJson: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly entity: CodecTypes['pg/text@1']['output'];
-      readonly entityId: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
     };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
@@ -475,17 +464,6 @@ export type FieldInputTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
     };
-    readonly AuditLog: {
-      readonly action: CodecTypes['pg/text@1']['input'];
-      readonly actorId: CodecTypes['pg/text@1']['input'] | null;
-      readonly actorRole: CodecTypes['pg/text@1']['input'] | null;
-      readonly afterJson: CodecTypes['pg/text@1']['input'] | null;
-      readonly beforeJson: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly entity: CodecTypes['pg/text@1']['input'];
-      readonly entityId: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -710,17 +688,6 @@ export type StorageColumnTypes = {
       readonly nameAr: CodecTypes['pg/text@1']['output'];
       readonly nameEn: CodecTypes['pg/text@1']['output'];
     };
-    readonly AuditLog: {
-      readonly action: CodecTypes['pg/text@1']['output'];
-      readonly actorId: CodecTypes['pg/text@1']['output'] | null;
-      readonly actorRole: CodecTypes['pg/text@1']['output'] | null;
-      readonly afterJson: CodecTypes['pg/text@1']['output'] | null;
-      readonly beforeJson: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly entity: CodecTypes['pg/text@1']['output'];
-      readonly entityId: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-    };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -944,17 +911,6 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly nameAr: CodecTypes['pg/text@1']['input'];
       readonly nameEn: CodecTypes['pg/text@1']['input'];
-    };
-    readonly AuditLog: {
-      readonly action: CodecTypes['pg/text@1']['input'];
-      readonly actorId: CodecTypes['pg/text@1']['input'] | null;
-      readonly actorRole: CodecTypes['pg/text@1']['input'] | null;
-      readonly afterJson: CodecTypes['pg/text@1']['input'] | null;
-      readonly beforeJson: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly entity: CodecTypes['pg/text@1']['input'];
-      readonly entityId: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
     };
     readonly Booking: {
       readonly contactPhone: CodecTypes['pg/text@1']['input'];
@@ -1181,18 +1137,6 @@ export namespace Models {
     nameEn: CodecTypes['pg/text@1']['output'];
     buses: public_BusAmenity[];
     readonly [RelationKeys]?: 'buses';
-  };
-  export type public_AuditLog = {
-    action: CodecTypes['pg/text@1']['output'];
-    actorId: CodecTypes['pg/text@1']['output'] | null;
-    actorRole: CodecTypes['pg/text@1']['output'] | null;
-    afterJson: CodecTypes['pg/text@1']['output'] | null;
-    beforeJson: CodecTypes['pg/text@1']['output'] | null;
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    entity: CodecTypes['pg/text@1']['output'];
-    entityId: CodecTypes['pg/text@1']['output'];
-    id: CodecTypes['pg/text@1']['output'];
-    readonly [RelationKeys]?: never;
   };
   export type public_Booking = {
     contactPhone: CodecTypes['pg/text@1']['output'];
@@ -1483,7 +1427,6 @@ export namespace Models {
 export declare const models: {
   public: {
     Amenity: Models.public_Amenity;
-    AuditLog: Models.public_AuditLog;
     Booking: Models.public_Booking;
     BookingNotice: Models.public_BookingNotice;
     BookingSeat: Models.public_BookingSeat;
@@ -1558,88 +1501,6 @@ type ContractBase = Omit<
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['code'] }];
               indexes: readonly [];
-              foreignKeys: readonly [];
-            };
-            readonly AuditLog: {
-              columns: {
-                readonly action: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly actorId: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                  readonly many: false;
-                };
-                readonly actorRole: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                  readonly many: false;
-                };
-                readonly afterJson: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                  readonly many: false;
-                };
-                readonly beforeJson: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                  readonly many: false;
-                };
-                readonly createdAt: {
-                  readonly dataType: 'pg/timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                  readonly many: false;
-                };
-                readonly entity: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly entityId: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly id: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'AuditLog_actorId_createdAt_id_idx_a358fe34';
-                  readonly prefix: 'AuditLog_actorId_createdAt_id_idx';
-                  readonly columns: readonly ['actorId', 'createdAt', 'id'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'AuditLog_createdAt_id_idx_3855cff1';
-                  readonly prefix: 'AuditLog_createdAt_id_idx';
-                  readonly columns: readonly ['createdAt', 'id'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'AuditLog_entity_entityId_createdAt_id_idx_87a5b01a';
-                  readonly prefix: 'AuditLog_entity_entityId_createdAt_id_idx';
-                  readonly columns: readonly ['entity', 'entityId', 'createdAt', 'id'];
-                  readonly unique: false;
-                },
-              ];
               foreignKeys: readonly [];
             };
             readonly Booking: {
@@ -3604,7 +3465,6 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly Amenity: { readonly namespace: 'public' & NamespaceId; readonly model: 'Amenity' };
-    readonly AuditLog: { readonly namespace: 'public' & NamespaceId; readonly model: 'AuditLog' };
     readonly Booking: { readonly namespace: 'public' & NamespaceId; readonly model: 'Booking' };
     readonly BookingNotice: {
       readonly namespace: 'public' & NamespaceId;
@@ -3706,65 +3566,6 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly nameAr: { readonly column: 'nameAr' };
                 readonly nameEn: { readonly column: 'nameEn' };
-              };
-            };
-          };
-          readonly AuditLog: {
-            readonly fields: {
-              readonly action: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly actorId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly actorRole: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly afterJson: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly beforeJson: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly entity: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly entityId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-            };
-            readonly relations: Record<string, never>;
-            readonly storage: {
-              readonly table: 'AuditLog';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly action: { readonly column: 'action' };
-                readonly actorId: { readonly column: 'actorId' };
-                readonly actorRole: { readonly column: 'actorRole' };
-                readonly afterJson: { readonly column: 'afterJson' };
-                readonly beforeJson: { readonly column: 'beforeJson' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly entity: { readonly column: 'entity' };
-                readonly entityId: { readonly column: 'entityId' };
-                readonly id: { readonly column: 'id' };
               };
             };
           };
@@ -5705,14 +5506,6 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'Amenity';
-            readonly field: 'id';
-            readonly namespace: 'public';
-          };
-        },
-        {
-          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
-          readonly ref: {
-            readonly entry: 'AuditLog';
             readonly field: 'id';
             readonly namespace: 'public';
           };

@@ -29,7 +29,11 @@ code/name search, complete server pagination, bilingual forms and confirmed
 deletes, preserving assigned-bus and reserved-booking safeguards. The bus batch
 adds plate search, type/activity filters, capacity, active state, optional type
 and amenities, and existing fixed/numbered seat templates, retaining trip/booking
-constraints. Routes/trips, bookings, users and refunds follow in separate batches.
+constraints. The management completion batch now adds route/trip editing,
+reviewed bulk departures, filtered bookings and saved payment evidence, explicit
+super-admin trip cancellation and full refunds, passenger/staff account controls
+and administrator roles/status. These reuse the existing API and shared table,
+form and confirmation patterns; financial writes are never automatically replayed.
 
 ## Capabilities and Constraints
 

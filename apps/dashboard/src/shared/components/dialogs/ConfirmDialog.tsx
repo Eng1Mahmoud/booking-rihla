@@ -21,6 +21,7 @@ export function ConfirmDialog({
   cancelLabel,
   pendingLabel,
   pending = false,
+  confirmDisabled = false,
   error,
   onConfirm,
   onCancel,
@@ -35,6 +36,7 @@ export function ConfirmDialog({
   cancelLabel?: string;
   pendingLabel?: string;
   pending?: boolean;
+  confirmDisabled?: boolean;
   error?: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -78,7 +80,7 @@ export function ConfirmDialog({
           <AlertDialogAction
             variant={variant}
             className="min-h-12"
-            disabled={pending}
+            disabled={pending || confirmDisabled}
             aria-busy={pending}
             onClick={(event) => {
               event.preventDefault();

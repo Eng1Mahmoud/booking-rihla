@@ -278,22 +278,6 @@ enum SeatLayout {
   STANDARD_2_2
 }
 
-// Independent identifiers preserve history after catalog/account deletion.
-model AuditLog {
-  id String @id @default(uuid())
-  actorId String?
-  actorRole String?
-  action String
-  entity String
-  entityId String
-  beforeJson String?
-  afterJson String?
-  createdAt TimestamptzString @default(now())
-  @@index([createdAt, id])
-  @@index([actorId, createdAt, id])
-  @@index([entity, entityId, createdAt, id])
-}
-
 // Durable receipt only. Signed callbacks require authenticated inquiry and a
 // matching payment attempt before they can affect bookings or seat allocations.
 model PaymentEvent {

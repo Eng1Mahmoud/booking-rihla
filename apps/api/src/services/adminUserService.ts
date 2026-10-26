@@ -1,5 +1,4 @@
 import { lockAccountEmail, revokeAccountSessions } from './accountSecurity.ts';
-import { recordAudit, type AuditActor } from './auditWriter.ts';
 import type { db as database } from '../prisma/db.ts';
 import type {
   AdminUserListQuery,
@@ -56,11 +55,7 @@ export const adminUserService = {
     const user = await passengers(db).where({ id }).first();
     return user ? serializeUser(user) : null;
   },
-  async updateStatus(
-    id: string,
-    input: UpdateUserStatusInput,
-    actor?: AuditActor,
-  ) {
+  async updateStatus(id: string, input: UpdateUserStatusInput) {
     const { db } = await import('../prisma/db.ts');
     const candidate = await passengers(db).where({ id }).first();
     if (!candidate) return null;
@@ -82,7 +77,6 @@ export const adminUserService = {
       if (!input.isActive) await revokeAccountSessions(tx, id);
       const user = await passengers(tx).where({ id }).first();
       if (!user) throw new Error('Updated passenger account is missing');
-      await recordAudit(tx, actor, 'User', id, before, user);
       return serializeUser(user);
     });
   },

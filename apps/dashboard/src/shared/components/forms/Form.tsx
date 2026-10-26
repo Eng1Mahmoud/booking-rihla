@@ -35,7 +35,15 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
   const locale = useLocale();
   const t = useTranslations('Forms');
   const form = useForm<Input, unknown, Output>({
-    resolver: zodResolver(schema, { error: () => t('invalid') }),
+    resolver: zodResolver(schema, {
+      error: (issue) => {
+        const messageKey =
+          issue.code === 'custom' ? issue.params?.messageKey : undefined;
+        return typeof messageKey === 'string' && t.has(messageKey)
+          ? t(messageKey)
+          : t('invalid');
+      },
+    }),
     defaultValues,
     shouldUnregister,
   });

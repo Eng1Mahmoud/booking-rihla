@@ -68,7 +68,7 @@ export function createBusTypeController(service: BusTypeService) {
           'VALIDATION_ERROR',
           'Provide only code (1-32 uppercase letters/digits/underscores, starting with a letter), nameAr and nameEn (1-100 characters)',
         );
-      const item = await service.create(input.data, response.locals.auth);
+      const item = await service.create(input.data);
       sendSuccess(
         response.location('/api/v1/bus-types/' + item.id).status(201),
         item,
@@ -84,17 +84,12 @@ export function createBusTypeController(service: BusTypeService) {
           'VALIDATION_ERROR',
           'Provide at least one valid code, nameAr or nameEn; no other fields are allowed',
         );
-      const result = await service.update(
-        itemId,
-        input.data,
-        response.locals.auth,
-      );
+      const result = await service.update(itemId, input.data);
       if (!result) throw missing();
       sendSuccess(response, result);
     },
     async remove(request: Request, response: Response) {
-      if (!(await service.remove(id(request), response.locals.auth)))
-        throw missing();
+      if (!(await service.remove(id(request)))) throw missing();
       sendSuccess(response);
     },
   };

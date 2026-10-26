@@ -257,3 +257,110 @@ API typecheck/build and scoped ESLint/Prettier passed; inline isolated checks
 verified defaults and retained guards. No test files/scripts/dependencies added,
 no DB/network/worker access, no commit/push.
 Suggested commit: refactor(api): simplify server startup
+
+## Dashboard management completion — 2026-10-25
+
+Completed locally in D:/personal-projects/bus-booking-platform/apps/dashboard:
+- Routes and future trips: complete station/route/bus pickers, CRUD, exact EGP to
+  piastre conversion, Cairo times and rejected skipped/repeated DST times.
+- Batch departures: 1-90 days, weekdays, conflict preview and explicit reviewed
+  creation; changing input invalidates the preview. No automatic write retries.
+- Booking details/passengers/seats, saved payment evidence and provider references,
+  supported filters and deep links. Reading details never contacts Paymob.
+- Super-admin cancellation reason/confirmation, full refund issuance and separate
+  outcome inquiry. Uncertain results block repeats until explicit successful read.
+- Passenger status, staff roles/status and sanitized before/after audit viewing.
+  Active/verified readiness and last-super-admin API protections are preserved.
+
+Every Action checks current staff role, not just navigation visibility. Existing
+backend business logic, database schema and passenger application are unchanged.
+Features reuse shared DataTable, forms, confirmation and focus utilities. Existing
+endpoints without totals use one-extra-row pagination; complete bounded picker
+paging refuses incomplete/inconsistent reads. Arabic/English and RTL/LTR supported.
+Temporal polyfill already installed for API is explicitly declared in dashboard.
+
+Validation recovery messages now name station differences, weekday selection,
+arrival ordering and the inclusive 90-day date range using the existing Form
+resolver. Input values and field associations remain. Stable columns/callbacks
+preserve dialog trigger focus; the existing focus helper retains its button default.
+
+Verification: existing dashboard typecheck/lint passed, fresh isolated Next16.4.2
+production webpack build passed (no env files), all187 source files byte-matched
+the final preview. Scoped Prettier and git diff whitespace passed. 48 final
+screenshots and72 responsive/browser checks cover ar/en at1440/390/768/320;
+zero JS/console/read/overflow/alignment errors. 18 synthetic scheduling/financial/
+account/audit groups,16 final state entries and6 extra localized ordering checks
+passed. No real database, payment, mail or worker side effects. No test files,
+restored scripts/commands, migration, commit, push or deployment.
+
+Evidence: registered C: workspace dashboard-review/completion. Initial independent
+finish review returned fix for generic validation copy; verdict pass scored that
+single finding resolved and returned ship at that scope. Documentation comparison preserved DESIGN.md and its sidecar, verified unchanged
+hashes, and recorded inherited inventory drift externally in design-comparison.md. Six detector findings are advisory inherited type sizes,
+zero blocking findings. Existing overview seed/native provenance gate remains OPEN;
+this management extension does not close it or claim production readiness.
+
+Next: review the completed workflows locally with actual deployment configuration
+and the owner's data, then separately address remaining overview acceptance and
+release/deployment work. Do not reset/seed DB or perform live financial operations
+without explicit authorization. Owner handles commits. Suggested commit:
+feat(dashboard): complete management workflows
+
+Owned synthetic API/previews were stopped and all three owned staging directories
+were safely removed after unlinking dependency junctions. Actual node_modules
+and application source were preserved; evidence screenshots/reports remain.
+
+## Final dashboard completion and Audit Log removal — 2026-10-25
+
+Supersedes the preceding Audit Log inventory and remaining functional checklist.
+Owner explicitly requested completion of all dashboard tasks and removal of Audit
+Log from frontend/backend, then explicitly confirmed removal of its table.
+All Phase12 functional dashboard items are complete, using the existing Rihla
+theme. Overview metrics already existed; their exact money, Cairo date meaning,
+seat/booking/upcoming counts and payment basis were verified, not replaced.
+
+Removed dashboard audit page/feature/nav/role entry/translations, API audit read
+router/controller/service/schema and writer,13 services' audit calls and unused
+actor plumbing, dead error messages and stale compiled audit modules. Financial
+actor checks, account/session revocation, last-super-admin protection, scheduling
+locks, refund claim-before-I/O, notices and payment evidence remain. Audit Log
+was not payment evidence and its removal does not remove payment/refund history.
+
+Removed AuditLog from contract.prisma and regenerated contract.json/d.ts offline.
+Migration20261025T1757_remove_audit_log contains exactly DROP TABLE public.AuditLog.
+After owner confirmation, verified loopback/non-production target and one pending
+migration, applied it locally, confirmed table absence and24 public tables remain.
+No other schema operation ran. Historical migrations/snapshots remain intact.
+No external environment was migrated; no provider, payment, refund, email or
+worker side effects were performed. An initial automatic approval rejection of
+an unapplied table-drop migration was resolved by the owner's explicit follow-up
+confirmation before generation/application. No approval block remains.
+
+Fixed old city picker limit10/offset100 inconsistency by replacing the duplicated
+reader with existing readListOptions(admin/cities,cityRowSchema). Inline synthetic
+checks returned all105 choices and refused inconsistent totals.
+
+Verification: API/dashboard types, scoped API/dashboard ESLint, API build and
+isolated Next16.4.2 webpack production build passed. All181 dashboard src files
+matched final preview. All14 surfaces, ar/en,1440/390/320:84 clean views,56 final
+captures, no JS/console/read/overflow/unlabeled-input/audit-link failures. Eleven
+state groups passed with0 business writes (date/invalid date, partial reports,
+stale-list recovery, keyboard/mobile navigation, details, confirmation cancel,
+deleted route404, ADMIN denial and guest sign-in). Eighteen read-only HTTP/schema
+checks exercised local database after removal. No actual identities or log
+contents were printed. No test files or scripts/commands were added/restored.
+
+Evidence: registered workspace dashboard-review/final-dashboard/. Independent
+finish review returned ship with zero material fixes at current scope; the
+documentation comparison preserved DESIGN.md/design.json with verified hashes
+and recorded inherited inventory drift externally. Prior overview
+native provenance ledger remains historical/open; never claim native closure.
+No commit, push or deployment. Owner handles Git. Suggested commit:
+feat(dashboard): finalize management and remove audit logs
+
+Final cleanup completed on2026-10-26 after resuming from an automatic-approval
+usage-limit failure. Owned synthetic API49102 and preview3443 were stopped; the
+verified final-dashboard staging directory was removed after unlinking dependency
+junctions. Actual dependencies and screenshots/reports remain intact. Final
+whitespace and new-file scope checks passed; no new testing/script files or
+temporary Prisma config remain. No approval blocker remains.

@@ -1048,27 +1048,6 @@ Read apps/api/src/schemas/administratorSchema.ts, controllers/administratorContr
 
 Administrator management verification: all 151 default tests and all 18 PostgreSQL integration tests passed, along with strict types, lint, formatting and build. The existing fifteen migrations replayed on an empty temporary database; repeating migration applied zero changes. Compiled JavaScript HTTP checks verified bootstrap, promotion, old-session revocation, transfer to another super admin and rejection of removing the last active verified super admin. Compared development business rows remained unchanged, and scoped fixtures/temporary databases were removed. No new migration or dependency is required.
 
-## Administrator audit log
-
-Successful business changes through the administrative API now write an AuditLog row in the **same PostgreSQL transaction** as the change. An audit insert failure aborts the change. Unchanged values, failed validation/authorization, rejected business operations, read requests and batch previews create no audit row. A successful batch writes one CREATE row per generated Trip.
-
-Covered mutations: City, Station, Route, Bus (including template/count/type/amenity assignments), BusType, Amenity, Trip, passenger activation/suspension, administrator roles/status, and the local first-super-admin bootstrap. Registration, login, passenger reservations, direct SQL/Prisma scripts and seed operations are not administrative audit events. Calling a catalog service internally without an authenticated actor records null actorId/actorRole; BOOTSTRAP also has a null actor because it is a local operator command. Null does not identify a signed-in administrator.
-
-| Method | Endpoint                     | Access      |
-| ------ | ---------------------------- | ----------- |
-| GET    | /api/v1/admin/audit-logs     | SUPER_ADMIN |
-| GET    | /api/v1/admin/audit-logs/:id | SUPER_ADMIN |
-
-The list supports limit (1-100, default 20), offset (0-100000), actorId UUID, entity, entityId UUID, action, from and to. Filters combine with AND. Entity is City, Station, Route, Bus, BusType, Amenity, Trip or User; action is CREATE, UPDATE, DELETE or BOOTSTRAP. The from/to filters are inclusive ISO timestamps with a timezone, and from must not follow to. Results are newest first, ordered by createdAt then id for stable pagination. Query parameters on detail requests are rejected. Read responses use Cache-Control: no-store.
-
-Example: GET /api/v1/admin/audit-logs?entity=Trip&action=UPDATE&limit=20&offset=0 with a super-admin bearer token.
-
-Each entry contains id, actorId, actorRole, action, entity, entityId, before, after and createdAt. The actor comes from authenticated server context, never from request JSON. CREATE has before:null; DELETE has after:null. User snapshots contain **only role and isActive**. Catalog snapshots use explicit business-field allowlists. Password hashes, email addresses, phone numbers, passenger names, verification codes, cookies and tokens are not audit payloads. Bus plate numbers remain operational audit data visible only to super admins.
-
-The Prisma contract stores beforeJson/afterJson as serialized JSON text; the read service exposes parsed before/after objects. Independent actor/entity identifiers deliberately have no foreign keys: deleting an account or catalog row must not delete its history. There are no audit create/update/delete API endpoints. This is application-level history, not a tamper-proof ledger against database administrators. Automatic retention/deletion is not enabled, and existing historical changes are not backfilled.
-
-Important files: apps/api/src/services/auditWriter.ts (allowlists and transaction insert), auditLogService.ts (queries), schemas/auditLogSchema.ts (filters), controllers/auditLogController.ts and routes/auditLogRoutes.ts (HTTP reads). Business services call recordAudit before committing. No external package or environment variable is required. Apply the additive AuditLog migration with npm run db:migrate before running the updated API. Database verification uses an isolated temporary database so test-created audit events do not pollute development history.
-
 ## Expiring checkout seat holds
 
 This section supersedes the immediate-reservation behavior in the earlier reservation MVP walkthrough. POST /api/v1/bookings now starts checkout: it creates PENDING_PAYMENT with paymentRequired:true and a server-generated expiresAt, at most ten minutes from creation and never after departure. Existing RESERVED bookings keep their status, expiresAt:null and paymentRequired:false; the migration never expires or deletes existing reservations. The following sections describe payment creation/reconciliation and gated owner checkout; no public manual confirmation endpoint exists.
@@ -1406,7 +1385,7 @@ docker run --rm --no-healthcheck --env-file apps/api/production.env bus-booking-
 
 Use host monitoring to check /health, /ready, container restarts and the operations command, and route alerts to a channel chosen by the operator. The operations snapshot is not a worker heartbeat, SMTP delivery receipt, external uptime monitor or bank reconciliation. Durable mail attempts exhausted at five still require operator investigation; a crash can duplicate SMTP delivery, as documented above.
 
-The super-admin POST /admin/refunds/:id/reconcile now also rechecks a REVIEW record using fresh authenticated provider evidence, records the reviewer in the audit log, and only advances it when the exact full refund is proven. Automatic workers continue to leave REVIEW for a human. This endpoint cannot resend money, accept a browser-provided success flag or clear a review merely because the operator clicked it. Manual verification covered a partial refund followed by verified full completion with no second refund POST.
+The super-admin POST /admin/refunds/:id/reconcile now also rechecks a REVIEW record using fresh authenticated provider evidence, and only advances it when the exact full refund is proven. Automatic workers continue to leave REVIEW for a human. This endpoint cannot resend money, accept a browser-provided success flag or clear a review merely because the operator clicked it. Manual verification covered a partial refund followed by verified full completion with no second refund POST.
 
 ### First Paymob setup
 
@@ -1686,3 +1665,17 @@ Passenger phase E adds /ar/terms, /en/terms, /ar/privacy and /en/privacy. These 
 The drafts describe the current test-only service, temporary seat holds, verified payment confirmation, passenger cancellation unavailability, company-cancellation full refunds, and the actual account/booking/payment/session data flows. They do not promise a fixed refund or retention period or that a payment provider stores no card information. The operator identity, approved contact channel, hosting/email providers and processing locations, retention schedule, data-request process and refund timing still require review before public launch. Both pages use noindex, follow until the final content is approved.
 
 Web TypeScript, ESLint, production build, modified-file formatting and diff checks passed. Twenty-nine Chromium checks covered both languages and policies at five viewport widths, keyboard section navigation, language switching, registration/footer links, metadata, stale-cookie public access and browser errors. A temporary isolated frontend preview used dummy environment values and no real .env files; it was stopped and its marked build copy removed after verification. No backend/database/provider/email operation, persistent test dependency, deployment, commit or push was added. Phase E implementation is complete; broader passenger UX review remains next.
+
+## Dashboard management completion
+
+The staff dashboard provides the overview, cities/stations, fleet metadata/buses,
+routes/trips and reviewed batch departures, bookings/payment evidence, full refunds,
+passenger accounts and administrator roles/status. Arabic/English and RTL/LTR use
+the existing Rihla theme. Report dates are Cairo travel days; payment amounts are
+verified gross paid by settlement update date, not net revenue.
+
+Audit viewing, API endpoints and mutation logging have been removed by request.
+The remove_audit_log migration drops only public.AuditLog; historical migrations
+remain intact so existing databases can upgrade consistently. This migration was
+applied to the local non-production database after explicit owner confirmation.
+No other deployment is implied.

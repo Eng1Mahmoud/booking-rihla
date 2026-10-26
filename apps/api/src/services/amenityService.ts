@@ -1,4 +1,3 @@
-import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { AppError } from '../errors/AppError.ts';
 import {
   isUniqueViolation,
@@ -37,15 +36,11 @@ export const amenityService = {
     const { db } = await import('../prisma/db.ts');
     return await db.orm.public.Amenity.where({ id }).first();
   },
-  async create(
-    input: FleetMetadataInput,
-    actor?: AuditActor,
-  ): Promise<FleetMetadata> {
+  async create(input: FleetMetadataInput): Promise<FleetMetadata> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
         const saved = await tx.orm.public.Amenity.create(input);
-        await recordAudit(tx, actor, 'Amenity', saved.id, null, saved);
         return saved;
       });
     } catch (error) {
@@ -55,7 +50,6 @@ export const amenityService = {
   async update(
     id: string,
     input: FleetMetadataUpdate,
-    actor?: AuditActor,
   ): Promise<FleetMetadata | null> {
     const { db } = await import('../prisma/db.ts');
     try {
@@ -84,19 +78,17 @@ export const amenityService = {
             'Amenity used by a reserved bus cannot change',
           );
         const saved = await tx.orm.public.Amenity.where({ id }).update(input);
-        await recordAudit(tx, actor, 'Amenity', id, current, saved);
         return saved;
       });
     } catch (error) {
       writeError(error);
     }
   },
-  async remove(id: string, actor?: AuditActor): Promise<FleetMetadata | null> {
+  async remove(id: string): Promise<FleetMetadata | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
         const removed = await tx.orm.public.Amenity.where({ id }).delete();
-        if (removed) await recordAudit(tx, actor, 'Amenity', id, removed, null);
         return removed;
       });
     } catch (error) {

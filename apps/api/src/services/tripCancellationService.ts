@@ -1,7 +1,6 @@
 import { lockBookingTrip, releaseBookingSeats } from './bookingHoldService.ts';
 import { AppError } from '../errors/AppError.ts';
 import type { AuthContext } from './sessionService.ts';
-import { recordAudit } from './auditWriter.ts';
 import { requireFinancialActor } from './financialActor.ts';
 import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 export const tripCancellationService = {
@@ -56,7 +55,7 @@ export const tripCancellationService = {
           );
       }
       const now = new Date().toISOString();
-      const saved = await tx.orm.public.Trip.where({ id: tripId }).update({
+      await tx.orm.public.Trip.where({ id: tripId }).update({
         status: 'CANCELLED',
         cancelledAt: now,
         cancellationReason: reason,
@@ -72,11 +71,10 @@ export const tripCancellationService = {
             expiresAt: booking.expiresAt ?? now,
           });
         if (booking.status === 'CONFIRMED') {
-          const refund = await tx.orm.public.Refund.create({
+          await tx.orm.public.Refund.create({
             bookingId: booking.id,
             amountPiastres: booking.totalPiastres,
           });
-          await recordAudit(tx, auth, 'Refund', refund.id, null, refund);
         }
         if (booking.status !== 'EXPIRED')
           await tx.orm.public.BookingNotice.create({
@@ -84,7 +82,6 @@ export const tripCancellationService = {
             purpose: 'TRIP_CANCELLED',
           });
       }
-      await recordAudit(tx, auth, 'Trip', tripId, trip, saved);
       return { id: tripId, status: 'CANCELLED', cancelledAt: now };
     });
   },

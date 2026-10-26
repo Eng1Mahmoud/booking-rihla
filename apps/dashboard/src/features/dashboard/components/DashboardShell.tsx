@@ -47,7 +47,10 @@ export async function DashboardShell({
             </small>
           </strong>
         </Link>
-        <DashboardNavigation website={website} />
+        <DashboardNavigation
+          website={website}
+          superAdmin={user.role === 'SUPER_ADMIN'}
+        />
         <a
           href={website}
           className="mx-6 mt-[38px] flex min-h-14 items-center gap-4 border-t border-[#466071] py-5 text-[14px] text-white"
@@ -59,7 +62,10 @@ export async function DashboardShell({
       <div className="min-w-0">
         <header className="flex min-h-[82px] items-center border-b bg-card px-6 py-3.5 xl:px-[34px]">
           <div className="lg:hidden">
-            <DashboardNavigation website={website} />
+            <DashboardNavigation
+              website={website}
+              superAdmin={user.role === 'SUPER_ADMIN'}
+            />
           </div>
           <Link
             href="/dashboard"

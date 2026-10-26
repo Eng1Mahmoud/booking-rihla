@@ -1,6 +1,8 @@
 import { routing } from '@/i18n/routing';
 import type { UserRole } from '@/features/auth/types/auth';
 export const protectedRoutes: { path: string; roles: UserRole[] }[] = [
+  { path: '/dashboard/refunds', roles: ['SUPER_ADMIN'] },
+  { path: '/dashboard/administrators', roles: ['SUPER_ADMIN'] },
   { path: '/dashboard', roles: ['ADMIN', 'SUPER_ADMIN'] },
 ];
 export function getRouteDetails(pathname: string) {

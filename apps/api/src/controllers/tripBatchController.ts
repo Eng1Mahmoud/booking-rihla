@@ -32,10 +32,7 @@ export function createTripBatchController(service: TripBatchService) {
       sendSuccess(response, await service.preview(input(request)));
     },
     async create(request: Request, response: Response) {
-      sendSuccess(
-        response.status(201),
-        await service.create(input(request), response.locals.auth),
-      );
+      sendSuccess(response.status(201), await service.create(input(request)));
     },
   };
 }

@@ -6,7 +6,6 @@ import type {
 } from '../payments/paymentProvider.ts';
 import type { AuthContext } from './sessionService.ts';
 import { requireFinancialActor } from './financialActor.ts';
-import { recordAudit } from './auditWriter.ts';
 import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 import type { db as database } from '../prisma/db.ts';
 function records(client: Pick<typeof database, 'orm'>) {
@@ -144,7 +143,6 @@ export function createRefundService(
           bookingId: current.bookingId,
           purpose: 'REFUND_SUCCEEDED',
         });
-      await recordAudit(tx, actor, 'Refund', id, current, saved);
       return saved ? serializeRefund(saved) : null;
     });
   }
@@ -212,13 +210,12 @@ export function createRefundService(
             'REFUND_REVIEW_REQUIRED',
             'Payment data changed',
           );
-        const saved = await tx.orm.public.Refund.where({ id }).update({
+        await tx.orm.public.Refund.where({ id }).update({
           status: 'REQUESTED',
           transactionId: remote.id,
           requestedBy: auth.user.id,
           updatedAt: new Date().toISOString(),
         });
-        await recordAudit(tx, auth, 'Refund', id, current, saved);
         return true;
       });
       if (claimed) {

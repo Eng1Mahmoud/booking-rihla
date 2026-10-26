@@ -54,7 +54,7 @@ export function createStationController(service: StationService) {
           'Provide only nameAr/nameEn (1-100 characters after trimming) and a cityId UUID',
         );
       }
-      const station = await service.create(input.data, response.locals.auth);
+      const station = await service.create(input.data);
       sendSuccess(
         response.location('/api/v1/stations/' + station.id).status(201),
         station,
@@ -84,11 +84,7 @@ export function createStationController(service: StationService) {
           'Provide at least one of nameAr/nameEn (1-100 characters) or cityId (UUID); no other fields are allowed',
         );
       }
-      const station = await service.update(
-        id.data,
-        input.data,
-        response.locals.auth,
-      );
+      const station = await service.update(id.data, input.data);
       if (!station) {
         throw new AppError(404, 'STATION_NOT_FOUND', 'Station not found');
       }
@@ -103,7 +99,7 @@ export function createStationController(service: StationService) {
           'Station id must be a valid UUID',
         );
       }
-      const station = await service.remove(id.data, response.locals.auth);
+      const station = await service.remove(id.data);
       if (!station) {
         throw new AppError(404, 'STATION_NOT_FOUND', 'Station not found');
       }

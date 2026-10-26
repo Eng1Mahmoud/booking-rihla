@@ -26,7 +26,7 @@ export async function seedEgyptCatalog(reset = false) {
         db.raw.sql`TRUNCATE TABLE
       public."BookingNotice", public."Refund", public."Ticket", public."PaymentSettlement",
       public."PaymentSession", public."PaymentAttempt", public."PaymentEvent",
-      public."BookingSeat", public."Booking", public."AuditLog",
+      public."BookingSeat", public."Booking",
       public."RefreshToken", public."Session", public."PasswordReset",
       public."EmailOutbox", public."EmailVerification", public."User",
       public."Trip", public."Route", public."BusAmenity", public."BusSeat",

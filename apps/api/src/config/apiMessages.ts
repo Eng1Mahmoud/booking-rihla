@@ -24,10 +24,6 @@ export const apiMessages: Record<string, { ar: string; en: string }> = {
     ar: 'المرفق غير موجود.',
     en: 'Amenity not found',
   },
-  AUDIT_LOG_NOT_FOUND: {
-    ar: 'سجل العملية غير موجود.',
-    en: 'Audit log not found',
-  },
   BOOKING_EXPIRED: {
     ar: 'انتهت مهلة الحجز. اختر المقاعد من جديد.',
     en: 'This booking is too close to expiry or has expired',

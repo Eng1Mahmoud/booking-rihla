@@ -66,7 +66,7 @@ export function createBusController(service: BusService) {
           'Provide plateNumber (1-32 characters), seatCount (integer 1-100), optional seatLayout (STANDARD_2_2/null), isActive, busTypeId (UUID/null), and amenityIds (up to 30 distinct UUIDs)',
         );
       }
-      const bus = await service.create(input.data, response.locals.auth);
+      const bus = await service.create(input.data);
       sendSuccess(
         response.location('/api/v1/buses/' + bus.id).status(201),
         bus,
@@ -96,11 +96,7 @@ export function createBusController(service: BusService) {
           'Provide plateNumber (1-32 characters), seatCount (integer 1-100), isActive (boolean), seatLayout (STANDARD_2_2/null), busTypeId (UUID/null), or amenityIds (up to 30 distinct UUIDs); no other fields are allowed',
         );
       }
-      const bus = await service.update(
-        id.data,
-        input.data,
-        response.locals.auth,
-      );
+      const bus = await service.update(id.data, input.data);
       if (!bus) {
         throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
       }
@@ -115,7 +111,7 @@ export function createBusController(service: BusService) {
           'Bus id must be a valid UUID',
         );
       }
-      const bus = await service.remove(id.data, response.locals.auth);
+      const bus = await service.remove(id.data);
       if (!bus) {
         throw new AppError(404, 'BUS_NOT_FOUND', 'Bus not found');
       }

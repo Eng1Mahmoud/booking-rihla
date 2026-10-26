@@ -18,11 +18,17 @@ import {
   Building2,
   MapPin,
   Wifi,
+  Route as RouteIcon,
+  CalendarDays,
+  Ticket,
+  Undo2,
+  Users,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/shared/lib/cn';
-function NavigationLinks() {
+function NavigationLinks({ superAdmin }: { superAdmin: boolean }) {
   const t = useTranslations('Dashboard');
   const locale = useLocale();
   const pathname = usePathname();
@@ -61,14 +67,46 @@ function NavigationLinks() {
         { href: '/dashboard/buses', label: t('buses'), Icon: BusFront },
         { href: '/dashboard/bus-types', label: t('busTypes'), Icon: BusFront },
         { href: '/dashboard/amenities', label: t('amenities'), Icon: Wifi },
+        { href: '/dashboard/routes', label: t('routes'), Icon: RouteIcon },
+        {
+          href: '/dashboard/trips',
+          label: t('tripManagement'),
+          Icon: CalendarDays,
+        },
+        {
+          href: '/dashboard/bookings',
+          label: t('bookingRecords'),
+          Icon: Ticket,
+        },
+        {
+          href: '/dashboard/payments',
+          label: t('paymentRecords'),
+          Icon: CreditCard,
+        },
+        { href: '/dashboard/users', label: t('users'), Icon: Users },
+        ...(superAdmin
+          ? [
+              { href: '/dashboard/refunds', label: t('refunds'), Icon: Undo2 },
+              {
+                href: '/dashboard/administrators',
+                label: t('administrators'),
+                Icon: ShieldCheck,
+              },
+            ]
+          : []),
       ].map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}
-          aria-current={pathname === href ? 'page' : undefined}
+          aria-current={
+            pathname === href || pathname.startsWith(href + '/')
+              ? 'page'
+              : undefined
+          }
           className={cn(
             'flex min-h-14 items-center gap-4 rounded-[10px] px-[18px] py-3.5 text-[15px] text-white hover:bg-[#24485a]',
-            pathname === href && 'bg-[#0b6372]',
+            (pathname === href || pathname.startsWith(href + '/')) &&
+              'bg-[#0b6372]',
           )}
         >
           <Icon className="size-[23px] shrink-0" aria-hidden="true" />
@@ -78,7 +116,13 @@ function NavigationLinks() {
     </nav>
   );
 }
-export function DashboardNavigation({ website }: { website: string }) {
+export function DashboardNavigation({
+  website,
+  superAdmin = false,
+}: {
+  website: string;
+  superAdmin?: boolean;
+}) {
   const t = useTranslations('Dashboard');
   const locale = useLocale();
   const [open, setOpen] = useState(false);
@@ -94,7 +138,7 @@ export function DashboardNavigation({ website }: { website: string }) {
   return (
     <>
       <div className="hidden lg:block">
-        <NavigationLinks />
+        <NavigationLinks superAdmin={superAdmin} />
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
@@ -134,7 +178,7 @@ export function DashboardNavigation({ website }: { website: string }) {
               if ((event.target as HTMLElement).closest('a')) setOpen(false);
             }}
           >
-            <NavigationLinks />
+            <NavigationLinks superAdmin={superAdmin} />
           </div>
           <a
             href={website}

@@ -63,11 +63,7 @@ export function createAdminUserController(service: AdminUserService) {
           'VALIDATION_ERROR',
           'Provide only isActive as a boolean',
         );
-      const user = await service.updateStatus(
-        userId,
-        input.data,
-        response.locals.auth,
-      );
+      const user = await service.updateStatus(userId, input.data);
       if (!user)
         throw new AppError(
           404,

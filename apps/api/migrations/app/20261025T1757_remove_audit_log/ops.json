@@ -1,0 +1,39 @@
+[
+  {
+    "id": "dropTable.AuditLog",
+    "label": "Drop table \"AuditLog\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "AuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"AuditLog\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"AuditLog\"",
+        "sql": "DROP TABLE \"public\".\"AuditLog\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"AuditLog\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AuditLog\""
+        ]
+      }
+    ]
+  }
+]

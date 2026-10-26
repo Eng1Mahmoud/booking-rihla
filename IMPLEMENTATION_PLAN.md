@@ -435,17 +435,46 @@ Reference docs: [Next.js server/client components](https://nextjs.org/docs/app/g
 
 Feature batches:
 
-- [ ] D1: Build a separate dashboard application in apps/dashboard, mirroring the feature-based organization of apps/web and its Rihla identity. Give it its own development command, sign-in and independently named session cookies. Keep the passenger application unchanged.
-- [ ] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
+- [x] D1: Build a separate dashboard application in apps/dashboard, mirroring the feature-based organization of apps/web and its Rihla identity. Give it its own development command, sign-in and independently named session cookies. Keep the passenger application unchanged.
+- [x] D1: Add a read-only date-filtered overview from /admin/statistics and /admin/payments/statistics. Preserve travel-day versus settlement-last-update semantics; do not label gross paid as net revenue. Deliver catalog/management modules in subsequent batches.
 - [x] Add complete city/station management screens.
 - [x] Add bus type and amenity management screens.
 - [x] Add fixed template selection, buses and plate management screens.
-- [ ] Add route and trip management screens.
-- [ ] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
-- [ ] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
-- [ ] Add user lists, suspension/activation, super-admin-only administrator management, and audit viewing.
-- [ ] Add precisely defined booking/revenue/upcoming-trip/occupancy metrics.
-- [ ] Complete Arabic/English, RTL, themes, accessibility, responsive behavior, and role-specific failure states.
+- [x] Add route and trip management screens.
+- [x] Add recurring/bulk trip creation with a review of generated departures and backend reservation safeguards.
+- [x] Add filtered bookings, details, payments, provider references, permitted refunds, and trip cancellation controls.
+- [x] Add user lists, suspension/activation, super-admin-only administrator management.
+- [x] Add precisely defined booking/verified-gross-paid/upcoming-trip/occupancy metrics with their Cairo date basis.
+- [x] Complete Arabic/English, RTL, the existing Rihla theme, keyboard accessibility, responsive behavior, and role-specific failure states.
+
+- [x] Remove Audit Log from dashboard, API, mutation logging and the local database after explicit owner confirmation.
+
+Final dashboard verification — 2026-10-25: all Phase12 functional items are now
+complete. Overview metrics were already implemented and are verified against the
+local API; no invented net-revenue figure was added. All14 remaining surfaces
+passed84 ar/en views at1440/390/320, with56 captures,11 state checks and no business
+writes. Eighteen read-only local API checks passed after removing public.AuditLog.
+The explicitly authorized migration applied exactly one DROP TABLE operation;
+24 other public tables remain. Current Prisma artifacts and API/frontend code
+contain no Audit Log feature; immutable migration history is retained. Complete
+city pickers now reuse readListOptions and passed105-item/inconsistent-total
+checks. No test files or deleted scripts/commands were added. Historical overview
+native workflow provenance is separately open, not a missing dashboard feature
+or a claimed native approval. Evidence: dashboard-review/final-dashboard/.
+
+Management completion batch finished locally on 2026-10-25: explicit routes/trips,
+reviewed 1-90-day batch departures, filtered bookings/payment evidence, full-refund
+execution/inquiry, passenger/staff controls (Audit Log was subsequently removed by owner request). Every Action checks
+current role; backend safeguards remain authoritative. Reused shared tables,
+forms and confirmations with honest unknown-total pagination, complete pickers,
+exact money and Cairo/DST semantics. Types/lint/fresh isolated production build,
+72 bilingual responsive checks and synthetic behavior/validation checks passed.
+Independent finish review requested specific recovery copy; its verdict scored
+that fix resolved (ship at the scored-fix scope). No real DB/provider operations,
+test files, restored scripts, commits or deployment. Earlier D1 overview/provenance
+and broader launch/metrics acceptance items remain separately open; these new
+management screens do not close that historic gate. Evidence: registered workspace
+dashboard-review/completion/verification.md and management-finish-verdict.md.
 
 City/station management batch completed locally on 2026-10-25: protected city/station lists, bilingual search, city filtering, 20-row pagination, RHF/Zod forms and confirmed deletes through the existing APIs. Linked-data failures are translated; every Action checks current staff access. Isolated production build, TypeScript, lint/format and synthetic CRUD, permission, failure, responsive and keyboard checks passed. Independent review returned ship for this ordinary extension, and the documentation comparison preserved the existing design system. No real catalog records were changed during verification. The earlier overview native workflow ledger remains open and is not closed by this batch.
 
@@ -550,7 +579,7 @@ feat(web): display trip search results
 fix(bookings): prevent concurrent seat reservations
 ```
 
-The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; simple fixed seat templates and trip guards are complete; finite batch trip preview and atomic creation are complete; administrator booking lists/details are complete; passenger account management with session revocation is complete; super-admin administrator management is complete; audit logging, expiring seat holds, the Paymob TEST adapter and durable signed webhook receipt are complete; owned payment-attempt preparation is complete; durable direct-payment session creation and authenticated SALE reconciliation are complete; authenticated reference recovery and missing-callback fallback are complete; owned checkout/status endpoints are complete behind a disabled-by-default TEST gate; actual merchant TEST payment/refund verification remains before frontend handoff.
+The roadmap follows complete feature batches: finish, verify, explain, commit, and push before moving on. Backend first, then passenger website, then dashboard. City, Station, basic Bus/seat management, Route management, and Trip management are complete; repeatable seed data and passenger trip search are complete; passenger trip details and departure seat listing are complete; registration and email verification are complete; secure sign-in, rotating sessions and password recovery are complete; administrator roles and management API protection are complete; the reservation MVP without payment or passenger cancellation is complete; bus types and amenities are complete; simple fixed seat templates and trip guards are complete; finite batch trip preview and atomic creation are complete; administrator booking lists/details are complete; passenger account management with session revocation is complete; super-admin administrator management is complete; expiring seat holds, the Paymob TEST adapter and durable signed webhook receipt are complete; owned payment-attempt preparation is complete; durable direct-payment session creation and authenticated SALE reconciliation are complete; authenticated reference recovery and missing-callback fallback are complete; owned checkout/status endpoints are complete behind a disabled-by-default TEST gate; actual merchant TEST payment/refund verification remains before frontend handoff.
 
 Payment reference recovery is implemented in the existing opt-in worker: UNKNOWN/stale REQUESTING operations are queried by their exact operation UUID, validated against account/TEST/EGP/amount, and correlated without resending creation. Known orders without a signed payment receipt can use the same authenticated lookup. Its latest-transaction limitation does not permit guessing parent IDs or reconstructing lost checkout links. The migration only widens the reference-pair check to allow a recovered order ID without an intention ID; READY still requires a verified intention and encrypted checkout. Owned checkout/status endpoints and protected administrator payment lists/details are implemented; merchant TEST verification remains required before declaring payments complete.
 
@@ -1490,3 +1519,7 @@ Dashboard يبدأ بعد إغلاق هذه الدفعات أو تأجيل بن�
 - أضيفت الروابط إلى Footer ونموذج إنشاء الحساب بالعربية والإنجليزية. روابط التسجيل إعلامية؛ لم يُضف مربع موافقة أو حقل أو تعديل في Schema أو طلب التسجيل أو Backend، ولم تُعتبر المسودة قبولًا تعاقديًا نهائيًا.
 - التحقق: نجحت ESLint وأنواع الويب وبناء الإنتاج في نسخة مؤقتة بلا ملفات .env، وتنسيق الملفات المعدلة وgit diff --check. اجتاز Chromium 29 فحصًا شملت المسارات الأربعة و320/390/768/1024/1440px، وRTL/LTR والفهرس بلوحة المفاتيح وتبديل اللغة والروابط وnoindex وCookies قديمة دون Backend فعلي، دون تجاوز أفقي أو أخطاء JavaScript أو ترجمة. تمت مراجعة صور سطح المكتب والجوال. بقيت الترجمات السابقة مطابقة ولم تضاف اختبارات دائمة أو dependencies.
 - أوقفت معاينة الواجهة المؤقتة ونُظفت نسخة البناء بحذر؛ لم تُقرأ بيئة حقيقية أو تُشغّل خدمات Backend أو قاعدة بيانات أو Paymob أو بريد، ولم يحدث نشر أو commit أو push. التنفيذ المحلي للدفعة E مكتمل؛ اعتماد النص النهائي قبل النشر ما زال مطلوبًا. التالي F: مراجعة UX الشاملة، قبل Dashboard.
+
+### Dashboard completion authorized — 2026-10-25
+
+Continue the established dashboard: routes, trips and reviewed bulk creation; bookings/payment details, super-admin trip cancellation/refunds; passenger and administrator controls; audit viewing. Reuse existing backend contracts and shared tables/forms/confirmation. Keep bilingual RTL/LTR and failure states. No test files, restored scripts, commits or pushes. Verify each completed feature and provide its commit message. Existing overview provenance gate remains open.

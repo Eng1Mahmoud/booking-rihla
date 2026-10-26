@@ -1,10 +1,9 @@
 'use server';
-import { z } from 'zod';
-import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
+import type { ApiResult } from '@/shared/lib/apiResult';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListPage } from '@/shared/lib/readListPage';
+import { readListOptions } from '@/shared/lib/readListOptions';
 import {
   listQuerySchema,
   type ListPage,
@@ -15,31 +14,14 @@ import {
   cityRowSchema,
   cityIdSchema,
   saveCitySchema,
-  citySchema,
   type CityInput,
 } from '../schemas/citySchema';
 import type { City, CityRow } from '../types/city';
 
-// City pickers are independent of table pages; never return partial options.
-async function listCityOptions(): Promise<ApiResult<City[]>> {
-  const locale = await getLocale();
-  const items: City[] = [];
-  const pageSchema = z.object({ items: z.array(citySchema).max(100) });
-  for (let offset = 0; offset <= 100000; offset += 100) {
-    const result = await apiFetch<unknown>('cities?limit=10&offset=' + offset);
-    if (!result.success) return { ...result, data: undefined };
-    const parsed = pageSchema.safeParse(result.data);
-    if (!parsed.success) return apiFailure(502, 'UPSTREAM_ERROR', locale);
-    items.push(...parsed.data.items);
-    if (parsed.data.items.length < 100) return { ...result, data: items };
-  }
-  return apiFailure(502, 'UPSTREAM_ERROR', locale);
-}
-
 export async function getCityOptionsAction(): Promise<ApiResult<City[]>> {
   const access = await checkStaffAccess();
   if (!access.success) return access;
-  return listCityOptions();
+  return readListOptions('admin/cities', cityRowSchema);
 }
 
 export async function getCitiesAction(

@@ -1,4 +1,3 @@
-import { recordAudit, type AuditActor } from './auditWriter.ts';
 import { busMetadata } from '../utils/busMetadata.ts';
 import type { FleetMetadata } from '../schemas/fleetMetadataSchema.ts';
 import type { db as database } from '../prisma/db.ts';
@@ -110,7 +109,7 @@ export const busService = {
       .orderBy((seat) => seat.number.asc())
       .all();
   },
-  async create(input: CreateBusInput, actor?: AuditActor): Promise<Bus> {
+  async create(input: CreateBusInput): Promise<Bus> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
@@ -129,10 +128,6 @@ export const busService = {
         );
         const result = await buses(tx).where({ id: bus.id }).first();
         if (!result) throw new Error('Bus creation returned no row');
-        await recordAudit(tx, actor, 'Bus', bus.id, null, {
-          ...result,
-          amenityIds: result.amenityLinks.map((l) => l.amenityId),
-        });
         return serializeBus(result);
       });
     } catch (error) {
@@ -145,11 +140,7 @@ export const busService = {
       throw error;
     }
   },
-  async update(
-    id: string,
-    input: UpdateBusInput,
-    actor?: AuditActor,
-  ): Promise<Bus | null> {
+  async update(id: string, input: UpdateBusInput): Promise<Bus | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
@@ -216,18 +207,6 @@ export const busService = {
             );
         }
         const result = await buses(tx).where({ id }).first();
-        if (result)
-          await recordAudit(
-            tx,
-            actor,
-            'Bus',
-            id,
-            { ...bus, amenityIds: links.map((l) => l.amenityId) },
-            {
-              ...result,
-              amenityIds: result.amenityLinks.map((l) => l.amenityId),
-            },
-          );
         return result ? serializeBus(result) : null;
       });
     } catch (error) {
@@ -246,7 +225,7 @@ export const busService = {
       throw error;
     }
   },
-  async remove(id: string, actor?: AuditActor): Promise<{ id: string } | null> {
+  async remove(id: string): Promise<{ id: string } | null> {
     const { db } = await import('../prisma/db.ts');
     try {
       return await db.transaction(async (tx) => {
@@ -256,20 +235,7 @@ export const busService = {
             .affectedCount()
             .build(),
         );
-        const before = await buses(tx).where({ id }).first();
         const removed = await tx.orm.public.Bus.where({ id }).delete();
-        if (before && removed)
-          await recordAudit(
-            tx,
-            actor,
-            'Bus',
-            id,
-            {
-              ...before,
-              amenityIds: before.amenityLinks.map((l) => l.amenityId),
-            },
-            null,
-          );
         return removed;
       });
     } catch (error) {
