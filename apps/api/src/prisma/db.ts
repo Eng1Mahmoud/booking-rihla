@@ -8,12 +8,6 @@ if (!url) {
   throw new Error('DATABASE_URL is required to use Prisma');
 }
 
-if (
-  !URL.canParse(url) ||
-  !['postgres:', 'postgresql:'].includes(new URL(url).protocol)
-)
-  throw new Error('Invalid database configuration: DATABASE_URL');
-
 export const db = postgres<Contract>({
   contractJson,
   url,
