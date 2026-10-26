@@ -84,7 +84,7 @@ function updateMessage(
 
 // Preparation keeps purpose-specific eligibility outside the delivery retry block.
 // Its returned function runs inside that block, including account-code checks.
-// SMTP stays under the row lock: delivery remains at least once after a crash.
+// Email delivery stays under the row lock: delivery remains at least once after a crash.
 export async function processMailBatch<K extends Queue>(
   db: typeof database,
   candidates: readonly { id: string }[],

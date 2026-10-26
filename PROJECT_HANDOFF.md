@@ -364,3 +364,24 @@ verified final-dashboard staging directory was removed after unlinking dependenc
 junctions. Actual dependencies and screenshots/reports remain intact. Final
 whitespace and new-file scope checks passed; no new testing/script files or
 temporary Prisma config remain. No approval blocker remains.
+
+
+## Mailjet email transport — 2026-10-26
+
+Owner reverted the earlier deployment-preparation changes and approved email only,
+one issue at a time. Replaced Nodemailer with node-mailjet in the shared mail
+service, using HTTPS Send API v3.1. Direct process.env: MJ_APIKEY, MJ_SECRETKEY,
+EMAIL_FROM (verified Mailjet sender), optional EMAIL_FROM_NAME (Rihla default).
+Updated committed examples and focused README email setup. Actual .env untouched.
+Removed SMTP-only checks from API startup and email worker. All existing templates,
+QR attachment, exported send functions, outbox transactions, locks and retries
+remain. Missing settings, transport rejection or unsuccessful message status reject
+delivery. Stable CustomID is for tracking, not provider deduplication; delivery
+remains at least once after a crash. Existing worker scheduling is unchanged.
+
+API typecheck/build, scoped ESLint and diff whitespace checks passed. In-memory
+SDK mock verified Arabic/English mail payloads, QR attachment and error propagation.
+No test files/scripts added, no real email/DB/provider calls, no commit/push/deploy.
+Owner still needs to configure Mailjet credentials and verify EMAIL_FROM. Other
+deployment changes remain deferred. Suggested commit:
+feat(email): replace SMTP delivery with Mailjet

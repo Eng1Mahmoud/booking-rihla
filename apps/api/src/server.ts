@@ -16,11 +16,6 @@ if (proxyHops !== '0' && proxyHops !== '1')
 if (process.env.NODE_ENV === 'production') {
   if (corsOrigins.some((origin) => !origin.startsWith('https://')))
     throw new Error('Production CORS origins must use HTTPS');
-  if (
-    process.env.SMTP_SECURE !== 'true' &&
-    process.env.SMTP_REQUIRE_TLS !== 'true'
-  )
-    throw new Error('Production SMTP requires TLS');
 
   const authSecrets = [
     process.env.AUTH_CODE_SECRET,

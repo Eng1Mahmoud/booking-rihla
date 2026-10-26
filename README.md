@@ -553,12 +553,12 @@ Compiled JavaScript verification also read a real seeded trip through both new e
 
 ## Registration and email verification
 
-Registration creates and verifies accounts; sign-in and sessions are implemented below. Catalog management is now protected by the roles documented below. The current API and Mailpit remain local development services.
+Registration creates and verifies accounts; sign-in and sessions are implemented below. Catalog management is now protected by the roles documented below. Email now uses the Mailjet HTTPS Send API in local development and production. Older SMTP/Mailpit verification records below describe the previous implementation.
 
 From the repository root:
 
 ```sh
-docker compose up -d --wait postgres mailpit
+docker compose up -d --wait postgres
 npm run db:migrate
 npm run dev
 ```
@@ -569,7 +569,7 @@ In another terminal, keep the mail worker running:
 npm run email:worker
 ```
 
-Open http://127.0.0.1:8025 to view captured emails. Mailpit receives local SMTP on 127.0.0.1:1025 and does not deliver these messages to real inboxes. Both ports bind only to loopback. No Mailpit volume is configured; recreating its container can remove captured test messages. The worker polls every two seconds, up to twenty messages per batch. npm run email:flush processes one batch and exits, useful for manual testing. Stop the worker with Ctrl+C.
+Set MJ_APIKEY, MJ_SECRETKEY, EMAIL_FROM and optionally EMAIL_FROM_NAME in apps/api/.env, using the placeholders in apps/api/.env.example. Verify EMAIL_FROM as a sender in Mailjet first. The worker sends to real recipient inboxes through Mailjet; Mailpit no longer receives application mail. The worker polls every two seconds, up to twenty messages per batch. For one batch, run npm run email:worker -- --once. Stop the worker with Ctrl+C.
 
 apps/api/.env needs AUTH_CODE_SECRET: a stable random 32-byte key encoded as 64 hexadecimal characters. A local value was generated without printing it. On a fresh checkout, replace the safe placeholder in .env.example using a locally generated key:
 
@@ -577,18 +577,17 @@ apps/api/.env needs AUTH_CODE_SECRET: a stable random 32-byte key encoded as 64 
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-Never commit the real key. Keep it with the database's development secrets; rotating it invalidates pending verification hashes and encrypted outbox payloads, requiring a resend. parseAuthEnv in config/env.ts validates the key and SMTP settings when authentication or the worker needs them; parseEnv continues validating base API/database settings. Health and isolated HTTP tests do not need authentication secrets or SMTP.
+Never commit the real key. Keep it with the database's development secrets; rotating it invalidates pending verification hashes and encrypted outbox payloads, requiring a resend. Configuration is read directly from process.env. The authentication secret is checked where used; Mailjet credentials and sender are required when sending.
 
-| Setting                   | Local default / requirement         |
-| ------------------------- | ----------------------------------- |
-| AUTH_CODE_SECRET          | Required 64 hex characters          |
-| SMTP_HOST                 | 127.0.0.1                           |
-| SMTP_PORT                 | 1025                                |
-| SMTP_SECURE               | false; accepts true/false           |
-| SMTP_FROM                 | noreply@bus.local                   |
-| SMTP_USER / SMTP_PASSWORD | Optional; must be supplied together |
+| Setting          | Requirement                      |
+| ---------------- | -------------------------------- |
+| AUTH_CODE_SECRET | Required 64 hex characters       |
+| MJ_APIKEY        | Mailjet API key                  |
+| MJ_SECRETKEY     | Mailjet secret key               |
+| EMAIL_FROM       | Sender email verified in Mailjet |
+| EMAIL_FROM_NAME  | Optional; defaults to Rihla      |
 
-The SMTP defaults target Mailpit. A future external SMTP deployment requires its own verified configuration; production publication is not part of this step.
+Use these same variables in production. SMTP settings and Gmail app passwords are no longer used. Keep real credentials out of Git.
 
 | Method | Path                             | Behavior                                               |
 | ------ | -------------------------------- | ------------------------------------------------------ |
@@ -610,7 +609,7 @@ Register body:
 
 Names are trimmed and contain 1-100 characters. Emails are trimmed/lowercased and limited to 254 characters. Phone numbers use international +country-code format with 8-15 digits, without spaces; phone uniqueness is not assumed. Passwords contain 12-128 characters, at most 512 UTF-8 bytes, and are not trimmed. language is ar (default) or en. Unknown fields, including caller ids/roles, are rejected. JSON is required and query parameters are unsupported. Register returns a generic message plus a random data.verificationId receipt, without user ids, password hashes or codes. A new registration receives its real verification id; duplicate emails receive an indistinguishable decoy id, preserve existing credentials and do not queue email. Keep the original receipt for verification/resend; a duplicate registration must not activate an account created by another client.
 
-Read the code from Mailpit, then verify:
+Read the code from the recipient inbox, then verify:
 
 ```json
 {
@@ -630,7 +629,7 @@ Passwords are Argon2id PHC hashes with random library-generated salts, memoryCos
 
 User, EmailVerification and EmailOutbox are committed in one transaction. Per-email advisory locks serialize register/resend/verify; unique normalized emails and verification user ids are also database constraints. The outbox worker locks and rereads each message before sending, checks that the code is current/unexpired and the user remains unverified, and serializes concurrent workers. It retries SMTP failures after 30/60/120/240 seconds, abandons after five delivery attempts or expiry, and never logs codes, credentials or raw transport errors. Retries retain the same Message-ID. Delivery is at least once: a process crash after SMTP acceptance but before the database commit may deliver the same code twice; verification still succeeds only once. Sent/failed records remain until verification, resend or later cleanup. Cleanup of stale accounts/codes is a later maintenance task.
 
-Implementation follows routes/authRoutes.ts -> controllers/authController.ts -> services/authService.ts -> Prisma, with schemas/authSchema.ts and utils/authCrypto.ts. emails/verificationEmail.ts holds Arabic RTL and English templates. services/mailService.ts wraps Nodemailer SMTP; services/emailOutboxService.ts handles delivery/retries, and workers/emailWorker.ts runs it. No repository layer or queue framework was added.
+Implementation follows routes/authRoutes.ts -> controllers/authController.ts -> services/authService.ts -> Prisma, with schemas/authSchema.ts and utils/authCrypto.ts. emails/verificationEmail.ts holds Arabic RTL and English templates. services/mailService.ts wraps the Mailjet Send API v3.1; services/emailOutboxService.ts handles delivery/retries, and workers/emailWorker.ts runs it. No repository layer or queue framework was added.
 
 Tests cover normalization/validation, Argon2 verification, encryption binding/tamper detection, templates, safe errors and IP throttling; PostgreSQL tests cover duplicate/concurrent registration, atomic code consumption, concurrent failed-attempt limits, cooldown/hourly resend limits, expired codes, concurrent workers, delayed retries, exhaustion and scoped cleanup. SMTP delivery and verification are also exercised through local Mailpit using the compiled API. Existing trip demo data is preserved.
 
@@ -706,7 +705,7 @@ Recovery codes contain six digits, expire after ten minutes and permit five fail
 
 Requesting a code does not change the password or revoke sessions. Successful reset atomically updates the Argon2id hash, consumes the code, resets login lockout, revokes every existing session and queues a password-changed notice. Old access and refresh tokens then fail their session checks. The user must sign in again; no automatic login occurs. A pending registration can recover without its original verification receipt by proving mailbox ownership with the recovery code and setting a new password. This also verifies its email and removes the old activation challenge; it never reactivates a suspended account or replaces profile details.
 
-Password-reset digests and encrypted outbox payloads use a separate purpose-bound context from activation codes. The shared worker distinguishes VERIFY_EMAIL, PASSWORD_RESET and PASSWORD_CHANGED, discards stale/used/exhausted codes and clears code payloads after delivery/discard. The security notice contains no password or code. It retries through the existing transactional outbox and expires after twenty-four hours. Delivery remains at least once. Start npm run email:worker or run npm run email:flush; inspect local SMTP messages at http://127.0.0.1:8025/.
+Password-reset digests and encrypted outbox payloads use a separate purpose-bound context from activation codes. The shared worker distinguishes VERIFY_EMAIL, PASSWORD_RESET and PASSWORD_CHANGED, discards stale/used/exhausted codes and clears code payloads after delivery/discard. The security notice contains no password or code. It retries through the existing transactional outbox and expires after twenty-four hours. Delivery remains at least once. Start npm run email:worker, or run npm run email:worker -- --once for one batch; read messages in the recipient inbox.
 
 Read schemas/passwordResetSchema.ts for input rules, routes/passwordResetRoutes.ts for endpoints/IP limits, controllers/passwordResetController.ts for HTTP handling, services/passwordResetService.ts for transactions and session revocation, and emails/passwordResetEmail.ts for Arabic/English messages. These paths are under apps/api/src. Tests cover generic replies, validation, purpose isolation, cooldown/quota, expiry, failed guesses, simultaneous requests/resets, pending-account recovery, session revocation, suspension and notification delivery. Each integration test cleans only its own records.
 
@@ -1156,7 +1155,7 @@ npm run email:flush
 
 Ticket itself stores delivery metadata: sentAt, discardedAt, attempts and nextAttemptAt. It is committed before SMTP work, so failed mail cannot undo a paid booking. Each batch handles up to 20 due tickets. Workers lock and re-read each ticket to avoid concurrent duplicate delivery. Failures back off from 30 seconds, with at most five attempts. Suspended/unverified customers, invalid/unpaid/cancelled-trip bookings and journeys that already departed are discarded from email delivery; the ticket row is retained. Exhausted/discarded mail has no automatic resend endpoint. The owner can still retrieve an otherwise valid ticket through the API.
 
-Arabic/English email includes the reference, stations, Cairo dates/times, passengers/seats and total, with the QR as a PNG attachment. Templates use plain text, so passenger input is never inserted into HTML. Nodemailer uses the existing SMTP settings; local development can receive it in Mailpit. No new secret or environment flag is required. A stable Message-ID helps identify a retry, but SMTP delivery is **at least once**: a crash after SMTP acceptance and before sentAt commits can deliver a duplicate. The Ticket is never duplicated by this situation.
+Arabic/English email includes the reference, stations, Cairo dates/times, passengers/seats and total, with the QR as a PNG attachment. Templates use plain text, so passenger input is never inserted into HTML. Mailjet uses the configuration above and receives the QR PNG as a base64 attachment. A stable CustomID identifies a retry; it does not guarantee deduplication. Delivery is **at least once**: a crash after Mailjet acceptance and before sentAt commits can deliver a duplicate. The Ticket is never duplicated by this situation.
 
 Apply npm run db:migrate before starting the updated API/worker. QR generation uses the [qrcode library's server PNG API](https://github.com/soldair/node-qrcode); TypeScript definitions are a development dependency. Tests exercise real isolated PostgreSQL with a fake payment provider and injected mail sender, including concurrent confirmation, protected reads, no ticket for unresolved payment, retry/backoff, concurrent workers, exhausted delivery and departed/suspended recipients. They do not claim a real Paymob transaction or external email delivery. Checkout/payment configuration remains disabled until merchant verification and operator policy work are complete. Reminder emails, operator cancellations/refunds and staff QR check-in remain separate features.
 
@@ -1317,7 +1316,7 @@ These files prepare deployment; they do not provision a host, publish a site, ob
 
 ### Configure and start on an approved server
 
-Use apps/api/production.env.example as the template for host/container environment variables. For the manual Docker examples below, copy it to ignored apps/api/production.env and replace every placeholder. Choose new independent authentication secrets, your deployment database connection string (including provider-required TLS options), HTTPS CORS origins and real SMTP settings. The database must be reachable from the container; localhost inside a container refers to that container. Keep all Paymob flags false while learning. Keep development and production databases separate. The :prod scripts expect environment variables from the host; they do not automatically load production.env.
+Use apps/api/production.env.example as the template for host/container environment variables. For the manual Docker examples below, copy it to ignored apps/api/production.env and replace every placeholder. Choose new independent authentication secrets, your deployment database connection string (including provider-required TLS options), HTTPS CORS origins and Mailjet credentials with a verified sender. The database must be reachable from the container; localhost inside a container refers to that container. Keep all Paymob flags false while learning. Keep development and production databases separate. The :prod scripts expect environment variables from the host; they do not automatically load production.env.
 
 Run these commands from the repository root after arranging database access and recovery:
 
@@ -1354,7 +1353,7 @@ Enable payment/refund processes only when their required TEST configuration is r
 
 Migrations are an explicit one-shot deployment step, not run by each API replica. Do not run the demo seed in production. After a backup, apply additive migrations and check readiness before routing traffic. Keep a previously verified image tag for rollback; application rollback is only safe while its database contract remains compatible. Never roll back a schema by dropping financial/history tables.
 
-The API validates production startup before listening: database settings, HTTPS browser origins, independent auth secrets and TLS SMTP must be present; invalid payment activation is rejected. HOST defaults to 127.0.0.1 locally and is overridden to 0.0.0.0 inside containers. TRUST_PROXY_HOPS defaults to 0. Set it to 1 only when exactly one trusted reverse proxy is the only route to the API. Set SMTP_SECURE=true for implicit TLS or SMTP_REQUIRE_TLS=true for mandatory STARTTLS, according to your SMTP provider.
+The API validates production startup before listening: HTTPS browser origins and independent secrets are checked before listening; service-specific configuration is checked where used. HOST defaults to 127.0.0.1 locally and is overridden to 0.0.0.0 inside containers. TRUST_PROXY_HOPS defaults to 0. Set it to 1 only when exactly one trusted reverse proxy is the only route to the API. Mailjet sends over HTTPS and requires no SMTP port or TLS flags.
 
 Terminate HTTPS at the trusted ingress. The loopback binding above assumes ingress runs on the same host; use the platform's private networking when it does not. The Next.js website stores its own HttpOnly session cookies and calls the API server-side, so the API does not need to share the website's cookie domain. Configure frontend origins and each deployment environment explicitly. DNS, certificates, real SMTP delivery and external uptime alerts are host/account tasks; this local preparation does not verify them.
 
@@ -1413,7 +1412,7 @@ npm run dev:web
 npm run email:worker
 ```
 
-Open http://localhost:3000/ar (or /en). Keep Docker PostgreSQL/Mailpit running. The email worker delivers registration verification codes to local Mailpit at http://localhost:8025. All previous accounts were removed by the owner-requested local reset; register a new account and verify its email before booking.
+Open http://localhost:3000/ar (or /en). Keep PostgreSQL and the email worker running. Configure Mailjet as described above; registration codes arrive in the recipient inbox. All previous accounts were removed by the owner-requested local reset; register a new account and verify its email before booking.
 
 The website supports city/station search, trip results, a physical 2+2 seat map, multi-seat selection, login/registration/email verification, passenger details, a ten-minute server-side seat hold, booking history and owned booking/payment status. Seat availability refreshes periodically and is rechecked before reservation. A seat conflict is handled from the API; selection does not reserve a seat.
 
@@ -1447,7 +1446,7 @@ After checkout, the website can POST an empty JSON object to /bookings/<UUID>/pa
 
 Use Forgot password on the login form, or /ar/forgot-password (/en also supported). Enter the account email to request a six-digit code. The same form then accepts the code and a matching new password of 12–128 characters. /ar/reset-password supports entering an already received code directly. Codes last ten minutes; requesting a new one replaces the old code, with the existing backend resend/attempt limits enforced. Generic request messages do not disclose whether an account exists.
 
-Keep the local email worker running and read development messages in Mailpit. Passwords and codes stay in form memory and are cleared after success; no automatic login follows a reset. Existing account sessions are revoked by the API, and the website clears its local session/cache before offering sign-in with the new password. A validated internal returnTo preserves the prior destination; email/code/password values are never carried in that URL.
+Keep the local email worker running and read Mailjet messages in the recipient inbox. Passwords and codes stay in form memory and are cleared after success; no automatic login follows a reset. Existing account sessions are revoked by the API, and the website clears its local session/cache before offering sign-in with the new password. A validated internal returnTo preserves the prior destination; email/code/password values are never carried in that URL.
 
 ### Passenger account
 

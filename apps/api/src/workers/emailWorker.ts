@@ -18,8 +18,6 @@ let close: (() => Promise<void>) | undefined;
 try {
   if (!/^[a-fA-F0-9]{64}$/.test(process.env.AUTH_CODE_SECRET ?? ''))
     throw new Error('Invalid environment configuration: AUTH_CODE_SECRET');
-  if (Boolean(process.env.SMTP_USER) !== Boolean(process.env.SMTP_PASSWORD))
-    throw new Error('Set SMTP_USER and SMTP_PASSWORD together');
   const { db } = await import('../prisma/db.ts');
   close = () => db.close();
   const once = process.argv.includes('--once');
