@@ -5,7 +5,14 @@ export const registerSchema = z.strictObject({
   email,
   phone: z
     .string()
-    .regex(/^\+[1-9]\d{7,14}$/, 'Use international phone format'),
+    .transform((value) =>
+      value
+        .replace(/[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+        .trim(),
+    )
+    .pipe(
+      z.string().regex(/^\+[1-9]\d{7,14}$/, 'Use international phone format'),
+    ),
   password: z
     .string()
     .min(12)

@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { registerSchema } from '@/features/auth/schemas/authSchema';
 
 export const createBookingSchema = z
   .strictObject({
     tripId: z.uuid(),
-    contactPhone: z.string().regex(/^\+[1-9]\d{7,14}$/),
+    contactPhone: registerSchema.shape.phone,
     passengers: z
       .array(
         z.strictObject({
