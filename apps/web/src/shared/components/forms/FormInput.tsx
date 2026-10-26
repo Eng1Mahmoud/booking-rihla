@@ -31,9 +31,8 @@ export function FormInput<T extends FieldValues>({
   const t = useTranslations('Auth');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const isPassword = props.type === 'password';
-  const direction =
-    props.dir ??
-    (props.type === 'tel' ? (locale === 'ar' ? 'rtl' : 'ltr') : undefined);
+  // International phone numbers keep their + prefix on the left in every locale.
+  const direction = props.dir ?? (props.type === 'tel' ? 'ltr' : undefined);
   const { register, getFieldState, formState } = useFormContext<T>();
   const { error } = getFieldState(name, formState);
   const describedBy =
@@ -54,6 +53,7 @@ export function FormInput<T extends FieldValues>({
           aria-describedby={describedBy}
           className={cn(
             'h-12 bg-card text-base',
+            props.type === 'tel' && locale === 'ar' && 'text-right',
             isPassword && 'pe-12',
             className,
           )}

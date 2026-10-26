@@ -129,9 +129,14 @@ export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
           <span>{t('phone')}</span>
           <Input
             name="phone"
-            dir={locale === 'ar' ? 'rtl' : 'ltr'}
+            type="tel"
+            dir="ltr"
             defaultValue={page.list.filters.phone}
-            className="min-h-11 bg-card"
+            className={
+              locale === 'ar'
+                ? 'min-h-11 bg-card text-right'
+                : 'min-h-11 bg-card'
+            }
           />
         </label>
         <label className="grid gap-2 text-sm">
