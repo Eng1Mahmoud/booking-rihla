@@ -4,7 +4,7 @@ const port = Number(process.env.PORT ?? 4000);
 const host = process.env.HOST ?? '127.0.0.1';
 const proxyHops = process.env.TRUST_PROXY_HOPS ?? '0';
 const corsOrigins = (
-  process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:3001'
+  process.env.CORS_ORIGINS ?? ""
 )
   .split(',')
   .map((origin) => origin.trim());
