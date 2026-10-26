@@ -1,5 +1,4 @@
-import type { Express } from 'express';
-import { createApp } from './createApp.ts';
+import { createApp } from './app.ts';
 
 const port = Number(process.env.PORT ?? 4000);
 const host = process.env.HOST ?? '127.0.0.1';
@@ -39,7 +38,7 @@ if (process.env.NODE_ENV === 'production') {
     );
 }
 
-const app: Express = createApp(corsOrigins);
+const app = createApp(corsOrigins);
 app.set('trust proxy', Number(proxyHops));
 const server = app.listen(port, host, () => {
   console.log(JSON.stringify({ event: 'server_started', port }));

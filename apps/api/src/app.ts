@@ -1,3 +1,4 @@
+import { createEmailJobRouter } from './routes/emailJobRoutes.ts';
 import { createAdminBusRouter } from './routes/adminBusRoutes.ts';
 import {
   adminBusService,
@@ -191,6 +192,8 @@ export function createApp(
       sendFailure(response, 503, 'SERVICE_UNAVAILABLE');
     }
   });
+
+  app.use('/api/v1/internal/jobs', createEmailJobRouter());
 
   app.get('/api/v1/health', (_request, response) => {
     sendSuccess(response, { status: 'ok' });
