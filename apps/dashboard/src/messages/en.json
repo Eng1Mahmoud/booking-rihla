@@ -1,5 +1,7 @@
 {
   "Auth": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "Staff sign in",
     "intro": "Sign in with your Rihla administrator account.",
     "email": "Email address",

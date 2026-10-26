@@ -1,5 +1,4 @@
 import { lockAccountEmail } from './accountSecurity.ts';
-import { randomUUID } from 'node:crypto';
 import { hash, argon2id } from 'argon2';
 import type { db as database } from '../prisma/db.ts';
 import type {
@@ -65,7 +64,7 @@ async function queueVerification(
 }
 export const authService = {
   async register(input: RegisterInput): Promise<string> {
-    // Hash duplicate registrations too; never replace an existing account's password.
+    // Keep expensive hashing outside the transaction and email lock.
     const passwordHash = await hash(input.password, {
       type: argon2id,
       memoryCost: 65536,
@@ -76,7 +75,11 @@ export const authService = {
     return await db.transaction(async (tx) => {
       await lockAccountEmail(tx, db, input.email);
       if (await tx.orm.public.User.where({ email: input.email }).first())
-        return randomUUID();
+        throw new AppError(
+          409,
+          'EMAIL_ALREADY_EXISTS',
+          'Email address is already registered',
+        );
       const user = await tx.orm.public.User.create({
         name: input.name,
         email: input.email,

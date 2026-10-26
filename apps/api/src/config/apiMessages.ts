@@ -1,5 +1,9 @@
 // Public messages are selected by stable code, never from exception text.
 export const apiMessages: Record<string, { ar: string; en: string }> = {
+  EMAIL_ALREADY_EXISTS: {
+    ar: 'هذا البريد الإلكتروني مستخدم بالفعل. سجّل الدخول أو استخدم بريدًا آخر.',
+    en: 'This email address is already registered. Sign in or use another email address.',
+  },
   ACCOUNT_NOT_READY: {
     ar: 'الحساب غير جاهز لتسجيل الدخول.',
     en: 'An account must be active and email-verified before receiving an administrator role',

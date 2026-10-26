@@ -59,7 +59,6 @@ export function PassengerForm({
         name="contactPhone"
         label={t('phone')}
         type="tel"
-        dir="ltr"
         autoComplete="tel"
         placeholder="+201xxxxxxxxx"
       />

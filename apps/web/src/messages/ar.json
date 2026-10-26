@@ -167,6 +167,8 @@
     "secondDriver": "السائق الثاني"
   },
   "Auth": {
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
     "loginTitle": "أهلًا بعودتك",
     "registerTitle": "أنشئ حسابك",
     "verifyTitle": "تأكيد البريد الإلكتروني",

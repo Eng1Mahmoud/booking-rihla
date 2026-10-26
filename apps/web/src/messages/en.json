@@ -167,6 +167,8 @@
     "secondDriver": "Second driver"
   },
   "Auth": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "loginTitle": "Welcome back",
     "registerTitle": "Create your account",
     "verifyTitle": "Verify your email",

@@ -66,7 +66,6 @@ export function AccountProfile() {
             name="phone"
             label={t('phone')}
             type="tel"
-            dir="ltr"
             autoComplete="tel"
             maxLength={16}
             description={t('phoneHint')}

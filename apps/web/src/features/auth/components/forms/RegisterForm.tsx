@@ -49,7 +49,6 @@ export function RegisterForm({
         name="phone"
         label={t('phone')}
         type="tel"
-        dir="ltr"
         autoComplete="tel"
         placeholder="+201xxxxxxxxx"
         description={t('internationalPhone')}
