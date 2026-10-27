@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { createTicketQrPayload } from '../utils/ticketQr.ts';
 import { bookingRecords } from './bookingService.ts';
 import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 import type { db as database } from '../prisma/db.ts';
@@ -69,15 +70,19 @@ export type TicketDetails = NonNullable<
 export async function serializeTicket(booking: TicketBooking) {
   const details = serializeTicketDetails(booking);
   if (!details) return null;
-  const payload = 'BUS-TICKET:v1:' + details.id;
+  const payload = createTicketQrPayload({
+    ticketId: details.id,
+    bookingId: details.bookingId,
+    issuedAt: details.issuedAt,
+  });
   return {
     ...details,
     qr: {
       payload,
       imageDataUrl: await QRCode.toDataURL(payload, {
         errorCorrectionLevel: 'M',
-        margin: 4,
-        width: 256,
+        margin: 2,
+        width: 320,
       }),
     },
   };
