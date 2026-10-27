@@ -24,7 +24,7 @@ import {
   getBookingInfoInputSchema,
 } from './tools/schemas.ts';
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash-lite';
+const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
 const MAX_STEPS = Number(process.env.AI_MAX_TOOL_STEPS ?? '5');
 const MAX_OUTPUT_TOKENS = Number(process.env.AI_MAX_OUTPUT_TOKENS ?? '1024');
 
