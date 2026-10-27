@@ -43,5 +43,10 @@ export const emptySessionSchema = z.strictObject({}).default({});
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 
-export const userRoleSchema = z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']);
+export const userRoleSchema = z.enum([
+  'USER',
+  'STAFF',
+  'ADMIN',
+  'SUPER_ADMIN',
+]);
 export type UserRole = z.infer<typeof userRoleSchema>;

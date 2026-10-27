@@ -24,18 +24,52 @@ import {
   Undo2,
   Users,
   ShieldCheck,
+  QrCode,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/shared/lib/cn';
-function NavigationLinks({ superAdmin }: { superAdmin: boolean }) {
+function NavigationLinks({
+  superAdmin,
+  staffOnly,
+}: {
+  superAdmin: boolean;
+  staffOnly: boolean;
+}) {
   const t = useTranslations('Dashboard');
   const locale = useLocale();
   const pathname = usePathname();
   const onOverview = pathname === '/dashboard';
   const sectionBase = onOverview ? '' : '/' + locale + '/dashboard';
+  if (staffOnly) {
+    return (
+      <nav className="grid gap-[5px] px-3.5" aria-label={t('navigation')}>
+        <Link
+          href="/dashboard/scan"
+          className={cn(
+            'flex min-h-14 items-center gap-4 rounded-[10px] px-[18px] py-3.5 text-[15px] text-white hover:bg-[#24485a]',
+            pathname.startsWith('/dashboard/scan') && 'bg-[#0b6372]',
+          )}
+        >
+          <QrCode className="size-[23px] shrink-0" aria-hidden="true" />
+          {t('ticketScan')}
+        </Link>
+      </nav>
+    );
+  }
+
   return (
     <nav className="grid gap-[5px] px-3.5" aria-label={t('navigation')}>
+      <Link
+        href="/dashboard/scan"
+        className={cn(
+          'flex min-h-14 items-center gap-4 rounded-[10px] px-[18px] py-3.5 text-[15px] text-white hover:bg-[#24485a]',
+          pathname.startsWith('/dashboard/scan') && 'bg-[#0b6372]',
+        )}
+      >
+        <QrCode className="size-[23px] shrink-0" aria-hidden="true" />
+        {t('ticketScan')}
+      </Link>
       <a
         href={sectionBase + '#overview'}
         aria-current={onOverview ? 'page' : undefined}
@@ -105,9 +139,11 @@ function NavigationLinks({ superAdmin }: { superAdmin: boolean }) {
 export function DashboardNavigation({
   website,
   superAdmin = false,
+  staffOnly = false,
 }: {
   website: string;
   superAdmin?: boolean;
+  staffOnly?: boolean;
 }) {
   const t = useTranslations('Dashboard');
   const locale = useLocale();
@@ -124,7 +160,7 @@ export function DashboardNavigation({
   return (
     <>
       <div className="hidden lg:block">
-        <NavigationLinks superAdmin={superAdmin} />
+        <NavigationLinks superAdmin={superAdmin} staffOnly={staffOnly} />
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
@@ -164,7 +200,7 @@ export function DashboardNavigation({
               if ((event.target as HTMLElement).closest('a')) setOpen(false);
             }}
           >
-            <NavigationLinks superAdmin={superAdmin} />
+            <NavigationLinks superAdmin={superAdmin} staffOnly={staffOnly} />
           </div>
           <a
             href={website}

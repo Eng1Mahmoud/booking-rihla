@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { createTicketQrPayload } from '../utils/ticketQr.ts';
 import { bookingRecords } from './bookingService.ts';
 import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 import type { db as database } from '../prisma/db.ts';
@@ -41,6 +42,7 @@ export function serializeTicketDetails(booking: TicketBooking) {
     currency: 'EGP',
     totalPiastres: Number(booking.totalPiastres),
     passengers: booking.seats.map((seat) => ({
+      seatId: seat.id,
       name: seat.passengerName,
       seatNumber: seat.seatNumber,
     })),
@@ -66,20 +68,45 @@ export function serializeTicketDetails(booking: TicketBooking) {
 export type TicketDetails = NonNullable<
   ReturnType<typeof serializeTicketDetails>
 >;
+
+async function qrImage(payload: string) {
+  return QRCode.toDataURL(payload, {
+    errorCorrectionLevel: 'M',
+    margin: 2,
+    width: 280,
+  });
+}
+
 export async function serializeTicket(booking: TicketBooking) {
   const details = serializeTicketDetails(booking);
   if (!details) return null;
-  const payload = 'BUS-TICKET:v1:' + details.id;
+
+  const passengers = await Promise.all(
+    details.passengers.map(async (passenger) => {
+      const payload = createTicketQrPayload({
+        ticketId: details.id,
+        bookingId: details.bookingId,
+        seatId: passenger.seatId,
+        issuedAt: details.issuedAt,
+      });
+      return {
+        ...passenger,
+        qr: {
+          payload,
+          imageDataUrl: await qrImage(payload),
+        },
+      };
+    }),
+  );
+
+  // Primary QR kept for older clients: first passenger seat.
+  const primary = passengers[0]?.qr;
+  if (!primary) return null;
+
   return {
     ...details,
-    qr: {
-      payload,
-      imageDataUrl: await QRCode.toDataURL(payload, {
-        errorCorrectionLevel: 'M',
-        margin: 4,
-        width: 256,
-      }),
-    },
+    passengers,
+    qr: primary,
   };
 }
 export type TicketData = NonNullable<

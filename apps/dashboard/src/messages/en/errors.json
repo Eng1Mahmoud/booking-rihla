@@ -1,0 +1,6 @@
+{
+  "mutationFailed": "The change could not be completed. Please try again.",
+  "sessionExpired": "Your session has expired. Sign in again to continue.",
+  "accessDenied": "Your current account cannot perform this action.",
+  "uncertainMutation": "The result could not be confirmed. Close this form and refresh the list before trying again."
+}

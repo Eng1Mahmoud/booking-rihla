@@ -50,6 +50,7 @@ export async function DashboardShell({
         <DashboardNavigation
           website={website}
           superAdmin={user.role === 'SUPER_ADMIN'}
+          staffOnly={user.role === 'STAFF'}
         />
         <a
           href={website}
@@ -65,6 +66,7 @@ export async function DashboardShell({
             <DashboardNavigation
               website={website}
               superAdmin={user.role === 'SUPER_ADMIN'}
+              staffOnly={user.role === 'STAFF'}
             />
           </div>
           <Link

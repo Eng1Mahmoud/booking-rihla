@@ -82,7 +82,7 @@ export async function authMiddleware(
 
   // 4. Check the role returned by the backend, then allow the request.
   const role = userResult.data?.role;
-  if (!role || !['USER', 'ADMIN', 'SUPER_ADMIN'].includes(role))
+  if (!role || !['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(role))
     return handleAuthFailure(503);
   if (protectedRoute && !protectedRoute.roles.includes(role))
     return handleAuthFailure(403);

@@ -64,6 +64,7 @@ import {
   type AdminBookingService,
 } from './services/adminBookingService.ts';
 import { createAdminBookingRouter } from './routes/adminBookingRoutes.ts';
+import { createTicketScanRouter } from './routes/ticketScanRoutes.ts';
 import type { TripBatchService } from './services/tripBatchService.ts';
 import {
   busTypeService,
@@ -166,6 +167,11 @@ export function createApp(
   const superAdmin = [
     requireAuth(services.sessions ?? sessionService),
     requireRole('SUPER_ADMIN'),
+  ];
+
+  const gateStaff = [
+    requireAuth(services.sessions ?? sessionService),
+    requireRole('STAFF', 'ADMIN', 'SUPER_ADMIN'),
   ];
 
   app.disable('x-powered-by');
@@ -302,6 +308,8 @@ export function createApp(
       admin,
     ),
   );
+
+  app.use('/api/v1/admin/tickets', createTicketScanRouter(gateStaff));
 
   app.use(
     '/api/v1/admin/statistics',
