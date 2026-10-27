@@ -8,25 +8,18 @@
     "node": ">=24.11.0"
   },
   "scripts": {
-    "dev": "npm run dev --workspace @booking-bus/api",
-    "build": "npm run build --workspace @booking-bus/api",
-    "start": "npm run start --workspace @booking-bus/api",
-    "typecheck": "npm run typecheck --workspace @booking-bus/api",
+    "dev": "concurrently --kill-others --names api,web,dashboard \"npm run dev --workspace @booking-bus/api\" \"npm run dev --workspace @booking-bus/web\" \"npm run dev --workspace @booking-bus/dashboard\"",
+    "build": "npm run build --workspaces",
+    "start": "concurrently --kill-others --names api,web,dashboard \"npm run start --workspace @booking-bus/api\" \"npm run start --workspace @booking-bus/web\" \"npm run start --workspace @booking-bus/dashboard\"",
+    "typecheck": "npm run typecheck --workspaces",
     "lint": "eslint apps/api/src apps/api/prisma.config.ts apps/web/src apps/dashboard/src --max-warnings=0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "email:worker": "npm run email:worker --workspace @booking-bus/api",
-    "dev:web": "npm run dev --workspace @booking-bus/web",
-    "build:web": "npm run build --workspace @booking-bus/web",
-    "typecheck:web": "npm run typecheck --workspace @booking-bus/web",
-    "lint:web": "npm run lint --workspace @booking-bus/web",
-    "dev:dashboard": "npm run dev --workspace @booking-bus/dashboard",
-    "build:dashboard": "npm run build --workspace @booking-bus/dashboard",
-    "typecheck:dashboard": "npm run typecheck --workspace @booking-bus/dashboard",
-    "lint:dashboard": "npm run lint --workspace @booking-bus/dashboard"
+    "check": "npm run format:check && npm run lint && npm run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "10.1.8",
     "prettier": "3.9.10",

@@ -16,7 +16,6 @@ trips, bookings, payments, refunds, users and administrators.
 | `apps/api/src/prisma`  | Prisma contract and generated typed database artifacts                      |
 | `apps/api/src/workers` | Local polling entrypoints; deployed jobs call the same services             |
 | `compose.yaml`         | Local PostgreSQL development service                                        |
-| `Dockerfile`           | Optional API container build; native Render deployment does not require it  |
 
 The stack uses Node.js, TypeScript, Express, PostgreSQL and the project's Prisma 8
 prerelease ORM. Both frontends use Next.js, React, Tailwind, next-intl, TanStack
@@ -75,12 +74,10 @@ The current local API environment may point to Supabase. Check the target before
 running migrations; do not seed or reimport the deployed database just to verify
 a feature. Existing deployment data was already imported.
 
-Start the three applications in separate terminals from the repository root:
+Start all three applications together from the repository root:
 
 ```sh
 npm run dev
-npm run dev:web
-npm run dev:dashboard
 ```
 
 - API: `http://127.0.0.1:4000/api/v1/health`
@@ -97,7 +94,7 @@ Set `MJ_APIKEY`, `MJ_SECRETKEY` and the verified Mailjet sender `EMAIL_FROM` in 
 API environment. Run this optional local email polling process in another terminal:
 
 ```sh
-npm run email:worker
+npm run email:worker --workspace @booking-bus/api
 ```
 
 Do not point an extra local worker at the deployed database while cloud schedules
@@ -114,25 +111,39 @@ outcome of existing requested refunds and does not initiate a new refund POST.
 
 ## Commands and verification
 
-The root commands delegate to existing workspace commands.
+All root commands apply to the complete project:
 
-| Purpose          | API                 | Passenger website                        | Dashboard                                      |
-| ---------------- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| Development      | `npm run dev`       | `npm run dev:web`                        | `npm run dev:dashboard`                        |
-| Type check       | `npm run typecheck` | `npm run typecheck:web`                  | `npm run typecheck:dashboard`                  |
-| Build            | `npm run build`     | `npm run build:web`                      | `npm run build:dashboard`                      |
-| Production start | `npm start`         | `npm start --workspace @booking-bus/web` | `npm start --workspace @booking-bus/dashboard` |
+| Purpose                          | Command                |
+| -------------------------------- | ---------------------- |
+| Development                      | `npm run dev`          |
+| Build                            | `npm run build`        |
+| Production start                 | `npm start`            |
+| Type check                       | `npm run typecheck`    |
+| Lint                             | `npm run lint`         |
+| Check formatting                 | `npm run format:check` |
+| Format files                     | `npm run format`       |
+| Formatting, lint and type checks | `npm run check`        |
 
-`npm run lint` covers the API and both frontends. `npm run format:check` checks
-formatting; `npm run format` rewrites files and should be used deliberately.
-The owner requested no new test files or restored testing scripts. Verification
-uses existing type checks/builds, scoped lint/format, and relevant manual checks.
+`dev` and `start` use concurrently to run all three applications with named output
+and stop the others if one exits. They do not start email or financial workers.
+Run `npm run build` before `npm start`. Combined startup is for local use and
+requires development dependencies to be installed.
+
+Build and typecheck process every workspace in sequence and return a failure
+if any workspace fails. Formatting with `--write` changes files; pass specific
+file paths to Prettier when making scoped changes.
+
+Hosted deployments use workspace-specific commands below so each service builds
+and starts only its own application. The owner requested no new test files or
+restored testing scripts; verification uses type checks/builds, scoped lint/format
+and relevant manual checks.
 
 ## Deployment
 
 - Passenger app and dashboard: Vercel, rooted at `apps/web` and `apps/dashboard`.
-- API: native Node Web Service on Render; build `npm ci --include=dev && npm run build`,
-  start `npm start`, repository root directory left empty.
+- API: native Node Web Service on Render; repository root directory left empty.
+  Build: `npm ci --include=dev && npm run build --workspace @booking-bus/api`.
+  Start: `npm start --workspace @booking-bus/api`.
 - Database: existing Supabase PostgreSQL project, using its configured pooler URL.
 - Email: Mailjet HTTPS API, not SMTP.
 - Scheduling: Supabase Cron dispatches authenticated HTTP requests to Render.
@@ -197,8 +208,8 @@ separation and booking/payment safeguards. Phone numbers retain LTR order with
 right alignment in Arabic.
 
 Use existing typecheck/build and scoped lint/format checks. Do not recreate removed
-utility/test scripts, add test files or a docs folder. Keep dependencies and
-migration history intact. Preserve private environment files and ignored backups;
+utility/test scripts, add test files or a docs folder. Keep dependency changes
+scoped to the requested work and retain migration history. Preserve private environment files and ignored backups;
 the local API environment currently targets Supabase. Use isolated synthetic
 verification. Provider operations, production writes and deployment require the
 owner's explicit instruction. Existing Cron jobs and Vault secrets must not be
