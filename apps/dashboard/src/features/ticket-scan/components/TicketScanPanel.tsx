@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { scanTicketAction, type ScanTicketResult } from '../actions/scan.actions';
 import { cn } from '@/shared/lib/cn';
@@ -9,45 +9,6 @@ import { cn } from '@/shared/lib/cn';
 type Detector = {
   detect: (source: ImageBitmapSource) => Promise<{ rawValue?: string }[]>;
 };
-
-const copy = {
-  en: {
-    ticketScan: 'Ticket scan',
-    scanTitle: 'Scan boarding QR',
-    scanHint: 'Point the camera at the passenger QR, or paste the code.',
-    startCamera: 'Start camera',
-    stopCamera: 'Stop camera',
-    manualPayload: 'Or paste QR payload',
-    verify: 'Verify',
-    board: 'Confirm boarding',
-    scanResult: 'Result',
-    cameraUnsupported:
-      'Camera QR scanning is not available on this device. Paste the payload instead.',
-    scanning: 'Scanning…',
-    passenger: 'Passenger',
-    trip: 'Trip',
-    departure: 'Departure',
-    boarded: 'Boarded',
-  },
-  ar: {
-    ticketScan: 'مسح التذاكر',
-    scanTitle: 'مسح QR للصعود',
-    scanHint: 'وجّه الكاميرا إلى رمز الراكب، أو الصق الرمز يدويًا.',
-    startCamera: 'تشغيل الكاميرا',
-    stopCamera: 'إيقاف الكاميرا',
-    manualPayload: 'أو الصق محتوى الـ QR',
-    verify: 'تحقق',
-    board: 'تأكيد الصعود',
-    scanResult: 'النتيجة',
-    cameraUnsupported:
-      'مسح الكاميرا غير متاح على هذا الجهاز. الصق الرمز يدويًا.',
-    scanning: 'جاري المسح…',
-    passenger: 'الراكب',
-    trip: 'الرحلة',
-    departure: 'المغادرة',
-    boarded: 'تم الصعود',
-  },
-} as const;
 
 function getDetector(): Detector | null {
   if (typeof window === 'undefined') return null;
@@ -65,8 +26,8 @@ function getDetector(): Detector | null {
 }
 
 export function TicketScanPanel() {
-  const locale = useLocale() === 'ar' ? 'ar' : 'en';
-  const t = useMemo(() => copy[locale], [locale]);
+  const t = useTranslations('Dashboard');
+  const locale = useLocale() as 'ar' | 'en';
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraOn, setCameraOn] = useState(false);
@@ -89,7 +50,7 @@ export function TicketScanPanel() {
     const detector = getDetector();
     if (!detector || !navigator.mediaDevices?.getUserMedia) {
       setCameraSupported(false);
-      setError(t.cameraUnsupported);
+      setError(t('cameraUnsupported'));
       return;
     }
     try {
@@ -105,7 +66,7 @@ export function TicketScanPanel() {
       setCameraOn(true);
     } catch {
       setCameraSupported(false);
-      setError(t.cameraUnsupported);
+      setError(t('cameraUnsupported'));
     }
   }, [t]);
 
@@ -175,8 +136,8 @@ export function TicketScanPanel() {
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t.scanTitle}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t.scanHint}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('scanTitle')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('scanHint')}</p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border bg-card">
@@ -193,22 +154,22 @@ export function TicketScanPanel() {
               onClick={() => void startCamera()}
               disabled={!cameraSupported}
             >
-              {t.startCamera}
+              {t('startCamera')}
             </Button>
           ) : (
             <Button type="button" variant="outline" onClick={stopCamera}>
-              {t.stopCamera}
+              {t('stopCamera')}
             </Button>
           )}
           {busy && (
-            <span className="text-sm text-muted-foreground">{t.scanning}</span>
+            <span className="text-sm text-muted-foreground">{t('scanning')}</span>
           )}
         </div>
       </div>
 
       <div className="grid gap-2">
         <label className="text-sm font-medium" htmlFor="qr-payload">
-          {t.manualPayload}
+          {t('manualPayload')}
         </label>
         <textarea
           id="qr-payload"
@@ -225,14 +186,14 @@ export function TicketScanPanel() {
             disabled={busy || !manual.trim()}
             onClick={() => void runScan(manual, 'verify')}
           >
-            {t.verify}
+            {t('verify')}
           </Button>
           <Button
             type="button"
             disabled={busy || !manual.trim()}
             onClick={() => void runScan(manual, 'board')}
           >
-            {t.board}
+            {t('board')}
           </Button>
         </div>
       </div>
@@ -249,7 +210,7 @@ export function TicketScanPanel() {
       {result && (
         <div className={cn('rounded-2xl border p-4 text-sm', statusColor)}>
           <p className="font-semibold">
-            {t.scanResult}: {result.code}
+            {t('scanResult')}: {result.code}
           </p>
           {result.ticket && (
             <dl className="mt-3 grid gap-2">
@@ -258,21 +219,21 @@ export function TicketScanPanel() {
                 <dd className="font-medium">{result.ticket.reference}</dd>
               </div>
               <div>
-                <dt className="text-xs opacity-70">{t.passenger}</dt>
+                <dt className="text-xs opacity-70">{t('scanPassenger')}</dt>
                 <dd className="font-medium">
                   {result.ticket.passenger.name} · seat{' '}
                   {result.ticket.passenger.seatNumber}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs opacity-70">{t.trip}</dt>
+                <dt className="text-xs opacity-70">{t('scanTrip')}</dt>
                 <dd>
                   {result.ticket.trip.origin} →{' '}
                   {result.ticket.trip.destination}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs opacity-70">{t.departure}</dt>
+                <dt className="text-xs opacity-70">{t('scanDeparture')}</dt>
                 <dd>
                   {new Date(result.ticket.trip.departureAt).toLocaleString(
                     locale === 'ar' ? 'ar-EG' : 'en-GB',
@@ -281,7 +242,7 @@ export function TicketScanPanel() {
               </div>
               {result.boardedAt && (
                 <div>
-                  <dt className="text-xs opacity-70">{t.boarded}</dt>
+                  <dt className="text-xs opacity-70">{t('scanBoarded')}</dt>
                   <dd>
                     {new Date(result.boardedAt).toLocaleString(
                       locale === 'ar' ? 'ar-EG' : 'en-GB',
