@@ -90,37 +90,38 @@ export function useSpeechToText(locale: 'ar' | 'en') {
   };
 }
 
+/** Prefer OS-local voices — remote Google voices hit Chrome's 15s cutoff. */
 function pickVoice(locale: 'ar' | 'en'): SpeechSynthesisVoice | null {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
 
+  const prefix = locale === 'ar' ? 'ar' : 'en';
+  const matching = voices.filter((v) =>
+    v.lang.toLowerCase().startsWith(prefix),
+  );
+  const pool = matching.length > 0 ? matching : voices;
+
+  // 1) Local Arabic/English voice
+  const local = pool.find((v) => v.localService);
+  if (local) return local;
+
+  // 2) Preferred locale codes
   const preferred =
     locale === 'ar'
       ? ['ar-EG', 'ar-SA', 'ar-AE', 'ar-XA', 'ar']
       : ['en-US', 'en-GB', 'en'];
-
   for (const code of preferred) {
-    const exact = voices.find(
-      (v) => v.lang.toLowerCase() === code.toLowerCase(),
-    );
-    if (exact) return exact;
+    const hit = pool.find((v) => v.lang.toLowerCase() === code.toLowerCase());
+    if (hit) return hit;
   }
 
-  const prefix = locale === 'ar' ? 'ar' : 'en';
-  const byPrefix = voices.find((v) =>
-    v.lang.toLowerCase().startsWith(prefix),
-  );
-  if (byPrefix) return byPrefix;
-
-  return voices[0] ?? null;
+  return pool[0] ?? null;
 }
 
-/** Prepare text so TTS does not choke on list numbers / long runs. */
 function prepareForSpeech(text: string, locale: 'ar' | 'en'): string {
   let t = text.replace(/\s+/g, ' ').trim();
 
-  // "1. step" / "2-" style markers confuse engines and often stop playback
   if (locale === 'ar') {
     t = t
       .replace(/\b1\s*[.)\-:]\s*/g, 'أولاً، ')
@@ -128,7 +129,7 @@ function prepareForSpeech(text: string, locale: 'ar' | 'en'): string {
       .replace(/\b3\s*[.)\-:]\s*/g, 'ثالثاً، ')
       .replace(/\b4\s*[.)\-:]\s*/g, 'رابعاً، ')
       .replace(/\b5\s*[.)\-:]\s*/g, 'خامساً، ')
-      .replace(/\b(\d+)\s*[.)\-:]\s*/g, 'النقطة $1، ');
+      .replace(/\b(\d+)\s*[.)\-:]\s*/g, '، ');
   } else {
     t = t
       .replace(/\b1\s*[.)\-:]\s*/g, 'First, ')
@@ -136,38 +137,43 @@ function prepareForSpeech(text: string, locale: 'ar' | 'en'): string {
       .replace(/\b3\s*[.)\-:]\s*/g, 'Third, ')
       .replace(/\b4\s*[.)\-:]\s*/g, 'Fourth, ')
       .replace(/\b5\s*[.)\-:]\s*/g, 'Fifth, ')
-      .replace(/\b(\d+)\s*[.)\-:]\s*/g, 'Point $1, ');
+      .replace(/\b(\d+)\s*[.)\-:]\s*/g, ', ');
   }
 
-  return t.slice(0, 1200);
+  return t.slice(0, 1500);
 }
 
-/** Split into short chunks — Chrome drops long single utterances. */
+/** ~120 char chunks at punctuation — known stable size for Chrome. */
 function chunkText(text: string): string[] {
-  const parts = text
-    .split(/(?<=[.!?؟،；;])\s+|(?<=\n)\s*/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  if (parts.length === 0) return text ? [text] : [];
-
-  // Merge tiny fragments; keep each chunk under ~180 chars
+  const max = 120;
   const chunks: string[] = [];
-  let buf = '';
-  for (const part of parts) {
-    if (!buf) {
-      buf = part;
-      continue;
+  let remaining = text.trim();
+
+  while (remaining.length > 0) {
+    if (remaining.length <= max) {
+      chunks.push(remaining);
+      break;
     }
-    if (buf.length + 1 + part.length <= 180) {
-      buf = `${buf} ${part}`;
-    } else {
-      chunks.push(buf);
-      buf = part;
-    }
+    let slice = remaining.slice(0, max + 1);
+    // Prefer break after Arabic/Latin punctuation or space
+    const breakAt = Math.max(
+      slice.lastIndexOf('。'),
+      slice.lastIndexOf('.'),
+      slice.lastIndexOf('!'),
+      slice.lastIndexOf('?'),
+      slice.lastIndexOf('؟'),
+      slice.lastIndexOf('،'),
+      slice.lastIndexOf(','),
+      slice.lastIndexOf(';'),
+      slice.lastIndexOf('؛'),
+      slice.lastIndexOf(' '),
+    );
+    const end = breakAt > 40 ? breakAt + 1 : max;
+    chunks.push(remaining.slice(0, end).trim());
+    remaining = remaining.slice(end).trim();
   }
-  if (buf) chunks.push(buf);
-  return chunks;
+
+  return chunks.filter(Boolean);
 }
 
 export function useTextToSpeech() {
@@ -175,7 +181,7 @@ export function useTextToSpeech() {
   const [supported, setSupported] = useState(false);
   const [voicesReady, setVoicesReady] = useState(false);
   const stoppedRef = useRef(false);
-  const resumeTimerRef = useRef<number | null>(null);
+  const keepAliveRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -189,28 +195,26 @@ export function useTextToSpeech() {
     };
     load();
     window.speechSynthesis.onvoiceschanged = load;
-    const t = window.setTimeout(load, 250);
+    const t = window.setTimeout(load, 300);
 
     return () => {
       window.clearTimeout(t);
       window.speechSynthesis.onvoiceschanged = null;
       window.speechSynthesis.cancel();
-      if (resumeTimerRef.current) {
-        window.clearInterval(resumeTimerRef.current);
-      }
+      if (keepAliveRef.current) window.clearInterval(keepAliveRef.current);
     };
   }, []);
 
-  const clearResumeTimer = () => {
-    if (resumeTimerRef.current) {
-      window.clearInterval(resumeTimerRef.current);
-      resumeTimerRef.current = null;
+  const clearKeepAlive = () => {
+    if (keepAliveRef.current) {
+      window.clearInterval(keepAliveRef.current);
+      keepAliveRef.current = null;
     }
   };
 
   const stop = useCallback(() => {
     stoppedRef.current = true;
-    clearResumeTimer();
+    clearKeepAlive();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -227,74 +231,84 @@ export function useTextToSpeech() {
         return;
       }
 
+      const synth = window.speechSynthesis;
       stoppedRef.current = false;
-      window.speechSynthesis.cancel();
-      clearResumeTimer();
+      synth.cancel();
+      clearKeepAlive();
 
       const prepared = prepareForSpeech(text, locale);
       const chunks = chunkText(prepared);
       if (chunks.length === 0) return;
 
+      // Warm up voices (Chrome often returns [] until spoken once)
+      void synth.getVoices();
+
       const voice = pickVoice(locale);
-      const lang = voice?.lang || (locale === 'ar' ? 'ar-EG' : 'en-US');
+      const lang = voice?.lang || (locale === 'ar' ? 'ar-SA' : 'en-US');
 
       setSpeaking(true);
 
-      // Keep Chromium from freezing mid-speech
-      resumeTimerRef.current = window.setInterval(() => {
-        if (stoppedRef.current || !window.speechSynthesis.speaking) {
-          clearResumeTimer();
+      // Chromium bug: remote/Google voices stop ~15s without pause+resume
+      keepAliveRef.current = window.setInterval(() => {
+        if (stoppedRef.current || !synth.speaking) {
+          clearKeepAlive();
           return;
         }
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
+        try {
+          synth.pause();
+          synth.resume();
+        } catch {
+          /* ignore */
         }
-      }, 4000);
+      }, 10000);
 
-      const speakChunk = (index: number) => {
+      const speakAt = (index: number) => {
         if (stoppedRef.current || index >= chunks.length) {
-          clearResumeTimer();
+          clearKeepAlive();
           setSpeaking(false);
           return;
         }
 
-        const utter = new SpeechSynthesisUtterance(chunks[index]);
+        const utter = new SpeechSynthesisUtterance(chunks[index]!);
         utter.lang = lang;
-        utter.rate = locale === 'ar' ? 0.92 : 1;
+        utter.rate = locale === 'ar' ? 0.9 : 1;
         utter.pitch = 1;
         utter.volume = 1;
         if (voice) utter.voice = voice;
 
-        utter.onend = () => {
+        const next = () => {
           if (stoppedRef.current) {
-            clearResumeTimer();
+            clearKeepAlive();
             setSpeaking(false);
             return;
           }
-          // Small gap between chunks helps stability
-          window.setTimeout(() => speakChunk(index + 1), 80);
-        };
-        utter.onerror = () => {
-          // Skip broken chunk and continue rather than stopping entirely
-          if (stoppedRef.current) {
-            clearResumeTimer();
-            setSpeaking(false);
-            return;
-          }
-          window.setTimeout(() => speakChunk(index + 1), 80);
+          window.setTimeout(() => speakAt(index + 1), 60);
         };
 
-        window.speechSynthesis.speak(utter);
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
+        utter.onend = next;
+        utter.onerror = next;
+
+        // Quirks that stabilize Chrome onend / ordering
+        // eslint-disable-next-line no-console
+        console.debug('[rihla-tts]', chunks[index]?.slice(0, 40));
+        window.setTimeout(() => {
+          if (stoppedRef.current) return;
+          synth.speak(utter);
+          if (synth.paused) {
+            try {
+              synth.resume();
+            } catch {
+              /* ignore */
+            }
+          }
+        }, 0);
       };
 
-      const start = () => speakChunk(0);
-      if (!voicesReady || window.speechSynthesis.getVoices().length === 0) {
-        window.setTimeout(start, 200);
+      const begin = () => speakAt(0);
+      if (!voicesReady || synth.getVoices().length === 0) {
+        window.setTimeout(begin, 250);
       } else {
-        start();
+        begin();
       }
     },
     [voicesReady],
