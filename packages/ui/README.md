@@ -4,7 +4,7 @@ Import controlled `DatePickr` and `TimePicker` from `@booking-bus/ui/date-pickr`
 Both apps expose form adapters with the same names from `@/shared/components/forms/DatePickr`.
 Date and time fields are explicit components, separate from normal `FormInput`.
 
-`DatePickr` accepts `YYYY-MM-DD`, localized labels, `min`, `max`, disabled/read-only state and a focus ref.
+`DatePickr` accepts `YYYY-MM-DD`, localized labels, `min`, `max`, disabled/read-only state and a focus ref. It supports controlled `value`/`onValueChange` and native-form `defaultValue` usage, including form reset.
 `TimePicker` presents styled hour/minute and AM/PM selects while retaining `HH:mm` internally. Existing seconds and milliseconds are preserved; a seconds select appears when needed.
 Both controls emit normal bubbling input events, preserving batch-preview invalidation and other form change handling.
 

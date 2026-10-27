@@ -1,8 +1,9 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Ticket } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { DatePickr } from '@/shared/components/ui/date-pickr';
 import { Input } from '@/shared/components/ui/input';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -26,6 +27,7 @@ export function BookingsManager({
     locale = useLocale(),
     t = useTranslations('Bookings'),
     states = useTranslations('States');
+  const filterId = useId();
   const name = locale === 'ar' ? 'nameAr' : 'nameEn';
   const columns = useMemo<DataTableColumn<Booking>[]>(
     () => [
@@ -121,22 +123,27 @@ export function BookingsManager({
         ).map((field) => (
           <label
             key={field}
+            htmlFor={filterId + field}
             className="grid min-w-0 flex-1 basis-44 gap-2 text-sm"
           >
             <span>{t(field)}</span>
-            <Input
-              name={field}
-              type={
-                field === 'travelDate'
-                  ? 'date'
-                  : field === 'email'
-                    ? 'email'
-                    : 'text'
-              }
-              defaultValue={page.list.filters[field]}
-              dir={field === 'travelDate' ? undefined : 'ltr'}
-              className="min-h-11 bg-card"
-            />
+            {field === 'travelDate' ? (
+              <DatePickr
+                id={filterId + field}
+                name="travelDate"
+                defaultValue={page.list.filters[field]}
+                className="min-h-11 bg-card"
+              />
+            ) : (
+              <Input
+                id={filterId + field}
+                name={field}
+                type={field === 'email' ? 'email' : 'text'}
+                defaultValue={page.list.filters[field]}
+                dir="ltr"
+                className="min-h-11 bg-card"
+              />
+            )}
           </label>
         ))}
         <Button type="submit" className="min-h-11">
@@ -146,15 +153,16 @@ export function BookingsManager({
           type="button"
           variant="outline"
           className="min-h-11"
-          onClick={() =>
+          onClick={(event) => {
+            event.currentTarget.form?.reset();
             page.list.resetFilters({
               reference: '',
               email: '',
               travelDate: '',
               tripId: '',
               userId: '',
-            })
-          }
+            });
+          }}
         >
           {t('clear')}
         </Button>

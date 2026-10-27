@@ -6,12 +6,11 @@ import {
   type FieldPath,
   type FieldValues,
 } from 'react-hook-form';
-import { useLocale, useTranslations } from 'next-intl';
+import type { PickerProps } from '@booking-bus/ui/date-pickr';
 import {
   DatePickr as CalendarPickr,
   TimePicker as ClockPicker,
-  type PickerProps,
-} from '@booking-bus/ui/date-pickr';
+} from '../ui/date-pickr';
 import { Field, FieldLabel, FieldDescription, FieldError } from '../ui/field';
 
 type Props<T extends FieldValues> = Omit<
@@ -34,8 +33,6 @@ function PickerField<T extends FieldValues>({
   ...props
 }: Props<T> & { kind: 'date' | 'time' }) {
   const id = useId();
-  const locale = useLocale();
-  const t = useTranslations('DatePicker');
   const { field, fieldState, formState } = useController<T>({ name });
   const Picker = kind === 'date' ? CalendarPickr : ClockPicker;
   const describedBy =
@@ -56,21 +53,6 @@ function PickerField<T extends FieldValues>({
         disabled={disabled || formState.isSubmitting}
         aria-invalid={!!fieldState.error}
         aria-describedby={describedBy}
-        locale={locale}
-        labels={{
-          chooseDate: t('chooseDate'),
-          chooseTime: t('chooseTime'),
-          hour: t('hour'),
-          minute: t('minute'),
-          second: t('second'),
-          period: t('period'),
-          am: t('am'),
-          pm: t('pm'),
-          today: t('today'),
-          clear: t('clear'),
-          close: t('close'),
-          time: t('time'),
-        }}
       />
       {description && (
         <FieldDescription id={id + '-hint'}>{description}</FieldDescription>

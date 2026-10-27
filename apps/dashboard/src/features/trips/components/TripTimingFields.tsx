@@ -42,7 +42,7 @@ export function TripTimingFields() {
         label={t('duration')}
       />
       <div
-        className="rounded-xl bg-secondary p-4"
+        className="rounded-2xl bg-secondary p-4"
         aria-live="polite"
         aria-atomic="true"
       >

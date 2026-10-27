@@ -48,10 +48,6 @@
 .placeholder {
   color: var(--muted);
 }
-.timeValue {
-  display: inline-block;
-  margin-inline-start: 8px;
-}
 .popover {
   z-index: 100;
   width: min(22rem, calc(100vw - 1rem));
@@ -238,10 +234,11 @@
 }
 .timeSegments {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .timeSegments label {
-  flex: 1;
+  flex: 1 1 64px;
   min-width: 0;
 }
 .timeSegments span {
@@ -258,10 +255,7 @@
   font-size: 16px;
   padding-inline: 6px;
 }
-.timeSegments {
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.timeSegments label {
-  flex-basis: 64px;
+
+.popover[dir='rtl'] .timeSegments label:last-child {
+  flex-basis: 100%;
 }

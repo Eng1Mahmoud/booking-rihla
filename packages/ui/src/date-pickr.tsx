@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ComponentProps } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { Popover } from 'radix-ui';
 import { CalendarDays, ChevronDown, Clock3 } from 'lucide-react';
 import {
@@ -258,10 +258,11 @@ export type PickerLabels = {
 
 export type PickerProps = Omit<
   ComponentProps<'button'>,
-  'type' | 'value' | 'onChange'
+  'type' | 'value' | 'onChange' | 'defaultValue'
 > & {
-  value: string;
-  onValueChange: (value: string) => void;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
   locale: string;
   labels: PickerLabels;
   min?: string;
@@ -272,7 +273,8 @@ export type PickerProps = Omit<
 
 function Picker({
   type = 'date',
-  value,
+  value: controlledValue,
+  defaultValue = '',
   onValueChange,
   locale,
   labels,
@@ -287,7 +289,18 @@ function Picker({
   ...props
 }: PickerProps & { type: 'date' | 'time' }) {
   const [open, setOpen] = useState(false);
+  const [localValue, setLocalValue] = useState(defaultValue);
+  const value = controlledValue ?? localValue;
   const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const form = input.current?.form;
+    function reset() {
+      if (controlledValue === undefined) setLocalValue(defaultValue);
+      setOpen(false);
+    }
+    form?.addEventListener('reset', reset);
+    return () => form?.removeEventListener('reset', reset);
+  }, [controlledValue, defaultValue]);
   const selected = calendarDate(value.slice(0, 10));
   const firstDate = calendarDate(min?.slice(0, 10) ?? '0001-01-01')!;
   const lastDate = calendarDate(max?.slice(0, 10) ?? '9999-12-31')!;
@@ -330,7 +343,11 @@ function Picker({
         tabIndex={-1}
         name={name}
         value={value}
-        onChange={(event) => onValueChange(event.currentTarget.value)}
+        onChange={(event) => {
+          const next = event.currentTarget.value;
+          if (controlledValue === undefined) setLocalValue(next);
+          onValueChange?.(next);
+        }}
       />
       <Popover.Root open={open && !unavailable} onOpenChange={setOpen}>
         <Popover.Trigger asChild>

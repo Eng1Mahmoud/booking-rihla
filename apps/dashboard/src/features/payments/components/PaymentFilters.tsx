@@ -2,6 +2,7 @@
 import { useId } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
+import { DatePickr } from '@/shared/components/ui/date-pickr';
 import { Input } from '@/shared/components/ui/input';
 import {
   NativeSelect,
@@ -25,20 +26,23 @@ export function PaymentFilters({
     names.map((name) => (
       <div key={name} className="grid min-w-0 gap-2 text-sm">
         <label htmlFor={id + name}>{t(name)}</label>
-        <Input
-          id={id + name}
-          name={name}
-          type={
-            name === 'createdDate'
-              ? 'date'
-              : name === 'email'
-                ? 'email'
-                : 'text'
-          }
-          defaultValue={state.filters[name]}
-          dir={name === 'createdDate' ? undefined : 'ltr'}
-          className="h-12 bg-card"
-        />
+        {name === 'createdDate' ? (
+          <DatePickr
+            id={id + name}
+            name="createdDate"
+            defaultValue={state.filters[name]}
+            className="h-12 bg-card"
+          />
+        ) : (
+          <Input
+            id={id + name}
+            name={name}
+            type={name === 'email' ? 'email' : 'text'}
+            defaultValue={state.filters[name]}
+            dir="ltr"
+            className="h-12 bg-card"
+          />
+        )}
       </div>
     ));
   return (
@@ -110,7 +114,10 @@ export function PaymentFilters({
           type="button"
           variant="outline"
           className="min-h-11"
-          onClick={() => state.resetFilters(emptyPaymentFilters)}
+          onClick={(event) => {
+            event.currentTarget.form?.reset();
+            state.resetFilters(emptyPaymentFilters);
+          }}
         >
           {t('clear')}
         </Button>
