@@ -91,6 +91,7 @@ model Trip {
 
 enum UserRole {
   USER
+  STAFF
   ADMIN
   SUPER_ADMIN
 }
@@ -100,6 +101,7 @@ model User {
   name String
   email String @unique
   phone String
+  boardedSeats BookingSeat[]
   role UserRole @default(USER)
   passwordHash String
   language String @default("ar")
@@ -240,6 +242,9 @@ model BookingSeat {
   seatNumber Int
   passengerName String
   releasedAt TimestamptzString?
+  boardedAt TimestamptzString?
+  boardedByUserId String?
+  boardedByUser User? @relation(fields: [boardedByUserId], references: [id], onDelete: SetNull, onUpdate: Restrict)
   booking Booking @relation(fields: [bookingId, tripId], references: [id, tripId], onDelete: Cascade, onUpdate: Restrict)
   seat BusSeat @relation(fields: [seatId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   @@index([tripId, seatId], unique: true, where: sql`"releasedAt" IS NULL`, name: "booking_seat_active_unique")

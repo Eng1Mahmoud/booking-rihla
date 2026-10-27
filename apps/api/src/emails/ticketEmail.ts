@@ -42,8 +42,8 @@ export function ticketEmail(ticket: TicketData, language: string) {
       (ticket.totalPiastres / 100).toFixed(2) +
       ' EGP',
     ar
-      ? 'رمز QR للتذكرة مرفق بالرسالة. احتفظ بمرجع الحجز.'
-      : 'Your ticket QR is attached. Keep your booking reference.',
+      ? 'رمز QR منفصل لكل راكب مرفق بالرسالة، باسم رقم مقعده. احتفظ بمرجع الحجز.'
+      : 'A separate QR for each passenger is attached, labeled by seat. Keep your booking reference.',
   ].join('\n');
 
   const bodyHtml = [
@@ -84,8 +84,8 @@ export function ticketEmail(ticket: TicketData, language: string) {
     ]),
     mutedParagraph(
       ar
-        ? 'التوقيت بتوقيت القاهرة. رمز QR للتذكرة مرفق — احتفظ به ومرجع الحجز للرحلة.'
-        : 'Times are in Africa/Cairo. Your ticket QR is attached — keep it and your booking reference for the trip.',
+        ? 'التوقيت بتوقيت القاهرة. رمز QR منفصل لكل راكب مرفق باسم رقم مقعده — احتفظ بالرموز ومرجع الحجز للرحلة.'
+        : 'Times are in Africa/Cairo. A separate QR for each passenger is attached, labeled by seat — keep the codes and your booking reference for the trip.',
     ),
   ].join('');
 
@@ -112,12 +112,11 @@ export function ticketEmail(ticket: TicketData, language: string) {
           }
         : undefined,
     }),
-    attachments: [
-      {
-        filename: 'ticket-' + ticket.reference + '.png',
-        content: Buffer.from(ticket.qr.imageDataUrl.split(',')[1]!, 'base64'),
-        contentType: 'image/png',
-      },
-    ],
+    attachments: ticket.passengers.map((passenger) => ({
+      filename:
+        'ticket-' + ticket.reference + '-seat-' + passenger.seatNumber + '.png',
+      content: Buffer.from(passenger.qr.imageDataUrl.split(',')[1]!, 'base64'),
+      contentType: 'image/png',
+    })),
   };
 }

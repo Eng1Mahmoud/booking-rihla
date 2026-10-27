@@ -340,7 +340,7 @@
     "seat": "Seat {number}",
     "timeZone": "All dates and times are in Cairo time.",
     "qrAlt": "Booking ticket QR code",
-    "qrNote": "This code identifies the ticket. It is not, by itself, boarding authorization. Reopen this page to check the current ticket status.",
+    "qrNote": "Each passenger has a separate code. Present each passenger’s code to gate staff for ticket verification and boarding.",
     "qrError": "The QR image could not be displayed. Keep your booking reference.",
     "refresh": "Refresh ticket",
     "unavailable": "No valid ticket is available",
@@ -350,7 +350,8 @@
     "preparingPrint": "Preparing to print…",
     "printNote": "We check the current ticket status before printing. Print it or save as PDF from your browser’s dialog.",
     "printError": "Could not prepare the ticket for printing. Check that the QR code is visible, then try again.",
-    "printFromButton": "Close the print dialog and use the page’s Print ticket button to check ticket validity and prepare the QR code."
+    "printFromButton": "Close the print dialog and use the page’s Print ticket button to check ticket validity and prepare the QR code.",
+    "passengerQrAlt": "QR code for {name}, seat {number}"
   },
   "Recovery": {
     "introTitle": "Get back to your account",

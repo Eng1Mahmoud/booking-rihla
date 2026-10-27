@@ -56,9 +56,14 @@ export function useTicket(
       // Render this exact verified snapshot before waiting for its QR image.
       flushSync(() => setPrintData(result.data));
       await document.fonts.ready;
-      const image = ticketRef.current?.querySelector('img');
-      if (!image) throw new Error('Missing ticket QR');
-      await image.decode();
+      const images = Array.from(
+        ticketRef.current?.querySelectorAll<HTMLImageElement>(
+          'img[data-passenger-qr]',
+        ) ?? [],
+      );
+      if (images.length !== result.data.passengers.length || !images.length)
+        throw new Error('Missing passenger QR');
+      await Promise.all(images.map((image) => image.decode()));
       if (!ticketRef.current) return;
       flushSync(() => setPrintStatus('ready'));
       window.print();

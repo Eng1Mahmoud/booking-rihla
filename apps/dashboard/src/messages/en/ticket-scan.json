@@ -22,5 +22,6 @@
     "NOT_ELIGIBLE": "Ticket is not eligible for boarding",
     "NOT_FOUND": "Ticket not found",
     "INVALID_QR": "Invalid QR code"
-  }
+  },
+  "boardedSuccess": "Boarding recorded"
 }

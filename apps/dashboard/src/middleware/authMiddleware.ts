@@ -19,10 +19,12 @@ export async function authMiddleware(
   const protectedRoute = getProtectedRoute(path);
   const isServerAction =
     request.method === 'POST' && request.headers.has('next-action');
+  const isIndex = path === '/' && !isServerAction;
   let response = previousResponse ?? NextResponse.next();
 
-  // Public navigation skips authentication; Actions still need session renewal.
-  if (!protectedRoute && !isServerAction) return response;
+  // Renew root sessions before choosing a role-aware destination. Other public
+  // navigation skips authentication; Actions still need session renewal.
+  if (!protectedRoute && !isServerAction && !isIndex) return response;
 
   const session = getSessionCookies(request.cookies);
   const options = { locale, requestHeaders: request.headers };
@@ -84,6 +86,15 @@ export async function authMiddleware(
   const role = userResult.data?.role;
   if (!role || !['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(role))
     return handleAuthFailure(503);
+  if (isIndex) {
+    const destination =
+      '/' + locale + (role === 'STAFF' ? '/dashboard/scan' : '/dashboard');
+    const redirect = NextResponse.redirect(new URL(destination, request.url));
+    for (const cookie of response.cookies.getAll())
+      redirect.cookies.set(cookie);
+    redirect.headers.set('Cache-Control', 'private, no-store');
+    return redirect;
+  }
   if (protectedRoute && !protectedRoute.roles.includes(role))
     return handleAuthFailure(403);
   return response;

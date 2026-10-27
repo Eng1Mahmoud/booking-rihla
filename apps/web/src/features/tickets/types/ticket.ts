@@ -5,7 +5,12 @@ export type Ticket = {
   issuedAt: string;
   currency: 'EGP';
   totalPiastres: number;
-  passengers: { name: string; seatNumber: number }[];
+  passengers: {
+    seatId: string;
+    name: string;
+    seatNumber: number;
+    qr: { payload: string; imageDataUrl: string };
+  }[];
   trip: {
     id: string;
     departureAt: string;
@@ -21,6 +26,9 @@ export type Ticket = {
   qr: { payload: string; imageDataUrl: string };
 };
 
-export type TicketViewData = Omit<Ticket, 'qr'> & {
+export type TicketViewData = Omit<Ticket, 'qr' | 'passengers'> & {
+  passengers: (Omit<Ticket['passengers'][number], 'qr'> & {
+    qr: { imageDataUrl: string };
+  })[];
   qr: { imageDataUrl: string };
 };

@@ -216,7 +216,7 @@ export function AssistantWidget() {
           tabIndex={open ? -1 : 0}
           aria-hidden={open}
           className={cn(
-            'fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full',
+            'print:hidden fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full',
             'bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(0,111,123,0.55)]',
             'ring-4 ring-primary/15',
             'motion-safe:transition-all motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:hover:shadow-[0_14px_36px_-10px_rgba(0,111,123,0.65)]',
@@ -245,7 +245,7 @@ export function AssistantWidget() {
             launcherRef.current?.focus();
           }}
           className={cn(
-            'fixed z-50 flex flex-col overflow-hidden',
+            'print:hidden fixed z-50 flex flex-col overflow-hidden',
             'bottom-3 right-3 left-3 sm:left-auto sm:bottom-5 sm:right-5 sm:w-[400px]',
             'max-h-[min(680px,88vh)]',
             'rounded-3xl border border-border/80 bg-background',

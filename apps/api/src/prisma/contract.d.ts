@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'9477561f68d02576a4eda049d586fa2440fab727377d55d7432a42eec75b73ce'>;
+  StorageHashBase<'55a33243170f0bacb55d425a534b178dd97a1eb82093983105529e2a4a624586'>;
 export type ExecutionHash =
   ExecutionHashBase<'bae1bdb30b51a81a02cbca1afbddf2cc92077026cb5a7ec411b4bbb66372aa29'>;
 export type ProfileHash =
@@ -265,6 +265,8 @@ export type FieldOutputTypes = {
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly BookingSeat: {
+      readonly boardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly boardedByUserId: CodecTypes['pg/text@1']['output'] | null;
       readonly bookingId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly passengerName: CodecTypes['pg/text@1']['output'];
@@ -452,7 +454,7 @@ export type FieldOutputTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly phone: CodecTypes['pg/text@1']['output'];
-      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+      readonly role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -489,6 +491,8 @@ export type FieldInputTypes = {
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly BookingSeat: {
+      readonly boardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly boardedByUserId: CodecTypes['pg/text@1']['input'] | null;
       readonly bookingId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly passengerName: CodecTypes['pg/text@1']['input'];
@@ -676,7 +680,7 @@ export type FieldInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly phone: CodecTypes['pg/text@1']['input'];
-      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+      readonly role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -713,6 +717,8 @@ export type StorageColumnTypes = {
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly BookingSeat: {
+      readonly boardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly boardedByUserId: CodecTypes['pg/text@1']['output'] | null;
       readonly bookingId: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly passengerName: CodecTypes['pg/text@1']['output'];
@@ -900,7 +906,7 @@ export type StorageColumnTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly phone: CodecTypes['pg/text@1']['output'];
-      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+      readonly role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -937,6 +943,8 @@ export type StorageColumnInputTypes = {
       readonly sentAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly BookingSeat: {
+      readonly boardedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly boardedByUserId: CodecTypes['pg/text@1']['input'] | null;
       readonly bookingId: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly passengerName: CodecTypes['pg/text@1']['input'];
@@ -1124,7 +1132,7 @@ export type StorageColumnInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly phone: CodecTypes['pg/text@1']['input'];
-      readonly role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+      readonly role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
     };
   };
 };
@@ -1173,6 +1181,8 @@ export namespace Models {
     readonly [RelationKeys]?: 'booking';
   };
   export type public_BookingSeat = {
+    boardedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    boardedByUserId: CodecTypes['pg/text@1']['output'] | null;
     bookingId: CodecTypes['pg/text@1']['output'];
     id: CodecTypes['pg/text@1']['output'];
     passengerName: CodecTypes['pg/text@1']['output'];
@@ -1180,9 +1190,10 @@ export namespace Models {
     seatId: CodecTypes['pg/text@1']['output'];
     seatNumber: CodecTypes['pg/int4@1']['output'];
     tripId: CodecTypes['pg/text@1']['output'];
+    boardedByUser: public_User | null;
     booking: public_Booking;
     seat: public_BusSeat;
-    readonly [RelationKeys]?: 'booking' | 'seat';
+    readonly [RelationKeys]?: 'boardedByUser' | 'booking' | 'seat';
   };
   export type public_Bus = {
     busTypeId: CodecTypes['pg/text@1']['output'] | null;
@@ -1414,13 +1425,15 @@ export namespace Models {
     name: CodecTypes['pg/text@1']['output'];
     passwordHash: CodecTypes['pg/text@1']['output'];
     phone: CodecTypes['pg/text@1']['output'];
-    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+    role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
+    boardedSeats: public_BookingSeat[];
     bookings: public_Booking[];
     emails: public_EmailOutbox[];
     passwordReset: public_PasswordReset | null;
     sessions: public_Session[];
     verification: public_EmailVerification | null;
-    readonly [RelationKeys]?: 'bookings' | 'emails' | 'passwordReset' | 'sessions' | 'verification';
+    readonly [RelationKeys]?:
+      'boardedSeats' | 'bookings' | 'emails' | 'passwordReset' | 'sessions' | 'verification';
   };
 }
 
@@ -1731,6 +1744,18 @@ type ContractBase = Omit<
             };
             readonly BookingSeat: {
               columns: {
+                readonly boardedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly boardedByUserId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly bookingId: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -1778,6 +1803,12 @@ type ContractBase = Omit<
               uniques: readonly [];
               indexes: readonly [
                 {
+                  readonly name: 'BookingSeat_boardedByUserId_idx_112466dc';
+                  readonly prefix: 'BookingSeat_boardedByUserId_idx';
+                  readonly columns: readonly ['boardedByUserId'];
+                  readonly unique: false;
+                },
+                {
                   readonly name: 'BookingSeat_bookingId_tripId_idx_52502076';
                   readonly prefix: 'BookingSeat_bookingId_tripId_idx';
                   readonly columns: readonly ['bookingId', 'tripId'];
@@ -1798,6 +1829,18 @@ type ContractBase = Omit<
                 },
               ];
               foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'BookingSeat';
+                    readonly columns: readonly ['boardedByUserId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
                 {
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
@@ -3451,7 +3494,7 @@ type ContractBase = Omit<
             };
             readonly UserRole: {
               readonly kind: 'valueSet';
-              readonly values: readonly ['USER', 'ADMIN', 'SUPER_ADMIN'];
+              readonly values: readonly ['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'];
             };
           };
         };
@@ -3796,6 +3839,17 @@ type ContractBase = Omit<
           };
           readonly BookingSeat: {
             readonly fields: {
+              readonly boardedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly boardedByUserId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly bookingId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -3829,6 +3883,15 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly boardedByUser: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['boardedByUserId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
               readonly booking: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -3858,6 +3921,8 @@ type ContractBase = Omit<
               readonly table: 'BookingSeat';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly boardedAt: { readonly column: 'boardedAt' };
+                readonly boardedByUserId: { readonly column: 'boardedByUserId' };
                 readonly bookingId: { readonly column: 'bookingId' };
                 readonly id: { readonly column: 'id' };
                 readonly passengerName: { readonly column: 'passengerName' };
@@ -5255,6 +5320,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly boardedSeats: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BookingSeat';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['boardedByUserId'];
+                };
+              };
               readonly bookings: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -5409,6 +5485,7 @@ type ContractBase = Omit<
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
               { readonly name: 'USER'; readonly value: 'USER' },
+              { readonly name: 'STAFF'; readonly value: 'STAFF' },
               { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
               { readonly name: 'SUPER_ADMIN'; readonly value: 'SUPER_ADMIN' },
             ];
@@ -5463,6 +5540,7 @@ type ContractBase = Omit<
           ];
           readonly UserRole: readonly [
             { readonly name: 'USER'; readonly value: 'USER' },
+            { readonly name: 'STAFF'; readonly value: 'STAFF' },
             { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
             { readonly name: 'SUPER_ADMIN'; readonly value: 'SUPER_ADMIN' },
           ];

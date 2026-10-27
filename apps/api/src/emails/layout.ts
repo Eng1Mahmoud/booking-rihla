@@ -52,7 +52,7 @@ export type EmailShellOptions = {
   cta?: { label: string; href: string };
 };
 
-function logoBlock(align: string, brand: string): string {
+function logoBlock(_align: string, brand: string): string {
   const logoUrl = process.env.EMAIL_LOGO_URL?.trim();
   if (logoUrl && /^https?:\/\//i.test(logoUrl)) {
     return `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(brand)}" width="140" height="40" style="display:block;height:40px;width:auto;max-width:160px;border:0;outline:none;" />`;
@@ -83,9 +83,7 @@ export function renderEmailShell(options: EmailShellOptions): string {
   const align = ar ? 'right' : 'left';
   const brand = process.env.EMAIL_FROM_NAME || 'Rihla';
   const year = new Date().getFullYear();
-  const preheader = options.preheader
-    ? escapeHtml(options.preheader)
-    : '';
+  const preheader = options.preheader ? escapeHtml(options.preheader) : '';
   const footer =
     options.footerNote ??
     (ar
@@ -179,7 +177,10 @@ export function infoCard(rows: { label: string; value: string }[]): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 4px;">${items}</table>`;
 }
 
-export function primaryNote(text: string, tone: 'neutral' | 'success' | 'warning' = 'neutral'): string {
+export function primaryNote(
+  text: string,
+  tone: 'neutral' | 'success' | 'warning' = 'neutral',
+): string {
   const bg =
     tone === 'success'
       ? '#ECFDF3'

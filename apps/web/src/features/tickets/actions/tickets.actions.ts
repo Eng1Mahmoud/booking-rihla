@@ -16,6 +16,15 @@ export async function getTicketAction(
   const { qr, ...ticket } = result.data;
   return {
     ...result,
-    data: { ...ticket, qr: { imageDataUrl: qr.imageDataUrl } },
+    data: {
+      ...ticket,
+      passengers: ticket.passengers.map(
+        ({ qr: passengerQr, ...passenger }) => ({
+          ...passenger,
+          qr: { imageDataUrl: passengerQr.imageDataUrl },
+        }),
+      ),
+      qr: { imageDataUrl: qr.imageDataUrl },
+    },
   };
 }

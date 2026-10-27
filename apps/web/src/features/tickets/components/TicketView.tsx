@@ -55,11 +55,11 @@ export function TicketView({
     locale === 'ar' ? station.nameAr : station.nameEn;
   const city = (station: typeof origin) =>
     locale === 'ar' ? station.cityAr : station.cityEn;
-  const qrImage = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(
-    ticket.qr.imageDataUrl,
-  )
-    ? ticket.qr.imageDataUrl
-    : null;
+  const validQr = (image: string) =>
+    /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(image);
+  const allQrReady =
+    ticket.passengers.length > 0 &&
+    ticket.passengers.every((person) => validQr(person.qr.imageDataUrl));
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-5 print:hidden">
@@ -70,7 +70,7 @@ export function TicketView({
           {back}
           <Button
             type="button"
-            disabled={query.isFetching || query.busy || !qrImage}
+            disabled={query.isFetching || query.busy || !allQrReady}
             onClick={() => void query.printTicket()}
           >
             <Printer size={18} aria-hidden="true" />
@@ -95,7 +95,7 @@ export function TicketView({
       <article
         ref={query.ticketRef}
         data-print-ready={query.printReady}
-        className="rounded-2xl border bg-card grid min-w-0 gap-8 p-[22px] md:grid-cols-[minmax(0,1fr)_280px] md:p-8 print:hidden print:rounded-none print:border-0 print:p-0 print:text-[14px] print:gap-6 print:grid-cols-[minmax(0,1fr)_55mm] data-[print-ready=true]:print:grid"
+        className="rounded-2xl border bg-card grid min-w-0 gap-8 p-[22px] md:grid-cols-[minmax(0,1fr)_280px] md:p-8 print:hidden print:rounded-none print:border-0 print:p-0 print:text-[14px] print:gap-6 data-[print-ready=true]:print:block"
         aria-label={t('title')}
       >
         <div className="hidden print:col-span-full print:flex print:items-center print:justify-between print:border-b print:pb-3">
@@ -176,24 +176,39 @@ export function TicketView({
           </ul>
           <p className="text-muted-foreground text-sm mt-5">{t('timeZone')}</p>
         </section>
-        <aside className="self-start border-t pt-5 text-center md:border-t-0 md:pt-0 print:break-inside-avoid print:border-0 print:pt-0">
-          {qrImage ? (
-            <Image
-              className="mx-auto block h-auto max-w-full print:w-[55mm]"
-              unoptimized
-              src={qrImage}
-              width={256}
-              height={256}
-              alt={t('qrAlt')}
-            />
-          ) : (
-            <p
-              className="my-[18px] text-sm leading-relaxed text-muted-foreground"
-              role="alert"
-            >
-              {t('qrError')}
-            </p>
-          )}
+        <aside className="self-start border-t pt-5 text-center md:border-t-0 md:pt-0 print:mt-6 print:border-0 print:pt-0">
+          <div className="grid gap-5 print:grid-cols-2 print:gap-4">
+            {ticket.passengers.map((person) => (
+              <figure
+                key={person.seatId}
+                className="m-0 rounded-xl border p-4 print:break-inside-avoid print:text-black"
+              >
+                <figcaption className="mb-3 grid gap-1 text-sm">
+                  <strong className="wrap-anywhere">{person.name}</strong>
+                  <span>{t('seat', { number: person.seatNumber })}</span>
+                </figcaption>
+                {validQr(person.qr.imageDataUrl) ? (
+                  <Image
+                    data-passenger-qr
+                    className="mx-auto block h-auto max-w-full print:w-[45mm]"
+                    unoptimized
+                    loading="eager"
+                    src={person.qr.imageDataUrl}
+                    width={256}
+                    height={256}
+                    alt={t('passengerQrAlt', {
+                      name: person.name,
+                      number: person.seatNumber,
+                    })}
+                  />
+                ) : (
+                  <p role="alert" className="text-sm text-destructive">
+                    {t('qrError')}
+                  </p>
+                )}
+              </figure>
+            ))}
+          </div>
           <p className="my-[18px] text-sm leading-relaxed text-muted-foreground">
             {t('qrNote')}
           </p>
