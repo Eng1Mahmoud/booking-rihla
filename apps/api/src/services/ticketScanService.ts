@@ -5,10 +5,7 @@ import { serializeBookingPayment } from '../payments/paymentStatus.ts';
 
 export type ScanAction = 'verify' | 'board';
 
-function boardingWindowHours(): {
-  before: number;
-  after: number;
-} {
+function boardingWindowHours(): { before: number; after: number } {
   const before = Number(process.env.TICKET_BOARDING_HOURS_BEFORE ?? '4');
   const after = Number(process.env.TICKET_BOARDING_HOURS_AFTER ?? '2');
   return {
@@ -21,9 +18,7 @@ function inBoardingWindow(departureAt: string, now = Date.now()): boolean {
   const dep = Date.parse(departureAt);
   if (!Number.isFinite(dep)) return false;
   const { before, after } = boardingWindowHours();
-  const start = dep - before * 3600_000;
-  const end = dep + after * 3600_000;
-  return now >= start && now <= end;
+  return now >= dep - before * 3600_000 && now <= dep + after * 3600_000;
 }
 
 export type TicketScanResult = {
@@ -40,7 +35,7 @@ export type TicketScanResult = {
     id: string;
     bookingId: string;
     reference: string;
-    passengers: { name: string; seatNumber: string }[];
+    passenger: { seatId: string; name: string; seatNumber: string | number };
     trip: {
       id: string;
       departureAt: string;
@@ -52,34 +47,31 @@ export type TicketScanResult = {
   } | null;
 };
 
-async function readBoarding(ticketId: string): Promise<string | null> {
+async function readSeatBoarding(seatId: string): Promise<string | null> {
   const { db } = await import('../prisma/db.ts');
   try {
-    const rows = await db.raw.sql<
-      { boardedAt: string | null }[]
-    >`SELECT "boardedAt" FROM "public"."Ticket" WHERE "id" = ${ticketId} LIMIT 1`;
+    const rows = await db.raw.sql<{ boardedAt: string | null }[]>`
+      SELECT "boardedAt" FROM "public"."BookingSeat" WHERE "id" = ${seatId} LIMIT 1`;
     const value = rows[0]?.boardedAt;
     return value ? new Date(value).toISOString() : null;
   } catch {
-    // Column may not exist until SQL migration is applied.
     return null;
   }
 }
 
-async function markBoarded(
-  ticketId: string,
+async function markSeatBoarded(
+  seatId: string,
   staffUserId: string,
-): Promise<string | null> {
+): Promise<string> {
   const { db } = await import('../prisma/db.ts');
   const now = new Date().toISOString();
   try {
     const rows = await db.raw.sql<{ boardedAt: string | null }[]>`
-      UPDATE "public"."Ticket"
+      UPDATE "public"."BookingSeat"
       SET "boardedAt" = COALESCE("boardedAt", ${now}::timestamptz),
           "boardedByUserId" = COALESCE("boardedByUserId", ${staffUserId})
-      WHERE "id" = ${ticketId}
-      RETURNING "boardedAt"
-    `;
+      WHERE "id" = ${seatId}
+      RETURNING "boardedAt"`;
     const value = rows[0]?.boardedAt;
     return value ? new Date(value).toISOString() : now;
   } catch {
@@ -136,6 +128,16 @@ export const ticketScanService = {
       };
     }
 
+    const seat = booking.seats.find((s) => s.id === verified.claims.seatId);
+    if (!seat || seat.releasedAt) {
+      return {
+        code: 'NOT_FOUND',
+        action: input.action,
+        boardedAt: null,
+        ticket: null,
+      };
+    }
+
     const details = serializeTicketDetails(booking);
     const payment = serializeBookingPayment(booking);
     if (
@@ -157,7 +159,11 @@ export const ticketScanService = {
       id: details.id,
       bookingId: details.bookingId,
       reference: details.reference,
-      passengers: details.passengers,
+      passenger: {
+        seatId: seat.id,
+        name: seat.passengerName,
+        seatNumber: seat.seatNumber,
+      },
       trip: {
         id: details.trip.id,
         departureAt: details.trip.departureAt,
@@ -172,12 +178,12 @@ export const ticketScanService = {
       return {
         code: 'OUTSIDE_WINDOW',
         action: input.action,
-        boardedAt: await readBoarding(details.id),
+        boardedAt: await readSeatBoarding(seat.id),
         ticket: ticketView,
       };
     }
 
-    const existingBoard = await readBoarding(details.id);
+    const existingBoard = await readSeatBoarding(seat.id);
     if (existingBoard) {
       return {
         code: 'ALREADY_BOARDED',
@@ -188,7 +194,7 @@ export const ticketScanService = {
     }
 
     if (input.action === 'board') {
-      const boardedAt = await markBoarded(details.id, input.staffUserId);
+      const boardedAt = await markSeatBoarded(seat.id, input.staffUserId);
       return {
         code: 'OK',
         action: 'board',

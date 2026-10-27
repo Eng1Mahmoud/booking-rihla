@@ -8,21 +8,21 @@ import {
 } from '../services/ticketScanService.ts';
 
 export function createTicketScanRouter(
-  admin: RequestHandler[],
+  staff: RequestHandler[],
   service: TicketScanService = ticketScanService,
 ) {
   const router = Router();
   const controller = createTicketScanController(service);
   const limiter = rateLimit({
     windowMs: 60_000,
-    limit: 60,
+    limit: 120,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     handler: (_request, _response, next) =>
       next(new AppError(429, 'RATE_LIMITED', 'Too many scan attempts')),
   });
 
-  // Staff / admin gate: authenticated ADMIN or SUPER_ADMIN only.
-  router.post('/scan', ...admin, limiter, controller.scan);
+  // STAFF, ADMIN, SUPER_ADMIN (caller wires requireRole).
+  router.post('/scan', ...staff, limiter, controller.scan);
   return router;
 }
