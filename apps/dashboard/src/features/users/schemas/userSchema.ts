@@ -4,7 +4,7 @@ export const userSchema = z.object({
   name: z.string(),
   email: z.string(),
   phone: z.string(),
-  role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
+  role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
   language: z.string(),
   isActive: z.boolean(),
   emailVerifiedAt: z.string().nullable(),

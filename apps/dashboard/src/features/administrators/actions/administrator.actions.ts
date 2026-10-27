@@ -44,12 +44,12 @@ export async function setAdministratorStatusAction(input: {
 }
 export async function setAdministratorRoleAction(input: {
   id: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
 }) {
   const parsed = await parseSchema(
     z.strictObject({
       id: z.uuid(),
-      role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
+      role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
     }),
     input,
   );
