@@ -1,4 +1,5 @@
 import {
+  appPath,
   bodyParagraph,
   codeBadge,
   mutedParagraph,
@@ -40,6 +41,8 @@ export function passwordResetEmail(code: string, language: string) {
     ),
   ].join('');
 
+  const resetUrl = appPath(language, '/forgot-password');
+
   return {
     subject,
     text,
@@ -49,6 +52,12 @@ export function passwordResetEmail(code: string, language: string) {
       eyebrow: ar ? 'أمان الحساب' : 'Account security',
       preheader: ar ? `كود الاستعادة: ${code}` : `Your reset code: ${code}`,
       bodyHtml,
+      cta: resetUrl
+        ? {
+            label: ar ? 'فتح صفحة الاستعادة' : 'Open recovery page',
+            href: resetUrl,
+          }
+        : undefined,
     }),
   };
 }
@@ -76,6 +85,8 @@ export function passwordChangedEmail(language: string) {
     ),
   ].join('');
 
+  const securityUrl = appPath(language, '/account/security');
+
   return {
     subject,
     text,
@@ -85,6 +96,12 @@ export function passwordChangedEmail(language: string) {
       eyebrow: ar ? 'تنبيه أمني' : 'Security notice',
       preheader: subject,
       bodyHtml,
+      cta: securityUrl
+        ? {
+            label: ar ? 'مراجعة أمان الحساب' : 'Review account security',
+            href: securityUrl,
+          }
+        : undefined,
     }),
   };
 }

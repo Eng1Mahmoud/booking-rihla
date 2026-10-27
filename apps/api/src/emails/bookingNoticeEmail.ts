@@ -1,4 +1,5 @@
 import {
+  appPath,
   bodyParagraph,
   infoCard,
   mutedParagraph,
@@ -94,6 +95,8 @@ export function bookingNoticeEmail(message: BookingNoticeData) {
         ]),
       ].join('');
 
+  const bookingsUrl = appPath(message.language, '/bookings');
+
   return {
     subject,
     text,
@@ -109,6 +112,12 @@ export function bookingNoticeEmail(message: BookingNoticeData) {
       eyebrow: arabic ? 'إشعار الحجز' : 'Booking notice',
       preheader: text.slice(0, 120),
       bodyHtml,
+      cta: bookingsUrl
+        ? {
+            label: arabic ? 'تفاصيل الحجز' : 'Booking details',
+            href: bookingsUrl,
+          }
+        : undefined,
     }),
   };
 }

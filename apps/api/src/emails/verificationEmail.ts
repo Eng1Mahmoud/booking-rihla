@@ -1,4 +1,5 @@
 import {
+  appPath,
   bodyParagraph,
   codeBadge,
   mutedParagraph,
@@ -38,6 +39,8 @@ export function verificationEmail(code: string, language: string) {
     ),
   ].join('');
 
+  const loginUrl = appPath(language, '/login');
+
   return {
     subject,
     text,
@@ -49,6 +52,12 @@ export function verificationEmail(code: string, language: string) {
         ? `كود التأكيد: ${code}`
         : `Your verification code: ${code}`,
       bodyHtml,
+      cta: loginUrl
+        ? {
+            label: arabic ? 'متابعة تسجيل الدخول' : 'Continue to sign in',
+            href: loginUrl,
+          }
+        : undefined,
     }),
   };
 }

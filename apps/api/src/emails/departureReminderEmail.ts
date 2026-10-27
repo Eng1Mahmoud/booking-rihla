@@ -1,5 +1,6 @@
 import type { TicketDetails } from '../services/ticketService.ts';
 import {
+  appPath,
   bodyParagraph,
   infoCard,
   mutedParagraph,
@@ -49,10 +50,7 @@ export function departureReminderEmail(
         ? 'تذكير ودي: رحلتك خلال الـ 24 ساعة القادمة. راجع التفاصيل واستعد في الوقت المناسب.'
         : 'Friendly reminder: your trip departs within the next 24 hours. Review the details and arrive on time.',
     ),
-    primaryNote(
-      (ar ? 'المغادرة: ' : 'Departure: ') + departure,
-      'warning',
-    ),
+    primaryNote((ar ? 'المغادرة: ' : 'Departure: ') + departure, 'warning'),
     infoCard([
       {
         label: ar ? 'مرجع الحجز' : 'Reference',
@@ -78,6 +76,8 @@ export function departureReminderEmail(
     ),
   ].join('');
 
+  const bookingsUrl = appPath(language, '/bookings');
+
   return {
     subject:
       (ar ? 'تذكير بموعد رحلتك: ' : 'Your upcoming trip: ') + ticket.reference,
@@ -86,10 +86,14 @@ export function departureReminderEmail(
       language,
       title: ar ? 'تذكير بالرحلة' : 'Trip reminder',
       eyebrow: ar ? 'خلال 24 ساعة' : 'Within 24 hours',
-      preheader:
-        (ar ? 'مغادرة ' : 'Departs ') +
-        departure,
+      preheader: (ar ? 'مغادرة ' : 'Departs ') + departure,
       bodyHtml,
+      cta: bookingsUrl
+        ? {
+            label: ar ? 'فتح التذكرة' : 'Open ticket',
+            href: bookingsUrl,
+          }
+        : undefined,
     }),
   };
 }

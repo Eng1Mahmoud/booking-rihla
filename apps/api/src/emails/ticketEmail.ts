@@ -1,5 +1,6 @@
 import type { TicketData } from '../services/ticketService.ts';
 import {
+  appPath,
   bodyParagraph,
   infoCard,
   mutedParagraph,
@@ -22,7 +23,7 @@ export function ticketEmail(ticket: TicketData, language: string) {
 
   const passengers = ticket.passengers
     .map((p) => (ar ? 'المقعد ' : 'Seat ') + p.seatNumber + ': ' + p.name)
-    .join(ar ? ' · ' : ' · ');
+    .join(' · ');
 
   const text = [
     ar
@@ -88,6 +89,8 @@ export function ticketEmail(ticket: TicketData, language: string) {
     ),
   ].join('');
 
+  const bookingsUrl = appPath(language, '/bookings');
+
   return {
     subject:
       (ar ? 'تذكرة حجزك المؤكد: ' : 'Your confirmed booking ticket: ') +
@@ -102,6 +105,12 @@ export function ticketEmail(ticket: TicketData, language: string) {
         ticket.reference +
         (ar ? ' — تم التأكيد' : ' — confirmed'),
       bodyHtml,
+      cta: bookingsUrl
+        ? {
+            label: ar ? 'عرض حجوزاتي' : 'View my bookings',
+            href: bookingsUrl,
+          }
+        : undefined,
     }),
     attachments: [
       {
