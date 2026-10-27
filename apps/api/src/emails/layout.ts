@@ -21,6 +21,26 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** Public website origin for CTAs (no trailing slash). */
+export function webAppOrigin(): string | null {
+  const raw =
+    process.env.WEB_APP_URL?.trim() ||
+    process.env.SITE_ORIGIN?.trim() ||
+    process.env.PUBLIC_WEB_URL?.trim() ||
+    '';
+  if (!raw) return null;
+  return raw.replace(/\/$/, '');
+}
+
+/** Absolute URL on the passenger site for a locale path. */
+export function appPath(language: string, path: string): string | null {
+  const origin = webAppOrigin();
+  if (!origin) return null;
+  const locale = language === 'ar' ? 'ar' : 'en';
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${origin}/${locale}${normalized}`;
+}
+
 export type EmailShellOptions = {
   language: string;
   preheader?: string;
@@ -28,7 +48,29 @@ export type EmailShellOptions = {
   eyebrow?: string;
   bodyHtml: string;
   footerNote?: string;
+  /** Optional primary CTA under the body */
+  cta?: { label: string; href: string };
 };
+
+function logoBlock(align: string, brand: string): string {
+  const logoUrl = process.env.EMAIL_LOGO_URL?.trim();
+  if (logoUrl && /^https?:\/\//i.test(logoUrl)) {
+    return `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(brand)}" width="140" height="40" style="display:block;height:40px;width:auto;max-width:160px;border:0;outline:none;" />`;
+  }
+  // Text wordmark when no hosted logo URL is configured
+  return `<div style="font-size:20px;font-weight:700;letter-spacing:0.04em;color:#ffffff;">${escapeHtml(brand)}</div>`;
+}
+
+export function ctaButton(label: string, href: string): string {
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 8px;">
+    <tr>
+      <td style="border-radius:12px;background:${BRAND.primary};">
+        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:14px 28px;font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:12px;">${escapeHtml(label)}</a>
+      </td>
+    </tr>
+  </table>`;
+}
 
 /**
  * Table-based layout for broad client support (Gmail, Outlook, Apple Mail).
@@ -50,6 +92,17 @@ export function renderEmailShell(options: EmailShellOptions): string {
       ? 'رسالة تلقائية من رحلة. لا ترد على هذا البريد.'
       : 'Automated message from Rihla. Please do not reply.');
 
+  const ctaHtml =
+    options.cta && options.cta.href
+      ? ctaButton(options.cta.label, options.cta.href)
+      : '';
+
+  const siteLink = webAppOrigin();
+  const footerSite =
+    siteLink != null
+      ? `<div style="margin-top:10px;"><a href="${escapeHtml(siteLink)}" style="color:${BRAND.primary};text-decoration:none;">${escapeHtml(siteLink.replace(/^https?:\/\//, ''))}</a></div>`
+      : '';
+
   return `<!DOCTYPE html>
 <html lang="${lang}" dir="${dir}">
 <head>
@@ -69,10 +122,10 @@ export function renderEmailShell(options: EmailShellOptions): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="${align}" style="font-family:Segoe UI,Tahoma,Arial,sans-serif;">
-                    <div style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.75);font-weight:600;">${escapeHtml(brand)}</div>
+                    ${logoBlock(align, brand)}
                     ${
                       options.eyebrow
-                        ? `<div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.85);">${escapeHtml(options.eyebrow)}</div>`
+                        ? `<div style="margin-top:14px;font-size:12px;color:rgba(255,255,255,0.85);">${escapeHtml(options.eyebrow)}</div>`
                         : ''
                     }
                     <h1 style="margin:10px 0 0;font-size:22px;line-height:1.35;font-weight:700;color:#ffffff;">${escapeHtml(options.title)}</h1>
@@ -84,11 +137,13 @@ export function renderEmailShell(options: EmailShellOptions): string {
           <tr>
             <td style="padding:28px;font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:15px;line-height:1.65;color:${BRAND.ink};text-align:${align};">
               ${options.bodyHtml}
+              ${ctaHtml}
             </td>
           </tr>
           <tr>
             <td style="padding:18px 28px 24px;border-top:1px solid ${BRAND.border};background:#FAFCFC;font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:12px;line-height:1.55;color:${BRAND.muted};text-align:${align};">
               ${escapeHtml(footer)}
+              ${footerSite}
               <div style="margin-top:8px;">© ${year} ${escapeHtml(brand)}</div>
             </td>
           </tr>
