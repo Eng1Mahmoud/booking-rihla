@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { BusFront, ExternalLink, UserRound } from 'lucide-react';
+import { BusFront, ExternalLink } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
-import { SignOutButton } from '@/features/auth/components/SignOutButton';
+import { StaffAccountMenu } from '@/features/auth/components/StaffAccountMenu';
 import type { AuthUser } from '@/features/auth/types/auth';
 import { DashboardNavigation } from './DashboardNavigation';
 export async function DashboardShell({
@@ -30,7 +30,7 @@ export async function DashboardShell({
       >
         {t('skip')}
       </a>
-      <aside className="hidden lg:bg-secondary-foreground lg:sticky lg:top-0 lg:block lg:h-dvh lg:overflow-y-auto">
+      <aside className="dashboard-scrollbar hidden lg:bg-secondary-foreground lg:sticky lg:top-0 lg:block lg:h-dvh lg:overflow-y-auto">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-3 px-[26px] pt-6 pb-[34px] text-white"
@@ -78,15 +78,7 @@ export async function DashboardShell({
             <div className="flex min-h-11 items-center">
               <LanguageSwitcher />
             </div>
-            <SignOutButton />
-            <div className="hidden min-w-0 items-center gap-2 border-s ps-3 sm:flex sm:ps-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-foreground text-white">
-                <UserRound size={21} aria-hidden="true" />
-              </span>
-              <span className="hidden max-w-32 truncate font-medium sm:block">
-                {user.name}
-              </span>
-            </div>
+            <StaffAccountMenu />
           </div>
         </header>
         <main

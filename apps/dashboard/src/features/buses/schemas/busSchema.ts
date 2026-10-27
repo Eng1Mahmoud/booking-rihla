@@ -22,7 +22,9 @@ export const busFormSchema = busInputSchema.extend({
   seatCount: z
     .string()
     .trim()
-    .regex(/^\d+$/)
+    .refine((value) => /^[0-9]+$/.test(value), {
+      params: { messageKey: 'wholeNumber' },
+    })
     .transform(Number)
     .pipe(busInputSchema.shape.seatCount),
   seatLayout: z.enum(['', 'STANDARD_2_2']).transform((value) => value || null),

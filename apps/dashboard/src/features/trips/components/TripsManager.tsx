@@ -14,6 +14,9 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
   const page = useTrips(superAdmin),
     t = page.t;
   const reasonId = useId();
+  const reasonInvalid =
+    Boolean(page.cancelConfirmation.error) &&
+    (page.reason.trim().length < 5 || page.reason.trim().length > 500);
   return (
     <section className="min-w-0" aria-labelledby="trips-title">
       <div className="mb-7 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -114,7 +117,7 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
           description={t('cancelHint')}
           confirmLabel={t('confirmCancel')}
           pending={page.cancelConfirmation.pending}
-          error={page.cancelConfirmation.error}
+          error={reasonInvalid ? undefined : page.cancelConfirmation.error}
           onConfirm={page.cancelConfirmation.confirm}
           onCancel={page.closeCancellation}
           onCloseAutoFocus={page.focus.restore}
@@ -129,9 +132,16 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
               maxLength={500}
               disabled={page.cancelConfirmation.pending}
               className="min-h-28 rounded-md border bg-card p-3"
+              aria-invalid={reasonInvalid}
               aria-describedby={reasonId + '-hint'}
             />
-            <span id={reasonId + '-hint'} className="text-muted-foreground">
+            <span
+              id={reasonId + '-hint'}
+              role={reasonInvalid ? 'alert' : undefined}
+              className={
+                reasonInvalid ? 'text-destructive' : 'text-muted-foreground'
+              }
+            >
               {t('reasonHint')}
             </span>
           </div>

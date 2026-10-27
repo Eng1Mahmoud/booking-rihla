@@ -1,4 +1,18 @@
 {
+  "DatePicker": {
+    "chooseDate": "Choose date",
+    "today": "Today",
+    "clear": "Clear",
+    "close": "Done",
+    "time": "Time in Cairo",
+    "chooseTime": "Choose time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "second": "Second",
+    "period": "Period",
+    "am": "AM",
+    "pm": "PM"
+  },
   "Auth": {
     "showPassword": "Show password",
     "hidePassword": "Hide password",
@@ -9,11 +23,14 @@
     "login": "Sign in",
     "logout": "Sign out",
     "staffOnly": "An administrator account is required.",
-    "switchAccount": "Sign out and use an authorized staff account."
+    "switchAccount": "Sign out and use an authorized staff account.",
+    "accountMenu": "Open staff account menu",
+    "staffAccount": "Staff account",
+    "signingOut": "Signing out…"
   },
   "Dashboard": {
-    "title": "Operations overview",
-    "intro": "Activity for the selected travel day · Cairo time.",
+    "title": "Overview",
+    "intro": "Trips departing on the selected date.",
     "travelDate": "Travel date",
     "applyDate": "Apply date",
     "overview": "Overview",
@@ -24,7 +41,6 @@
     "closeMenu": "Close navigation",
     "backWebsite": "Back to website",
     "skip": "Skip to reports",
-    "updated": "Report updated: {time}",
     "trips": "Trips",
     "bookings": "Bookings",
     "allocation": "Seat allocation",
@@ -48,8 +64,6 @@
     "unknown": "Unknown",
     "needsReview": "Needs review",
     "refundRequired": "Refund required",
-    "paymentBasis": "Payment figures use the last recorded settlement update on the selected Cairo day.",
-    "notRevenue": "Verified gross paid amounts, not net revenue or bank payouts.",
     "operationsUnavailable": "Operations report unavailable",
     "paymentsUnavailable": "Payment report unavailable",
     "retryHint": "The figures could not be loaded. Refresh to try again.",
@@ -84,7 +98,23 @@
     "differentStations": "Choose a destination station different from the origin.",
     "operatingDayRequired": "Select at least one operating day.",
     "arrivalAfterDeparture": "Choose an arrival time after departure.",
-    "departureDateRange": "Choose a last date on or after the first date, within a total of 90 days."
+    "departureDateRange": "Choose a last date on or after the first date, within a total of 90 days.",
+    "required": "This field is required.",
+    "email": "Enter a valid email address, such as name@example.com.",
+    "selection": "Choose a valid option from the list.",
+    "dateTime": "Enter a valid Cairo date and time. Repeated or missing times during a clock change cannot be used.",
+    "wholeNumber": "Enter a whole number using digits 0–9.",
+    "minLength": "Enter at least {value} characters.",
+    "maxLength": "Use {value} characters or fewer.",
+    "minValue": "Enter a value of at least {value}.",
+    "maxValue": "Enter a value no greater than {value}.",
+    "minItems": "Select at least {value} items.",
+    "maxItems": "Select {value} items or fewer.",
+    "price": "Enter a non-negative price using digits 0–9 and at most two decimal places.",
+    "priceRange": "The price must not exceed EGP 21,474,836.47.",
+    "code": "Start with an English letter; use only letters, numbers and underscores, up to 32 characters.",
+    "date": "Enter a valid date.",
+    "time": "Enter a valid time in hours and minutes."
   },
   "DataTable": {
     "range": "Showing {from, number}–{to, number} of {count, number}",
@@ -95,7 +125,10 @@
     "refreshing": "Refreshing…",
     "loading": "Loading the table…",
     "clearFilters": "Clear filters",
-    "pageOnly": "Page {page}"
+    "pageOnly": "Page {page}",
+    "scrollHint": "Scroll horizontally to see more columns",
+    "scrollLeft": "Scroll table left",
+    "scrollRight": "Scroll table right"
   },
   "ConfirmDialog": {
     "confirm": "Confirm",
@@ -396,7 +429,10 @@
     "batchCreated": "Created {count} trips.",
     "invalidTime": "A Cairo departure time is repeated or skipped by a daylight-saving change. Choose another time.",
     "noDepartures": "No departures match the selected days and date range.",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "departureDate": "Departure date",
+    "calculatedArrival": "Arrival — calculated automatically",
+    "arrivalHint": "Choose a departure date, time and duration to see the arrival."
   },
   "States": {
     "RESERVED": "Reserved",

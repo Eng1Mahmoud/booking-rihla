@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { useRouter } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
-import { FormInput } from '@/shared/components/forms/FormInput';
+import { DatePickr } from '@/shared/components/forms/DatePickr';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { reportDateSchema } from '../schemas/reportSchema';
 const schema = z.object({ date: reportDateSchema });
@@ -20,12 +20,11 @@ export function DateFilter({ date }: { date: string }) {
         router.push('/dashboard?date=' + encodeURIComponent(values.date));
       }}
     >
-      <FormInput<z.infer<typeof schema>>
+      <DatePickr<z.infer<typeof schema>>
         name="date"
         fieldClassName="min-w-0 gap-2"
         className="rounded-[12px] lg:h-[50px]"
         label={t('travelDate')}
-        type="date"
         min="2000-01-01"
         max="9998-12-31"
       />

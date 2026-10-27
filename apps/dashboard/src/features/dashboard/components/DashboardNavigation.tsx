@@ -47,20 +47,6 @@ function NavigationLinks({ superAdmin }: { superAdmin: boolean }) {
         <House className="size-[23px] shrink-0" aria-hidden="true" />
         {t('overview')}
       </a>
-      <a
-        href={sectionBase + '#operations'}
-        className="flex min-h-14 items-center gap-4 rounded-[10px] px-[18px] py-3.5 text-[15px] text-white hover:bg-[#24485a]"
-      >
-        <BusFront className="size-[23px] shrink-0" aria-hidden="true" />
-        {t('operations')}
-      </a>
-      <a
-        href={sectionBase + '#payments'}
-        className="flex min-h-14 items-center gap-4 rounded-[10px] px-[18px] py-3.5 text-[15px] text-white hover:bg-[#24485a]"
-      >
-        <CreditCard className="size-[23px] shrink-0" aria-hidden="true" />
-        {t('payments')}
-      </a>
       {[
         { href: '/dashboard/cities', label: t('cities'), Icon: Building2 },
         { href: '/dashboard/stations', label: t('stations'), Icon: MapPin },
@@ -155,7 +141,7 @@ export function DashboardNavigation({
           showCloseButton={false}
           side={locale === 'ar' ? 'right' : 'left'}
           dir={locale === 'ar' ? 'rtl' : 'ltr'}
-          className="w-[min(22rem,calc(100vw-2rem))] max-w-none overflow-y-auto border-0 bg-secondary-foreground pb-5 sm:max-w-none"
+          className="dashboard-scrollbar w-[min(22rem,calc(100vw-2rem))] max-w-none overflow-y-auto border-0 bg-secondary-foreground pb-5 sm:max-w-none"
           aria-describedby={undefined}
         >
           <div className="flex items-center justify-between gap-4 p-5">

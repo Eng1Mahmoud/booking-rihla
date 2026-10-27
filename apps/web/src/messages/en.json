@@ -722,5 +722,19 @@
         ]
       }
     ]
+  },
+  "DatePicker": {
+    "chooseDate": "Choose date",
+    "today": "Today",
+    "clear": "Clear",
+    "close": "Done",
+    "time": "Time in Cairo",
+    "chooseTime": "Choose time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "second": "Second",
+    "period": "Period",
+    "am": "AM",
+    "pm": "PM"
   }
 }

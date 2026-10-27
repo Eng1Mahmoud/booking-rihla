@@ -1,9 +1,11 @@
 'use client';
 import { useLocale } from 'next-intl';
+import { useId } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { Form } from '@/shared/components/forms/Form';
+import { DatePickr, TimePicker } from '@/shared/components/forms/DatePickr';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
@@ -25,6 +27,7 @@ import { formatReportTime } from '@/features/dashboard/lib/format';
 import { batchFormSchema } from '../schemas/tripSchema';
 import { useTripBatch } from '../hooks/useTripBatch';
 export function TripBatchManager() {
+  const weekdaysErrorId = useId();
   const page = useTripBatch(),
     locale = useLocale(),
     t = page.t;
@@ -59,6 +62,17 @@ export function TripBatchManager() {
         <div onChangeCapture={page.clearReview}>
           <Form
             schema={batchFormSchema}
+            serverErrorFields={{
+              BUS_SCHEDULE_CONFLICT: [
+                'busId',
+                'departureTime',
+                'durationMinutes',
+              ],
+              INVALID_DEPARTURE_TIME: ['departureTime'],
+              NO_DEPARTURES: ['weekdays', 'startDate', 'endDate'],
+              BUS_INACTIVE: ['busId'],
+              ROUTE_INACTIVE: ['routeId'],
+            }}
             defaultValues={{
               routeId: '',
               busId: '',
@@ -108,17 +122,9 @@ export function TripBatchManager() {
                       </NativeSelectOption>
                     ))}
                   </FormSelect>
-                  <FormInput
-                    name="startDate"
-                    type="date"
-                    label={t('startDate')}
-                  />
-                  <FormInput name="endDate" type="date" label={t('endDate')} />
-                  <FormInput
-                    name="departureTime"
-                    type="time"
-                    label={t('departureTime')}
-                  />
+                  <DatePickr name="startDate" label={t('startDate')} />
+                  <DatePickr name="endDate" label={t('endDate')} />
+                  <TimePicker name="departureTime" label={t('departureTime')} />
                   <FormInput
                     name="durationMinutes"
                     type="number"
@@ -133,7 +139,15 @@ export function TripBatchManager() {
                     dir="ltr"
                     label={t('price')}
                   />
-                  <fieldset className="grid gap-2 sm:col-span-2">
+                  <fieldset
+                    className="grid gap-2 sm:col-span-2"
+                    aria-invalid={!!form.formState.errors.weekdays}
+                    aria-describedby={
+                      form.formState.errors.weekdays
+                        ? weekdaysErrorId
+                        : undefined
+                    }
+                  >
                     <legend className="mb-3 text-sm font-medium">
                       {t('weekdays')}
                     </legend>
@@ -154,7 +168,10 @@ export function TripBatchManager() {
                       ))}
                     </div>
                     {form.formState.errors.weekdays && (
-                      <FieldError errors={[form.formState.errors.weekdays]} />
+                      <FieldError
+                        id={weekdaysErrorId}
+                        errors={[form.formState.errors.weekdays]}
+                      />
                     )}
                   </fieldset>
                 </fieldset>

@@ -1,9 +1,9 @@
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { DateFilter } from '@/features/dashboard/components/DateFilter';
 import { DashboardOverview } from '@/features/dashboard/components/DashboardOverview';
 import { reportDateSchema } from '@/features/dashboard/schemas/reportSchema';
-import { cairoToday, formatReportTime } from '@/features/dashboard/lib/format';
+import { cairoToday } from '@/features/dashboard/lib/format';
 import { getDashboardReports } from '@/features/dashboard/lib/reports.server';
 export default async function DashboardPage({
   searchParams,
@@ -30,7 +30,6 @@ export default async function DashboardPage({
       </section>
     );
   const reports = await getDashboardReports(parsed.data);
-  const locale = await getLocale();
   return (
     <div id="overview">
       <div className="mb-6 flex flex-col gap-6 lg:min-h-32 lg:flex-row lg:items-start lg:justify-between">
@@ -44,16 +43,6 @@ export default async function DashboardPage({
         </div>
         <div className="lg:w-2/5 lg:min-w-[330px]">
           <DateFilter date={parsed.data} />
-          {reports.operations.data && (
-            <p className="mt-4 min-h-[25px] max-w-[65ch] text-end text-[13px] leading-normal text-muted-foreground">
-              {t('updated', {
-                time: formatReportTime(
-                  reports.operations.data.serverTime,
-                  locale,
-                ),
-              })}
-            </p>
-          )}
         </div>
       </div>
       <DashboardOverview {...reports} />

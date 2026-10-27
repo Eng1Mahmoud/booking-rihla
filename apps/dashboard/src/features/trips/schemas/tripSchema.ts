@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Temporal } from 'temporal-polyfill';
+import { calculateTripSchedule } from '../lib/tripTime';
 export const tripInputSchema = z.object({
   routeId: z.uuid(),
   busId: z.uuid(),
@@ -12,41 +13,63 @@ export const tripSchema = tripInputSchema.extend({
   id: z.uuid(),
   cancelledAt: z.string().nullable().optional(),
 });
-const cairoDateTime = z
-  .string()
-  .min(16)
-  .transform((value, context) => {
-    try {
-      return Temporal.PlainDateTime.from(value)
-        .toZonedDateTime('Africa/Cairo', { disambiguation: 'reject' })
-        .toInstant()
-        .toString();
-    } catch {
-      context.addIssue({
-        code: 'custom',
-      });
-      return z.NEVER;
-    }
-  });
 export const priceFormSchema = z
   .string()
   .trim()
-  .regex(/^[0-9]+(?:\.[0-9]{1,2})?$/)
+  .refine((value) => /^[0-9]+(?:\.[0-9]{1,2})?$/.test(value), {
+    params: { messageKey: 'price' },
+  })
   .transform((value) => {
     const [whole, fraction = ''] = value.split('.');
     return Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
   })
-  .pipe(tripInputSchema.shape.pricePiastres);
-export const tripFormSchema = tripInputSchema
-  .extend({
-    departureAt: cairoDateTime,
-    arrivalAt: cairoDateTime,
-    pricePiastres: priceFormSchema,
+  .refine((value) => value <= 2147483647, {
+    params: { messageKey: 'priceRange' },
   })
-  .refine((v) => Date.parse(v.arrivalAt) > Date.parse(v.departureAt), {
-    path: ['arrivalAt'],
-    params: { messageKey: 'arrivalAfterDeparture' },
-  });
+  .pipe(tripInputSchema.shape.pricePiastres);
+export const tripFormSchema = z
+  .object({
+    routeId: tripInputSchema.shape.routeId,
+    busId: tripInputSchema.shape.busId,
+    departureDate: z.iso.date(),
+    departureTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?$/),
+    durationMinutes: z
+      .string()
+      .trim()
+      .refine((value) => /^\d+(?:\.\d+)?$/.test(value), {
+        params: { messageKey: 'wholeNumber' },
+      })
+      .transform(Number)
+      .pipe(z.number().positive()),
+    pricePiastres: priceFormSchema,
+    status: tripInputSchema.shape.status,
+  })
+  .transform((values, context) => {
+    const schedule = calculateTripSchedule(
+      values.departureDate,
+      values.departureTime,
+      values.durationMinutes,
+    );
+    if (!schedule) {
+      context.addIssue({
+        code: 'custom',
+        path: ['departureTime'],
+        params: { messageKey: 'dateTime' },
+      });
+      return z.NEVER;
+    }
+    return {
+      routeId: values.routeId,
+      busId: values.busId,
+      ...schedule,
+      pricePiastres: values.pricePiastres,
+      status: values.status,
+    };
+  })
+  .pipe(tripInputSchema);
+export type TripFormValues = z.input<typeof tripFormSchema>;
 export const tripListSchema = z.object({
   limit: z.number().int().min(1).max(99),
   offset: z.number().int().min(0).max(100000),
@@ -67,7 +90,11 @@ export const batchInputSchema = z
       })
       .max(7)
       .refine((days) => new Set(days).size === days.length),
-    departureTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    departureTime: z
+      .string()
+      .refine((value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value), {
+        params: { messageKey: 'time' },
+      }),
     durationMinutes: z.number().int().min(1).max(10080),
     pricePiastres: tripInputSchema.shape.pricePiastres,
   })
@@ -89,7 +116,9 @@ export const batchFormSchema = z
     ...batchInputSchema.shape,
     durationMinutes: z
       .string()
-      .regex(/^[0-9]+$/)
+      .refine((value) => /^[0-9]+$/.test(value), {
+        params: { messageKey: 'wholeNumber' },
+      })
       .transform(Number)
       .pipe(batchInputSchema.shape.durationMinutes),
     pricePiastres: priceFormSchema,

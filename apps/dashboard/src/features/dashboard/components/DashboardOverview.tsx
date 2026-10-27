@@ -1,10 +1,10 @@
-import { Armchair, BusFront, Database, Info, Ticket } from 'lucide-react';
+import { Armchair, BusFront, Database, Ticket } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cn } from '@/shared/lib/cn';
 import type { ApiResult } from '@/shared/lib/apiResult';
 import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import type { OperationReport, PaymentReport } from '../types/report';
-import { formatGrossPaid, formatReportTime } from '../lib/format';
+import { formatGrossPaid } from '../lib/format';
 type Row = { label: string; value: number; tone?: string };
 function MetricList({
   rows,
@@ -337,25 +337,11 @@ export async function DashboardOverview({
                 {t('noPayments')}
               </p>
             )}
-            <div className="mt-4 flex flex-wrap items-center gap-5 rounded-[12px] bg-[#eef7fb] px-5 py-4 text-sm/[1.7] text-secondary-foreground sm:flex-nowrap">
-              <Info className="shrink-0 text-[#157ba9]" aria-hidden="true" />
-              <div className="md:flex-1">
-                <p>{t('paymentBasis')}</p>
-                <p>{t('notRevenue')}</p>
-              </div>
-              {process.env.DASHBOARD_PREVIEW === 'synthetic' ? (
-                <span>{t('demoData')}</span>
-              ) : (
-                <time
-                  className="basis-full text-muted-foreground sm:basis-auto md:max-w-[290px] md:border-s md:ps-[22px]"
-                  dateTime={payment.serverTime}
-                >
-                  {t('updated', {
-                    time: formatReportTime(payment.serverTime, locale),
-                  })}
-                </time>
-              )}
-            </div>
+            {process.env.DASHBOARD_PREVIEW === 'synthetic' && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                {t('demoData')}
+              </p>
+            )}
           </>
         ) : (
           <div role="alert">

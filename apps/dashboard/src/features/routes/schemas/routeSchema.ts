@@ -10,7 +10,9 @@ export const routeFormSchema = routeInputSchema
   .extend({
     estimatedDurationMinutes: z
       .string()
-      .regex(/^[0-9]+$/)
+      .refine((value) => /^[0-9]+$/.test(value), {
+        params: { messageKey: 'wholeNumber' },
+      })
       .transform(Number)
       .pipe(routeInputSchema.shape.estimatedDurationMinutes),
   })

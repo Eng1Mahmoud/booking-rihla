@@ -9,7 +9,7 @@ import {
 import { useRouter } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
-import { FormInput } from '@/shared/components/forms/FormInput';
+import { DatePickr } from '@/shared/components/forms/DatePickr';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
 import type { City, Station } from '../types/trip';
@@ -130,7 +130,7 @@ export function TripSearchForm({
             </FormSelect>
           </div>
           <div className="min-w-0 sm:col-span-3 md:col-span-2 lg:col-span-1">
-            <FormInput<SearchFormValues>
+            <DatePickr<SearchFormValues>
               name="date"
               label={
                 <>
@@ -138,7 +138,6 @@ export function TripSearchForm({
                   {t('date')}
                 </>
               }
-              type="date"
               min={today}
             />
           </div>

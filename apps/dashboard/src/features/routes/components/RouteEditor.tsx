@@ -42,6 +42,10 @@ export function RouteEditor({
     >
       <Form
         schema={routeFormSchema}
+        serverErrorFields={{
+          ROUTE_EXISTS: ['originStationId', 'destinationStationId'],
+          STATION_NOT_FOUND: ['originStationId', 'destinationStationId'],
+        }}
         defaultValues={{
           originStationId: entry?.originStationId ?? '',
           destinationStationId: entry?.destinationStationId ?? '',

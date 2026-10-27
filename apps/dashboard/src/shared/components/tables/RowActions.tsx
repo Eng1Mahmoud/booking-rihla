@@ -14,7 +14,7 @@ export function RowActions({
 }) {
   const t = useTranslations('Common');
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className="flex flex-wrap justify-center gap-2">
       <Button
         variant="outline"
         className="min-h-11"

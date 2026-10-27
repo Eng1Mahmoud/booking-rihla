@@ -38,6 +38,7 @@ export function BusTypeEditor({
     >
       <Form
         schema={busTypeInputSchema}
+        serverErrorFields={{ BUS_TYPE_CODE_EXISTS: ['code'] }}
         defaultValues={{
           code: entry?.code ?? '',
           nameAr: entry?.nameAr ?? '',

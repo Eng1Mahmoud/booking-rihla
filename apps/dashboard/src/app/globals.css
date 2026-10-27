@@ -102,3 +102,77 @@
   font-weight: 700;
   font-display: swap;
 }
+
+@layer base {
+  [data-slot='table-container'] {
+    scrollbar-color: var(--muted) var(--canvas);
+    scrollbar-width: auto;
+  }
+  [data-slot='table-container']::-webkit-scrollbar {
+    height: 10px;
+  }
+  [data-slot='table-container']::-webkit-scrollbar-track {
+    background: var(--canvas);
+  }
+  [data-slot='table-container']::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border: 2px solid var(--canvas);
+    border-radius: 999px;
+  }
+}
+
+@layer base {
+  html,
+  .dashboard-scrollbar {
+    --scrollbar-thumb: #7196a4;
+    --scrollbar-thumb-hover: #9fc4cc;
+    --scrollbar-track: var(--navy);
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+
+  .dashboard-scrollbar {
+    overscroll-behavior-y: contain;
+  }
+
+  /* Use rounded handles where scrollbar pseudo-elements are supported. */
+  @supports selector(::-webkit-scrollbar) {
+    html,
+    .dashboard-scrollbar {
+      scrollbar-color: auto;
+      scrollbar-width: auto;
+    }
+
+    html::-webkit-scrollbar,
+    .dashboard-scrollbar::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    html::-webkit-scrollbar-track,
+    .dashboard-scrollbar::-webkit-scrollbar-track,
+    html::-webkit-scrollbar-corner,
+    .dashboard-scrollbar::-webkit-scrollbar-corner {
+      background: var(--scrollbar-track);
+    }
+
+    html::-webkit-scrollbar-thumb,
+    .dashboard-scrollbar::-webkit-scrollbar-thumb {
+      min-height: 44px;
+      border: 2px solid var(--scrollbar-track);
+      border-radius: 999px;
+      background: var(--scrollbar-thumb);
+    }
+
+    html::-webkit-scrollbar-thumb:hover,
+    .dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+
+    html::-webkit-scrollbar-button,
+    .dashboard-scrollbar::-webkit-scrollbar-button {
+      display: none;
+    }
+  }
+}

@@ -38,6 +38,7 @@ export function AmenityEditor({
     >
       <Form
         schema={amenityInputSchema}
+        serverErrorFields={{ AMENITY_CODE_EXISTS: ['code'] }}
         defaultValues={{
           code: entry?.code ?? '',
           nameAr: entry?.nameAr ?? '',

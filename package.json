@@ -2,7 +2,8 @@
   "name": "booking-bus",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "engines": {
     "node": ">=24.11.0"
@@ -12,7 +13,7 @@
     "build": "npm run build --workspaces",
     "start": "concurrently --kill-others --names api,web,dashboard \"npm run start --workspace @booking-bus/api\" \"npm run start --workspace @booking-bus/web\" \"npm run start --workspace @booking-bus/dashboard\"",
     "typecheck": "npm run typecheck --workspaces",
-    "lint": "eslint apps/api/src apps/api/prisma.config.ts apps/web/src apps/dashboard/src --max-warnings=0",
+    "lint": "eslint packages/ui/src apps/api/src apps/api/prisma.config.ts apps/web/src apps/dashboard/src --max-warnings=0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "check": "npm run format:check && npm run lint && npm run typecheck"

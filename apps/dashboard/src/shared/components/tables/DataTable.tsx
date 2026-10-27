@@ -126,7 +126,7 @@ export function DataTable<
         <Table
           aria-label={caption}
           className={cn(
-            'w-full min-w-160 table-fixed text-[length:inherit] leading-[inherit] text-start',
+            'w-full min-w-160 table-fixed text-[length:inherit] leading-[inherit] text-center',
             tableClassName,
           )}
         >
@@ -143,7 +143,7 @@ export function DataTable<
                     scope="col"
                     colSpan={header.colSpan}
                     className={cn(
-                      'h-auto px-5 py-3 text-start font-medium whitespace-normal text-muted-foreground',
+                      'h-auto px-5 py-3 font-medium whitespace-normal text-muted-foreground',
                       header.column.columnDef.meta?.headerClassName,
                     )}
                   >

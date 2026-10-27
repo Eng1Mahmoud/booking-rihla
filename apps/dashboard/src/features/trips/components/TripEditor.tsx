@@ -1,6 +1,7 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { Form } from '@/shared/components/forms/Form';
+import { TripTimingFields } from './TripTimingFields';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
 import {
@@ -31,6 +32,14 @@ export function TripEditor({
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
 }) {
+  const departure = entry
+    ? tripLocalTime(entry.departureAt).split('T')
+    : ['', '09:00'];
+  const duration = entry
+    ? String(
+        (Date.parse(entry.arrivalAt) - Date.parse(entry.departureAt)) / 60000,
+      )
+    : '120';
   const t = useTranslations('Trips'),
     common = useTranslations('Common'),
     locale = useLocale();
@@ -44,11 +53,25 @@ export function TripEditor({
     >
       <Form
         schema={tripFormSchema}
+        serverErrorFields={{
+          BUS_SCHEDULE_CONFLICT: [
+            'busId',
+            'departureDate',
+            'departureTime',
+            'durationMinutes',
+          ],
+          BUS_INACTIVE: ['busId'],
+          BUS_NOT_FOUND: ['busId'],
+          ROUTE_INACTIVE: ['routeId'],
+          ROUTE_NOT_FOUND: ['routeId'],
+          TRIP_REFERENCE_NOT_FOUND: ['routeId', 'busId'],
+        }}
         defaultValues={{
           routeId: entry?.routeId ?? '',
           busId: entry?.busId ?? '',
-          departureAt: entry ? tripLocalTime(entry.departureAt) : '',
-          arrivalAt: entry ? tripLocalTime(entry.arrivalAt) : '',
+          departureDate: departure[0],
+          departureTime: departure[1],
+          durationMinutes: duration,
           pricePiastres: ((entry?.pricePiastres ?? 0) / 100).toFixed(2),
           status: entry?.status ?? 'SCHEDULED',
         }}
@@ -81,18 +104,7 @@ export function TripEditor({
               </NativeSelectOption>
             ))}
           </FormSelect>
-          <FormInput
-            name="departureAt"
-            type="datetime-local"
-            step="any"
-            label={t('departure')}
-          />
-          <FormInput
-            name="arrivalAt"
-            type="datetime-local"
-            step="any"
-            label={t('arrival')}
-          />
+          <TripTimingFields />
           <FormInput
             name="pricePiastres"
             inputMode="decimal"
