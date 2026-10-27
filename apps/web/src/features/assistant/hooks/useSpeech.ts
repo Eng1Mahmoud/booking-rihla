@@ -90,33 +90,36 @@ export function useSpeechToText(locale: 'ar' | 'en') {
   };
 }
 
+function listVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return [];
+  return window.speechSynthesis.getVoices();
+}
+
 /** Prefer OS-local voices — remote Google voices hit Chrome's 15s cutoff. */
 function pickVoice(locale: 'ar' | 'en'): SpeechSynthesisVoice | null {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
+  const voices = listVoices();
   if (!voices.length) return null;
 
   const prefix = locale === 'ar' ? 'ar' : 'en';
   const matching = voices.filter((v) =>
     v.lang.toLowerCase().startsWith(prefix),
   );
-  const pool = matching.length > 0 ? matching : voices;
+  if (matching.length === 0) return null;
 
-  // 1) Local Arabic/English voice
-  const local = pool.find((v) => v.localService);
+  const local = matching.find((v) => v.localService);
   if (local) return local;
 
-  // 2) Preferred locale codes
   const preferred =
     locale === 'ar'
       ? ['ar-EG', 'ar-SA', 'ar-AE', 'ar-XA', 'ar']
       : ['en-US', 'en-GB', 'en'];
   for (const code of preferred) {
-    const hit = pool.find((v) => v.lang.toLowerCase() === code.toLowerCase());
+    const hit = matching.find(
+      (v) => v.lang.toLowerCase() === code.toLowerCase(),
+    );
     if (hit) return hit;
   }
-
-  return pool[0] ?? null;
+  return matching[0] ?? null;
 }
 
 function prepareForSpeech(text: string, locale: 'ar' | 'en'): string {
@@ -140,12 +143,12 @@ function prepareForSpeech(text: string, locale: 'ar' | 'en'): string {
       .replace(/\b(\d+)\s*[.)\-:]\s*/g, ', ');
   }
 
-  return t.slice(0, 1500);
+  // Keep spoken replies short for reliability
+  return t.slice(0, 800);
 }
 
-/** ~120 char chunks at punctuation — known stable size for Chrome. */
 function chunkText(text: string): string[] {
-  const max = 120;
+  const max = 100;
   const chunks: string[] = [];
   let remaining = text.trim();
 
@@ -154,21 +157,17 @@ function chunkText(text: string): string[] {
       chunks.push(remaining);
       break;
     }
-    let slice = remaining.slice(0, max + 1);
-    // Prefer break after Arabic/Latin punctuation or space
+    const slice = remaining.slice(0, max + 1);
     const breakAt = Math.max(
-      slice.lastIndexOf('。'),
       slice.lastIndexOf('.'),
       slice.lastIndexOf('!'),
       slice.lastIndexOf('?'),
       slice.lastIndexOf('؟'),
       slice.lastIndexOf('،'),
       slice.lastIndexOf(','),
-      slice.lastIndexOf(';'),
-      slice.lastIndexOf('؛'),
       slice.lastIndexOf(' '),
     );
-    const end = breakAt > 40 ? breakAt + 1 : max;
+    const end = breakAt > 30 ? breakAt + 1 : max;
     chunks.push(remaining.slice(0, end).trim());
     remaining = remaining.slice(end).trim();
   }
@@ -180,6 +179,8 @@ export function useTextToSpeech() {
   const [speaking, setSpeaking] = useState(false);
   const [supported, setSupported] = useState(false);
   const [voicesReady, setVoicesReady] = useState(false);
+  const [hasArabicVoice, setHasArabicVoice] = useState(false);
+  const [hasEnglishVoice, setHasEnglishVoice] = useState(false);
   const stoppedRef = useRef(false);
   const keepAliveRef = useRef<number | null>(null);
 
@@ -191,11 +192,15 @@ export function useTextToSpeech() {
     setSupported(true);
 
     const load = () => {
-      if (window.speechSynthesis.getVoices().length > 0) setVoicesReady(true);
+      const voices = listVoices();
+      if (voices.length === 0) return;
+      setVoicesReady(true);
+      setHasArabicVoice(voices.some((v) => v.lang.toLowerCase().startsWith('ar')));
+      setHasEnglishVoice(voices.some((v) => v.lang.toLowerCase().startsWith('en')));
     };
     load();
     window.speechSynthesis.onvoiceschanged = load;
-    const t = window.setTimeout(load, 300);
+    const t = window.setTimeout(load, 400);
 
     return () => {
       window.clearTimeout(t);
@@ -204,6 +209,14 @@ export function useTextToSpeech() {
       if (keepAliveRef.current) window.clearInterval(keepAliveRef.current);
     };
   }, []);
+
+  const canSpeakForLocale = useCallback(
+    (locale: 'ar' | 'en') => {
+      if (!supported || !voicesReady) return false;
+      return locale === 'ar' ? hasArabicVoice : hasEnglishVoice;
+    },
+    [supported, voicesReady, hasArabicVoice, hasEnglishVoice],
+  );
 
   const clearKeepAlive = () => {
     if (keepAliveRef.current) {
@@ -228,27 +241,23 @@ export function useTextToSpeech() {
         !('speechSynthesis' in window) ||
         !text.trim()
       ) {
-        return;
+        return false;
       }
+
+      const voice = pickVoice(locale);
+      if (!voice) return false;
 
       const synth = window.speechSynthesis;
       stoppedRef.current = false;
       synth.cancel();
       clearKeepAlive();
 
-      const prepared = prepareForSpeech(text, locale);
-      const chunks = chunkText(prepared);
-      if (chunks.length === 0) return;
+      const chunks = chunkText(prepareForSpeech(text, locale));
+      if (chunks.length === 0) return false;
 
-      // Warm up voices (Chrome often returns [] until spoken once)
-      void synth.getVoices();
-
-      const voice = pickVoice(locale);
-      const lang = voice?.lang || (locale === 'ar' ? 'ar-SA' : 'en-US');
-
+      const lang = voice.lang || (locale === 'ar' ? 'ar-SA' : 'en-US');
       setSpeaking(true);
 
-      // Chromium bug: remote/Google voices stop ~15s without pause+resume
       keepAliveRef.current = window.setInterval(() => {
         if (stoppedRef.current || !synth.speaking) {
           clearKeepAlive();
@@ -260,7 +269,7 @@ export function useTextToSpeech() {
         } catch {
           /* ignore */
         }
-      }, 10000);
+      }, 9000);
 
       const speakAt = (index: number) => {
         if (stoppedRef.current || index >= chunks.length) {
@@ -272,9 +281,7 @@ export function useTextToSpeech() {
         const utter = new SpeechSynthesisUtterance(chunks[index]!);
         utter.lang = lang;
         utter.rate = locale === 'ar' ? 0.9 : 1;
-        utter.pitch = 1;
-        utter.volume = 1;
-        if (voice) utter.voice = voice;
+        utter.voice = voice;
 
         const next = () => {
           if (stoppedRef.current) {
@@ -282,37 +289,30 @@ export function useTextToSpeech() {
             setSpeaking(false);
             return;
           }
-          window.setTimeout(() => speakAt(index + 1), 60);
+          window.setTimeout(() => speakAt(index + 1), 50);
         };
 
         utter.onend = next;
         utter.onerror = next;
 
-        // Quirks that stabilize Chrome onend / ordering
-        // eslint-disable-next-line no-console
-        console.debug('[rihla-tts]', chunks[index]?.slice(0, 40));
         window.setTimeout(() => {
           if (stoppedRef.current) return;
           synth.speak(utter);
-          if (synth.paused) {
-            try {
-              synth.resume();
-            } catch {
-              /* ignore */
-            }
-          }
         }, 0);
       };
 
-      const begin = () => speakAt(0);
-      if (!voicesReady || synth.getVoices().length === 0) {
-        window.setTimeout(begin, 250);
-      } else {
-        begin();
-      }
+      speakAt(0);
+      return true;
     },
-    [voicesReady],
+    [],
   );
 
-  return { supported, speaking, speak, stop, voicesReady };
+  return {
+    supported,
+    speaking,
+    speak,
+    stop,
+    voicesReady,
+    canSpeakForLocale,
+  };
 }
