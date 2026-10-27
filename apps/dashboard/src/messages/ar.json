@@ -53,6 +53,7 @@
     "expired": "منتهية",
     "reserved": "محجوزة",
     "processing": "جارٍ التحقق من الدفع",
+    "occupancy": "{percent}% من السعة مخصصة",
     "cities": "المدن",
     "stations": "المحطات",
     "busTypes": "أنواع الحافلات",
@@ -76,6 +77,12 @@
     "scanResult": "النتيجة",
     "cameraUnsupported": "مسح الكاميرا غير متاح على هذا الجهاز. الصق الرمز يدويًا.",
     "scanning": "جاري المسح…",
+    "scanReference": "المرجع",
+    "scanPassenger": "الراكب",
+    "scanTrip": "الرحلة",
+    "scanDeparture": "المغادرة",
+    "scanBoarded": "تم الصعود",
+    "scanSeat": "مقعد {number}",
     "refresh": "تحديث التقارير",
     "noTrips": "لا توجد مغادرات في هذا التاريخ.",
     "today": "عرض تقارير اليوم"
@@ -88,7 +95,9 @@
     "retry": "إعادة المحاولة",
     "notFound": "تعذر العثور على هذه الصفحة.",
     "home": "العودة للرئيسية",
-    "required": "هذا الحقل مطلوب."
+    "required": "هذا الحقل مطلوب.",
+    "email": "أدخل بريدًا إلكترونيًا صالحًا.",
+    "selection": "اختر خيارًا صالحًا من القائمة."
   },
   "States": {
     "USER": "راكب",
@@ -142,5 +151,20 @@
     "mutationFailed": "تعذر إكمال التغيير. حاول مرة أخرى.",
     "sessionExpired": "انتهت جلستك. سجّل الدخول مجددًا للمتابعة.",
     "accessDenied": "حسابك الحالي لا يمكنه تنفيذ هذا الإجراء."
+  },
+  "Cities": {
+    "citiesTitle": "المدن",
+    "citiesIntro": "إدارة المدن المخدومة على المسارات.",
+    "addCity": "إضافة مدينة",
+    "editCity": "تعديل مدينة",
+    "deleteCity": "حذف مدينة",
+    "created": "تمت الإضافة.",
+    "updated": "تم الحفظ.",
+    "deleted": "تم الحذف.",
+    "searchCities": "بحث المدن",
+    "noCities": "لا توجد مدن بعد",
+    "confirmDelete": "تأكيد الحذف",
+    "deleting": "جارٍ الحذف…",
+    "cancel": "إلغاء"
   }
 }
