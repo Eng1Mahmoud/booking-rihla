@@ -64,6 +64,7 @@ import {
   type AdminBookingService,
 } from './services/adminBookingService.ts';
 import { createAdminBookingRouter } from './routes/adminBookingRoutes.ts';
+import { createTicketScanRouter } from './routes/ticketScanRoutes.ts';
 import type { TripBatchService } from './services/tripBatchService.ts';
 import {
   busTypeService,
@@ -302,6 +303,8 @@ export function createApp(
       admin,
     ),
   );
+
+  app.use('/api/v1/admin/tickets', createTicketScanRouter(admin));
 
   app.use(
     '/api/v1/admin/statistics',
