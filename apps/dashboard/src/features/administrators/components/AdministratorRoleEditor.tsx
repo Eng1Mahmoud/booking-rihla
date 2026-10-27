@@ -9,7 +9,9 @@ import {
 } from '@/shared/components/dialogs/FormDialog';
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import type { ManagedUser } from '@/features/users/schemas/userSchema';
-const schema = z.object({ role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']) });
+const schema = z.object({
+  role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
+});
 export function AdministratorRoleEditor({
   entry,
   pending,
@@ -40,7 +42,7 @@ export function AdministratorRoleEditor({
       >
         <fieldset disabled={pending}>
           <FormSelect name="role" label={t('role')}>
-            {(['USER', 'ADMIN', 'SUPER_ADMIN'] as const).map((role) => (
+            {(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'] as const).map((role) => (
               <NativeSelectOption
                 key={role}
                 value={role}
