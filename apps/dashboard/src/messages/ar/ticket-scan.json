@@ -1,0 +1,26 @@
+{
+  "scanTitle": "مسح QR للصعود",
+  "scanHint": "وجّه الكاميرا إلى رمز الراكب، أو الصق الرمز يدويًا.",
+  "startCamera": "تشغيل الكاميرا",
+  "stopCamera": "إيقاف الكاميرا",
+  "manualPayload": "أو الصق محتوى الـ QR",
+  "verify": "تحقق",
+  "board": "تأكيد الصعود",
+  "scanResult": "النتيجة",
+  "cameraUnsupported": "مسح الكاميرا غير متاح على هذا الجهاز. الصق الرمز يدويًا.",
+  "scanning": "جاري المسح…",
+  "scanReference": "المرجع",
+  "scanPassenger": "الراكب",
+  "scanTrip": "الرحلة",
+  "scanDeparture": "المغادرة",
+  "scanBoarded": "تم الصعود",
+  "scanSeat": "مقعد {number}",
+  "results": {
+    "OK": "تم قبول التذكرة",
+    "ALREADY_BOARDED": "تم الصعود مسبقًا",
+    "OUTSIDE_WINDOW": "خارج وقت الصعود المسموح",
+    "NOT_ELIGIBLE": "التذكرة غير مؤهلة للصعود",
+    "NOT_FOUND": "التذكرة غير موجودة",
+    "INVALID_QR": "رمز QR غير صالح"
+  }
+}

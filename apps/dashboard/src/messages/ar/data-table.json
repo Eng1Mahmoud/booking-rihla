@@ -1,0 +1,14 @@
+{
+  "range": "عرض {from, number}–{to, number} من {count, number}",
+  "pagination": "صفحات الجدول",
+  "previous": "السابق",
+  "next": "التالي",
+  "refresh": "تحديث القائمة",
+  "refreshing": "جارٍ التحديث…",
+  "loading": "جارٍ تحميل الجدول…",
+  "clearFilters": "مسح عوامل التصفية",
+  "pageOnly": "الصفحة {page}",
+  "scrollHint": "مرّر الجدول أفقيًا لعرض بقية الأعمدة",
+  "scrollLeft": "تمرير الجدول لليسار",
+  "scrollRight": "تمرير الجدول لليمين"
+}

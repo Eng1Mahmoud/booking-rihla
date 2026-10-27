@@ -138,6 +138,15 @@ and starts only its own application. The owner requested no new test files or
 restored testing scripts; verification uses type checks/builds, scoped lint/format
 and relevant manual checks.
 
+## Dashboard translations
+
+Dashboard messages live in `apps/dashboard/src/messages/{ar,en}/`, with one
+JSON file per section (for example, `trips.json`, `payments.json`, and
+`ticket-scan.json`). Each locale's `index.ts` explicitly maps these files to
+next-intl namespaces. Add matching keys and interpolation variables in both
+languages; keep existing namespaces when adding text to a feature. New sections
+also need an entry in both locale indexes. The request loader selects one locale.
+
 ## AI booking assistant
 
 The passenger chat uses a same-origin streaming proxy to the Express API. Set

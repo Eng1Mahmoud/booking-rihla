@@ -3,8 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
-import { scanTicketAction, type ScanTicketResult } from '../actions/scan.actions';
+import {
+  scanTicketAction,
+  type ScanTicketResult,
+} from '../actions/scan.actions';
 import { cn } from '@/shared/lib/cn';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 
 type Detector = {
   detect: (source: ImageBitmapSource) => Promise<{ rawValue?: string }[]>;
@@ -26,7 +30,7 @@ function getDetector(): Detector | null {
 }
 
 export function TicketScanPanel() {
-  const t = useTranslations('Dashboard');
+  const t = useTranslations('TicketScan');
   const locale = useLocale() as 'ar' | 'en';
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -85,12 +89,17 @@ export function TicketScanPanel() {
           language: locale,
         });
         if (!res.success || !res.data) {
-          setError(String(res.code ?? 'ERROR'));
-          setResult(null);
-          return;
+          throw new ApiError(
+            res.status,
+            res.code,
+            'message' in res ? res.message : undefined,
+          );
         }
         setResult(res.data);
         lastPayload.current = value;
+      } catch (error) {
+        setError(errorMessage(error, locale));
+        setResult(null);
       } finally {
         setBusy(false);
       }
@@ -136,7 +145,9 @@ export function TicketScanPanel() {
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('scanTitle')}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('scanTitle')}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('scanHint')}</p>
       </div>
 
@@ -162,7 +173,9 @@ export function TicketScanPanel() {
             </Button>
           )}
           {busy && (
-            <span className="text-sm text-muted-foreground">{t('scanning')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('scanning')}
+            </span>
           )}
         </div>
       </div>
@@ -210,7 +223,7 @@ export function TicketScanPanel() {
       {result && (
         <div className={cn('rounded-2xl border p-4 text-sm', statusColor)}>
           <p className="font-semibold">
-            {t('scanResult')}: {result.code}
+            {t('scanResult')}: {t('results.' + result.code)}
           </p>
           {result.ticket && (
             <dl className="mt-3 grid gap-2">
@@ -230,8 +243,7 @@ export function TicketScanPanel() {
               <div>
                 <dt className="text-xs opacity-70">{t('scanTrip')}</dt>
                 <dd>
-                  {result.ticket.trip.origin} →{' '}
-                  {result.ticket.trip.destination}
+                  {result.ticket.trip.origin} → {result.ticket.trip.destination}
                 </dd>
               </div>
               <div>

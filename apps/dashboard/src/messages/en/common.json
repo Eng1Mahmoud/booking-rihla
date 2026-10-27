@@ -1,0 +1,14 @@
+{
+  "nameAr": "Arabic name",
+  "nameEn": "English name",
+  "close": "Close form",
+  "cancel": "Cancel",
+  "saveChanges": "Save changes",
+  "edit": "Edit",
+  "delete": "Delete",
+  "actions": "Actions",
+  "editNamed": "Edit {name}",
+  "deleteNamed": "Delete {name}",
+  "retry": "Try again",
+  "city": "City"
+}

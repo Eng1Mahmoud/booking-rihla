@@ -1,0 +1,26 @@
+{
+  "scanTitle": "Scan boarding QR",
+  "scanHint": "Point the camera at the passenger QR, or paste the code.",
+  "startCamera": "Start camera",
+  "stopCamera": "Stop camera",
+  "manualPayload": "Or paste QR payload",
+  "verify": "Verify",
+  "board": "Confirm boarding",
+  "scanResult": "Result",
+  "cameraUnsupported": "Camera QR scanning is not available on this device. Paste the payload instead.",
+  "scanning": "Scanning…",
+  "scanReference": "Reference",
+  "scanPassenger": "Passenger",
+  "scanTrip": "Trip",
+  "scanDeparture": "Departure",
+  "scanBoarded": "Boarded",
+  "scanSeat": "Seat {number}",
+  "results": {
+    "OK": "Ticket accepted",
+    "ALREADY_BOARDED": "Already boarded",
+    "OUTSIDE_WINDOW": "Outside the boarding window",
+    "NOT_ELIGIBLE": "Ticket is not eligible for boarding",
+    "NOT_FOUND": "Ticket not found",
+    "INVALID_QR": "Invalid QR code"
+  }
+}
