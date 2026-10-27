@@ -215,14 +215,16 @@ export function TicketScanPanel() {
           {result.ticket && (
             <dl className="mt-3 grid gap-2">
               <div>
-                <dt className="text-xs opacity-70">Ref</dt>
+                <dt className="text-xs opacity-70">{t('scanReference')}</dt>
                 <dd className="font-medium">{result.ticket.reference}</dd>
               </div>
               <div>
                 <dt className="text-xs opacity-70">{t('scanPassenger')}</dt>
                 <dd className="font-medium">
-                  {result.ticket.passenger.name} · seat{' '}
-                  {result.ticket.passenger.seatNumber}
+                  {result.ticket.passenger.name} ·{' '}
+                  {t('scanSeat', {
+                    number: result.ticket.passenger.seatNumber,
+                  })}
                 </dd>
               </div>
               <div>
