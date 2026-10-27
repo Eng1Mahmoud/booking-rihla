@@ -138,6 +138,9 @@ export function AdministratorsManager() {
             className="min-h-11"
           >
             <NativeSelectOption value="">{t('all')}</NativeSelectOption>
+            <NativeSelectOption value="STAFF">
+              {states('STAFF')}
+            </NativeSelectOption>
             <NativeSelectOption value="ADMIN">
               {states('ADMIN')}
             </NativeSelectOption>

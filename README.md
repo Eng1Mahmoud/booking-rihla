@@ -138,6 +138,47 @@ and starts only its own application. The owner requested no new test files or
 restored testing scripts; verification uses type checks/builds, scoped lint/format
 and relevant manual checks.
 
+## Ticket QR and gate boarding
+
+Each confirmed, fully paid booking provides a signed QR for each passenger seat.
+The passenger ticket page and print view show every code with its name and seat;
+ticket emails attach one PNG per seat. The primary QR field remains available
+for older clients. QR contents contain allocation identifiers and a signature,
+not passenger contact details or payment credentials.
+
+Gate staff sign in to the dashboard and open `/{locale}/dashboard/scan`.
+STAFF accounts land on this page and cannot access administrator pages. A super
+administrator can assign the STAFF role to an active, verified account; changing
+roles revokes existing sessions. ADMIN and SUPER_ADMIN can also scan tickets.
+
+Scanning verifies current ticket, payment, trip and seat eligibility. Verification
+never records boarding. Confirm boarding stores the seat timestamp and staff
+user; repeated/concurrent scans return the existing record. Boarding and operator
+cancellation share the trip lock, so eligibility is re-read inside the transaction.
+Business scan outcomes use HTTP 200 with a string envelope code and the outcome
+in `data.code`; malformed requests and authorization failures remain HTTP errors.
+
+The default boarding window is four hours before through two hours after departure.
+Set `TICKET_BOARDING_HOURS_BEFORE` / `TICKET_BOARDING_HOURS_AFTER` on the API to
+change it. Displayed scan times use Africa/Cairo. A dedicated 64-character hex
+`TICKET_QR_SECRET` is optional; otherwise a separate signing key is derived from
+`AUTH_CODE_SECRET`. Invalid configured keys fail closed. Changing the signing key
+invalidates saved QR images; passengers must reopen their ticket to regenerate it.
+Camera scanning uses BarcodeDetector where supported, with manual payload input
+as a fallback; browser camera access requires HTTPS or localhost.
+
+Apply tracked migrations from `apps/api` before running the updated API:
+
+```sh
+npx prisma db migrate
+```
+
+Migration `20261027T2204_ticket_boarding_staff` adds seat boarding fields, the
+staff-user relation and STAFF to the existing role check. Its contract artifacts
+accompany the migration. It replaces the old standalone boarding SQL;
+installations that ran that legacy script need their schema reconciled with the
+tracked contract before migration, preserving any existing boarding records.
+
 ## Dashboard translations
 
 Dashboard messages live in `apps/dashboard/src/messages/{ar,en}/`, with one

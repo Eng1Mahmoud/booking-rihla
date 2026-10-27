@@ -1,0 +1,251 @@
+[
+  {
+    "id": "dropCheckConstraint.User.User_role_check_a8bee70d",
+    "label": "Drop check constraint \"User_role_check_a8bee70d\" on \"User\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "User_role_check_a8bee70d",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_role_check_a8bee70d\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_a8bee70d",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"User_role_check_a8bee70d\"",
+        "sql": "ALTER TABLE \"public\".\"User\" DROP CONSTRAINT \"User_role_check_a8bee70d\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_role_check_a8bee70d\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_a8bee70d",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.BookingSeat.boardedAt",
+    "label": "Add column \"boardedAt\" to \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "boardedAt",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"boardedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "boardedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"boardedAt\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\" ADD COLUMN \"boardedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"boardedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "boardedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.BookingSeat.boardedByUserId",
+    "label": "Add column \"boardedByUserId\" to \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "boardedByUserId",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"boardedByUserId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "boardedByUserId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"boardedByUserId\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\" ADD COLUMN \"boardedByUserId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"boardedByUserId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "BookingSeat",
+          "boardedByUserId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.User.User_role_check_8b3757fc",
+    "label": "Add check constraint \"User_role_check_8b3757fc\" on \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "User_role_check_8b3757fc",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_role_check_8b3757fc\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_8b3757fc",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"User_role_check_8b3757fc\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD CONSTRAINT \"User_role_check_8b3757fc\" CHECK (\"role\" IN ('USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_role_check_8b3757fc\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_8b3757fc",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.BookingSeat.BookingSeat_boardedByUserId_idx_112466dc",
+    "label": "Create index \"BookingSeat_boardedByUserId_idx_112466dc\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "BookingSeat_boardedByUserId_idx_112466dc",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"BookingSeat_boardedByUserId_idx_112466dc\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_boardedByUserId_idx_112466dc\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"BookingSeat_boardedByUserId_idx_112466dc\"",
+        "sql": "CREATE INDEX \"BookingSeat_boardedByUserId_idx_112466dc\" ON \"public\".\"BookingSeat\" (\"boardedByUserId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"BookingSeat_boardedByUserId_idx_112466dc\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"BookingSeat_boardedByUserId_idx_112466dc\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.BookingSeat.BookingSeat_boardedByUserId_fkey",
+    "label": "Add foreign key \"BookingSeat_boardedByUserId_fkey\" on \"BookingSeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "BookingSeat_boardedByUserId_fkey",
+        "table": "BookingSeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"BookingSeat_boardedByUserId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_boardedByUserId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"BookingSeat_boardedByUserId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"BookingSeat\"\nADD CONSTRAINT \"BookingSeat_boardedByUserId_fkey\"\nFOREIGN KEY (\"boardedByUserId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE SET NULL\nON UPDATE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"BookingSeat_boardedByUserId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "BookingSeat_boardedByUserId_fkey",
+          "public",
+          "\"public\".\"BookingSeat\""
+        ]
+      }
+    ]
+  }
+]

@@ -32,7 +32,7 @@ export async function DashboardShell({
       </a>
       <aside className="dashboard-scrollbar hidden lg:bg-secondary-foreground lg:sticky lg:top-0 lg:block lg:h-dvh lg:overflow-y-auto">
         <Link
-          href="/dashboard"
+          href={user.role === 'STAFF' ? '/dashboard/scan' : '/dashboard'}
           className="inline-flex items-center gap-3 px-[26px] pt-6 pb-[34px] text-white"
           dir="ltr"
           aria-label={t('overview')}
@@ -70,7 +70,7 @@ export async function DashboardShell({
             />
           </div>
           <Link
-            href="/dashboard"
+            href={user.role === 'STAFF' ? '/dashboard/scan' : '/dashboard'}
             dir="ltr"
             className="ms-2 text-xl font-semibold sm:hidden"
           >

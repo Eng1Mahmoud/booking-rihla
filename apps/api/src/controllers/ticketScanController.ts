@@ -27,18 +27,8 @@ export function createTicketScanController(service: TicketScanService) {
           language: parsed.data.language,
         });
 
-        const http =
-          result.code === 'INVALID_QR' || result.code === 'NOT_FOUND'
-            ? 404
-            : result.code === 'NOT_ELIGIBLE'
-              ? 409
-              : result.code === 'OUTSIDE_WINDOW'
-                ? 409
-                : result.code === 'ALREADY_BOARDED'
-                  ? 200
-                  : 200;
-
-        sendSuccess(response, result, http);
+        // A completed scan returns a business outcome in data.code.
+        sendSuccess(response, result);
       } catch (error) {
         next(error);
       }

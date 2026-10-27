@@ -11,10 +11,10 @@ import {
   tokensSchema,
 } from '@/shared/lib/session';
 import { loginSchema, type LoginValues } from '../schemas/loginSchema';
-import type { AuthUser } from '../types/auth';
+import type { AuthUser, UserRole } from '../types/auth';
 export async function loginAction(
   input: LoginValues,
-): Promise<ApiResult<void>> {
+): Promise<ApiResult<{ role: UserRole }>> {
   const parsed = await parseSchema(loginSchema, input);
   if (!parsed.success) return parsed.error;
   const locale = await getLocale();
@@ -30,7 +30,10 @@ export async function loginAction(
     accessToken: tokens.data.accessToken,
   });
   if (!user.success) return { ...user, data: undefined };
-  if (user.data?.role !== 'ADMIN' && user.data?.role !== 'SUPER_ADMIN') {
+  if (
+    !user.data ||
+    !['STAFF', 'ADMIN', 'SUPER_ADMIN'].includes(user.data.role)
+  ) {
     await apiFetch('auth/logout', {
       method: 'POST',
       body: {},
@@ -46,7 +49,7 @@ export async function loginAction(
     };
   }
   setSessionCookies(await cookies(), tokens.data);
-  return { ...result, data: undefined };
+  return { ...result, data: { role: user.data.role } };
 }
 export async function logoutAction(): Promise<ApiResult<void>> {
   const store = await cookies();

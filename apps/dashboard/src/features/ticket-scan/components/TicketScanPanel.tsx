@@ -34,6 +34,8 @@ export function TicketScanPanel() {
   const locale = useLocale() as 'ar' | 'en';
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraGeneration = useRef(0);
+  const [cameraStarting, setCameraStarting] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
   const [manual, setManual] = useState('');
@@ -43,6 +45,8 @@ export function TicketScanPanel() {
   const lastPayload = useRef('');
 
   const stopCamera = useCallback(() => {
+    cameraGeneration.current++;
+    setCameraStarting(false);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -50,11 +54,15 @@ export function TicketScanPanel() {
   }, []);
 
   const startCamera = useCallback(async () => {
+    stopCamera();
+    const generation = cameraGeneration.current;
+    setCameraStarting(true);
     setError(null);
     const detector = getDetector();
     if (!detector || !navigator.mediaDevices?.getUserMedia) {
       setCameraSupported(false);
       setError(t('cameraUnsupported'));
+      setCameraStarting(false);
       return;
     }
     try {
@@ -62,17 +70,25 @@ export function TicketScanPanel() {
         video: { facingMode: { ideal: 'environment' } },
         audio: false,
       });
+      if (generation !== cameraGeneration.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      setCameraOn(true);
+      if (generation === cameraGeneration.current) setCameraOn(true);
     } catch {
+      if (generation !== cameraGeneration.current) return;
+      stopCamera();
       setCameraSupported(false);
       setError(t('cameraUnsupported'));
+    } finally {
+      if (generation === cameraGeneration.current) setCameraStarting(false);
     }
-  }, [t]);
+  }, [t, stopCamera]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
@@ -159,7 +175,7 @@ export function TicketScanPanel() {
           playsInline
         />
         <div className="flex flex-wrap gap-2 border-t p-3">
-          {!cameraOn ? (
+          {!cameraOn && !cameraStarting ? (
             <Button
               type="button"
               onClick={() => void startCamera()}
@@ -189,6 +205,7 @@ export function TicketScanPanel() {
           value={manual}
           onChange={(e) => setManual(e.target.value)}
           rows={3}
+          maxLength={2048}
           className="w-full rounded-xl border bg-background px-3 py-2 font-mono text-sm"
           dir="ltr"
         />
@@ -223,7 +240,12 @@ export function TicketScanPanel() {
       {result && (
         <div className={cn('rounded-2xl border p-4 text-sm', statusColor)}>
           <p className="font-semibold">
-            {t('scanResult')}: {t('results.' + result.code)}
+            {t('scanResult')}:{' '}
+            {t(
+              result.code === 'OK' && result.action === 'board'
+                ? 'boardedSuccess'
+                : 'results.' + result.code,
+            )}
           </p>
           {result.ticket && (
             <dl className="mt-3 grid gap-2">
@@ -251,6 +273,7 @@ export function TicketScanPanel() {
                 <dd>
                   {new Date(result.ticket.trip.departureAt).toLocaleString(
                     locale === 'ar' ? 'ar-EG' : 'en-GB',
+                    { timeZone: 'Africa/Cairo' },
                   )}
                 </dd>
               </div>
@@ -260,6 +283,7 @@ export function TicketScanPanel() {
                   <dd>
                     {new Date(result.boardedAt).toLocaleString(
                       locale === 'ar' ? 'ar-EG' : 'en-GB',
+                      { timeZone: 'Africa/Cairo' },
                     )}
                   </dd>
                 </div>

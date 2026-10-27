@@ -5,7 +5,7 @@ export const administratorIdSchema = z.uuid();
 export const administratorDetailsQuerySchema = z.strictObject({});
 export const administratorListQuerySchema = paginationQuerySchema.extend({
   email: registerSchema.shape.email.optional(),
-  role: z.enum(['ADMIN', 'SUPER_ADMIN']).optional(),
+  role: z.enum(['STAFF', 'ADMIN', 'SUPER_ADMIN']).optional(),
   isActive: z
     .enum(['true', 'false'])
     .transform((value) => value === 'true')

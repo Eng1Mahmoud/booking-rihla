@@ -270,6 +270,10 @@
                 "value": "USER"
               },
               {
+                "name": "STAFF",
+                "value": "STAFF"
+              },
+              {
                 "name": "ADMIN",
                 "value": "ADMIN"
               },
@@ -704,6 +708,20 @@
           },
           "BookingSeat": {
             "fields": {
+              "boardedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "boardedByUserId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "bookingId": {
                 "nullable": false,
                 "type": {
@@ -755,6 +773,22 @@
               }
             },
             "relations": {
+              "boardedByUser": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "boardedByUserId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              },
               "booking": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -792,6 +826,12 @@
             },
             "storage": {
               "fields": {
+                "boardedAt": {
+                  "column": "boardedAt"
+                },
+                "boardedByUserId": {
+                  "column": "boardedByUserId"
+                },
                 "bookingId": {
                   "column": "bookingId"
                 },
@@ -2972,6 +3012,21 @@
               }
             },
             "relations": {
+              "boardedSeats": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "boardedByUserId"
+                  ]
+                },
+                "to": {
+                  "model": "BookingSeat",
+                  "namespace": "public"
+                }
+              },
               "bookings": {
                 "cardinality": "1:N",
                 "on": {
@@ -3489,6 +3544,16 @@
                 }
               ],
               "columns": {
+                "boardedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
+                },
+                "boardedByUserId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "bookingId": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -3526,6 +3591,27 @@
                 }
               },
               "foreignKeys": [
+                {
+                  "index": {
+                    "name": "BookingSeat_boardedByUserId_idx_112466dc"
+                  },
+                  "onDelete": "setNull",
+                  "onUpdate": "restrict",
+                  "source": {
+                    "columns": [
+                      "boardedByUserId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "BookingSeat"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                },
                 {
                   "index": {
                     "name": "BookingSeat_bookingId_tripId_idx_52502076"
@@ -3572,6 +3658,14 @@
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "boardedByUserId"
+                  ],
+                  "name": "BookingSeat_boardedByUserId_idx_112466dc",
+                  "prefix": "BookingSeat_boardedByUserId_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "bookingId",
@@ -5651,8 +5745,8 @@
             "User": {
               "checks": [
                 {
-                  "expression": "\"role\" IN ('USER', 'ADMIN', 'SUPER_ADMIN')",
-                  "name": "User_role_check_a8bee70d",
+                  "expression": "\"role\" IN ('USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN')",
+                  "name": "User_role_check_8b3757fc",
                   "prefix": "User_role_check"
                 },
                 {
@@ -5867,6 +5961,7 @@
               "kind": "valueSet",
               "values": [
                 "USER",
+                "STAFF",
                 "ADMIN",
                 "SUPER_ADMIN"
               ]
@@ -5877,7 +5972,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "9477561f68d02576a4eda049d586fa2440fab727377d55d7432a42eec75b73ce"
+    "storageHash": "55a33243170f0bacb55d425a534b178dd97a1eb82093983105529e2a4a624586"
   },
   "execution": {
     "executionHash": "bae1bdb30b51a81a02cbca1afbddf2cc92077026cb5a7ec411b4bbb66372aa29",
