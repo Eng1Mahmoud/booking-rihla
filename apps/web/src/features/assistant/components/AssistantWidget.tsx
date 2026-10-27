@@ -14,6 +14,7 @@ import {
   VolumeX,
   RotateCcw,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
@@ -137,17 +138,25 @@ export function AssistantWidget() {
 
   return (
     <>
+      {/* Always visual right (physical right), even in RTL */}
       <button
         type="button"
         aria-label={isAr ? 'فتح مساعد الحجز' : 'Open booking assistant'}
         onClick={() => setOpen(true)}
         className={cn(
-          'fixed bottom-5 end-5 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg',
-          'motion-safe:transition-transform motion-safe:hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          open && 'pointer-events-none opacity-0',
+          'fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full',
+          'bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(0,111,123,0.55)]',
+          'ring-4 ring-primary/15',
+          'motion-safe:transition-all motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:hover:shadow-[0_14px_36px_-10px_rgba(0,111,123,0.65)]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          open && 'pointer-events-none scale-90 opacity-0',
         )}
       >
-        <MessageCircle size={26} />
+        <MessageCircle size={26} strokeWidth={2.25} />
+        <span className="absolute -top-0.5 -left-0.5 flex size-3.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+          <span className="relative inline-flex size-3.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+        </span>
       </button>
 
       {open && (
@@ -155,47 +164,67 @@ export function AssistantWidget() {
           role="dialog"
           aria-modal="true"
           aria-label={isAr ? 'مساعد رحلة' : 'Rihla assistant'}
-          className="fixed inset-x-3 bottom-3 z-50 flex max-h-[min(640px,85vh)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:inset-x-auto sm:end-5 sm:bottom-5 sm:w-[400px]"
+          className={cn(
+            'fixed z-50 flex flex-col overflow-hidden',
+            'bottom-3 right-3 left-3 sm:left-auto sm:bottom-5 sm:right-5 sm:w-[400px]',
+            'max-h-[min(680px,88vh)]',
+            'rounded-3xl border border-border/80 bg-background',
+            'shadow-[0_24px_64px_-20px_rgba(17,47,69,0.35)]',
+          )}
         >
-          <header className="flex items-center gap-2 border-b bg-secondary/50 px-4 py-3">
-            <MessageCircle size={20} className="text-primary" />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-semibold">
-                {isAr ? 'مساعد رحلة' : 'Rihla Assistant'}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {isAr ? 'ابحث عن رحلات بالعربي أو الإنجليزي' : 'Search trips in Arabic or English'}
-              </p>
+          <header className="relative overflow-hidden border-b border-primary/10 bg-gradient-to-br from-primary to-[#0a5c66] px-4 py-3.5 text-primary-foreground">
+            <div className="pointer-events-none absolute -right-6 -top-8 size-28 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-10 left-8 size-24 rounded-full bg-black/10" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+                <Sparkles size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold tracking-tight">
+                  {isAr ? 'مساعد رحلة' : 'Rihla Assistant'}
+                </h2>
+                <p className="text-[11px] text-primary-foreground/80">
+                  {isAr
+                    ? 'ابحث عن رحلات بالعربي أو الإنجليزي'
+                    : 'Search trips in Arabic or English'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                aria-label={isAr ? 'إغلاق' : 'Close'}
+                onClick={() => setOpen(false)}
+                className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
+              >
+                <X size={18} />
+              </Button>
             </div>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="ghost"
-              aria-label={isAr ? 'إغلاق' : 'Close'}
-              onClick={() => setOpen(false)}
-            >
-              <X size={18} />
-            </Button>
           </header>
 
           <div
             ref={listRef}
             onScroll={onScroll}
-            className="flex-1 space-y-3 overflow-y-auto px-3 py-3"
+            className="flex-1 space-y-3 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-secondary/40 via-background to-background px-3 py-3"
           >
             {messages.length === 0 && (
               <div className="space-y-3 text-sm">
-                <p className="rounded-2xl bg-muted/60 px-3 py-2 text-muted-foreground">
-                  {isAr
-                    ? 'مرحباً! أقدر أساعدك تلاقي رحلات حافلات، محطات، وأسعار. مثال: عايز أروح من القاهرة لإسكندرية بكرة.'
-                    : 'Hi! I can help find bus trips, stations, and prices. Try: trips from Cairo to Alexandria tomorrow.'}
+                <div className="rounded-2xl border border-border/60 bg-card/90 px-3.5 py-3 shadow-sm">
+                  <p className="leading-relaxed text-muted-foreground">
+                    {isAr
+                      ? 'مرحباً! أقدر أساعدك تلاقي رحلات حافلات، محطات، وأسعار. مثال: عايز أروح من القاهرة لإسكندرية بكرة.'
+                      : 'Hi! I can help find bus trips, stations, and prices. Try: trips from Cairo to Alexandria tomorrow.'}
+                  </p>
+                </div>
+                <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/80">
+                  {isAr ? 'اقتراحات' : 'Suggestions'}
                 </p>
                 <ul className="flex flex-wrap gap-2">
                   {suggestions.map((s) => (
                     <li key={s}>
                       <button
                         type="button"
-                        className="rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent"
+                        className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/10"
                         onClick={() => void submit(s)}
                       >
                         {s}
@@ -223,10 +252,10 @@ export function AssistantWidget() {
                   {text ? (
                     <div
                       className={cn(
-                        'max-w-[90%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap',
+                        'max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap shadow-sm',
                         isUser
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground',
+                          ? 'rounded-br-md bg-primary text-primary-foreground'
+                          : 'rounded-bl-md border border-border/60 bg-card text-foreground',
                       )}
                     >
                       {text}
@@ -264,8 +293,8 @@ export function AssistantWidget() {
             })}
 
             {busy && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 size={14} className="animate-spin" />
+              <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                <Loader2 size={14} className="animate-spin text-primary" />
                 {isAr ? 'جاري البحث…' : 'Searching…'}
               </div>
             )}
@@ -288,73 +317,76 @@ export function AssistantWidget() {
           </div>
 
           <form
-            className="flex items-end gap-2 border-t p-3"
+            className="border-t border-border/70 bg-card/80 p-3 backdrop-blur-sm"
             onSubmit={(e) => {
               e.preventDefault();
               void submit(input);
             }}
           >
-            {speech.supported && (
-              <Button
-                type="button"
-                size="icon"
-                variant={speech.listening ? 'default' : 'outline'}
-                aria-label={
-                  speech.listening
-                    ? isAr
-                      ? 'إيقاف التسجيل'
-                      : 'Stop recording'
-                    : isAr
-                      ? 'تسجيل صوت'
-                      : 'Voice input'
-                }
-                onClick={() =>
-                  speech.listening ? speech.stop() : speech.start()
-                }
-              >
-                {speech.listening ? <MicOff size={18} /> : <Mic size={18} />}
-              </Button>
-            )}
-            <label className="sr-only" htmlFor="rihla-assistant-input">
-              {isAr ? 'رسالتك' : 'Your message'}
-            </label>
-            <textarea
-              id="rihla-assistant-input"
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  void submit(input);
-                }
-              }}
-              placeholder={
-                isAr ? 'اكتب أو تحدث…' : 'Type or speak…'
-              }
-              className="max-h-28 min-h-10 flex-1 resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              dir="auto"
-            />
-            {busy ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                aria-label={isAr ? 'إيقاف' : 'Stop'}
-                onClick={() => stop()}
-              >
-                <Square size={16} />
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                size="icon"
-                disabled={!input.trim()}
-                aria-label={isAr ? 'إرسال' : 'Send'}
-              >
-                <Send size={18} />
-              </Button>
-            )}
+            <div className="flex items-end gap-2 rounded-2xl border border-input bg-background p-1.5 shadow-sm focus-within:ring-2 focus-within:ring-ring/40">
+              {speech.supported && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={speech.listening ? 'default' : 'ghost'}
+                  aria-label={
+                    speech.listening
+                      ? isAr
+                        ? 'إيقاف التسجيل'
+                        : 'Stop recording'
+                      : isAr
+                        ? 'تسجيل صوت'
+                        : 'Voice input'
+                  }
+                  onClick={() =>
+                    speech.listening ? speech.stop() : speech.start()
+                  }
+                  className="shrink-0"
+                >
+                  {speech.listening ? <MicOff size={18} /> : <Mic size={18} />}
+                </Button>
+              )}
+              <label className="sr-only" htmlFor="rihla-assistant-input">
+                {isAr ? 'رسالتك' : 'Your message'}
+              </label>
+              <textarea
+                id="rihla-assistant-input"
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    void submit(input);
+                  }
+                }}
+                placeholder={isAr ? 'اكتب أو تحدث…' : 'Type or speak…'}
+                className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none"
+                dir="auto"
+              />
+              {busy ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  aria-label={isAr ? 'إيقاف' : 'Stop'}
+                  onClick={() => stop()}
+                  className="shrink-0"
+                >
+                  <Square size={16} />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!input.trim()}
+                  aria-label={isAr ? 'إرسال' : 'Send'}
+                  className="shrink-0 rounded-xl"
+                >
+                  <Send size={18} />
+                </Button>
+              )}
+            </div>
           </form>
         </div>
       )}
