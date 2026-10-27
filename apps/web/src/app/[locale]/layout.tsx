@@ -12,6 +12,7 @@ import { SiteHeader } from '@/shared/components/layout/SiteHeader';
 import { SiteFooter } from '@/shared/components/layout/SiteFooter';
 import { AccountMenu } from '@/features/auth/components/navigation/AccountMenu';
 import { HeaderNavigation } from '@/features/auth/components/navigation/HeaderNavigation';
+import { AssistantWidget } from '@/features/assistant/components/AssistantWidget';
 export const metadata: Metadata = {
   title: 'Rihla | Bus booking',
   description: 'Find a bus trip and choose your seat.',
@@ -42,6 +43,7 @@ export default async function LocaleLayout({
               />
               <main className="flex-1">{children}</main>
               <SiteFooter />
+              <AssistantWidget />
             </div>
           </AppProviders>
         </NextIntlClientProvider>

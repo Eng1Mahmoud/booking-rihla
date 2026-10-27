@@ -11,7 +11,9 @@
     "email:worker": "node --env-file-if-exists=.env src/workers/emailWorker.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.0",
     "@prisma/orm-postgres": "^8.0.0-rc.18",
+    "ai": "^5.0.0",
     "argon2": "^0.45.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

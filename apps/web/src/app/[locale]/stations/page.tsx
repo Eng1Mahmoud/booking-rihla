@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { getTripCatalog } from '@/features/trips/lib/trips.server';
 import { StationDirectory } from '@/features/stations/components/StationDirectory';
@@ -17,11 +18,23 @@ export async function generateMetadata({
   return { title: t('metaTitle'), description: t('intro') };
 }
 
-export default async function StationsPage() {
-  const [catalog, t] = await Promise.all([
+export default async function StationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cityId?: string | string[] }>;
+}) {
+  const [catalog, t, query] = await Promise.all([
     getTripCatalog(),
     getTranslations('Stations'),
+    searchParams,
   ]);
+  const selectedCity = z.uuid().safeParse(query.cityId);
+  const initialCityId =
+    selectedCity.success &&
+    catalog.success &&
+    catalog.data?.cities.some((city) => city.id === selectedCity.data)
+      ? selectedCity.data
+      : '';
   return (
     <>
       <PageIntro
@@ -29,7 +42,11 @@ export default async function StationsPage() {
         description={t('intro')}
         eyebrow={t('eyebrow')}
       />
-      <StationDirectory initial={catalog.success ? catalog.data : undefined} />
+      <StationDirectory
+        key={initialCityId}
+        initial={catalog.success ? catalog.data : undefined}
+        initialCityId={initialCityId}
+      />
       <div className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] pb-10">
         <p className="mt-8 flex items-start gap-2 text-xs leading-6 text-muted-foreground">
           <Info size={16} aria-hidden="true" className="mt-1 shrink-0" />

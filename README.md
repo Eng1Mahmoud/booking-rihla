@@ -138,6 +138,37 @@ and starts only its own application. The owner requested no new test files or
 restored testing scripts; verification uses type checks/builds, scoped lint/format
 and relevant manual checks.
 
+## AI booking assistant
+
+The passenger chat uses a same-origin streaming proxy to the Express API. Set
+`GOOGLE_GENERATIVE_AI_API_KEY` only on the API (`GEMINI_API_KEY` remains a fallback).
+`GEMINI_MODEL` overrides the existing Flash-Lite model. Model availability and
+free-tier entitlement must be checked for the owner's Gemini project.
+
+The API example lists request rate, history, tool-step, output-token and timeout
+settings. History is capped at 20 messages, steps at 10, output at 4096 tokens,
+and the deadline at 120 seconds; invalid settings use safe defaults. Match
+`AI_REQUEST_TIMEOUT_MS` on the web app; its proxy allows five extra seconds.
+The widget sends at most eight recent text messages and 12,000 characters,
+without previous tool-result payloads. It keeps the visible conversation locally.
+
+A short-lived HttpOnly, SameSite cookie scopes public conversation filters to a
+browser; a verified access-token session also scopes them when signed in.
+Filters expire after 30 minutes and are process-local, so API restarts or another
+replica lose them. No new database tables are used. Read-only tools return public
+fields only; live seat counts use the existing seat/hold rules and are snapshots
+at search time. Booking and payment continue on the ordinary trip page.
+
+The panel supports retry, stop, new chat, keyboard focus/Escape, Arabic/English,
+and editable browser speech input with permission/error feedback. Structured
+station/city results link to the existing directory, which accepts a validated
+city filter and station anchors. The catalog currently has names/cities, not
+verified street addresses or coordinates. Search actions reuse the shared
+DatePickr/TimePicker and preserve the conversation; trip-details actions use a
+validated selected-trip ID without exposing it in the message text. The
+all-trips link opens the normal results page for the same route/date, across
+all departure times. Voice output is intentionally excluded.
+
 ## Deployment
 
 - Passenger app and dashboard: Vercel, rooted at `apps/web` and `apps/dashboard`.
