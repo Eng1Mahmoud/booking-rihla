@@ -1,7 +1,7 @@
 import { routing } from '@/i18n/routing';
 import type { UserRole } from '@/features/auth/types/auth';
 
-const allRoles: UserRole[] = ['USER', 'ADMIN', 'SUPER_ADMIN'];
+const allRoles: UserRole[] = ['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'];
 
 // These pages and their children require one of the listed roles.
 export const protectedRoutes: { path: string; roles: UserRole[] }[] = [
