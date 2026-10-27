@@ -169,6 +169,11 @@ export function createApp(
     requireRole('SUPER_ADMIN'),
   ];
 
+  const gateStaff = [
+    requireAuth(services.sessions ?? sessionService),
+    requireRole('STAFF', 'ADMIN', 'SUPER_ADMIN'),
+  ];
+
   app.disable('x-powered-by');
   app.use(requestId);
   app.use(requestLogger);
@@ -304,7 +309,7 @@ export function createApp(
     ),
   );
 
-  app.use('/api/v1/admin/tickets', createTicketScanRouter(admin));
+  app.use('/api/v1/admin/tickets', createTicketScanRouter(gateStaff));
 
   app.use(
     '/api/v1/admin/statistics',
