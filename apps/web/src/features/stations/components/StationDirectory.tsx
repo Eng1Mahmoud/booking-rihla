@@ -15,12 +15,18 @@ import { useTripCatalog } from '@/features/trips/hooks/useTrips';
 import type { TripCatalog, Station, City } from '@/features/trips/types/trip';
 import { displayName } from '@/shared/lib/format';
 
-export function StationDirectory({ initial }: { initial?: TripCatalog }) {
+export function StationDirectory({
+  initial,
+  initialCityId = '',
+}: {
+  initial?: TripCatalog;
+  initialCityId?: string;
+}) {
   const t = useTranslations('Stations');
   const locale = useLocale() as 'ar' | 'en';
   const query = useTripCatalog(initial);
   const [search, setSearch] = useState('');
-  const [cityId, setCityId] = useState('');
+  const [cityId, setCityId] = useState(initialCityId);
   const catalog = query.data;
   const cityMap = new Map(catalog?.cities.map((city) => [city.id, city]));
   const grouped = new Map<string, Station[]>();
@@ -45,7 +51,7 @@ export function StationDirectory({ initial }: { initial?: TripCatalog }) {
     catalog?.stations.map((station) => station.cityId),
   );
   const cities = (catalog?.cities ?? [])
-    .filter((city) => stationCityIds.has(city.id))
+    .filter((city) => stationCityIds.has(city.id) || city.id === cityId)
     .sort((a, b) => collator.compare(name(a), name(b)));
   const groups = [...grouped.entries()].sort(([a], [b]) =>
     collator.compare(
@@ -229,6 +235,7 @@ function StationGroup({
           .map((station) => (
             <li
               key={station.id}
+              id={'station-' + station.id}
               className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4 sm:flex-nowrap md:px-6"
             >
               <span

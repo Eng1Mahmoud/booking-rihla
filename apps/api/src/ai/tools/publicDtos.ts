@@ -25,16 +25,24 @@ export type PublicTripSummary = {
   pricePiastres: number;
   priceEgp: number;
   originCity: string;
+  originCityEn?: string;
   originStation: string;
+  originStationEn?: string;
   destinationCity: string;
+  destinationCityEn?: string;
   destinationStation: string;
+  destinationStationEn?: string;
   busType: string | null;
+  busTypeEn?: string | null;
   seatCount: number;
+  availableSeats?: number;
+  availabilityCheckedAt?: string;
   tripPagePath: string;
 };
 
 export type PublicTripDetails = PublicTripSummary & {
   amenities: string[];
+  amenitiesEn?: string[];
 };
 
 export type PublicSeatAvailability = {
@@ -85,14 +93,14 @@ export function toPublicTripSummary(trip: {
     originStation?: {
       nameAr?: string;
       nameEn?: string;
-      city?: { nameAr?: string; nameEn?: string };
-    };
+      city?: { nameAr?: string; nameEn?: string } | null;
+    } | null;
     destinationStation?: {
       nameAr?: string;
       nameEn?: string;
-      city?: { nameAr?: string; nameEn?: string };
-    };
-  };
+      city?: { nameAr?: string; nameEn?: string } | null;
+    } | null;
+  } | null;
   bus?: {
     seatCount?: number;
     busType?: { nameAr?: string; nameEn?: string; code?: string } | null;
@@ -107,10 +115,15 @@ export function toPublicTripSummary(trip: {
     pricePiastres: trip.pricePiastres,
     priceEgp: piastresToEgp(trip.pricePiastres),
     originCity: origin?.city?.nameAr ?? origin?.city?.nameEn ?? '',
+    originCityEn: origin?.city?.nameEn ?? origin?.city?.nameAr ?? '',
     originStation: origin?.nameAr ?? origin?.nameEn ?? '',
+    originStationEn: origin?.nameEn ?? origin?.nameAr ?? '',
     destinationCity: dest?.city?.nameAr ?? dest?.city?.nameEn ?? '',
+    destinationCityEn: dest?.city?.nameEn ?? dest?.city?.nameAr ?? '',
     destinationStation: dest?.nameAr ?? dest?.nameEn ?? '',
+    destinationStationEn: dest?.nameEn ?? dest?.nameAr ?? '',
     busType: trip.bus?.busType?.nameAr ?? trip.bus?.busType?.nameEn ?? null,
+    busTypeEn: trip.bus?.busType?.nameEn ?? trip.bus?.busType?.nameAr ?? null,
     seatCount: trip.bus?.seatCount ?? 0,
     tripPagePath: `/trips/${trip.id}`,
   };

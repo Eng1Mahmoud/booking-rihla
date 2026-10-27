@@ -2,16 +2,26 @@ import { busMetadata } from '../utils/busMetadata.ts';
 import type { TripSearchQuery } from '../schemas/tripSearchSchema.ts';
 import { cairoDayBounds } from '../utils/cairoTime.ts';
 
+export type TripSearchOptions = {
+  departureAtOrAfter?: string;
+  departureAtBefore?: string;
+  sortBy?: 'departure' | 'price';
+};
+
 export const tripSearchService = {
-  async search({
-    travelDate,
-    originCityId,
-    originStationId,
-    destinationCityId,
-    destinationStationId,
-    limit,
-    offset,
-  }: TripSearchQuery) {
+  async search(
+    {
+      travelDate,
+      originCityId,
+      originStationId,
+      destinationCityId,
+      destinationStationId,
+      limit,
+      offset,
+    }: TripSearchQuery,
+    options: TripSearchOptions = {},
+  ) {
+    const { departureAtOrAfter, departureAtBefore, sortBy } = options;
     const { db } = await import('../prisma/db.ts');
     const { start, end } = cairoDayBounds(travelDate);
     let query = db.orm.public.Trip.where({ status: 'SCHEDULED' })
@@ -36,8 +46,24 @@ export const tripSearchService = {
       query = query.where((trip) => trip.route.some({ originStationId }));
     if (destinationStationId)
       query = query.where((trip) => trip.route.some({ destinationStationId }));
-    const trips = await query
-      .orderBy([(trip) => trip.departureAt.asc(), (trip) => trip.id.asc()])
+    if (departureAtOrAfter) {
+      query = query.where((trip) => trip.departureAt.gte(departureAtOrAfter));
+    }
+    if (departureAtBefore) {
+      query = query.where((trip) => trip.departureAt.lt(departureAtBefore));
+    }
+    const ordered =
+      sortBy === 'price'
+        ? query.orderBy([
+            (trip) => trip.pricePiastres.asc(),
+            (trip) => trip.departureAt.asc(),
+            (trip) => trip.id.asc(),
+          ])
+        : query.orderBy([
+            (trip) => trip.departureAt.asc(),
+            (trip) => trip.id.asc(),
+          ]);
+    const trips = await ordered
       .limit(limit)
       .offset(offset)
       .include('bus', (bus) =>

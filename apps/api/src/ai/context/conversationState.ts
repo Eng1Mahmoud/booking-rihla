@@ -1,21 +1,21 @@
 /**
  * Lightweight in-memory conversation filters.
  * Short-lived, process-local. Suitable for free-tier single-instance API.
- * Ownership is keyed by conversationId + optional session fingerprint.
+ * Keys are scoped by the server to a browser session, authenticated session when present, and conversation ID.
  */
 
 export type ConversationFilters = {
-  originCityId?: string;
-  originCityName?: string;
-  destinationCityId?: string;
-  destinationCityName?: string;
-  originStationId?: string;
-  destinationStationId?: string;
+  originCityId?: string | null;
+  originCityName?: string | null;
+  destinationCityId?: string | null;
+  destinationCityName?: string | null;
+  originStationId?: string | null;
+  destinationStationId?: string | null;
   travelDate?: string;
-  departureTimeAfter?: string;
-  departureTimeBefore?: string;
+  departureTimeAfter?: string | null;
+  departureTimeBefore?: string | null;
   sortBy?: 'departure' | 'price';
-  selectedTripId?: string;
+  selectedTripId?: string | null;
   updatedAt: number;
 };
 

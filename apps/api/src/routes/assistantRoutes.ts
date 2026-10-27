@@ -1,10 +1,13 @@
+import { assistantRateLimit } from '../ai/assistantService.ts';
+import { clientRateLimitKey } from '../utils/clientIdentity.ts';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { createAssistantController } from '../controllers/assistantController.ts';
 
 const assistantLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: Number(process.env.AI_RATE_LIMIT_PER_MINUTE ?? '20'),
+  max: assistantRateLimit,
+  keyGenerator: clientRateLimitKey,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

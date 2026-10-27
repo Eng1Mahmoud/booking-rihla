@@ -1,5 +1,6 @@
 import { Temporal } from 'temporal-polyfill';
 import { cairoTimeZone } from '../../utils/cairoTime.ts';
+import { tripSearchQuerySchema } from '../../schemas/tripSearchSchema.ts';
 import { cityService } from '../../services/cityService.ts';
 import { stationService } from '../../services/stationService.ts';
 import { tripSearchService } from '../../services/tripSearchService.ts';
@@ -17,15 +18,10 @@ import {
   toPublicCity,
   toPublicStation,
   toPublicTripSummary,
-  type PublicTripSummary,
 } from './publicDtos.ts';
 import { resolveCityId, resolveStationsForCity } from './cityResolution.ts';
 import { BOOKING_POLICIES } from './bookingPolicies.ts';
-import {
-  getFilters,
-  updateFilters,
-  type ConversationFilters,
-} from '../context/conversationState.ts';
+import { getFilters, updateFilters } from '../context/conversationState.ts';
 
 function resolveTravelDate(input: SearchTripsInput): string {
   if (input.relativeDate) {
@@ -39,21 +35,50 @@ function resolveTravelDate(input: SearchTripsInput): string {
   return Temporal.Now.plainDateISO(cairoTimeZone).toString();
 }
 
-function filterByTimeWindow(
-  trips: PublicTripSummary[],
-  after?: string,
-  before?: string,
-): PublicTripSummary[] {
-  return trips.filter((t) => {
-    const local = Temporal.Instant.from(t.departureAt)
-      .toZonedDateTimeISO(cairoTimeZone)
-      .toPlainTime()
-      .toString({ smallestUnit: 'minute' })
-      .slice(0, 5);
-    if (after && local < after) return false;
-    if (before && local >= before) return false;
-    return true;
+type SearchEndpoint = {
+  cityId?: string;
+  cityName?: string;
+  stationId?: string | null;
+};
+
+async function resolveEndpoint(
+  input: SearchEndpoint,
+  previous: SearchEndpoint,
+) {
+  const station = input.stationId
+    ? await stationService.findById(input.stationId)
+    : null;
+  if (input.stationId && !station) {
+    return { city: null, stationId: null, error: 'STATION_NOT_FOUND' };
+  }
+
+  let cityId = input.cityId;
+  if (!cityId && !input.cityName) cityId = station?.cityId ?? previous.cityId;
+  const city = await resolveCityId(cityService, {
+    cityId,
+    cityName: input.cityName ?? previous.cityName,
   });
+  let stationId = previous.stationId ?? null;
+  if (input.stationId !== undefined) stationId = input.stationId;
+  else if (city?.id !== previous.cityId) stationId = null;
+
+  if (stationId) {
+    const selectedStation =
+      station ?? (await stationService.findById(stationId));
+    if (!selectedStation || selectedStation.cityId !== city?.id) {
+      return { city, stationId: null, error: 'STATION_CITY_MISMATCH' };
+    }
+  }
+  return { city, stationId: stationId ?? null, error: null };
+}
+
+function departureBound(date: string, time: string | null | undefined) {
+  if (!time) return undefined;
+  return Temporal.PlainDate.from(date)
+    .toPlainDateTime(time)
+    .toZonedDateTime(cairoTimeZone, { disambiguation: 'reject' })
+    .toInstant()
+    .toString();
 }
 
 export async function runGetCities(raw: unknown) {
@@ -61,83 +86,150 @@ export async function runGetCities(raw: unknown) {
   const cities = await cityService.list({ limit: 100, offset: 0 });
   let items = cities.map(toPublicCity);
   if (input.query) {
-    const q = input.query.toLowerCase();
+    const query = input.query.toLowerCase();
     items = items.filter(
-      (c) =>
-        c.nameAr.includes(input.query!) ||
-        c.nameEn.toLowerCase().includes(q),
+      (city) =>
+        city.nameAr.includes(input.query!) ||
+        city.nameEn.toLowerCase().includes(query),
     );
+    if (items.length === 0) {
+      const city = await resolveCityId(cityService, { cityName: input.query });
+      if (city) items = [toPublicCity(city)];
+    }
   }
-  return { cities: items, count: items.length };
+  return {
+    cities: items.slice(0, input.limit),
+    count: Math.min(items.length, input.limit),
+    hasMore: items.length > input.limit,
+  };
 }
 
 export async function runGetStations(raw: unknown) {
   const input = getStationsInputSchema.parse(raw);
-  let cityId = input.cityId;
-  if (!cityId && input.cityName) {
-    const resolved = await resolveCityId(cityService, {
-      cityName: input.cityName,
-    });
-    if (!resolved) return { stations: [], error: 'CITY_NOT_FOUND' };
-    cityId = resolved.id;
-  }
-  if (cityId) {
-    const stations = await resolveStationsForCity(
-      stationService,
-      cityId,
-      input.query,
+  const city =
+    input.cityId || input.cityName
+      ? await resolveCityId(cityService, {
+          cityId: input.cityId,
+          cityName: input.cityName,
+        })
+      : null;
+  if ((input.cityId || input.cityName) && !city)
+    return { stations: [], error: 'CITY_NOT_FOUND' };
+  let matches = city
+    ? await resolveStationsForCity(stationService, city.id, input.query)
+    : await stationService.list({ limit: 100, offset: 0 });
+  if (!city && input.query) {
+    const query = input.query.toLowerCase();
+    matches = matches.filter(
+      (station) =>
+        station.nameAr.includes(input.query!) ||
+        station.nameEn.toLowerCase().includes(query),
     );
-    return {
-      stations: stations.map((s) => toPublicStation(s)),
-      count: stations.length,
-    };
   }
-  const stations = await stationService.list({ limit: 50, offset: 0 });
+  const visible = matches.slice(0, input.limit);
+  const cityIds = [...new Set(visible.map((station) => station.cityId))];
+  const cities = await Promise.all(
+    cityIds.map((id) => (city?.id === id ? city : cityService.findById(id))),
+  );
+  const cityMap = new Map(
+    cities.filter((entry) => entry !== null).map((entry) => [entry.id, entry]),
+  );
   return {
-    stations: stations.map((s) => toPublicStation(s)),
-    count: stations.length,
+    stations: visible.map((station) =>
+      toPublicStation(station, cityMap.get(station.cityId)),
+    ),
+    count: visible.length,
+    hasMore: matches.length > visible.length,
   };
 }
 
-export async function runSearchTrips(
-  raw: unknown,
-  conversationId?: string,
+async function publicTripWithAvailability(
+  trip: Parameters<typeof toPublicTripSummary>[0],
 ) {
-  const input = searchTripsInputSchema.parse(raw);
-  const prev = conversationId ? getFilters(conversationId) : null;
+  const availability = await tripDetailsService.listSeats(trip.id);
+  if (!availability) return null;
+  return {
+    ...toPublicTripSummary(trip),
+    availableSeats: availability.availableSeats,
+    availabilityCheckedAt: new Date().toISOString(),
+  };
+}
 
-  const origin =
-    (await resolveCityId(cityService, {
-      cityId: input.originCityId ?? prev?.originCityId,
-      cityName: input.originCityName ?? prev?.originCityName,
-    })) ?? null;
-  const destination =
-    (await resolveCityId(cityService, {
-      cityId: input.destinationCityId ?? prev?.destinationCityId,
-      cityName: input.destinationCityName ?? prev?.destinationCityName,
-    })) ?? null;
+export async function runSearchTrips(raw: unknown, conversationId?: string) {
+  const input = searchTripsInputSchema.parse(raw);
+  const previous = conversationId ? getFilters(conversationId) : null;
+  const [origin, destination] = await Promise.all([
+    resolveEndpoint(
+      {
+        cityId: input.originCityId,
+        cityName: input.originCityName,
+        stationId: input.originStationId,
+      },
+      {
+        cityId: previous?.originCityId ?? undefined,
+        cityName: previous?.originCityName ?? undefined,
+        stationId: previous?.originStationId,
+      },
+    ),
+    resolveEndpoint(
+      {
+        cityId: input.destinationCityId,
+        cityName: input.destinationCityName,
+        stationId: input.destinationStationId,
+      },
+      {
+        cityId: previous?.destinationCityId ?? undefined,
+        cityName: previous?.destinationCityName ?? undefined,
+        stationId: previous?.destinationStationId,
+      },
+    ),
+  ]);
+  if (origin.error || destination.error) {
+    return { trips: [], error: origin.error ?? destination.error };
+  }
 
   const travelDate =
-    input.travelDate ||
-    input.relativeDate ||
-    prev?.travelDate
-      ? resolveTravelDate({
-          ...input,
-          travelDate: input.travelDate ?? prev?.travelDate,
-          relativeDate: input.relativeDate,
-        })
-      : Temporal.Now.plainDateISO(cairoTimeZone).add({ days: 1 }).toString();
+    input.relativeDate || input.travelDate
+      ? resolveTravelDate(input)
+      : (previous?.travelDate ??
+        Temporal.Now.plainDateISO(cairoTimeZone).add({ days: 1 }).toString());
+  const timeAfter =
+    input.departureTimeAfter !== undefined
+      ? input.departureTimeAfter
+      : previous?.departureTimeAfter;
+  const timeBefore =
+    input.departureTimeBefore !== undefined
+      ? input.departureTimeBefore
+      : previous?.departureTimeBefore;
+  const sortBy = input.sortBy ?? previous?.sortBy ?? 'departure';
 
-  if (!origin || !destination) {
+  if (timeAfter && timeBefore && timeAfter >= timeBefore) {
     return {
       trips: [],
-      error: 'MISSING_CITIES',
+      error: 'INVALID_TIME_RANGE',
       message:
-        'Need both origin and destination cities. Ask the user to specify them.',
-      resolved: { origin, destination, travelDate },
+        'Ask for a departure time range within the chosen travel date, or clear a bound with null.',
     };
   }
-  if (origin.id === destination.id) {
+  let departureAtOrAfter: string | undefined;
+  let departureAtBefore: string | undefined;
+  try {
+    departureAtOrAfter = departureBound(travelDate, timeAfter);
+    departureAtBefore = departureBound(travelDate, timeBefore);
+  } catch {
+    return {
+      trips: [],
+      error: 'AMBIGUOUS_OR_NONEXISTENT_TIME',
+      message:
+        'Ask for another departure time: this Cairo local time is ambiguous or does not exist due to daylight saving.',
+    };
+  }
+
+  if (
+    origin.city &&
+    destination.city &&
+    origin.city.id === destination.city.id
+  ) {
     return {
       trips: [],
       error: 'SAME_CITY',
@@ -145,102 +237,113 @@ export async function runSearchTrips(
     };
   }
 
-  const originStationId =
-    input.originStationId ?? prev?.originStationId;
-  const destinationStationId =
-    input.destinationStationId ?? prev?.destinationStationId;
-
-  const searchArgs = {
-    travelDate,
-    limit: input.limit ?? 5,
-    offset: 0,
-    ...(originStationId
-      ? { originStationId }
-      : { originCityId: origin.id }),
-    ...(destinationStationId
-      ? { destinationStationId }
-      : { destinationCityId: destination.id }),
-  };
-
-  const trips = await tripSearchService.search(searchArgs as never);
-  let publicTrips = trips.map(toPublicTripSummary);
-
-  const timeAfter =
-    input.departureTimeAfter ?? prev?.departureTimeAfter;
-  const timeBefore =
-    input.departureTimeBefore ?? prev?.departureTimeBefore;
-  publicTrips = filterByTimeWindow(publicTrips, timeAfter, timeBefore);
-
-  const sortBy = input.sortBy ?? prev?.sortBy ?? 'departure';
-  if (sortBy === 'price') {
-    publicTrips = [...publicTrips].sort(
-      (a, b) => a.pricePiastres - b.pricePiastres,
-    );
-  }
-
   if (conversationId) {
-    const patch: Partial<ConversationFilters> = {
-      originCityId: origin.id,
-      originCityName: origin.nameAr,
-      destinationCityId: destination.id,
-      destinationCityName: destination.nameAr,
+    updateFilters(conversationId, {
+      originCityId: origin.city?.id ?? null,
+      originCityName: origin.city?.nameAr ?? null,
+      destinationCityId: destination.city?.id ?? null,
+      destinationCityName: destination.city?.nameAr ?? null,
+      originStationId: origin.stationId,
+      destinationStationId: destination.stationId,
       travelDate,
+      departureTimeAfter: timeAfter ?? null,
+      departureTimeBefore: timeBefore ?? null,
       sortBy,
-    };
-    if (timeAfter) patch.departureTimeAfter = timeAfter;
-    if (timeBefore) patch.departureTimeBefore = timeBefore;
-    if (originStationId) patch.originStationId = originStationId;
-    if (destinationStationId)
-      patch.destinationStationId = destinationStationId;
-    updateFilters(conversationId, patch);
+      selectedTripId: null,
+    });
   }
 
+  if (!origin.city || !destination.city) {
+    return {
+      trips: [],
+      error: 'MISSING_CITIES',
+      message:
+        'Need both origin and destination cities. Ask the user to specify or clarify them.',
+      resolved: {
+        origin: origin.city,
+        destination: destination.city,
+        travelDate,
+      },
+    };
+  }
+
+  const searchArgs = tripSearchQuerySchema.parse({
+    travelDate,
+    limit: String(input.limit),
+    offset: '0',
+    ...(origin.stationId
+      ? { originStationId: origin.stationId }
+      : { originCityId: origin.city.id }),
+    ...(destination.stationId
+      ? { destinationStationId: destination.stationId }
+      : { destinationCityId: destination.city.id }),
+  });
+  const trips = await tripSearchService.search(searchArgs, {
+    departureAtOrAfter,
+    departureAtBefore,
+    sortBy,
+  });
+  const summaries = await Promise.all(trips.map(publicTripWithAvailability));
+  const publicTrips = summaries.filter((trip) => trip !== null);
   return {
     trips: publicTrips,
     count: publicTrips.length,
     travelDate,
-    origin: { id: origin.id, nameAr: origin.nameAr, nameEn: origin.nameEn },
-    destination: {
-      id: destination.id,
-      nameAr: destination.nameAr,
-      nameEn: destination.nameEn,
-    },
+    origin: origin.city,
+    destination: destination.city,
     sortBy,
+    search: {
+      originCityId: searchArgs.originCityId,
+      originStationId: searchArgs.originStationId,
+      destinationCityId: searchArgs.destinationCityId,
+      destinationStationId: searchArgs.destinationStationId,
+      travelDate,
+      departureTimeAfter: timeAfter ?? null,
+      departureTimeBefore: timeBefore ?? null,
+      sortBy,
+    },
   };
 }
 
-export async function runGetTripDetails(
+export async function runGetTripDetails(raw: unknown, conversationId?: string) {
+  const input = getTripDetailsInputSchema.parse(raw);
+  const tripId =
+    input.tripId ??
+    (conversationId ? getFilters(conversationId)?.selectedTripId : undefined);
+  if (!tripId)
+    return { error: 'MISSING_TRIP', message: 'Ask the user to select a trip.' };
+  const trip = await tripDetailsService.findById(tripId);
+  if (!trip) return { error: 'TRIP_NOT_FOUND' };
+  const summary = await publicTripWithAvailability(trip);
+  if (!summary) return { error: 'TRIP_NOT_FOUND' };
+  if (conversationId) updateFilters(conversationId, { selectedTripId: tripId });
+  const amenities = trip.bus.amenities
+    .map((amenity) => amenity.nameAr ?? amenity.nameEn ?? '')
+    .filter(Boolean);
+  const amenitiesEn = trip.bus.amenities
+    .map((amenity) => amenity.nameEn ?? amenity.nameAr ?? '')
+    .filter(Boolean);
+  return { trip: { ...summary, amenities, amenitiesEn } };
+}
+
+export async function runGetAvailableSeats(
   raw: unknown,
   conversationId?: string,
 ) {
-  const input = getTripDetailsInputSchema.parse(raw);
-  const trip = await tripDetailsService.findById(input.tripId);
-  if (!trip) return { error: 'TRIP_NOT_FOUND' };
-  if (conversationId) {
-    updateFilters(conversationId, { selectedTripId: input.tripId });
-  }
-  const summary = toPublicTripSummary(trip as never);
-  const amenities =
-    (trip as { bus?: { amenities?: { nameAr?: string; nameEn?: string }[] } })
-      .bus?.amenities?.map((a) => a.nameAr ?? a.nameEn ?? '')
-      .filter(Boolean) ?? [];
-  return { trip: { ...summary, amenities } };
-}
-
-export async function runGetAvailableSeats(raw: unknown) {
   const input = getAvailableSeatsInputSchema.parse(raw);
-  const seats = await tripDetailsService.listSeats(input.tripId);
+  const tripId =
+    input.tripId ??
+    (conversationId ? getFilters(conversationId)?.selectedTripId : undefined);
+  if (!tripId)
+    return { error: 'MISSING_TRIP', message: 'Ask the user to select a trip.' };
+  const seats = await tripDetailsService.listSeats(tripId);
   if (!seats) return { error: 'TRIP_NOT_FOUND' };
-  const list = seats as {
-    totalSeats: number;
-    availableSeats: number;
-    tripId: string;
-  };
+  if (conversationId) updateFilters(conversationId, { selectedTripId: tripId });
   return {
-    tripId: list.tripId,
-    totalSeats: list.totalSeats,
-    availableSeats: list.availableSeats,
-    tripPagePath: `/trips/${list.tripId}`,
+    tripId: seats.tripId,
+    totalSeats: seats.totalSeats,
+    availableSeats: seats.availableSeats,
+    tripPagePath: `/trips/${seats.tripId}`,
   };
 }
 
