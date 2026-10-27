@@ -75,6 +75,7 @@ export function AssistantWidget() {
   const stickToBottom = useRef(true);
   const speech = useSpeechToText(locale);
   const tts = useTextToSpeech();
+  const canListen = tts.canSpeakForLocale(locale);
 
   const transport = useMemo(
     () =>
@@ -138,7 +139,6 @@ export function AssistantWidget() {
 
   return (
     <>
-      {/* Always visual right (physical right), even in RTL */}
       <button
         type="button"
         aria-label={isAr ? 'فتح مساعد الحجز' : 'Open booking assistant'}
@@ -259,7 +259,7 @@ export function AssistantWidget() {
                       )}
                     >
                       {text}
-                      {!isUser && text && tts.supported && (
+                      {!isUser && text && canListen && (
                         <button
                           type="button"
                           className="ms-2 inline-flex align-middle text-muted-foreground hover:text-foreground"
