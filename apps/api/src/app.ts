@@ -47,6 +47,8 @@ import {
   type PaymobWebhookService,
 } from './services/paymobWebhookService.ts';
 import { createPaymobWebhookRouter } from './routes/paymobWebhookRoutes.ts';
+import { createAssistantRouter } from './routes/assistantRoutes.ts';
+
 import {
   administratorService,
   type AdministratorService,
@@ -255,7 +257,6 @@ export function createApp(
   );
   app.use('/api/v1/admin', createOperationRouter(superAdmin));
 
-  // Public capability only; no keys, account ids, URLs or provider calls.
   app.get('/api/v1/payments/availability', (_request, response) => {
     let checkoutEnabled = false;
     try {
@@ -336,6 +337,8 @@ export function createApp(
     '/api/v1/payments/paymob',
     createPaymobWebhookRouter(services.paymobWebhook ?? paymobWebhookService),
   );
+
+  app.use('/api/v1/assistant', createAssistantRouter());
 
   // This runs only if none of the routes above handled the request.
   app.use((_request, _response, next) => {
