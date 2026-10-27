@@ -10,8 +10,6 @@ import {
   Square,
   Mic,
   MicOff,
-  Volume2,
-  VolumeX,
   RotateCcw,
   Loader2,
   Sparkles,
@@ -20,7 +18,7 @@ import { useLocale } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
 import { TripResultCard, type AssistantTrip } from './TripResultCard';
-import { useSpeechToText, useTextToSpeech } from '../hooks/useSpeech';
+import { useSpeechToText } from '../hooks/useSpeech';
 
 const SUGGESTIONS_AR = [
   'فيه رحلات من القاهرة للإسكندرية بكرة؟',
@@ -74,8 +72,6 @@ export function AssistantWidget() {
   const listRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const speech = useSpeechToText(locale);
-  const tts = useTextToSpeech();
-  const canListen = tts.canSpeakForLocale(locale);
 
   const transport = useMemo(
     () =>
@@ -111,11 +107,8 @@ export function AssistantWidget() {
   }, [speech.transcript]);
 
   useEffect(() => {
-    if (!open) {
-      speech.stop();
-      tts.stop();
-    }
-  }, [open, speech, tts]);
+    if (!open) speech.stop();
+  }, [open, speech]);
 
   const onScroll = () => {
     const el = listRef.current;
@@ -259,22 +252,6 @@ export function AssistantWidget() {
                       )}
                     >
                       {text}
-                      {!isUser && text && canListen && (
-                        <button
-                          type="button"
-                          className="ms-2 inline-flex align-middle text-muted-foreground hover:text-foreground"
-                          aria-label={isAr ? 'استمع' : 'Listen'}
-                          onClick={() =>
-                            tts.speaking ? tts.stop() : tts.speak(text, locale)
-                          }
-                        >
-                          {tts.speaking ? (
-                            <VolumeX size={14} />
-                          ) : (
-                            <Volume2 size={14} />
-                          )}
-                        </button>
-                      )}
                     </div>
                   ) : null}
                   {trips.length > 0 && (
