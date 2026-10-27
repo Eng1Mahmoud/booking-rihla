@@ -16,7 +16,6 @@ apps/api/migrations/app/**/migration.json
 
 apps/web/next-env.d.ts
 
-# Generated Next and design-workflow evidence
+# Generated Next files
 **/.next/**
-**/.impeccable/**
 apps/dashboard/next-env.d.ts
