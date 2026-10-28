@@ -1,0 +1,10 @@
+{
+  "from": "From",
+  "to": "To",
+  "date": "Travel date",
+  "choose": "Choose a city or station",
+  "allStations": "All stations",
+  "search": "Search trips",
+  "swap": "Swap departure and destination",
+  "invalid": "Choose different departure and arrival points and a valid date."
+}

@@ -1,0 +1,66 @@
+{
+  "title": "Privacy policy",
+  "metaTitle": "Privacy policy — draft | Rihla",
+  "intro": "The information used for your account, bookings and payments, and the details still to be confirmed before launch.",
+  "providerPolicy": "Read Paymob’s privacy policy",
+  "sections": [
+    {
+      "id": "data",
+      "title": "Information used by the application",
+      "paragraphs": [
+        "Account information includes your name, email address, phone number and selected language. Passwords are stored as password hashes. Account verification, password recovery and session records support secure access.",
+        "Booking information includes passenger names, selected seats, contact phone number, trip details, booking reference, price and status. Payment and refund records include amounts, currency, transaction references and recorded outcomes.",
+        "Technical information, such as request and session identifiers and, where configured, a client IP address, may be processed for authentication, request diagnostics and protection against repeated or abusive requests. Hosting and infrastructure logging practices still need to be documented before launch."
+      ]
+    },
+    {
+      "id": "purposes",
+      "title": "Why this information is used",
+      "paragraphs": [
+        "Information is used to create and protect accounts, verify email ownership, recover access, reserve seats, verify payment results, provide tickets, and record cancellations and refunds.",
+        "Service emails may include verification or recovery codes, password-change notices, tickets, departure reminders, trip-cancellation notices and confirmed refund notifications. The final notice must state the applicable basis for each use of personal information."
+      ]
+    },
+    {
+      "id": "cookies",
+      "title": "Session cookies",
+      "paragraphs": [
+        "Sign-in uses session cookies to keep you authenticated and renew access. Authentication cookies cannot be read by page scripts; production settings also require secure transport. Blocking these cookies can prevent account features from working.",
+        "You can sign out of the current session or all sessions from your account. Signing out does not delete your account, booking history or financial records. Any analytics tools or additional non-essential cookies must be reviewed and described before they are introduced."
+      ]
+    },
+    {
+      "id": "providers",
+      "title": "Payments, email & other providers",
+      "paragraphs": [
+        "When the test payment integration is enabled, the account holder’s name, email address and phone number, together with the booking amount and payment reference, are sent to Paymob to prepare the payment. Payment details are entered on the provider’s payment page; the Rihla booking form does not ask for a card number or security code.",
+        "The configured email provider processes the recipient address and message content to deliver service emails. The final notice must identify the operating entity, hosting and email providers, processing locations, and any applicable international transfers.",
+        "Payment providers have their own privacy information. This draft makes no promise that a provider does not store payment information; review the provider’s notice before using its service."
+      ]
+    },
+    {
+      "id": "access",
+      "title": "Access & sharing",
+      "paragraphs": [
+        "Passengers can access their own bookings and payment history through their account. Authorized administrators have role-based access to records needed for operations, account management, payment review and refunds.",
+        "The final policy must specify recipients, purposes and safeguards for any additional sharing or disclosure. No sale of personal information, marketing programme or new sharing arrangement is authorized by this draft."
+      ]
+    },
+    {
+      "id": "retention",
+      "title": "How long records are kept",
+      "paragraphs": [
+        "Final retention periods for accounts, bookings, financial records, operational logs and backups have not yet been approved. These periods, their reasons and the deletion or anonymization process must be documented before public launch.",
+        "Temporary authentication records have expiry and cleanup rules. These rules do not mean that an account, booking or financial record is automatically deleted when a code expires or a passenger signs out."
+      ]
+    },
+    {
+      "id": "requests",
+      "title": "Your choices & data requests",
+      "paragraphs": [
+        "You can update your name and phone number in your account and end your sessions. Account deletion is not currently available as a self-service feature.",
+        "An approved contact channel for access, correction, deletion and other data-related requests has not yet been added. The final notice must explain how requests are handled, how identity is checked and any applicable limits or response periods. Do not send passwords or full card details in a support request."
+      ]
+    }
+  ]
+}
