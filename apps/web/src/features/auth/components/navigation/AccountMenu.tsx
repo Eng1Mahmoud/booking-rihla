@@ -53,10 +53,14 @@ export function AccountMenu() {
     );
   if (!user)
     return (
-      <Button asChild variant="ghost" className="min-h-11 rounded-full">
+      <Button
+        asChild
+        variant="ghost"
+        className="hidden min-h-11 rounded-full lg:inline-flex"
+      >
         <Link href={loginHref} aria-label={auth('login')}>
           <LogIn aria-hidden="true" />
-          <span className="hidden sm:inline">{auth('login')}</span>
+          <span>{auth('login')}</span>
         </Link>
       </Button>
     );

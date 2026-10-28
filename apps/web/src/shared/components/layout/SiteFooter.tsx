@@ -1,4 +1,4 @@
-import { BusFront, ArrowUp } from 'lucide-react';
+import { BusFront } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 
@@ -72,13 +72,6 @@ export async function SiteFooter() {
           <p className="leading-6">
             {t('copyright', { year: new Date().getFullYear() })}
           </p>
-          <a
-            href="#top"
-            className="inline-flex min-h-11 items-center gap-2 self-start text-white/75 hover:text-white hover:underline underline-offset-4"
-          >
-            {t('backToTop')}
-            <ArrowUp size={15} aria-hidden="true" />
-          </a>
         </div>
       </div>
     </footer>

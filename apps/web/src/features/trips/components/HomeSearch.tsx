@@ -19,10 +19,10 @@ export function HomeSearch({
   const catalog = query.data;
   return (
     <section
-      className="rounded-2xl border border-border bg-card p-5 md:p-7"
+      className="rounded-2xl border border-border bg-card p-4 md:p-7"
       aria-labelledby="trip-search-title"
     >
-      <div className="mb-5 flex flex-wrap items-center gap-2.5">
+      <div className="mb-4 flex flex-wrap items-center gap-2.5 md:mb-5">
         <BusFront size={21} aria-hidden="true" className="text-primary" />
         <h2
           id="trip-search-title"

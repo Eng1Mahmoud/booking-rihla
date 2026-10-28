@@ -6,6 +6,7 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 import { Dialog } from 'radix-ui';
 import { Link } from '@/i18n/navigation';
 import {
+  ArrowUp,
   MessageCircle,
   X,
   Send,
@@ -16,7 +17,7 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
 import { AssistantResults } from './AssistantResults';
@@ -87,6 +88,7 @@ function assistantDisplayText(text: string) {
 export function AssistantWidget() {
   const locale = useLocale() as 'ar' | 'en';
   const isAr = locale === 'ar';
+  const footer = useTranslations('Footer');
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const conversationId = useRef<string | null>(null);
@@ -208,29 +210,41 @@ export function AssistantWidget() {
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          aria-label={isAr ? 'فتح مساعد الحجز' : 'Open booking assistant'}
-          ref={launcherRef}
-          tabIndex={open ? -1 : 0}
-          aria-hidden={open}
-          className={cn(
-            'print:hidden fixed bottom-5 right-5 z-40 flex size-14 items-center justify-center rounded-full',
-            'bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(0,111,123,0.55)]',
-            'ring-4 ring-primary/15',
-            'motion-safe:transition-all motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:hover:shadow-[0_14px_36px_-10px_rgba(0,111,123,0.65)]',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            open && 'pointer-events-none scale-90 opacity-0',
-          )}
-        >
-          <MessageCircle size={26} strokeWidth={2.25} />
-          <span className="absolute -top-0.5 -left-0.5 flex size-3.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex size-3.5 rounded-full bg-emerald-500 ring-2 ring-background" />
-          </span>
-        </button>
-      </Dialog.Trigger>
+      <div className="print:hidden fixed bottom-5 right-5 z-40 flex flex-col items-center gap-3">
+        {!open && (
+          <a
+            href="#top"
+            aria-label={footer('backToTop')}
+            title={footer('backToTop')}
+            className="flex size-12 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm motion-safe:transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          >
+            <ArrowUp size={22} aria-hidden="true" />
+          </a>
+        )}
+        <Dialog.Trigger asChild>
+          <button
+            type="button"
+            aria-label={isAr ? 'فتح مساعد الحجز' : 'Open booking assistant'}
+            ref={launcherRef}
+            tabIndex={open ? -1 : 0}
+            aria-hidden={open}
+            className={cn(
+              'relative flex size-14 items-center justify-center rounded-full',
+              'bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(0,111,123,0.55)]',
+              'ring-4 ring-primary/15',
+              'motion-safe:transition-all motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:hover:shadow-[0_14px_36px_-10px_rgba(0,111,123,0.65)]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              open && 'pointer-events-none scale-90 opacity-0',
+            )}
+          >
+            <MessageCircle size={26} strokeWidth={2.25} />
+            <span className="absolute -top-0.5 -left-0.5 flex size-3.5">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex size-3.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+            </span>
+          </button>
+        </Dialog.Trigger>
+      </div>
       <Dialog.Portal>
         <Dialog.Content
           aria-describedby={undefined}

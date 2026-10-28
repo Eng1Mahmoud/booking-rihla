@@ -83,7 +83,7 @@ export function TripSearchForm({
             }),
         );
       }}
-      className="grid-cols-[minmax(0,1fr)] items-start gap-x-3 gap-y-4 sm:grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] lg:grid-cols-[1fr_auto_1fr_1fr_auto]"
+      className="grid-cols-[minmax(0,1fr)_44px] items-start gap-x-3 gap-y-4 sm:grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] lg:grid-cols-[1fr_auto_1fr_1fr_auto]"
     >
       {(form) => (
         <>
@@ -102,7 +102,7 @@ export function TripSearchForm({
             type="button"
             variant="outline"
             size="icon"
-            className="mx-auto size-11 rounded-full sm:mt-8"
+            className="row-span-2 mx-auto mt-8 size-11 self-center rounded-full sm:row-span-1 sm:self-start"
             aria-label={t('swap')}
             onClick={() => {
               const { origin, destination } = form.getValues();
@@ -129,7 +129,7 @@ export function TripSearchForm({
               {options}
             </FormSelect>
           </div>
-          <div className="min-w-0 sm:col-span-3 md:col-span-2 lg:col-span-1">
+          <div className="col-span-2 min-w-0 sm:col-span-3 md:col-span-2 lg:col-span-1">
             <DatePickr<SearchFormValues>
               name="date"
               label={
@@ -141,7 +141,7 @@ export function TripSearchForm({
               min={today}
             />
           </div>
-          <div className="self-start sm:col-span-3 md:col-span-1 md:mt-8">
+          <div className="col-span-2 self-start sm:col-span-3 md:col-span-1 md:mt-8">
             <SubmitButton>
               <SearchIcon size={19} />
               {t('search')}

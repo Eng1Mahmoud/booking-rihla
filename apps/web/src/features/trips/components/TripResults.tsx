@@ -48,9 +48,13 @@ export function TripResults({
     locale === 'ar' ? 'ar-EG' : 'en-GB',
     { weekday: 'short', timeZone: 'Africa/Cairo' },
   );
-  const dateFormat = new Intl.DateTimeFormat(
+  const dayNumberFormat = new Intl.DateTimeFormat(
     locale === 'ar' ? 'ar-EG' : 'en-GB',
-    { day: 'numeric', month: 'short', timeZone: 'Africa/Cairo' },
+    { day: 'numeric', timeZone: 'Africa/Cairo' },
+  );
+  const monthFormat = new Intl.DateTimeFormat(
+    locale === 'ar' ? 'ar-EG' : 'en-GB',
+    { month: 'short', timeZone: 'Africa/Cairo' },
   );
   return (
     <div className="mx-auto w-[calc(100%-2rem)] max-w-[1240px] py-6 md:pt-8 md:pb-16">
@@ -93,32 +97,50 @@ export function TripResults({
         </span>
       </div>
       <nav
-        className="my-6 flex gap-2 overflow-x-auto pb-2"
+        className="mx-auto my-6 grid w-full grid-flow-col auto-cols-fr gap-1 sm:max-w-2xl sm:gap-2"
         aria-label={t('days')}
       >
         {days.map((date) => {
           const selected = date === search.travelDate;
           const value = new Date(date + 'T12:00:00Z');
+          const weekday = dayFormat.format(value);
+          const day = dayNumberFormat.format(value);
+          const month = monthFormat.format(value);
           return (
             <Link
               key={date}
               href={searchHref(search, { travelDate: date, offset: 0 })}
               className={cn(
-                'grid min-w-24 flex-1 gap-1 rounded-lg border bg-card px-4 py-3 text-center hover:bg-accent md:min-w-28',
-                selected && 'border-primary bg-accent ring-1 ring-primary',
+                'flex min-h-22 min-w-0 flex-col items-center justify-center gap-1 rounded-md border border-border bg-card px-1 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:border-primary/40 hover:bg-accent sm:min-h-19 sm:px-3',
+                selected &&
+                  'border-primary bg-primary text-primary-foreground hover:border-primary hover:bg-primary/90',
               )}
+              aria-label={weekday + ' ' + day + ' ' + month}
               aria-current={selected ? 'date' : undefined}
             >
               <span
                 className={cn(
-                  'text-xs text-muted-foreground',
-                  selected && 'text-primary',
+                  'text-[11px] leading-4 whitespace-nowrap text-muted-foreground sm:text-xs',
+                  selected && 'text-primary-foreground/90',
                 )}
               >
-                {dayFormat.format(value)}
+                {weekday}
               </span>
-              <time dateTime={date} className="text-sm font-medium">
-                {dateFormat.format(value)}
+              <time
+                dateTime={date}
+                className="flex min-w-0 flex-col items-center sm:flex-row sm:gap-1.5"
+              >
+                <span className="text-xl leading-6 font-semibold sm:text-base">
+                  {day}
+                </span>
+                <span
+                  className={cn(
+                    'text-[11px] leading-4 whitespace-nowrap text-muted-foreground sm:text-sm',
+                    selected && 'text-primary-foreground/90',
+                  )}
+                >
+                  {month}
+                </span>
               </time>
             </Link>
           );
