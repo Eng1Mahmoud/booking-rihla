@@ -53,5 +53,7 @@
   "heroSeat": "حدّد مقعدك",
   "heroBooking": "تابع تفاصيل حجزك",
   "heroImageLabel": "مقعد تختاره على مزاجك",
-  "routeFrom": "من {city}"
+  "routeFrom": "من {city}",
+  "loadingSearch": "بنجهّزلك البحث",
+  "loadingSearchHint": "جارٍ تحميل المدن والمحطات…"
 }

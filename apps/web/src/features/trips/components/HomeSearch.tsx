@@ -2,7 +2,7 @@
 import { useTranslations } from 'next-intl';
 import { BusFront } from 'lucide-react';
 import { QueryError } from '@/shared/components/feedback/QueryError';
-import { Skeleton } from '@/shared/components/ui/skeleton';
+import { JourneyLoading } from '@/shared/components/feedback/JourneyLoading';
 import { TripSearchForm } from './TripSearchForm';
 import { useTripCatalog } from '../hooks/useTrips';
 import type { TripCatalog } from '../types/trip';
@@ -15,7 +15,6 @@ export function HomeSearch({
   today: string;
 }) {
   const t = useTranslations('Home');
-  const forms = useTranslations('Forms');
   const query = useTripCatalog(initial);
   const catalog = query.data;
   return (
@@ -45,15 +44,11 @@ export function HomeSearch({
       {catalog && catalog.cities.length > 1 ? (
         <TripSearchForm {...catalog} today={today} />
       ) : query.isPending ? (
-        <div
-          role="status"
-          aria-label={forms('loading')}
-          className="grid gap-4 md:grid-cols-3"
-        >
-          <Skeleton className="h-12" />
-          <Skeleton className="h-12" />
-          <Skeleton className="h-12" />
-        </div>
+        <JourneyLoading
+          variant="inline"
+          title={t('loadingSearch')}
+          description={t('loadingSearchHint')}
+        />
       ) : catalog ? (
         <p className="text-sm text-muted-foreground">{t('noCities')}</p>
       ) : null}

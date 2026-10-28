@@ -53,5 +53,7 @@
   "heroSeat": "Pick your seat",
   "heroBooking": "Keep track of your booking",
   "heroImageLabel": "A seat that feels like yours",
-  "routeFrom": "From {city}"
+  "routeFrom": "From {city}",
+  "loadingSearch": "Getting your search ready",
+  "loadingSearchHint": "Loading cities and stations…"
 }
