@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./date-pickr": "./src/date-pickr.tsx"
+    "./date-pickr": "./src/date-pickr.tsx",
+    "./page-status": "./src/page-status.tsx"
   },
   "dependencies": {
     "@daypicker/react": "10.0.2",

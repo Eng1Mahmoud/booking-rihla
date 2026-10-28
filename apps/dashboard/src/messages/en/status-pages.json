@@ -1,0 +1,11 @@
+{
+  "sessionTitle": "We couldn’t verify your session",
+  "sessionDescription": "We can’t reach the session service right now. Please try again in a moment.",
+  "forbiddenTitle": "This page isn’t available to your account",
+  "forbiddenDescription": "Your account does not have permission to view this page. Return to your workspace or sign out.",
+  "notFoundTitle": "We couldn’t find this page",
+  "notFoundDescription": "The link may be incorrect or the page may no longer exist.",
+  "retry": "Try again",
+  "home": "Back to your workspace",
+  "code": "Error code:"
+}

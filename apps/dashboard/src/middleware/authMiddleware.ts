@@ -114,12 +114,12 @@ export async function authMiddleware(
         url.searchParams.set('returnTo', returnTo);
       errorResponse = NextResponse.redirect(url);
     } else {
-      errorResponse = new NextResponse(
-        locale === 'ar'
-          ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
-          : 'Could not verify your session right now. Please try again.',
-        { status },
+      const url = new URL('/' + locale + '/service-unavailable', request.url);
+      url.searchParams.set(
+        'returnTo',
+        '/' + locale + path + request.nextUrl.search,
       );
+      errorResponse = NextResponse.redirect(url);
     }
     for (const cookie of response.cookies.getAll())
       errorResponse.cookies.set(cookie);

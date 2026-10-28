@@ -1,16 +1,23 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { PageStatus } from '@booking-bus/ui/page-status';
+import { Button } from '@/shared/components/ui/button';
+import { StatusPageLayout } from '@/shared/components/feedback/StatusPageLayout';
+
 export default async function NotFound() {
-  const t = await getTranslations('Forms');
+  const t = await getTranslations('StatusPages');
   return (
-    <main className="mx-auto max-w-lg p-8 py-20">
-      <h1 className="text-2xl font-semibold">{t('notFound')}</h1>
-      <Link
-        href="/dashboard"
-        className="mt-5 inline-flex text-primary underline"
+    <StatusPageLayout>
+      <PageStatus
+        status={404}
+        title={t('notFoundTitle')}
+        description={t('notFoundDescription')}
+        codeLabel={t('code')}
       >
-        {t('home')}
-      </Link>
-    </main>
+        <Button asChild size="lg" className="rounded-full">
+          <Link href="/">{t('home')}</Link>
+        </Button>
+      </PageStatus>
+    </StatusPageLayout>
   );
 }

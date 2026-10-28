@@ -99,6 +99,17 @@
   }
 }
 
+@keyframes status-arrival {
+  from {
+    transform: translateX(var(--status-arrival-offset));
+    opacity: 0.65;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @font-face {
   font-family: 'Wix Madefor Display';
   src: url('/fonts/wix-madefor-display-700.ttf') format('truetype');

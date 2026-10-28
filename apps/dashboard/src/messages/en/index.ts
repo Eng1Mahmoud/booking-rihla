@@ -19,6 +19,7 @@ import payments from './payments.json';
 import refunds from './refunds.json';
 import users from './users.json';
 import ticketScan from './ticket-scan.json';
+import statusPages from './status-pages.json';
 
 export default {
   DatePicker: datePicker,
@@ -42,4 +43,5 @@ export default {
   Refunds: refunds,
   Users: users,
   TicketScan: ticketScan,
+  StatusPages: statusPages,
 };
