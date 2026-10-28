@@ -1,0 +1,23 @@
+{
+  "title": "Search results",
+  "invalid": "Check your cities or stations and travel date.",
+  "error": "Trips could not be loaded.",
+  "retry": "Try again",
+  "back": "Start a new search",
+  "empty": "No trips match this search.",
+  "emptyHint": "Try another date, or search all stations in the city.",
+  "nextDate": "View the next day",
+  "bus": "Bus",
+  "capacity": "{count} seats",
+  "seats": "Choose seats",
+  "previous": "Previous page",
+  "next": "Next page",
+  "duration": "{hours}h {minutes}m",
+  "direct": "Direct journey",
+  "nextDay": "Next day",
+  "perSeat": "Per seat",
+  "dateNote": "All times are in Cairo time.",
+  "count": "Trips on this page: {count}",
+  "days": "Choose travel date",
+  "pagination": "Trip pages"
+}

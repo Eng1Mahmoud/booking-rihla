@@ -1,0 +1,64 @@
+{
+  "title": "Terms of use & booking",
+  "metaTitle": "Terms of use — draft | Rihla",
+  "intro": "How accounts, seat holds, payments and cancellations work in the current version of Rihla.",
+  "sections": [
+    {
+      "id": "service",
+      "title": "About this version",
+      "paragraphs": [
+        "Rihla is currently a test bus-booking application. Its payment integration supports test transactions only. This draft does not announce a live transport service or authorize real-money payments.",
+        "The legal name and details of the operating entity must be added to the final terms before the service is launched publicly."
+      ]
+    },
+    {
+      "id": "account",
+      "title": "Your account & passenger details",
+      "paragraphs": [
+        "Provide accurate account and passenger information, keep your password private, and use passenger details only when you are authorized to provide them. Email verification is required for booking and payment access.",
+        "You can update your name and phone number in your account and sign out of the current session or all sessions. Booking and payment records belong to the account that created them."
+      ]
+    },
+    {
+      "id": "booking",
+      "title": "Choosing seats & temporary holds",
+      "paragraphs": [
+        "Selecting a seat on screen does not reserve it. A seat hold begins only after the booking request succeeds. A new hold lasts up to ten minutes and never extends beyond the trip departure time. Use the expiry time shown for your booking.",
+        "An unpaid hold expires and its seats become available again. A pending booking is not a confirmed ticket. Review the passengers, route, departure time and total price before continuing; prices are shown in Egyptian pounds."
+      ]
+    },
+    {
+      "id": "payments",
+      "title": "Payment status & confirmation",
+      "paragraphs": [
+        "Payment takes place through the configured payment provider. Returning from its payment page does not, by itself, confirm a successful payment. Follow the recorded status in your booking and avoid starting another payment while the previous result is uncertain.",
+        "A ticket becomes available only after the application verifies full payment and confirms the booking. A late successful charge does not restore an expired hold or take a seat that has been assigned to someone else; it is recorded for a full refund instead."
+      ]
+    },
+    {
+      "id": "tickets",
+      "title": "Your ticket & journey",
+      "paragraphs": [
+        "Review the trip and passenger information before travelling. Journey times are displayed in Cairo time. A printed ticket is a copy of the booking information at the time it was checked; the recorded booking and trip status may subsequently change.",
+        "Boarding arrangements and any operating requirements must be confirmed by the operator in the final service terms. This draft does not create a separate boarding entitlement from a screenshot, printout or QR image."
+      ]
+    },
+    {
+      "id": "cancellation",
+      "title": "Cancellation & refunds",
+      "paragraphs": [
+        "Passenger cancellation and passenger-initiated refund requests are not available in the current version. Expiry of an unpaid hold is different from cancellation of a confirmed booking.",
+        "If the company cancels a trip, a booking with verified full payment is due a full refund through the approved refund process. A refund marked as due or requested has not yet been confirmed as returned. Check the separate refund status in your booking or payment history.",
+        "No fixed refund completion time is promised in this draft. The operator must confirm the applicable process and provider or bank timeframes before public launch."
+      ]
+    },
+    {
+      "id": "contact",
+      "title": "Contact & final review",
+      "paragraphs": [
+        "The approved support channel and operating entity have not yet been finalized for this draft. They must be added before public launch so passengers can raise booking, payment and refund enquiries.",
+        "The final terms also need an effective date and a defined process for notifying passengers about material changes. The date above identifies this draft revision."
+      ]
+    }
+  ]
+}

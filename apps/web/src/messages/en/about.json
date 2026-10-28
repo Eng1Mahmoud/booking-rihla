@@ -1,0 +1,36 @@
+{
+  "metaTitle": "About | Rihla",
+  "eyebrow": "About Rihla",
+  "title": "A clearer journey, from the first choice.",
+  "intro": "Rihla is a platform for booking intercity bus trips in Egypt. Choose your station, departure and seat, with your booking and ticket details in one place.",
+  "cta": "Start your journey",
+  "journeyTitle": "From your starting point to your destination.",
+  "origin": "Departure station",
+  "destination": "Your destination",
+  "journeyText": "Find a trip, reserve a seat and follow your ticket. Connected steps that keep your journey details together.",
+  "purposeTitle": "Less searching around. More clarity.",
+  "purposeText": "We bring together the details you need before travelling: departure and arrival stations, schedules, fares and available seats. You can explore trips and stations before signing in.",
+  "purposeDetail": "When you book, choose your seat and enter the passenger details. After payment, follow your booking status and open your ticket in your account once confirmed.",
+  "howTitle": "From search to ticket.",
+  "howText": "A clear place for each step, so you can follow your journey without losing the details.",
+  "stepNumber": "Step {number}",
+  "steps": {
+    "trip": {
+      "title": "Find your trip",
+      "text": "Choose your departure and arrival city or station and your travel date, then review the schedules and fares."
+    },
+    "seat": {
+      "title": "Choose your seat",
+      "text": "See the bus layout, pick from the available seats and add passenger names and a contact number."
+    },
+    "ticket": {
+      "title": "Follow your booking",
+      "text": "Pay within the deadline shown and check the status in your account. Your ticket appears after payment and booking confirmation."
+    }
+  },
+  "exploreTitle": "A little more to know before you go.",
+  "stationsTitle": "Explore the stations",
+  "stationsText": "Browse stations by city and search for your station on the map.",
+  "faqsTitle": "Find an answer",
+  "faqsText": "Read about booking, payment and tickets, and understand your next step."
+}
