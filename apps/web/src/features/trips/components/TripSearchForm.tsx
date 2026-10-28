@@ -9,6 +9,10 @@ import {
 import { useRouter } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
+import {
+  NativeSelectOptGroup,
+  NativeSelectOption,
+} from '@/shared/components/ui/native-select';
 import { DatePickr } from '@/shared/components/forms/DatePickr';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
@@ -35,22 +39,25 @@ export function TripSearchForm({
   const name = (city: City) => (locale === 'ar' ? city.nameAr : city.nameEn);
   const options = (
     <>
-      <option value="" disabled>
+      <NativeSelectOption value="" disabled>
         {t('choose')}
-      </option>
+      </NativeSelectOption>
       {cities.map((city) => (
-        <optgroup key={city.id} label={name(city)}>
-          <option value={'city:' + city.id}>
+        <NativeSelectOptGroup key={city.id} label={name(city)}>
+          <NativeSelectOption value={'city:' + city.id}>
             {name(city)} — {t('allStations')}
-          </option>
+          </NativeSelectOption>
           {stations
             .filter((station) => station.cityId === city.id)
             .map((station) => (
-              <option key={station.id} value={'station:' + station.id}>
+              <NativeSelectOption
+                key={station.id}
+                value={'station:' + station.id}
+              >
                 {name(station)}، {name(city)}
-              </option>
+              </NativeSelectOption>
             ))}
-        </optgroup>
+        </NativeSelectOptGroup>
       ))}
     </>
   );

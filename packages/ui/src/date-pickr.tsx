@@ -8,13 +8,40 @@ import {
   TZDate,
   useDayPicker,
   type MonthCaptionProps,
+  type ClassNames,
 } from '@daypicker/react';
 import { ar } from '@daypicker/react/locale/ar';
 import { enGB } from '@daypicker/react/locale/en-GB';
-import '@daypicker/react/style.css';
-import styles from './date-pickr.module.css';
 
 const timeZone = 'Africa/Cairo';
+
+const calendarClasses: Partial<ClassNames> = {
+  root: 'relative w-full',
+  months: 'relative block max-w-none',
+  month: 'relative',
+  month_caption:
+    'relative mx-10 flex h-12 items-center justify-center text-sm font-bold',
+  month_grid: 'mt-3 w-full table-fixed border-collapse',
+  weekday: 'py-2 text-center text-xs font-medium text-muted-foreground',
+  day: 'group/day h-11 w-[calc(100%/7)] p-px text-center text-sm tabular-nums',
+  day_button:
+    'm-0 flex h-10.5 w-full cursor-pointer items-center justify-center rounded-[0.625rem] border-2 border-transparent bg-transparent p-0 text-inherit [font:inherit] hover:bg-secondary disabled:cursor-default group-data-[selected]/day:border-primary group-data-[selected]/day:bg-primary group-data-[selected]/day:font-bold group-data-[selected]/day:text-primary-foreground',
+  button_previous:
+    'absolute start-0 top-0 inline-flex h-12 w-10 cursor-pointer appearance-none items-center justify-center rounded-[0.625rem] border-0 bg-transparent p-0 hover:bg-secondary disabled:cursor-default disabled:opacity-50 aria-disabled:cursor-default aria-disabled:opacity-50',
+  button_next:
+    'absolute end-0 top-0 inline-flex h-12 w-10 cursor-pointer appearance-none items-center justify-center rounded-[0.625rem] border-0 bg-transparent p-0 hover:bg-secondary disabled:cursor-default disabled:opacity-50 aria-disabled:cursor-default aria-disabled:opacity-50',
+  chevron: 'inline-block fill-primary',
+  outside: 'text-muted-foreground',
+  today:
+    '[&:not([data-selected])>button]:border-primary [&:not([data-selected])>button]:font-bold [&:not([data-selected])>button]:text-primary',
+  disabled: 'not-data-[selected]:opacity-50',
+  hidden: 'invisible',
+};
+
+const pickerSelectClassName =
+  'supports-[appearance:base-select]:[&:not([multiple])]:appearance-[base-select] [&::picker(select)]:appearance-[base-select] [&::picker-icon]:hidden supports-[appearance:base-select]:[&:open:not([aria-invalid=true])]:border-primary [&::picker(select)]:my-1.5 [&::picker(select)]:max-h-[min(20rem,60dvh)] [&::picker(select)]:max-w-[calc(100vw-1rem)] [&::picker(select)]:[min-inline-size:min(anchor-size(self-inline),calc(100vw-1rem))] [&::picker(select)]:rounded-md [&::picker(select)]:border-0 [&::picker(select)]:bg-card [&::picker(select)]:p-1.5 [&::picker(select)]:text-foreground [&::picker(select)]:shadow-[0_12px_36px_-8px_#112f4533] [&::picker(select)]:[font:inherit] [&::picker(select)]:[direction:inherit] [&::picker(select)]:[scrollbar-color:var(--muted)_var(--canvas)] [&::picker(select)]:[scrollbar-width:thin] supports-[appearance:base-select]:[&_option]:flex supports-[appearance:base-select]:[&_option]:min-h-11 supports-[appearance:base-select]:[&_option]:cursor-pointer supports-[appearance:base-select]:[&_option]:items-center supports-[appearance:base-select]:[&_option]:gap-3 supports-[appearance:base-select]:[&_option]:rounded-sm supports-[appearance:base-select]:[&_option]:bg-card supports-[appearance:base-select]:[&_option]:px-3 supports-[appearance:base-select]:[&_option]:py-2.5 supports-[appearance:base-select]:[&_option]:whitespace-normal supports-[appearance:base-select]:[&_option]:text-foreground supports-[appearance:base-select]:[&_option]:wrap-anywhere supports-[appearance:base-select]:[&_option]:[font:inherit] supports-[appearance:base-select]:[&_option:checked]:bg-accent supports-[appearance:base-select]:[&_option:checked]:font-semibold supports-[appearance:base-select]:[&_option:checked]:text-primary supports-[appearance:base-select]:[&_option:enabled:is(:hover,:focus-visible)]:bg-accent supports-[appearance:base-select]:[&_option:enabled:is(:hover,:focus-visible)]:text-accent-foreground supports-[appearance:base-select]:[&_option:focus-visible]:outline-2 supports-[appearance:base-select]:[&_option:focus-visible]:-outline-offset-2 supports-[appearance:base-select]:[&_option:focus-visible]:outline-primary supports-[appearance:base-select]:[&_option:disabled]:cursor-not-allowed supports-[appearance:base-select]:[&_option:disabled]:text-muted-foreground [&_option::checkmark]:order-1 [&_option::checkmark]:ms-auto [&_option::checkmark]:text-primary supports-[appearance:base-select]:[&_optgroup]:font-semibold supports-[appearance:base-select]:[&_optgroup]:text-muted-foreground supports-[appearance:base-select]:[&_optgroup]:[font-family:inherit]';
+
+const timeSelectClassName = `${pickerSelectClassName} h-13 w-full min-w-0 cursor-pointer appearance-auto rounded-[0.5rem] border border-transparent bg-secondary px-1.5 text-center text-base font-semibold tabular-nums [font-family:inherit]`;
 
 function calendarDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
@@ -81,9 +108,10 @@ function CalendarCaption({ calendarMonth, className }: MonthCaptionProps) {
   }
   return (
     <div className={className}>
-      <div className={styles.caption}>
-        <div className={styles.monthSelect}>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <div className="relative min-w-0 flex-1">
           <select
+            className={`${pickerSelectClassName} h-11 w-full min-w-0 appearance-none rounded-[0.5rem] border border-transparent bg-secondary ps-2 pe-7 text-start text-sm font-semibold [font-family:inherit]`}
             aria-label={labels.labelMonthDropdown()}
             value={month}
             onChange={(event) => goTo(year, Number(event.target.value))}
@@ -98,7 +126,11 @@ function CalendarCaption({ calendarMonth, className }: MonthCaptionProps) {
               </option>
             ))}
           </select>
-          <ChevronDown size={16} aria-hidden="true" />
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-2 top-3.5 text-primary"
+          />
         </div>
         <input
           key={year}
@@ -108,7 +140,7 @@ function CalendarCaption({ calendarMonth, className }: MonthCaptionProps) {
           max={lastYear}
           defaultValue={year}
           dir="ltr"
-          className={styles.year}
+          className="h-11 w-18 min-w-0 shrink-0 rounded-[0.5rem] border border-transparent bg-secondary px-1 text-center text-sm font-semibold tabular-nums [font-family:inherit]"
           onBlur={(event) => {
             const value = Number(event.currentTarget.value);
             if (
@@ -170,12 +202,21 @@ function TimeFields({
   }
   const number = new Intl.NumberFormat('en', { minimumIntegerDigits: 2 });
   return (
-    <fieldset disabled={disabled} className={styles.timeField}>
-      <legend>{labels.time}</legend>
-      <div className={styles.timeSegments} dir="ltr">
+    <fieldset
+      disabled={disabled}
+      className="mt-3 border-0 border-t border-border pt-3 text-sm"
+    >
+      <legend className="pb-2 text-[13px] text-muted-foreground">
+        {labels.time}
+      </legend>
+      <div
+        className="flex flex-wrap gap-2 [&>label]:min-w-0 [&>label]:flex-[1_1_64px] [&>label>span]:mb-1.5 [&>label>span]:block [&>label>span]:text-center [&>label>span]:text-xs [&>label>span]:text-muted-foreground rtl:[&>label:last-child]:basis-full"
+        dir="ltr"
+      >
         <label>
           <span>{labels.hour}</span>
           <select
+            className={timeSelectClassName}
             value={displayHour}
             onChange={(event) => change(Number(event.target.value))}
           >
@@ -189,6 +230,7 @@ function TimeFields({
         <label>
           <span>{labels.minute}</span>
           <select
+            className={timeSelectClassName}
             value={minute}
             onChange={(event) => change(displayHour, event.target.value)}
           >
@@ -203,6 +245,7 @@ function TimeFields({
           <label>
             <span>{labels.second}</span>
             <select
+              className={timeSelectClassName}
               value={second}
               onChange={(event) =>
                 change(
@@ -227,6 +270,7 @@ function TimeFields({
         <label>
           <span>{labels.period}</span>
           <select
+            className={timeSelectClassName}
             value={period}
             onChange={(event) =>
               change(displayHour, minute, event.target.value)
@@ -358,11 +402,18 @@ function Picker({
             disabled={disabled}
             aria-readonly={readOnly || undefined}
             onBlur={onBlur}
-            className={[styles.trigger, className].filter(Boolean).join(' ')}
+            className={[
+              'flex min-h-12 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-md border border-border bg-card px-3.5 py-2 text-start text-foreground [font:inherit] motion-safe:transition-[border-color,background-color] motion-safe:duration-150 hover:border-primary hover:bg-secondary/50 data-[state=open]:border-primary data-[state=open]:outline-2 data-[state=open]:outline-primary/15 focus-visible:outline-[3px] focus-visible:outline-offset-3 focus-visible:outline-[#4eacd8] disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-destructive [&>svg]:shrink-0 [&>svg]:text-primary',
+              className,
+            ]
+              .filter(Boolean)
+              .join(' ')}
           >
             <span
               className={
-                (timeOnly ? time : selected) ? styles.value : styles.placeholder
+                (timeOnly ? time : selected)
+                  ? 'min-w-0 tabular-nums'
+                  : 'text-muted-foreground'
               }
             >
               {timeOnly
@@ -381,11 +432,11 @@ function Picker({
             collisionPadding={8}
             dir={direction}
             aria-label={placeholder}
-            className={styles.popover}
+            className="z-100 max-h-(--radix-popover-content-available-height) w-[min(22rem,calc(100vw-1rem))] overflow-y-auto rounded-2xl bg-card p-3 text-foreground shadow-[0_12px_36px_-8px_#112f4533] outline-none [scrollbar-color:var(--muted)_var(--canvas)] [&_button:focus-visible]:outline-[3px] [&_button:focus-visible]:outline-offset-0 [&_button:focus-visible]:outline-[#4eacd8] [&_input:focus-visible]:outline-[3px] [&_input:focus-visible]:outline-offset-0 [&_input:focus-visible]:outline-[#4eacd8] [&_select:focus-visible]:outline-[3px] [&_select:focus-visible]:outline-offset-0 [&_select:focus-visible]:outline-[#4eacd8]"
           >
             {!timeOnly && (
               <DayPicker
-                className={styles.calendar}
+                classNames={calendarClasses}
                 mode="single"
                 required
                 autoFocus
@@ -416,11 +467,11 @@ function Picker({
                 onChange={(next) => changeValue(next)}
               />
             )}
-            <div className={styles.footer}>
+            <div className="sticky -bottom-3 mt-3 flex items-center justify-between gap-1 border-t border-border bg-card pt-3 [&>button]:min-h-11 [&>button]:cursor-pointer [&>button]:rounded-[0.5rem] [&>button]:border-0 [&>button]:px-3.5 [&>button]:py-2 [&>button]:text-sm [&>button]:[font-family:inherit] [&>button:hover]:bg-secondary [&>button:hover]:text-secondary-foreground [&>button:disabled]:cursor-not-allowed [&>button:disabled]:opacity-50">
               {!timeOnly && (
                 <button
                   type="button"
-                  className={styles.today}
+                  className="bg-secondary font-semibold text-primary"
                   disabled={
                     dateValue(today) < dateValue(firstDate) ||
                     dateValue(today) > dateValue(lastDate)
@@ -432,6 +483,7 @@ function Picker({
               )}
               <button
                 type="button"
+                className="bg-transparent text-muted-foreground"
                 onClick={() => {
                   changeValue('');
                   setOpen(false);
@@ -440,7 +492,12 @@ function Picker({
                 {labels.clear}
               </button>
               <Popover.Close asChild>
-                <button type="button">{labels.close}</button>
+                <button
+                  type="button"
+                  className="bg-transparent text-muted-foreground"
+                >
+                  {labels.close}
+                </button>
               </Popover.Close>
             </div>
           </Popover.Content>

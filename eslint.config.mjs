@@ -15,6 +15,7 @@ export default defineConfig(
   },
   {
     files: [
+      'packages/ui/src/**/*.ts',
       'packages/ui/src/**/*.tsx',
       'apps/api/src/**/*.ts',
       'apps/api/tests/**/*.ts',
