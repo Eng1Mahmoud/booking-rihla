@@ -14,9 +14,11 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { errorMessage, invokeAction } from '@/shared/lib/apiResult';
 import { logoutAction } from '../actions/auth.actions';
+import type { UserRole } from '../types/auth';
 
-export function StaffAccountMenu() {
+export function StaffAccountMenu({ role }: { role: UserRole }) {
   const t = useTranslations('Auth');
+  const states = useTranslations('States');
   const locale = useLocale();
   const router = useRouter();
   const client = useQueryClient();
@@ -48,11 +50,14 @@ export function StaffAccountMenu() {
         <Button
           variant="ghost"
           className="min-h-12 gap-2 rounded-full p-1 pe-2.5"
-          aria-label={t('accountMenu')}
+          aria-label={t('accountMenu') + ': ' + states(role)}
           disabled={pending}
         >
           <span className="grid size-10 place-items-center rounded-full bg-secondary-foreground text-white">
             <UserRound className="size-5" aria-hidden="true" />
+          </span>
+          <span className="hidden max-w-40 truncate text-sm font-medium sm:inline">
+            {states(role)}
           </span>
           <ChevronDown
             className="size-4 text-muted-foreground"
@@ -64,7 +69,10 @@ export function StaffAccountMenu() {
         align="end"
         className="w-56 max-w-[calc(100vw-2rem)]"
       >
-        <p className="px-3 py-2.5 text-sm font-medium">{t('staffAccount')}</p>
+        <div className="px-3 py-2.5">
+          <p className="text-xs text-muted-foreground">{t('accountRole')}</p>
+          <p className="mt-1 text-sm font-medium">{states(role)}</p>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={pending}

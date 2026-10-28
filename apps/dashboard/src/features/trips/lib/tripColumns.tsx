@@ -1,4 +1,4 @@
-import { Button } from '@/shared/components/ui/button';
+import { Ban } from 'lucide-react';
 import { RowActions } from '@/shared/components/tables/RowActions';
 import type { DataTableColumn } from '@/shared/lib/dataTable';
 import { routeLabel } from '@/features/routes/lib/routeColumns';
@@ -73,36 +73,36 @@ export function createTripColumns({
     {
       id: 'actions',
       header: labels.actions,
-      meta: { headerClassName: 'w-48 text-end' },
+      meta: { headerClassName: 'w-24 text-center' },
       cell: ({ row }) => {
         const trip = row.original,
           closed =
             trip.status === 'CANCELLED' ||
             Date.parse(trip.departureAt) <= Date.now();
+        if (closed)
+          return (
+            <span className="text-sm text-muted-foreground">
+              {labels.closed}
+            </span>
+          );
         return (
-          <div className="grid justify-items-end gap-2">
-            {!closed && (
-              <RowActions
-                name={name(trip)}
-                onEdit={() => onEdit(trip)}
-                onDelete={() => onDelete(trip)}
-              />
-            )}{' '}
-            {closed && (
-              <span className="text-sm text-muted-foreground">
-                {labels.closed}
-              </span>
-            )}{' '}
-            {superAdmin && !closed && (
-              <Button
-                variant="ghost"
-                className="min-h-11 text-destructive"
-                onClick={() => onCancel(trip)}
-              >
-                {labels.cancel}
-              </Button>
-            )}
-          </div>
+          <RowActions
+            name={name(trip)}
+            onEdit={() => onEdit(trip)}
+            onDelete={() => onDelete(trip)}
+            additionalActions={
+              superAdmin
+                ? [
+                    {
+                      label: labels.cancel!,
+                      icon: Ban,
+                      destructive: true,
+                      onSelect: () => onCancel(trip),
+                    },
+                  ]
+                : []
+            }
+          />
         );
       },
     },

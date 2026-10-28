@@ -1,7 +1,8 @@
 'use client';
 import { useMemo, useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Ticket } from 'lucide-react';
+import { Ticket, Eye } from 'lucide-react';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { Button } from '@/shared/components/ui/button';
 import { DatePickr } from '@/shared/components/ui/date-pickr';
 import { Input } from '@/shared/components/ui/input';
@@ -15,7 +16,8 @@ import {
 } from '@/features/dashboard/lib/format';
 import { useBookings } from '../hooks/useBookings';
 import { BookingDetails } from './BookingDetails';
-import type { Booking, BookingFilters } from '../schemas/bookingSchema';
+import type { Booking } from '../schemas/bookingSchema';
+const filterFields = ['reference', 'email', 'travelDate'] as const;
 export function BookingsManager({
   tripId = '',
   bookingId = '',
@@ -78,14 +80,18 @@ export function BookingsManager({
       {
         id: 'details',
         header: t('details'),
+        meta: { headerClassName: 'w-24 text-center' },
         cell: ({ row }) => (
-          <Button
-            variant="outline"
-            className="min-h-11"
-            onClick={() => page.open(row.original.id)}
-          >
-            {t('details')}
-          </Button>
+          <RowActionMenu
+            name={row.original.reference}
+            actions={[
+              {
+                label: t('details'),
+                icon: Eye,
+                onSelect: () => page.open(row.original.id),
+              },
+            ]}
+          />
         ),
       },
     ],
@@ -110,17 +116,15 @@ export function BookingsManager({
           event.preventDefault();
           const data = new FormData(event.currentTarget);
           const filters = Object.fromEntries(
-            Object.keys(page.list.filters).map((key) => [
+            filterFields.map((key) => [
               key,
               String(data.get(key) ?? '').trim(),
             ]),
           );
-          page.list.resetFilters(filters as BookingFilters);
+          page.list.resetFilters({ ...page.list.filters, ...filters });
         }}
       >
-        {(
-          ['reference', 'email', 'travelDate', 'tripId', 'userId'] as const
-        ).map((field) => (
+        {filterFields.map((field) => (
           <label
             key={field}
             htmlFor={filterId + field}

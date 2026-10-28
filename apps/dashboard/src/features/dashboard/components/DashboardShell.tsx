@@ -35,7 +35,7 @@ export async function DashboardShell({
           href={user.role === 'STAFF' ? '/dashboard/scan' : '/dashboard'}
           className="inline-flex items-center gap-3 px-[26px] pt-6 pb-[34px] text-white"
           dir="ltr"
-          aria-label={t('overview')}
+          aria-label={t(user.role === 'STAFF' ? 'ticketScan' : 'overview')}
         >
           <span className="grid size-14 place-items-center rounded-full bg-primary">
             <BusFront className="size-[30px]" aria-hidden="true" />
@@ -47,11 +47,7 @@ export async function DashboardShell({
             </small>
           </strong>
         </Link>
-        <DashboardNavigation
-          website={website}
-          superAdmin={user.role === 'SUPER_ADMIN'}
-          staffOnly={user.role === 'STAFF'}
-        />
+        <DashboardNavigation website={website} role={user.role} />
         <a
           href={website}
           className="mx-6 mt-[38px] flex min-h-14 items-center gap-4 border-t border-[#466071] py-5 text-[14px] text-white"
@@ -63,11 +59,7 @@ export async function DashboardShell({
       <div className="min-w-0">
         <header className="flex min-h-[82px] items-center border-b bg-card px-6 py-3.5 xl:px-[34px]">
           <div className="lg:hidden">
-            <DashboardNavigation
-              website={website}
-              superAdmin={user.role === 'SUPER_ADMIN'}
-              staffOnly={user.role === 'STAFF'}
-            />
+            <DashboardNavigation website={website} role={user.role} />
           </div>
           <Link
             href={user.role === 'STAFF' ? '/dashboard/scan' : '/dashboard'}
@@ -80,7 +72,7 @@ export async function DashboardShell({
             <div className="flex min-h-11 items-center">
               <LanguageSwitcher />
             </div>
-            <StaffAccountMenu />
+            <StaffAccountMenu role={user.role} />
           </div>
         </header>
         <main

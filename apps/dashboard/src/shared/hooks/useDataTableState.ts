@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PaginationState, Updater } from '@tanstack/react-table';
+import { DEFAULT_TABLE_PAGE_SIZE } from '@/shared/lib/pagination';
 
 export function useDataTableState<TFilters extends Record<string, string>>({
   initialFilters,
-  pageSize = 20,
+  pageSize = DEFAULT_TABLE_PAGE_SIZE,
 }: {
   initialFilters: TFilters;
   pageSize?: number;

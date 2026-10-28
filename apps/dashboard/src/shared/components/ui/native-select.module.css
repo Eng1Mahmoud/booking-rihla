@@ -1,0 +1,88 @@
+.select {
+  font-family: inherit;
+  text-align: start;
+}
+
+/* Keep native form, keyboard and reset behavior; older browsers keep their picker. */
+@supports (appearance: base-select) and selector(::picker(select)) {
+  .select:not([multiple]),
+  .select:not([multiple])::picker(select) {
+    appearance: base-select;
+  }
+
+  .select::picker-icon {
+    display: none;
+  }
+
+  .select:open {
+    border-color: var(--ocean);
+  }
+
+  .select[aria-invalid='true'] {
+    border-color: var(--color-destructive);
+  }
+
+  .select::picker(select) {
+    min-inline-size: min(anchor-size(self-inline), calc(100vw - 1rem));
+    max-inline-size: calc(100vw - 1rem);
+    max-block-size: min(20rem, 60dvh);
+    margin-block: 6px;
+    padding: 6px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--ink);
+    font: inherit;
+    box-shadow: 0 12px 36px -8px #112f4533;
+    scrollbar-color: var(--muted) var(--canvas);
+    scrollbar-width: thin;
+  }
+
+  .select option {
+    display: flex;
+    min-block-size: 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--color-card);
+    color: var(--ink);
+    font: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  .select option:checked {
+    background: var(--color-accent);
+    color: var(--ocean);
+    font-weight: 600;
+  }
+
+  .select option:enabled:is(:hover, :focus-visible) {
+    background: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  .select option:focus-visible {
+    outline: 2px solid var(--ocean);
+    outline-offset: -2px;
+  }
+
+  .select option:disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .select option::checkmark {
+    order: 1;
+    margin-inline-start: auto;
+    color: var(--ocean);
+  }
+
+  .select optgroup {
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+  }
+}

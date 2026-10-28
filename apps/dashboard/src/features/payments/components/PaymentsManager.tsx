@@ -1,8 +1,8 @@
 'use client';
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { CreditCard } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { CreditCard, Eye } from 'lucide-react';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -66,14 +66,18 @@ export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
       {
         id: 'details',
         header: t('details'),
+        meta: { headerClassName: 'w-24 text-center' },
         cell: ({ row }) => (
-          <Button
-            variant="outline"
-            className="min-h-11"
-            onClick={() => page.open(row.original.id)}
-          >
-            {t('details')}
-          </Button>
+          <RowActionMenu
+            name={row.original.reference}
+            actions={[
+              {
+                label: t('details'),
+                icon: Eye,
+                onSelect: () => page.open(row.original.id),
+              },
+            ]}
+          />
         ),
       },
     ],

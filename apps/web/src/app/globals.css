@@ -134,6 +134,9 @@
   html[lang='en'] body {
     font-family: 'Segoe UI', Arial, sans-serif;
   }
+  html[lang='ar'] input[type='email'] {
+    text-align: right;
+  }
   summary:focus-visible {
     outline: 3px solid var(--ocean);
     outline-offset: 4px;
@@ -158,5 +161,16 @@
   body:has([data-ticket-page]) [data-site-shell] > header,
   body:has([data-ticket-page]) [data-site-shell] > footer {
     display: none;
+  }
+}
+
+@keyframes status-arrival {
+  from {
+    transform: translateX(var(--status-arrival-offset));
+    opacity: 0.65;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }

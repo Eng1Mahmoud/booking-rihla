@@ -22,7 +22,7 @@ export function intlMiddleware(
   }
 
   // 4. Protected page responses must not be cached.
-  if (getProtectedRoute(path)) {
+  if (getProtectedRoute(path) || path === '/service-unavailable') {
     response.headers.set('Cache-Control', 'private, no-store');
   }
   return response;

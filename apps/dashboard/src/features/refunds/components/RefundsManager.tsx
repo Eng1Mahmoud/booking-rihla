@@ -1,9 +1,9 @@
 'use client';
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Undo2 } from 'lucide-react';
+import { Undo2, RefreshCw } from 'lucide-react';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -53,32 +53,37 @@ export function RefundsManager() {
       {
         id: 'actions',
         header: t('actions'),
-        meta: { headerClassName: 'w-56 text-end' },
+        meta: { headerClassName: 'w-24 text-center' },
         cell: ({ row }) => {
           const refund = row.original,
             blocked = page.blocked.includes(refund.id);
           return (
-            <div className="grid justify-items-end gap-2">
-              {refund.status === 'PENDING' && (
-                <Button
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={blocked}
-                  onClick={() => page.open(refund, 'issue')}
-                >
-                  {t('issue')}
-                </Button>
-              )}
-              {['REQUESTED', 'UNKNOWN', 'REVIEW'].includes(refund.status) && (
-                <Button
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={blocked}
-                  onClick={() => page.open(refund, 'reconcile')}
-                >
-                  {t('reconcile')}
-                </Button>
-              )}
+            <div className="grid justify-items-center gap-2">
+              <RowActionMenu
+                name={refund.bookingId}
+                actions={[
+                  ...(refund.status === 'PENDING'
+                    ? [
+                        {
+                          label: t('issue'),
+                          icon: Undo2,
+                          disabled: blocked,
+                          onSelect: () => page.open(refund, 'issue'),
+                        },
+                      ]
+                    : []),
+                  ...(['REQUESTED', 'UNKNOWN', 'REVIEW'].includes(refund.status)
+                    ? [
+                        {
+                          label: t('reconcile'),
+                          icon: RefreshCw,
+                          disabled: blocked,
+                          onSelect: () => page.open(refund, 'reconcile'),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
               {refund.status === 'SUCCEEDED' && (
                 <span className="text-sm text-muted-foreground">
                   {t('completed')}

@@ -88,32 +88,25 @@ export async function authMiddleware(
     return handleAuthFailure(403);
   return response;
 
-  // Preserve renewed cookies when redirecting or showing a temporary error.
+  // Preserve renewed cookies when redirecting, including during a temporary outage.
   function handleAuthFailure(status: 401 | 403 | 503) {
     // Actions return backend errors through invokeAction; redirects are for page navigation.
     if (isServerAction) return response;
-    let errorResponse: NextResponse;
-    if (status === 401 || status === 403) {
-      const url = new URL(
-        '/' + locale + (status === 401 ? '/login' : '/forbidden'),
-        request.url,
-      );
-      const returnTo = path + request.nextUrl.search;
-      if (status === 401 && returnTo !== '/')
-        url.searchParams.set('returnTo', returnTo);
-      errorResponse = NextResponse.redirect(url);
-    } else {
-      errorResponse = new NextResponse(
-        locale === 'ar'
-          ? 'تعذر التحقق من الجلسة الآن. حاول مجددًا.'
-          : 'Could not verify your session right now. Please try again.',
-        { status },
-      );
-    }
+    const destination = {
+      401: '/login',
+      403: '/forbidden',
+      503: '/service-unavailable',
+    }[status];
+    const url = new URL('/' + locale + destination, request.url);
+    const returnTo = path + request.nextUrl.search;
+    if (status === 401 && returnTo !== '/')
+      url.searchParams.set('returnTo', returnTo);
+    if (status === 503)
+      url.searchParams.set('returnTo', '/' + locale + returnTo);
+    const errorResponse = NextResponse.redirect(url);
     for (const cookie of response.cookies.getAll())
       errorResponse.cookies.set(cookie);
     errorResponse.headers.set('Cache-Control', 'private, no-store');
-    if (status === 503) errorResponse.headers.set('Retry-After', '5');
     return errorResponse;
   }
 }

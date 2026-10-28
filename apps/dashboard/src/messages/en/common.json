@@ -10,5 +10,6 @@
   "editNamed": "Edit {name}",
   "deleteNamed": "Delete {name}",
   "retry": "Try again",
-  "city": "City"
+  "city": "City",
+  "actionsNamed": "Actions for {name}"
 }

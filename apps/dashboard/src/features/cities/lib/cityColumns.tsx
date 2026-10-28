@@ -36,7 +36,7 @@ export function createCityColumns({
     {
       id: 'actions',
       header: labels.actions,
-      meta: { headerClassName: 'text-end' },
+      meta: { headerClassName: 'w-24 text-center' },
       cell: ({ row }) => (
         <RowActions
           name={row.original[locale === 'ar' ? 'nameAr' : 'nameEn']}

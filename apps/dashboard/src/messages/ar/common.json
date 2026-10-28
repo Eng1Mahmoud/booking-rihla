@@ -10,5 +10,6 @@
   "editNamed": "تعديل {name}",
   "deleteNamed": "حذف {name}",
   "retry": "إعادة المحاولة",
-  "city": "المدينة"
+  "city": "المدينة",
+  "actionsNamed": "إجراءات {name}"
 }

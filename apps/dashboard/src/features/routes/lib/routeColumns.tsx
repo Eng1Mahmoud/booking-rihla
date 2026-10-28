@@ -68,7 +68,7 @@ export function createRouteColumns(options: {
     {
       id: 'actions',
       header: labels.actions,
-      meta: { headerClassName: 'text-end' },
+      meta: { headerClassName: 'w-24 text-center' },
       cell: ({ row }) => (
         <RowActions
           name={routeLabel(row.original, stations, locale)}

@@ -47,6 +47,9 @@
   html[lang='en'] body {
     font-family: 'Segoe UI', Arial, sans-serif;
   }
+  html[lang='ar'] input[type='email'] {
+    text-align: right;
+  }
   h1,
   h2,
   p,

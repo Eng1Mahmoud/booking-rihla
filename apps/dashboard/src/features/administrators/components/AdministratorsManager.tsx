@@ -1,7 +1,8 @@
 'use client';
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Users } from 'lucide-react';
+import { Users, ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -60,24 +61,26 @@ export function AdministratorsManager() {
       {
         id: 'actions',
         header: t('actions'),
-        meta: { headerClassName: 'w-48 text-end' },
+        meta: { headerClassName: 'w-24 text-center' },
         cell: ({ row }) => (
-          <div className="grid justify-items-end gap-2">
-            <Button
-              variant="outline"
-              className="min-h-11"
-              onClick={() => page.openStatus(row.original)}
-            >
-              {t(row.original.isActive ? 'suspend' : 'activate')}
-            </Button>
-            <Button
-              variant="ghost"
-              className="min-h-11"
-              onClick={() => page.openRole(row.original)}
-            >
-              {t('changeRole')}
-            </Button>
-          </div>
+          <RowActionMenu
+            name={row.original.name}
+            actions={[
+              {
+                label: t(row.original.isActive ? 'suspend' : 'activate'),
+                icon: row.original.isActive ? UserRoundX : UserRoundCheck,
+                destructive: row.original.isActive,
+                onSelect: () => page.openStatus(row.original),
+              },
+              ...[
+                {
+                  label: t('changeRole'),
+                  icon: ShieldCheck,
+                  onSelect: () => page.openRole(row.original),
+                },
+              ],
+            ]}
+          />
         ),
       },
     ],

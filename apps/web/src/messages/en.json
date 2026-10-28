@@ -737,5 +737,20 @@
     "period": "Period",
     "am": "AM",
     "pm": "PM"
+  },
+  "StatusPages": {
+    "sessionTitle": "We couldn’t verify your session",
+    "sessionDescription": "We can’t check your session right now. Please try again in a moment.",
+    "forbiddenTitle": "This page isn’t available to your account",
+    "forbiddenDescription": "Your current account doesn’t have permission to view this page.",
+    "notFoundTitle": "We couldn’t find this page",
+    "notFoundDescription": "The link may be incorrect or the page may no longer exist.",
+    "errorTitle": "We couldn’t load this page",
+    "errorDescription": "Something went wrong loading this page. Please try again.",
+    "retry": "Try again",
+    "home": "Back to home",
+    "bookings": "My bookings",
+    "searchTrips": "Search for a trip",
+    "code": "Error code:"
   }
 }
