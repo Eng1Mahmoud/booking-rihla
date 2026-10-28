@@ -3,7 +3,13 @@ import type { ComponentProps } from 'react';
 import { DropdownMenu as DropdownPrimitive } from 'radix-ui';
 import { cn } from '@/shared/lib/cn';
 
-export const DropdownMenu = DropdownPrimitive.Root;
+/** Non-modal by default so opening menus does not lock body scroll / shift layout. */
+export function DropdownMenu({
+  modal = false,
+  ...props
+}: ComponentProps<typeof DropdownPrimitive.Root>) {
+  return <DropdownPrimitive.Root modal={modal} {...props} />;
+}
 export const DropdownMenuTrigger = DropdownPrimitive.Trigger;
 export function DropdownMenuContent({
   className,
