@@ -39,6 +39,7 @@
     border-color: var(--border);
   }
   html {
+    scrollbar-gutter: stable;
     color-scheme: light;
     scroll-padding-top: 100px;
   }
