@@ -49,17 +49,22 @@ export const routeService = {
     originStationId,
     destinationStationId,
     isActive,
-  }: RouteListQuery): Promise<Route[]> {
+  }: RouteListQuery): Promise<{ items: Route[]; total: number }> {
     const { db } = await import('../prisma/db.ts');
-    return await db.orm.public.Route.where({
+    const query = db.orm.public.Route.where({
       ...(originStationId === undefined ? {} : { originStationId }),
       ...(destinationStationId === undefined ? {} : { destinationStationId }),
       ...(isActive === undefined ? {} : { isActive }),
-    })
-      .orderBy((route) => route.id.asc())
-      .limit(limit)
-      .offset(offset)
-      .all();
+    });
+    const [items, { total }] = await Promise.all([
+      query
+        .orderBy((route) => route.id.asc())
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items, total };
   },
   async findById(id: string): Promise<Route | null> {
     const { db } = await import('../prisma/db.ts');

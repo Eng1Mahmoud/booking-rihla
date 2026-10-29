@@ -4,7 +4,7 @@ import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { apiFetch } from '@/shared/lib/api';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListOptions } from '@/shared/lib/readListOptions';
-import { readWindowPage } from '@/shared/lib/readWindowPage';
+import { readListPage } from '@/shared/lib/readListPage';
 import { stationRowSchema } from '@/features/stations/schemas/stationSchema';
 import {
   routeSchema,
@@ -17,14 +17,14 @@ import {
 export async function getRouteStationsAction() {
   const access = await checkStaffAccess();
   if (!access.success) return access;
-  return readListOptions('admin/stations', stationRowSchema);
+  return readListOptions('admin/stations', stationRowSchema, '');
 }
 export async function getRoutesAction(input: RouteListQuery) {
   const parsed = await parseSchema(routeListSchema, input);
   if (!parsed.success) return parsed.error;
   const access = await checkStaffAccess();
   if (!access.success) return access;
-  return readWindowPage('routes', parsed.data, routeSchema, {
+  return readListPage('routes', parsed.data, routeSchema, {
     originStationId: parsed.data.originStationId,
     destinationStationId: parsed.data.destinationStationId,
     isActive: parsed.data.isActive,

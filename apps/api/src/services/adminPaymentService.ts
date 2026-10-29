@@ -139,12 +139,15 @@ export const adminPaymentService = {
         .where((p) => p.createdAt.gte(start))
         .where((p) => p.createdAt.lt(end));
     }
-    const rows = await query
-      .orderBy([(p) => p.createdAt.desc(), (p) => p.id.desc()])
-      .limit(limit)
-      .offset(offset)
-      .all();
-    return rows.map(serialize);
+    const [rows, { total }] = await Promise.all([
+      query
+        .orderBy([(p) => p.createdAt.desc(), (p) => p.id.desc()])
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: rows.map(serialize), total };
   },
   async findById(id: string) {
     const { db } = await import('../prisma/db.ts');

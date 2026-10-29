@@ -71,7 +71,7 @@ export const tripFormSchema = z
   .pipe(tripInputSchema);
 export type TripFormValues = z.input<typeof tripFormSchema>;
 export const tripListSchema = z.object({
-  limit: z.number().int().min(1).max(99),
+  limit: z.number().int().min(1).max(100),
   offset: z.number().int().min(0).max(100000),
   routeId: z.union([z.literal(''), z.uuid()]),
   busId: z.union([z.literal(''), z.uuid()]),

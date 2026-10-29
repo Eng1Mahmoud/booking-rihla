@@ -125,18 +125,22 @@ export const tripService = {
     routeId,
     busId,
     status,
-  }: TripListQuery): Promise<Trip[]> {
+  }: TripListQuery): Promise<{ items: Trip[]; total: number }> {
     const { db } = await import('../prisma/db.ts');
-    const trips = await db.orm.public.Trip.where({
+    const query = db.orm.public.Trip.where({
       ...(routeId === undefined ? {} : { routeId }),
       ...(busId === undefined ? {} : { busId }),
       ...(status === undefined ? {} : { status }),
-    })
-      .orderBy([(trip) => trip.departureAt.asc(), (trip) => trip.id.asc()])
-      .limit(limit)
-      .offset(offset)
-      .all();
-    return trips.map(serializeTrip);
+    });
+    const [trips, { total }] = await Promise.all([
+      query
+        .orderBy([(trip) => trip.departureAt.asc(), (trip) => trip.id.asc()])
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: trips.map(serializeTrip), total };
   },
   async findById(id: string): Promise<Trip | null> {
     const { db } = await import('../prisma/db.ts');

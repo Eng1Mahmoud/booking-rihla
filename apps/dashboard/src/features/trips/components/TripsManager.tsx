@@ -63,7 +63,7 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
           state={page.list}
           columns={page.columns}
           data={page.query.data?.items ?? []}
-          hasNextPage={page.query.data?.hasNextPage}
+          rowCount={page.query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-300 [&_td]:wrap-anywhere"

@@ -20,8 +20,12 @@ export function createTripController(service: TripService) {
           'Use limit 1-100, offset 0-100000, optional routeId/busId UUIDs and status SCHEDULED/CANCELLED; no other query fields are supported',
         );
       }
-      const trips = await service.list(query.data);
-      sendSuccess(response, { items: trips, pagination: query.data });
+      const { items, total } = await service.list(query.data);
+      sendSuccess(response, {
+        items,
+        total,
+        pagination: { limit: query.data.limit, offset: query.data.offset },
+      });
     },
     async getById(request: Request, response: Response) {
       const id = tripIdSchema.safeParse(request.params.id);

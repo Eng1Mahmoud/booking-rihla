@@ -2,7 +2,8 @@
 import { z } from 'zod';
 import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
-import { readWindowPage, readRecord } from '@/shared/lib/readWindowPage';
+import { readListPage } from '@/shared/lib/readListPage';
+import { readRecord } from '@/shared/lib/readRecord';
 import {
   bookingSchema,
   bookingDetailSchema,
@@ -17,7 +18,7 @@ export async function getBookingsAction(
   const access = await checkStaffAccess();
   if (!access.success) return access;
   const { limit, offset, ...filters } = parsed.data;
-  return readWindowPage(
+  return readListPage(
     'admin/bookings',
     { limit, offset },
     bookingSchema,

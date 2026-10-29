@@ -96,17 +96,20 @@ async function changeAdministrator(
 export const administratorService = {
   async list({ limit, offset, email, role, isActive }: AdministratorListQuery) {
     const { db } = await import('../prisma/db.ts');
-    const users = await staff(db)
-      .where({
-        ...(email === undefined ? {} : { email }),
-        ...(role === undefined ? {} : { role }),
-        ...(isActive === undefined ? {} : { isActive }),
-      })
-      .orderBy([(user) => user.createdAt.desc(), (user) => user.id.desc()])
-      .limit(limit)
-      .offset(offset)
-      .all();
-    return users.map(serializeUser);
+    const query = staff(db).where({
+      ...(email === undefined ? {} : { email }),
+      ...(role === undefined ? {} : { role }),
+      ...(isActive === undefined ? {} : { isActive }),
+    });
+    const [users, { total }] = await Promise.all([
+      query
+        .orderBy([(user) => user.createdAt.desc(), (user) => user.id.desc()])
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: users.map(serializeUser), total };
   },
   async findById(id: string) {
     const { db } = await import('../prisma/db.ts');

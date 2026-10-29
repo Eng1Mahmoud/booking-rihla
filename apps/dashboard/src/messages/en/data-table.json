@@ -7,7 +7,6 @@
   "refreshing": "Refreshing…",
   "loading": "Loading the table…",
   "clearFilters": "Clear filters",
-  "pageOnly": "Page {page}",
   "scrollHint": "Scroll horizontally to see more columns",
   "scrollLeft": "Scroll table left",
   "scrollRight": "Scroll table right"

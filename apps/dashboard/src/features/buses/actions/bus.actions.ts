@@ -21,8 +21,8 @@ export async function getBusOptionsAction(): Promise<ApiResult<BusOptions>> {
   const access = await checkStaffAccess();
   if (!access.success) return access;
   const [types, amenities] = await Promise.all([
-    readListOptions('admin/bus-types', busTypeSchema),
-    readListOptions('admin/amenities', amenitySchema),
+    readListOptions('admin/bus-types', busTypeSchema, ''),
+    readListOptions('admin/amenities', amenitySchema, ''),
   ]);
   if (!types.success || !types.data) return { ...types, data: undefined };
   if (!amenities.success || !amenities.data)

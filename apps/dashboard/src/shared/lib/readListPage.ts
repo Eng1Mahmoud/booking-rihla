@@ -5,21 +5,26 @@ import { apiFetch } from './api';
 import { apiFailure, type ApiResult } from './apiResult';
 import type { ListPage, ListQuery } from '@/shared/schemas/listSchema';
 
+type PageInput = Pick<ListQuery, 'limit' | 'offset'> & { search?: string };
+
 export async function readListPage<T>(
   path: string,
-  input: ListQuery,
+  input: PageInput,
   itemSchema: z.ZodType<T>,
   filters: Record<string, string> = {},
 ): Promise<ApiResult<ListPage<T>>> {
   const locale = await getLocale();
   const params = new URLSearchParams({
-    locale,
-    search: input.search,
     limit: String(input.limit),
     offset: String(input.offset),
   });
+  if (input.search !== undefined) {
+    params.set('search', input.search);
+    params.set('locale', locale);
+  }
   for (const [key, value] of Object.entries(filters))
     if (value) params.set(key, value);
+
   const result = await apiFetch<unknown>(path + '?' + params);
   if (!result.success) return { ...result, data: undefined };
   const schema = z.strictObject({

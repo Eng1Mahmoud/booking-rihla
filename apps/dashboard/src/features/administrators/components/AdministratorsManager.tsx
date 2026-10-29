@@ -193,7 +193,7 @@ export function AdministratorsManager() {
           state={page.list}
           columns={columns}
           data={page.query.data?.items ?? []}
-          hasNextPage={page.query.data?.hasNextPage}
+          rowCount={page.query.data?.total}
           getRowId={(row) => row.id}
           caption={t('administrators')}
           tableClassName="min-w-320 [&_td]:wrap-anywhere"

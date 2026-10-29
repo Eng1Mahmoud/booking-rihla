@@ -20,8 +20,12 @@ export function createRouteController(service: RouteService) {
           'Use limit 1-100, offset 0-100000, optional originStationId/destinationStationId UUIDs and isActive true/false; no other query fields are supported',
         );
       }
-      const routes = await service.list(query.data);
-      sendSuccess(response, { items: routes, pagination: query.data });
+      const { items, total } = await service.list(query.data);
+      sendSuccess(response, {
+        items,
+        total,
+        pagination: { limit: query.data.limit, offset: query.data.offset },
+      });
     },
     async getById(request: Request, response: Response) {
       const id = routeIdSchema.safeParse(request.params.id);

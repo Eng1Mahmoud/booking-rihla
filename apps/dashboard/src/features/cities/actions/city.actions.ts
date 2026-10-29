@@ -21,7 +21,7 @@ import type { City, CityRow } from '../types/city';
 export async function getCityOptionsAction(): Promise<ApiResult<City[]>> {
   const access = await checkStaffAccess();
   if (!access.success) return access;
-  return readListOptions('admin/cities', cityRowSchema);
+  return readListOptions('admin/cities', cityRowSchema, '');
 }
 
 export async function getCitiesAction(

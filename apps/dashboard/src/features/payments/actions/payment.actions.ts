@@ -2,7 +2,8 @@
 import { z } from 'zod';
 import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
-import { readWindowPage, readRecord } from '@/shared/lib/readWindowPage';
+import { readListPage } from '@/shared/lib/readListPage';
+import { readRecord } from '@/shared/lib/readRecord';
 import {
   paymentSchema,
   paymentListSchema,
@@ -16,7 +17,7 @@ export async function getPaymentsAction(
   const access = await checkStaffAccess();
   if (!access.success) return access;
   const { limit, offset, ...filters } = parsed.data;
-  return readWindowPage(
+  return readListPage(
     'admin/payments',
     { limit, offset },
     paymentSchema,

@@ -31,7 +31,6 @@ export function DataTable<
   columns,
   data,
   rowCount,
-  hasNextPage,
   tableClassName,
   getRowId,
   caption,
@@ -48,7 +47,6 @@ export function DataTable<
   columns: DataTableColumn<TData>[];
   data: TData[];
   rowCount?: number;
-  hasNextPage?: boolean;
   tableClassName?: string;
   getRowId: (row: TData) => string;
   caption: string;
@@ -92,7 +90,7 @@ export function DataTable<
   const pending =
     isLoading ||
     state.isSearching ||
-    (rowCount === undefined && hasNextPage === undefined) ||
+    rowCount === undefined ||
     (rowCount !== undefined &&
       rowCount > 0 &&
       pageIndex * pageSize >= rowCount);
@@ -191,15 +189,6 @@ export function DataTable<
       <DataTablePagination
         table={table}
         pending={pending || isFetching}
-        window={
-          hasNextPage === undefined
-            ? undefined
-            : {
-                hasNextPage,
-                onPageChange: (pageIndex) =>
-                  state.setPagination((current) => ({ ...current, pageIndex })),
-              }
-        }
       />
     </div>
   );

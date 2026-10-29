@@ -18,9 +18,10 @@ export function createAdminBookingController(service: AdminBookingService) {
           'VALIDATION_ERROR',
           'Use limit 1-100, offset 0-100000 and optional booking reference, tripId/userId UUIDs, customer email and travelDate (YYYY-MM-DD Cairo, years 2000-9998); no other query fields',
         );
-      const data = await service.list(parsed.data);
+      const { items, total } = await service.list(parsed.data);
       sendSuccess(response, {
-        items: data,
+        items,
+        total,
         pagination: { limit: parsed.data.limit, offset: parsed.data.offset },
       });
     },

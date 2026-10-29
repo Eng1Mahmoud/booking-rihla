@@ -17,8 +17,10 @@ export function createAdminPaymentController(service: AdminPaymentService) {
           'VALIDATION_ERROR',
           'Provide bounded pagination and supported exact payment filters only',
         );
+      const { items, total } = await service.list(query.data);
       sendSuccess(response, {
-        items: await service.list(query.data),
+        items,
+        total,
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },

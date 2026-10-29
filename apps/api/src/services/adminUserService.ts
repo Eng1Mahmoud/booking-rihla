@@ -38,17 +38,20 @@ export function serializeUser(user: UserRecord) {
 export const adminUserService = {
   async list({ limit, offset, email, phone, isActive }: AdminUserListQuery) {
     const { db } = await import('../prisma/db.ts');
-    const rows = await passengers(db)
-      .where({
-        ...(email === undefined ? {} : { email }),
-        ...(phone === undefined ? {} : { phone }),
-        ...(isActive === undefined ? {} : { isActive }),
-      })
-      .orderBy([(user) => user.createdAt.desc(), (user) => user.id.desc()])
-      .limit(limit)
-      .offset(offset)
-      .all();
-    return rows.map(serializeUser);
+    const query = passengers(db).where({
+      ...(email === undefined ? {} : { email }),
+      ...(phone === undefined ? {} : { phone }),
+      ...(isActive === undefined ? {} : { isActive }),
+    });
+    const [rows, { total }] = await Promise.all([
+      query
+        .orderBy([(user) => user.createdAt.desc(), (user) => user.id.desc()])
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: rows.map(serializeUser), total };
   },
   async findById(id: string) {
     const { db } = await import('../prisma/db.ts');

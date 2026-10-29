@@ -49,15 +49,18 @@ export const adminBookingService = {
           booking.trip.some((trip) => trip.departureAt.lt(end)),
         );
     }
-    const rows = await query
-      .orderBy([
-        (booking) => booking.createdAt.desc(),
-        (booking) => booking.id.desc(),
-      ])
-      .limit(limit)
-      .offset(offset)
-      .all();
-    return rows.map(summary);
+    const [rows, { total }] = await Promise.all([
+      query
+        .orderBy([
+          (booking) => booking.createdAt.desc(),
+          (booking) => booking.id.desc(),
+        ])
+        .limit(limit)
+        .offset(offset)
+        .all(),
+      query.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: rows.map(summary), total };
   },
   async findById(id: string) {
     const { db } = await import('../prisma/db.ts');

@@ -53,11 +53,13 @@ export const operationController = {
         'Use supported pagination fields',
       );
     response.setHeader('Cache-Control', 'no-store');
+    const { items, total } = await refundReadService.list(
+      parsed.data.limit,
+      parsed.data.offset,
+    );
     sendSuccess(response, {
-      items: await refundReadService.list(
-        parsed.data.limit,
-        parsed.data.offset,
-      ),
+      items,
+      total,
       pagination: parsed.data,
     });
   },

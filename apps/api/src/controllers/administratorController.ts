@@ -33,9 +33,10 @@ export function createAdministratorController(service: AdministratorService) {
           'VALIDATION_ERROR',
           'Use bounded limit/offset and optional email, role ADMIN/SUPER_ADMIN and isActive true/false',
         );
-      const data = await service.list(query.data);
+      const { items, total } = await service.list(query.data);
       sendSuccess(response, {
-        items: data,
+        items,
+        total,
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },

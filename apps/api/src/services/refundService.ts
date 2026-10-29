@@ -253,15 +253,19 @@ export function configuredRefundService() {
 export const refundReadService = {
   async list(limit: number, offset: number) {
     const { db } = await import('../prisma/db.ts');
-    return (
-      await db.orm.public.Refund.orderBy([
-        (r) => r.createdAt.desc(),
-        (r) => r.id.desc(),
-      ])
+    const refunds = db.orm.public.Refund;
+    const [rows, { total }] = await Promise.all([
+      refunds
+        .orderBy([
+          (r) => r.createdAt.desc(),
+          (r) => r.id.desc(),
+        ])
         .limit(limit)
         .offset(offset)
-        .all()
-    ).map(serializeRefund);
+        .all(),
+      refunds.aggregate((aggregate) => ({ total: aggregate.count() })),
+    ]);
+    return { items: rows.map(serializeRefund), total };
   },
   async get(id: string, userId?: string) {
     const { db } = await import('../prisma/db.ts');

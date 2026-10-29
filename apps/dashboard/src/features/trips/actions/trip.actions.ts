@@ -6,7 +6,7 @@ import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { apiFetch } from '@/shared/lib/api';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListOptions } from '@/shared/lib/readListOptions';
-import { readWindowPage, readWindowOptions } from '@/shared/lib/readWindowPage';
+import { readListPage } from '@/shared/lib/readListPage';
 import { routeSchema } from '@/features/routes/schemas/routeSchema';
 import { stationRowSchema } from '@/features/stations/schemas/stationSchema';
 import { busSchema } from '@/features/buses/schemas/busSchema';
@@ -26,9 +26,9 @@ export async function getTripOptionsAction() {
   const access = await checkStaffAccess();
   if (!access.success) return access;
   const [routes, buses, stations] = await Promise.all([
-    readWindowOptions('routes', routeSchema),
-    readListOptions('admin/buses', busSchema),
-    readListOptions('admin/stations', stationRowSchema),
+    readListOptions('routes', routeSchema),
+    readListOptions('admin/buses', busSchema, ''),
+    readListOptions('admin/stations', stationRowSchema, ''),
   ]);
   if (!routes.success || !routes.data) return { ...routes, data: undefined };
   if (!buses.success || !buses.data) return { ...buses, data: undefined };
@@ -44,7 +44,7 @@ export async function getTripsAction(input: TripListQuery) {
   if (!parsed.success) return parsed.error;
   const access = await checkStaffAccess();
   if (!access.success) return access;
-  return readWindowPage('trips', parsed.data, tripSchema, {
+  return readListPage('trips', parsed.data, tripSchema, {
     routeId: parsed.data.routeId,
     busId: parsed.data.busId,
     status: parsed.data.status,

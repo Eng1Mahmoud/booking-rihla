@@ -111,7 +111,7 @@ export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
           state={page.list}
           columns={columns}
           data={page.query.data?.items ?? []}
-          hasNextPage={page.query.data?.hasNextPage}
+          rowCount={page.query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-300 [&_td]:wrap-anywhere"

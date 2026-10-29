@@ -129,7 +129,7 @@ export function RefundsManager() {
           state={page.list}
           columns={columns}
           data={page.query.data?.items ?? []}
-          hasNextPage={page.query.data?.hasNextPage}
+          rowCount={page.query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-240 [&_td]:wrap-anywhere"

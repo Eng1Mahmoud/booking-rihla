@@ -32,9 +32,10 @@ export function createAdminUserController(service: AdminUserService) {
           'VALIDATION_ERROR',
           'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
         );
-      const data = await service.list(query.data);
+      const { items, total } = await service.list(query.data);
       sendSuccess(response, {
-        items: data,
+        items,
+        total,
         pagination: { limit: query.data.limit, offset: query.data.offset },
       });
     },
