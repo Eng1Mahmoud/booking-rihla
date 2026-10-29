@@ -40,9 +40,9 @@ export function TripEditor({
         (Date.parse(entry.arrivalAt) - Date.parse(entry.departureAt)) / 60000,
       )
     : '120';
-  const t = useTranslations('Trips'),
-    common = useTranslations('Common'),
-    locale = useLocale();
+  const t = useTranslations('Trips');
+  const common = useTranslations('Common');
+  const locale = useLocale();
   return (
     <FormDialog
       title={t(entry ? 'edit' : 'add')}
@@ -53,19 +53,6 @@ export function TripEditor({
     >
       <Form
         schema={tripFormSchema}
-        serverErrorFields={{
-          BUS_SCHEDULE_CONFLICT: [
-            'busId',
-            'departureDate',
-            'departureTime',
-            'durationMinutes',
-          ],
-          BUS_INACTIVE: ['busId'],
-          BUS_NOT_FOUND: ['busId'],
-          ROUTE_INACTIVE: ['routeId'],
-          ROUTE_NOT_FOUND: ['routeId'],
-          TRIP_REFERENCE_NOT_FOUND: ['routeId', 'busId'],
-        }}
         defaultValues={{
           routeId: entry?.routeId ?? '',
           busId: entry?.busId ?? '',

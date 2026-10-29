@@ -16,10 +16,10 @@ import {
 import { createRouteColumns, routeLabel } from '../lib/routeColumns';
 import type { Route, RouteInput, RouteListQuery } from '../schemas/routeSchema';
 export function useRoutes() {
-  const t = useTranslations('Routes'),
-    common = useTranslations('Common'),
-    locale = useLocale(),
-    client = useQueryClient();
+  const t = useTranslations('Routes');
+  const common = useTranslations('Common');
+  const locale = useLocale();
+  const client = useQueryClient();
   const list = useDataTableState<{
     originStationId: string;
     destinationStationId: string;
@@ -32,10 +32,10 @@ export function useRoutes() {
     },
   });
   const focus = useDialogFocus();
-  const [editing, setEditing] = useState<Route | null>(null),
-    [editorOpen, setEditorOpen] = useState(false),
-    [deleting, setDeleting] = useState<Route | null>(null),
-    [notice, setNotice] = useState('');
+  const [editing, setEditing] = useState<Route | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [deleting, setDeleting] = useState<Route | null>(null);
+  const [notice, setNotice] = useState('');
   const query = useQuery({
     queryKey: ['routes', locale, list.params],
     queryFn: async () => {

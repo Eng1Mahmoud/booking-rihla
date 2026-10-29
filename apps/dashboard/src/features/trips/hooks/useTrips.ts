@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDataTableState } from '@/shared/hooks/useDataTableState';
@@ -14,27 +14,26 @@ import {
   deleteTripAction,
   cancelTripAction,
 } from '../actions/trip.actions';
-import { createTripColumns } from '../lib/tripColumns';
+import { useTripColumns } from './useTripColumns';
 import type { Trip, TripInput, TripListQuery } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
 const emptyOptions: TripOptions = { routes: [], stations: [], buses: [] };
 export function useTrips(superAdmin: boolean) {
-  const t = useTranslations('Trips'),
-    common = useTranslations('Common'),
-    locale = useLocale(),
-    client = useQueryClient();
+  const t = useTranslations('Trips');
+  const locale = useLocale();
+  const client = useQueryClient();
   const list = useDataTableState<{
     routeId: string;
     busId: string;
     status: TripListQuery['status'];
   }>({ initialFilters: { routeId: '', busId: '', status: '' } });
   const focus = useDialogFocus();
-  const [editing, setEditing] = useState<Trip | null>(null),
-    [editorOpen, setEditorOpen] = useState(false),
-    [deleting, setDeleting] = useState<Trip | null>(null),
-    [cancelling, setCancelling] = useState<Trip | null>(null),
-    [reason, setReason] = useState(''),
-    [notice, setNotice] = useState('');
+  const [editing, setEditing] = useState<Trip | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [deleting, setDeleting] = useState<Trip | null>(null);
+  const [cancelling, setCancelling] = useState<Trip | null>(null);
+  const [reason, setReason] = useState('');
+  const [notice, setNotice] = useState('');
   const query = useQuery({
     queryKey: ['trips', locale, list.params],
     queryFn: async () => {
@@ -155,41 +154,13 @@ export function useTrips(superAdmin: boolean) {
     [focus.remember, cancelConfirmation.reset],
   );
   const options = query.data?.options ?? emptyOptions;
-  const columns = useMemo(() => {
-    const labels = Object.fromEntries(
-      [
-        'route',
-        'bus',
-        'departure',
-        'arrival',
-        'price',
-        'status',
-        'scheduled',
-        'cancelled',
-        'cancel',
-        'closed',
-      ].map((key) => [key, t(key)]),
-    );
-    labels.actions = common('actions');
-    return createTripColumns({
-      locale,
-      options,
-      labels,
-      onEdit: edit,
-      onDelete: requestDelete,
-      onCancel: requestCancel,
-      superAdmin,
-    });
-  }, [
-    locale,
+  const columns = useTripColumns({
     options,
-    t,
-    common,
-    edit,
-    requestDelete,
-    requestCancel,
+    onEdit: edit,
+    onDelete: requestDelete,
+    onCancel: requestCancel,
     superAdmin,
-  ]);
+  });
 
   function create() {
     focus.remember(focus.fallbackRef.current);

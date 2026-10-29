@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { useActionErrors } from '@/shared/hooks/useActionErrors';
 import type { ListQuery } from '@/shared/types/list';
-import { cityOptionsQuery } from '../lib/cityOptions';
 import {
   getCitiesAction,
   saveCityAction,
@@ -16,22 +15,16 @@ export function useCitiesData(params: ListQuery) {
   const t = useTranslations('Cities');
   const locale = useLocale();
   const client = useQueryClient();
-  const options = cityOptionsQuery(locale);
   const query = useQuery({
     queryKey: ['locations', locale, 'cities', params],
-    queryFn: async () => {
-      const [page, cities] = await Promise.all([
-        invokeAction(() =>
-          getCitiesAction({
-            search: params.search,
-            limit: params.limit,
-            offset: params.offset,
-          }),
-        ),
-        client.fetchQuery(options),
-      ]);
-      return { ...page, cities };
-    },
+    queryFn: () =>
+      invokeAction(() =>
+        getCitiesAction({
+          search: params.search,
+          limit: params.limit,
+          offset: params.offset,
+        }),
+      ),
   });
   const actionError = useActionErrors(query.error, {
     CITY_HAS_STATIONS: t('cityHasStations'),
@@ -59,13 +52,5 @@ export function useCitiesData(params: ListQuery) {
       }
     },
   });
-  async function refresh() {
-    await client.invalidateQueries({
-      queryKey: options.queryKey,
-      refetchType: 'none',
-    });
-    return query.refetch();
-  }
-
-  return { query, save, remove, refresh };
+  return { query, save, remove, refresh: query.refetch };
 }

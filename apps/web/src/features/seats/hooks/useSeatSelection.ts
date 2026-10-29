@@ -7,7 +7,6 @@ import { invokeAction } from '@/shared/lib/apiResult';
 import type { SeatList } from '@/features/trips/types/trip';
 import { getTripSeatsAction } from '../actions/seats.actions';
 import { availableSeatsByIds, seatIdsFromQuery } from '../lib/seatSelection';
-import { seatKeys } from './queryKeys';
 
 /**
  * Seat map state: poll availability, selection, URL restore, auto-prune.
@@ -28,7 +27,7 @@ export function useSeatSelection(initialSeats: SeatList) {
   const [availabilityNotice, setAvailabilityNotice] = useState('');
 
   const seatQuery = useQuery({
-    queryKey: seatKeys.list(locale, initialSeats.tripId),
+    queryKey: ['seats', 'list', locale, initialSeats.tripId],
     queryFn: () => invokeAction(() => getTripSeatsAction(initialSeats.tripId)),
     initialData: initialSeats,
     staleTime: 0,

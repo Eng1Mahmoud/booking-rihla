@@ -1,11 +1,16 @@
 'use client';
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { useActionErrors } from '@/shared/hooks/useActionErrors';
 import type { DataTableState } from '@/shared/hooks/useDataTableState';
-import { cityOptionsQuery } from '@/features/cities/lib/cityOptions';
+import { getCityOptionsAction } from '@/features/cities/actions/city.actions';
 import {
   getStationsAction,
   saveStationAction,
@@ -19,7 +24,10 @@ export function useStationsData(
   const t = useTranslations('Stations');
   const locale = useLocale();
   const client = useQueryClient();
-  const options = cityOptionsQuery(locale);
+  const cityOptions = queryOptions({
+    queryKey: ['locations', locale, 'city-options'],
+    queryFn: () => invokeAction(getCityOptionsAction),
+  });
   const query = useQuery({
     queryKey: ['locations', locale, 'stations', params],
     queryFn: async () => {
@@ -32,7 +40,7 @@ export function useStationsData(
             cityId: params.filters.cityId || undefined,
           }),
         ),
-        client.fetchQuery(options),
+        client.fetchQuery(cityOptions),
       ]);
       return { ...page, cities };
     },
@@ -72,13 +80,13 @@ export function useStationsData(
   });
   async function refresh() {
     await client.invalidateQueries({
-      queryKey: options.queryKey,
+      queryKey: cityOptions.queryKey,
       refetchType: 'none',
     });
     return query.refetch();
   }
   const cachedCities =
-    query.data?.cities ?? client.getQueryData(options.queryKey);
+    query.data?.cities ?? client.getQueryData(cityOptions.queryKey);
   const collator = useMemo(() => new Intl.Collator(locale), [locale]);
   const cities = useMemo(
     () =>

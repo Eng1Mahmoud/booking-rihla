@@ -1,11 +1,16 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { useActionErrors } from '@/shared/hooks/useActionErrors';
 import type { BusListQuery, BusInput } from '../schemas/busSchema';
-import { busOptionsQuery } from '../lib/busOptions';
 import {
+  getBusOptionsAction,
   getBusesAction,
   saveBusAction,
   deleteBusAction,
@@ -15,6 +20,11 @@ export function useBusesData(params: BusListQuery) {
   const t = useTranslations('Buses');
   const locale = useLocale();
   const client = useQueryClient();
+  const busOptions = queryOptions({
+    queryKey: ['fleet', locale, 'bus-options'],
+    queryFn: () => invokeAction(getBusOptionsAction),
+    staleTime: 30000,
+  });
   const query = useQuery({
     queryKey: ['fleet', locale, 'buses', params],
     queryFn: async () => {
@@ -28,7 +38,7 @@ export function useBusesData(params: BusListQuery) {
             isActive: params.isActive,
           }),
         ),
-        client.fetchQuery(busOptionsQuery(locale)),
+        client.fetchQuery(busOptions),
       ]);
       return { ...page, options };
     },
@@ -66,7 +76,7 @@ export function useBusesData(params: BusListQuery) {
   });
   async function refresh() {
     await client.invalidateQueries({
-      queryKey: busOptionsQuery(locale).queryKey,
+      queryKey: busOptions.queryKey,
       refetchType: 'none',
     });
     return query.refetch();

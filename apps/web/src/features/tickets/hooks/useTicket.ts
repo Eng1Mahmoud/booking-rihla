@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { ticketKeys } from './queryKeys';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -23,7 +22,7 @@ export function useTicket(
   const [printData, setPrintData] = useState<TicketViewData | null>(null);
   const busy = printStatus === 'checking' || printStatus === 'ready';
   const query = useQuery({
-    queryKey: ticketKeys.detail(userId, locale, initial.bookingId),
+    queryKey: ['tickets', 'detail', userId, locale, initial.bookingId],
     queryFn: () => invokeAction(() => getTicketAction(initial.bookingId)),
     initialData: initial,
     initialDataUpdatedAt: readAt,

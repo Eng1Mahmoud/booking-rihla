@@ -19,9 +19,9 @@ export function TripFilters({
   options: TripOptions;
   disabled: boolean;
 }) {
-  const id = useId(),
-    t = useTranslations('Trips'),
-    locale = useLocale();
+  const id = useId();
+  const t = useTranslations('Trips');
+  const locale = useLocale();
   return (
     <div className="grid min-w-0 gap-4 sm:grid-cols-3">
       <div className="min-w-0">

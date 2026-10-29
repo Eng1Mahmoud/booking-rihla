@@ -5,7 +5,6 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { getPaymentHistoryAction } from '../actions/account.actions';
 import type { PaymentHistoryPage } from '../types/payment';
-import { accountKeys } from './queryKeys';
 
 export function usePaymentHistory(
   initial: PaymentHistoryPage,
@@ -15,7 +14,13 @@ export function usePaymentHistory(
   const locale = useLocale();
   const { user } = useAuth();
   const query = useQuery({
-    queryKey: accountKeys.payments(userId, locale, initial.pagination.offset),
+    queryKey: [
+      'account',
+      'payments',
+      userId,
+      locale,
+      initial.pagination.offset,
+    ],
     queryFn: () =>
       invokeAction(() => getPaymentHistoryAction(initial.pagination.offset)),
     initialData: initial,

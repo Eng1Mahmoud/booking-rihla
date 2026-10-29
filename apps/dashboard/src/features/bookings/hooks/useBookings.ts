@@ -31,8 +31,8 @@ export function useBookings(tripId: string, bookingId: string) {
       ),
   });
   useActionErrors(query.error, {});
-  const focus = useDialogFocus<HTMLHeadingElement>(),
-    [selected, setSelected] = useState<string | null>(bookingId || null);
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [selected, setSelected] = useState<string | null>(bookingId || null);
   const open = useCallback(
     (id: string) => {
       focus.remember();

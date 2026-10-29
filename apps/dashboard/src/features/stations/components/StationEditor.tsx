@@ -50,7 +50,6 @@ export function StationEditor({
     >
       <Form
         schema={stationInputSchema}
-        serverErrorFields={{ CITY_NOT_FOUND: ['cityId'] }}
         defaultValues={{
           nameAr: entry?.nameAr ?? '',
           nameEn: entry?.nameEn ?? '',

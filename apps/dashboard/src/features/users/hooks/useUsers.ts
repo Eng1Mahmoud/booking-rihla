@@ -12,17 +12,17 @@ import { getUsersAction, setUserStatusAction } from '../actions/user.actions';
 import { setAdministratorRoleAction } from '@/features/administrators/actions/administrator.actions';
 import type { ManagedUser, UserFilters } from '../schemas/userSchema';
 export function useUsers() {
-  const locale = useLocale(),
-    t = useTranslations('Users'),
-    client = useQueryClient(),
-    router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Users');
+  const client = useQueryClient();
+  const router = useRouter();
   const list = useDataTableState<UserFilters>({
-      initialFilters: { email: '', phone: '', isActive: '' },
-    }),
-    focus = useDialogFocus<HTMLHeadingElement>();
-  const [target, setTarget] = useState<ManagedUser | null>(null),
-    [editingRole, setEditingRole] = useState<ManagedUser | null>(null),
-    [notice, setNotice] = useState('');
+    initialFilters: { email: '', phone: '', isActive: '' },
+  });
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [target, setTarget] = useState<ManagedUser | null>(null);
+  const [editingRole, setEditingRole] = useState<ManagedUser | null>(null);
+  const [notice, setNotice] = useState('');
   const query = useQuery({
     queryKey: ['users', locale, list.params],
     queryFn: () =>

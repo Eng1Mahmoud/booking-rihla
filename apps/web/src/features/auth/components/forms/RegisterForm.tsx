@@ -13,9 +13,9 @@ export function RegisterForm({
 }: {
   onRegistered: (challenge: { email: string; verificationId: string }) => void;
 }) {
-  const t = useTranslations('Auth'),
-    locale = useLocale(),
-    registration = useRegister();
+  const t = useTranslations('Auth');
+  const locale = useLocale();
+  const registration = useRegister();
   return (
     <Form
       schema={registerSchema}

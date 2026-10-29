@@ -1,7 +1,4 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, type UIMessage } from 'ai';
 import { Dialog } from 'radix-ui';
 import { Link } from '@/i18n/navigation';
 import {
@@ -20,7 +17,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
 import { AssistantResults } from './AssistantResults';
-import { useSpeechToText } from '../hooks/useSpeech';
+import { useAssistantChat } from '../hooks/useAssistantChat';
+import { messageText } from '../lib/messages';
 
 const SUGGESTIONS_AR = [
   'فيه رحلات من القاهرة للإسكندرية بكرة؟',
@@ -32,22 +30,6 @@ const SUGGESTIONS_EN = [
   'Which cities are available?',
   'How do I book a ticket?',
 ];
-
-function boundedHistory(messages: UIMessage[]) {
-  const history: { role: 'user' | 'assistant'; content: string }[] = [];
-  let characters = 0;
-  for (let index = messages.length - 1; index >= 0; index--) {
-    const message = messages[index];
-    if (message.role !== 'user' && message.role !== 'assistant') continue;
-    const content = messageText(message).trim().slice(0, 4000);
-    if (!content) continue;
-    if (history.length === 8 || characters + content.length > 12000) break;
-    history.unshift({ role: message.role, content });
-    characters += content.length;
-  }
-  while (history[0]?.role === 'assistant') history.shift();
-  return history;
-}
 
 function errorLabel(error: Error, isAr: boolean) {
   if (error.message.includes('AI_RATE_LIMIT'))
@@ -67,19 +49,6 @@ function errorLabel(error: Error, isAr: boolean) {
     : 'Assistant unavailable. Retry or use normal search.';
 }
 
-function messageText(message: {
-  parts?: { type: string; text?: string }[];
-  content?: string;
-}): string {
-  if (message.parts) {
-    return message.parts
-      .filter((p) => p.type === 'text' && p.text)
-      .map((p) => p.text!)
-      .join('');
-  }
-  return typeof message.content === 'string' ? message.content : '';
-}
-
 function assistantDisplayText(text: string) {
   return text.replaceAll('\\*', '*').replaceAll('**', '');
 }
@@ -88,123 +57,24 @@ export function AssistantWidget() {
   const locale = useLocale() as 'ar' | 'en';
   const isAr = locale === 'ar';
   const footer = useTranslations('Footer');
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const conversationId = useRef<string | null>(null);
-  const lastSelectedTripId = useRef<string | undefined>(undefined);
-  const listRef = useRef<HTMLDivElement>(null);
-  const stickToBottom = useRef(true);
-  const speech = useSpeechToText(locale);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const launcherRef = useRef<HTMLButtonElement>(null);
-  const submitting = useRef(false);
-
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: '/api/assistant/chat',
-        prepareSendMessagesRequest: ({ messages, body }) => ({
-          body: { ...body, messages: boundedHistory(messages) },
-        }),
-        body: () => ({
-          conversationId: conversationId.current ?? undefined,
-        }),
-        fetch: async (url, init) => {
-          const res = await fetch(url, init);
-          const id = res.headers.get('X-Conversation-Id');
-          if (id) conversationId.current = id;
-          return res;
-        },
-      }),
-    [],
-  );
-
   const {
+    open,
+    setOpen,
+    input,
+    setInput,
+    listRef,
+    inputRef,
+    launcherRef,
+    speech,
     messages,
-    sendMessage,
-    status,
+    busy,
     stop,
     error,
-    setMessages,
-    clearError,
-    regenerate,
-  } = useChat({
-    transport,
-  });
-
-  const busy = status === 'submitted' || status === 'streaming';
-
-  useEffect(() => {
-    if (!stickToBottom.current || !listRef.current) return;
-    listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages, status]);
-
-  useEffect(() => {
-    if (speech.transcript) setInput(speech.transcript.slice(0, 4000));
-  }, [speech.transcript]);
-
-  useEffect(() => {
-    if (!open) speech.stop();
-  }, [open, speech.stop]);
-
-  useEffect(
-    () => () => {
-      void stop();
-    },
-    [stop],
-  );
-
-  const reset = async () => {
-    await stop();
-    speech.cancel();
-    conversationId.current = null;
-    lastSelectedTripId.current = undefined;
-    setMessages([]);
-    clearError();
-    setInput('');
-    stickToBottom.current = true;
-    inputRef.current?.focus();
-  };
-
-  const retry = async () => {
-    if (submitting.current) return;
-    submitting.current = true;
-    try {
-      await regenerate({
-        body: { locale, selectedTripId: lastSelectedTripId.current },
-      });
-    } finally {
-      submitting.current = false;
-    }
-  };
-
-  const onScroll = () => {
-    const el = listRef.current;
-    if (!el) return;
-    stickToBottom.current =
-      el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-  };
-
-  const submit = useCallback(
-    async (text: string, selectedTripId?: string) => {
-      const value = text.trim();
-      if (!value || busy || submitting.current || value.length > 4000) return;
-      submitting.current = true;
-      lastSelectedTripId.current = selectedTripId;
-      setInput('');
-      speech.cancel();
-      try {
-        await sendMessage(
-          { text: value },
-          { body: { locale, selectedTripId } },
-        );
-      } finally {
-        submitting.current = false;
-      }
-    },
-    [busy, sendMessage, speech, locale],
-  );
-
+    reset,
+    retry,
+    onScroll,
+    submit,
+  } = useAssistantChat(locale);
   const suggestions = isAr ? SUGGESTIONS_AR : SUGGESTIONS_EN;
 
   return (

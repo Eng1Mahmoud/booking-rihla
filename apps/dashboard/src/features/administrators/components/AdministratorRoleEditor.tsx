@@ -25,8 +25,8 @@ export function AdministratorRoleEditor({
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
 }) {
-  const t = useTranslations('Users'),
-    states = useTranslations('States');
+  const t = useTranslations('Users');
+  const states = useTranslations('States');
   return (
     <FormDialog
       title={t('changeRole')}
@@ -42,17 +42,20 @@ export function AdministratorRoleEditor({
       >
         <fieldset disabled={pending}>
           <FormSelect name="role" label={t('role')}>
-            {(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'] as const).map((role) => (
-              <NativeSelectOption
-                key={role}
-                value={role}
-                disabled={
-                  role !== 'USER' && (!entry.isActive || !entry.emailVerifiedAt)
-                }
-              >
-                {states(role)}
-              </NativeSelectOption>
-            ))}
+            {(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'] as const).map(
+              (role) => (
+                <NativeSelectOption
+                  key={role}
+                  value={role}
+                  disabled={
+                    role !== 'USER' &&
+                    (!entry.isActive || !entry.emailVerifiedAt)
+                  }
+                >
+                  {states(role)}
+                </NativeSelectOption>
+              ),
+            )}
           </FormSelect>
         </fieldset>
         <FormDialogActions

@@ -29,9 +29,9 @@ export function RouteEditor({
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
 }) {
-  const t = useTranslations('Routes'),
-    common = useTranslations('Common'),
-    locale = useLocale();
+  const t = useTranslations('Routes');
+  const common = useTranslations('Common');
+  const locale = useLocale();
   return (
     <FormDialog
       title={t(entry ? 'edit' : 'add')}
@@ -42,10 +42,6 @@ export function RouteEditor({
     >
       <Form
         schema={routeFormSchema}
-        serverErrorFields={{
-          ROUTE_EXISTS: ['originStationId', 'destinationStationId'],
-          STATION_NOT_FOUND: ['originStationId', 'destinationStationId'],
-        }}
         defaultValues={{
           originStationId: entry?.originStationId ?? '',
           destinationStationId: entry?.destinationStationId ?? '',

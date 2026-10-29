@@ -1,106 +1,22 @@
 'use client';
-import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Undo2, RefreshCw } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { Undo2 } from 'lucide-react';
 import { DataTable } from '@/shared/components/tables/DataTable';
-import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import {
-  formatGrossPaid,
-  formatReportTime,
-} from '@/features/dashboard/lib/format';
+import { formatGrossPaid } from '@/features/dashboard/lib/format';
 import { useRefunds } from '../hooks/useRefunds';
-import type { Refund } from '../schemas/refundSchema';
+import { useRefundColumns } from '../hooks/useRefundColumns';
+
 export function RefundsManager() {
-  const page = useRefunds(),
-    locale = useLocale(),
-    t = useTranslations('Refunds'),
-    states = useTranslations('States');
-  const columns = useMemo<DataTableColumn<Refund>[]>(
-    () => [
-      {
-        id: 'booking',
-        header: t('booking'),
-        meta: { headerClassName: 'w-60' },
-        cell: ({ row }) => (
-          <Link
-            href={'/dashboard/bookings?bookingId=' + row.original.bookingId}
-            className="inline-flex min-h-11 items-center break-all text-primary underline underline-offset-4"
-          >
-            <bdi>{row.original.bookingId}</bdi>
-          </Link>
-        ),
-      },
-      {
-        id: 'amount',
-        header: t('amount'),
-        cell: ({ row }) => formatGrossPaid(row.original.amountPiastres, locale),
-      },
-      {
-        id: 'status',
-        header: t('status'),
-        cell: ({ row }) => states(row.original.status),
-      },
-      {
-        id: 'updated',
-        header: t('lastUpdated'),
-        cell: ({ row }) => formatReportTime(row.original.updatedAt, locale),
-      },
-      {
-        id: 'actions',
-        header: t('actions'),
-        meta: { headerClassName: 'w-24 text-center' },
-        cell: ({ row }) => {
-          const refund = row.original,
-            blocked = page.blocked.includes(refund.id);
-          return (
-            <div className="grid justify-items-center gap-2">
-              <RowActionMenu
-                name={refund.bookingId}
-                actions={[
-                  ...(refund.status === 'PENDING'
-                    ? [
-                        {
-                          label: t('issue'),
-                          icon: Undo2,
-                          disabled: blocked,
-                          onSelect: () => page.open(refund, 'issue'),
-                        },
-                      ]
-                    : []),
-                  ...(['REQUESTED', 'UNKNOWN', 'REVIEW'].includes(refund.status)
-                    ? [
-                        {
-                          label: t('reconcile'),
-                          icon: RefreshCw,
-                          disabled: blocked,
-                          onSelect: () => page.open(refund, 'reconcile'),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-              {refund.status === 'SUCCEEDED' && (
-                <span className="text-sm text-muted-foreground">
-                  {t('completed')}
-                </span>
-              )}
-              {blocked && (
-                <span className="text-sm text-destructive">
-                  {t('refreshFirst')}
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
-    ],
-    [t, states, locale, page.blocked, page.open],
-  );
+  const page = useRefunds();
+  const locale = useLocale();
+  const t = useTranslations('Refunds');
+  const columns = useRefundColumns({
+    blockedIds: page.blocked,
+    onAction: page.open,
+  });
   return (
     <section className="min-w-0">
       <h1

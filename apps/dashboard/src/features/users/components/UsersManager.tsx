@@ -1,8 +1,6 @@
 'use client';
-import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Users, ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { Users } from 'lucide-react';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -13,79 +11,20 @@ import {
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { formatReportTime } from '@/features/dashboard/lib/format';
 import { AdministratorRoleEditor } from '@/features/administrators/components/AdministratorRoleEditor';
-import type { ManagedUser, UserFilters } from '../schemas/userSchema';
+import type { UserFilters } from '../schemas/userSchema';
 import { useUsers } from '../hooks/useUsers';
+import { useUserColumns } from '../hooks/useUserColumns';
+
 export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
-  const page = useUsers(),
-    locale = useLocale(),
-    t = useTranslations('Users'),
-    states = useTranslations('States');
-  const columns = useMemo<DataTableColumn<ManagedUser>[]>(
-    () => [
-      { id: 'name', header: t('name'), cell: ({ row }) => row.original.name },
-      {
-        id: 'email',
-        header: t('email'),
-        cell: ({ row }) => <bdi>{row.original.email}</bdi>,
-      },
-      {
-        id: 'phone',
-        header: t('phone'),
-        cell: ({ row }) => <bdi>{row.original.phone}</bdi>,
-      },
-      {
-        id: 'role',
-        header: t('role'),
-        cell: ({ row }) => states(row.original.role),
-      },
-      {
-        id: 'verified',
-        header: t('verified'),
-        cell: ({ row }) => t(row.original.emailVerifiedAt ? 'yes' : 'no'),
-      },
-      {
-        id: 'status',
-        header: t('status'),
-        cell: ({ row }) => t(row.original.isActive ? 'active' : 'suspended'),
-      },
-      {
-        id: 'created',
-        header: t('created'),
-        cell: ({ row }) => formatReportTime(row.original.createdAt, locale),
-      },
-      {
-        id: 'actions',
-        header: t('actions'),
-        meta: { headerClassName: 'w-24 text-center' },
-        cell: ({ row }) => (
-          <RowActionMenu
-            name={row.original.name}
-            actions={[
-              {
-                label: t(row.original.isActive ? 'suspend' : 'activate'),
-                icon: row.original.isActive ? UserRoundX : UserRoundCheck,
-                destructive: row.original.isActive,
-                onSelect: () => page.openStatus(row.original),
-              },
-              ...(superAdmin
-                ? [
-                    {
-                      label: t('changeRole'),
-                      icon: ShieldCheck,
-                      onSelect: () => page.openRole(row.original),
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        ),
-      },
-    ],
-    [t, states, locale, page.openStatus, page.openRole, superAdmin],
-  );
+  const page = useUsers();
+  const locale = useLocale();
+  const t = useTranslations('Users');
+  const columns = useUserColumns({
+    onStatus: page.openStatus,
+    onRole: page.openRole,
+    canChangeRole: superAdmin,
+  });
   return (
     <section className="min-w-0">
       <h1

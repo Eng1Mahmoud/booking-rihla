@@ -28,8 +28,8 @@ export function usePayments(bookingId: string) {
       ),
   });
   useActionErrors(query.error, {});
-  const focus = useDialogFocus<HTMLHeadingElement>(),
-    [selected, setSelected] = useState<string | null>(null);
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [selected, setSelected] = useState<string | null>(null);
   const open = useCallback(
     (id: string) => {
       focus.remember();

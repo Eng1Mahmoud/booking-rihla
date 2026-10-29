@@ -21,9 +21,9 @@ export function BookingDetails({
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
 }) {
-  const locale = useLocale(),
-    t = useTranslations('Bookings'),
-    states = useTranslations('States');
+  const locale = useLocale();
+  const t = useTranslations('Bookings');
+  const states = useTranslations('States');
   const query = useQuery({
     queryKey: ['booking', locale, id],
     queryFn: () => invokeAction(() => getBookingAction(id)),

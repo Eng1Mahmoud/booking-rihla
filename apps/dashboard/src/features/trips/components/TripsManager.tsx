@@ -11,8 +11,8 @@ import { useTrips } from '../hooks/useTrips';
 import { TripEditor } from './TripEditor';
 import { TripFilters } from './TripFilters';
 export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
-  const page = useTrips(superAdmin),
-    t = page.t;
+  const page = useTrips(superAdmin);
+  const t = page.t;
   const reasonId = useId();
   const reasonInvalid =
     Boolean(page.cancelConfirmation.error) &&

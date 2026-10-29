@@ -21,9 +21,9 @@ export function RouteFilters({
   stations: RouteStation[];
   disabled: boolean;
 }) {
-  const id = useId(),
-    t = useTranslations('Routes'),
-    locale = useLocale();
+  const id = useId();
+  const t = useTranslations('Routes');
+  const locale = useLocale();
   return (
     <div className="grid min-w-0 gap-4 sm:grid-cols-3">
       {(['originStationId', 'destinationStationId'] as const).map((name) => (

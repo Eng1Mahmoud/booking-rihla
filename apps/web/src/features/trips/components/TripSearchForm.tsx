@@ -33,9 +33,9 @@ export function TripSearchForm({
   today: string;
   defaults?: Partial<Search>;
 }) {
-  const locale = useLocale(),
-    t = useTranslations('Search'),
-    router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Search');
+  const router = useRouter();
   const name = (city: City) => (locale === 'ar' ? city.nameAr : city.nameEn);
   const options = (
     <>
@@ -78,8 +78,8 @@ export function TripSearchForm({
         date: defaults.travelDate ?? today,
       }}
       onSubmit={(values) => {
-        const [from, fromId] = values.origin.split(':'),
-          [to, toId] = values.destination.split(':');
+        const [from, fromId] = values.origin.split(':');
+        const [to, toId] = values.destination.split(':');
         router.push(
           '/trips?' +
             new URLSearchParams({

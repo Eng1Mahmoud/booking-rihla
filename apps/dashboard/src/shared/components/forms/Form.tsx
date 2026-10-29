@@ -4,14 +4,13 @@ import {
   FormProvider,
   type DefaultValues,
   type FieldValues,
-  type FieldPath,
   type UseFormReturn,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { cn } from '@/shared/lib/cn';
 import { Alert, AlertDescription } from '../ui/alert';
 
@@ -23,7 +22,6 @@ type Props<Input extends FieldValues, Output extends FieldValues> = {
     ReactNode | ((form: UseFormReturn<Input, unknown, Output>) => ReactNode);
   className?: string;
   shouldUnregister?: boolean;
-  serverErrorFields?: Record<string, FieldPath<Input>[]>;
 };
 // Each form owns one RHF instance; schema input/output stay typed even with transforms.
 export function Form<Input extends FieldValues, Output extends FieldValues>({
@@ -33,7 +31,6 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
   children,
   className,
   shouldUnregister,
-  serverErrorFields,
 }: Props<Input, Output>) {
   const locale = useLocale();
   const t = useTranslations('Forms');
@@ -96,22 +93,7 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
               await onSubmit(values);
             } catch (error) {
               const message = errorMessage(error, locale);
-              const fields =
-                error instanceof ApiError
-                  ? serverErrorFields?.[error.code]
-                  : undefined;
-              if (fields?.length) {
-                fields.forEach((field, index) =>
-                  form.setError(
-                    field,
-                    { type: 'server', message },
-                    { shouldFocus: index === 0 },
-                  ),
-                );
-                requestAnimationFrame(() => form.setFocus(fields[0]));
-              } else {
-                form.setError('root.server', { message });
-              }
+              form.setError('root.server', { message });
             }
           })(event);
         }}

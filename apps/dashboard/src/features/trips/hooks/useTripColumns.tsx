@@ -1,3 +1,6 @@
+'use client';
+
+import { useLocale, useTranslations } from 'next-intl';
 import { Ban } from 'lucide-react';
 import { RowActions } from '@/shared/components/tables/RowActions';
 import type { DataTableColumn } from '@/shared/lib/dataTable';
@@ -8,23 +11,22 @@ import {
 } from '@/features/dashboard/lib/format';
 import type { Trip } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
-export function createTripColumns({
-  locale,
+export function useTripColumns({
   options,
-  labels,
   onEdit,
   onDelete,
   onCancel,
   superAdmin,
 }: {
-  locale: string;
   options: TripOptions;
-  labels: Record<string, string>;
   onEdit: (trip: Trip) => void;
   onDelete: (trip: Trip) => void;
   onCancel: (trip: Trip) => void;
   superAdmin: boolean;
 }): DataTableColumn<Trip>[] {
+  const locale = useLocale();
+  const t = useTranslations('Trips');
+  const common = useTranslations('Common');
   const name = (trip: Trip) => {
     const route = options.routes.find((route) => route.id === trip.routeId);
     return route ? routeLabel(route, options.stations, locale) : trip.routeId;
@@ -32,13 +34,13 @@ export function createTripColumns({
   return [
     {
       id: 'route',
-      header: labels.route,
+      header: t('route'),
       meta: { headerClassName: 'w-60' },
       cell: ({ row }) => name(row.original),
     },
     {
       id: 'bus',
-      header: labels.bus,
+      header: t('bus'),
       cell: ({ row }) => (
         <bdi>
           {options.buses.find((bus) => bus.id === row.original.busId)
@@ -48,42 +50,38 @@ export function createTripColumns({
     },
     {
       id: 'departure',
-      header: labels.departure,
+      header: t('departure'),
       cell: ({ row }) => formatReportTime(row.original.departureAt, locale),
     },
     {
       id: 'arrival',
-      header: labels.arrival,
+      header: t('arrival'),
       cell: ({ row }) => formatReportTime(row.original.arrivalAt, locale),
     },
     {
       id: 'price',
-      header: labels.price,
+      header: t('price'),
       cell: ({ row }) =>
         formatGrossPaid(String(row.original.pricePiastres), locale),
     },
     {
       id: 'status',
-      header: labels.status,
+      header: t('status'),
       cell: ({ row }) =>
-        row.original.status === 'SCHEDULED'
-          ? labels.scheduled
-          : labels.cancelled,
+        row.original.status === 'SCHEDULED' ? t('scheduled') : t('cancelled'),
     },
     {
       id: 'actions',
-      header: labels.actions,
+      header: common('actions'),
       meta: { headerClassName: 'w-24 text-center' },
       cell: ({ row }) => {
-        const trip = row.original,
-          closed =
-            trip.status === 'CANCELLED' ||
-            Date.parse(trip.departureAt) <= Date.now();
+        const trip = row.original;
+        const closed =
+          trip.status === 'CANCELLED' ||
+          Date.parse(trip.departureAt) <= Date.now();
         if (closed)
           return (
-            <span className="text-sm text-muted-foreground">
-              {labels.closed}
-            </span>
+            <span className="text-sm text-muted-foreground">{t('closed')}</span>
           );
         return (
           <RowActions
@@ -94,7 +92,7 @@ export function createTripColumns({
               superAdmin
                 ? [
                     {
-                      label: labels.cancel!,
+                      label: t('cancel'),
                       icon: Ban,
                       destructive: true,
                       onSelect: () => onCancel(trip),

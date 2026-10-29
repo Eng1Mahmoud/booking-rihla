@@ -9,8 +9,8 @@ import { useRoutes } from '../hooks/useRoutes';
 import { RouteEditor } from './RouteEditor';
 import { RouteFilters } from './RouteFilters';
 export function RoutesManager() {
-  const page = useRoutes(),
-    t = page.t;
+  const page = useRoutes();
+  const t = page.t;
   return (
     <section className="min-w-0" aria-labelledby="routes-title">
       <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

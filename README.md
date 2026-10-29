@@ -29,6 +29,9 @@ stays with its owning code. There is no Redis/BullMQ dependency or Audit Log
 feature. HTTP request logs go to stdout, with request IDs; they are not a database
 audit table.
 
+Frontend feature structure and data-flow conventions are documented in
+[CODE_CONVENTIONS.md](CODE_CONVENTIONS.md).
+
 ## Local setup
 
 Use Node.js 24.18.0, npm, and Docker Desktop if you want the supplied local

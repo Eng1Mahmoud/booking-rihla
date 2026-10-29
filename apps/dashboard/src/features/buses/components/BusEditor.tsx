@@ -46,11 +46,6 @@ export function BusEditor({
     >
       <Form
         schema={busFormSchema}
-        serverErrorFields={{
-          PLATE_NUMBER_EXISTS: ['plateNumber'],
-          BUS_TYPE_NOT_FOUND: ['busTypeId'],
-          AMENITY_NOT_FOUND: ['amenityIds'],
-        }}
         defaultValues={busFormValues(entry)}
         onSubmit={onSave}
       >

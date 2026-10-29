@@ -37,4 +37,13 @@ export default defineConfig(
       ],
     },
   },
+  {
+    files: [
+      'apps/web/src/features/**/*.ts',
+      'apps/web/src/features/**/*.tsx',
+      'apps/dashboard/src/features/**/*.ts',
+      'apps/dashboard/src/features/**/*.tsx',
+    ],
+    rules: { 'one-var': ['error', 'never'] },
+  },
 );

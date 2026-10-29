@@ -11,19 +11,19 @@ import {
 } from '../actions/trip.actions';
 import type { BatchInput, BatchPreview } from '../schemas/tripSchema';
 export function useTripBatch() {
-  const locale = useLocale(),
-    t = useTranslations('Trips'),
-    client = useQueryClient();
+  const locale = useLocale();
+  const t = useTranslations('Trips');
+  const client = useQueryClient();
   const options = useQuery({
     queryKey: ['catalog', locale, 'trip-options'],
     queryFn: () => invokeAction(getTripOptionsAction),
   });
   const [review, setReview] = useState<{
-      input: BatchInput;
-      preview: BatchPreview;
-    } | null>(null),
-    [error, setError] = useState(''),
-    [notice, setNotice] = useState('');
+    input: BatchInput;
+    preview: BatchPreview;
+  } | null>(null);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const actionError = useActionErrors(options.error, {
     BUS_SCHEDULE_CONFLICT: t('conflict'),
     INVALID_DEPARTURE_TIME: t('invalidTime'),
@@ -66,7 +66,6 @@ export function useTripBatch() {
     },
   });
   return {
-    t,
     options,
     review,
     error,

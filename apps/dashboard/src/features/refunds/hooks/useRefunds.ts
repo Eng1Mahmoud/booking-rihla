@@ -13,17 +13,17 @@ import {
 } from '../actions/refund.actions';
 import type { Refund } from '../schemas/refundSchema';
 export function useRefunds() {
-  const locale = useLocale(),
-    t = useTranslations('Refunds'),
-    client = useQueryClient();
-  const list = useDataTableState({ initialFilters: {} }),
-    focus = useDialogFocus<HTMLHeadingElement>();
+  const locale = useLocale();
+  const t = useTranslations('Refunds');
+  const client = useQueryClient();
+  const list = useDataTableState({ initialFilters: {} });
+  const focus = useDialogFocus<HTMLHeadingElement>();
   const [target, setTarget] = useState<{
-      refund: Refund;
-      operation: 'issue' | 'reconcile';
-    } | null>(null),
-    [blocked, setBlocked] = useState<string[]>([]),
-    [notice, setNotice] = useState('');
+    refund: Refund;
+    operation: 'issue' | 'reconcile';
+  } | null>(null);
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [notice, setNotice] = useState('');
   const query = useQuery({
     queryKey: ['refunds', locale, list.params.limit, list.params.offset],
     queryFn: () =>

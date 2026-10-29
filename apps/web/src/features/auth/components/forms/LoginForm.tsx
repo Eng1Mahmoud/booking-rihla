@@ -9,9 +9,9 @@ import { loginSchema } from '../../schemas/authSchema';
 import type { LoginInput } from '../../types/auth';
 
 export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
-  const t = useTranslations('Auth'),
-    locale = useLocale(),
-    login = useLogin();
+  const t = useTranslations('Auth');
+  const locale = useLocale();
+  const login = useLogin();
   const destination =
     returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
   return (

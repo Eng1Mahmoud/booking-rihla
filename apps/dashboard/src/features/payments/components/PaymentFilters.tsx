@@ -19,9 +19,9 @@ export function PaymentFilters({
 }: {
   state: DataTableState<FilterValues>;
 }) {
-  const id = useId(),
-    t = useTranslations('Payments'),
-    states = useTranslations('States');
+  const id = useId();
+  const t = useTranslations('Payments');
+  const states = useTranslations('States');
   const fields = (names: (keyof FilterValues)[]) =>
     names.map((name) => (
       <div key={name} className="grid min-w-0 gap-2 text-sm">

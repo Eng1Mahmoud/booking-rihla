@@ -1,88 +1,18 @@
 'use client';
-import { useMemo } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
-import { CreditCard, Eye } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { useTranslations } from 'next-intl';
+import { CreditCard } from 'lucide-react';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import {
-  formatReportTime,
-  formatGrossPaid,
-} from '@/features/dashboard/lib/format';
 import { usePayments } from '../hooks/usePayments';
+import { usePaymentColumns } from '../hooks/usePaymentColumns';
 import { PaymentDetails } from './PaymentDetails';
-import type { Payment } from '../schemas/paymentSchema';
 import { PaymentFilters } from './PaymentFilters';
+
 export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
-  const page = usePayments(bookingId),
-    locale = useLocale(),
-    t = useTranslations('Payments'),
-    states = useTranslations('States');
-  const columns = useMemo<DataTableColumn<Payment>[]>(
-    () => [
-      {
-        id: 'reference',
-        header: t('reference'),
-        cell: ({ row }) => (
-          <bdi className="font-semibold">{row.original.reference}</bdi>
-        ),
-      },
-      {
-        id: 'customer',
-        header: t('customer'),
-        cell: ({ row }) => (
-          <div>
-            <p>{row.original.customer.name}</p>
-            <bdi className="text-sm text-muted-foreground">
-              {row.original.customer.email}
-            </bdi>
-          </div>
-        ),
-      },
-      {
-        id: 'created',
-        header: t('createdDate'),
-        cell: ({ row }) => formatReportTime(row.original.createdAt, locale),
-      },
-      {
-        id: 'status',
-        header: t('status'),
-        cell: ({ row }) => states(row.original.paymentStatus),
-      },
-      {
-        id: 'refund',
-        header: t('refund'),
-        cell: ({ row }) =>
-          row.original.refundStatus ? states(row.original.refundStatus) : '—',
-      },
-      {
-        id: 'amount',
-        header: t('amount'),
-        cell: ({ row }) =>
-          formatGrossPaid(String(row.original.amountPiastres), locale),
-      },
-      {
-        id: 'details',
-        header: t('details'),
-        meta: { headerClassName: 'w-24 text-center' },
-        cell: ({ row }) => (
-          <RowActionMenu
-            name={row.original.reference}
-            actions={[
-              {
-                label: t('details'),
-                icon: Eye,
-                onSelect: () => page.open(row.original.id),
-              },
-            ]}
-          />
-        ),
-      },
-    ],
-    [t, states, locale, page.open],
-  );
+  const page = usePayments(bookingId);
+  const t = useTranslations('Payments');
+  const columns = usePaymentColumns({ onDetails: page.open });
   return (
     <section className="min-w-0">
       <h1

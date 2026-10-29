@@ -21,9 +21,9 @@ export function PaymentDetails({
   onClose: () => void;
   onCloseAutoFocus: (event: Event) => void;
 }) {
-  const locale = useLocale(),
-    t = useTranslations('Payments'),
-    states = useTranslations('States');
+  const locale = useLocale();
+  const t = useTranslations('Payments');
+  const states = useTranslations('States');
   const query = useQuery({
     queryKey: ['payment', locale, id],
     queryFn: () => invokeAction(() => getPaymentAction(id)),

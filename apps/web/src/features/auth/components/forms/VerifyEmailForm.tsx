@@ -19,12 +19,12 @@ export function VerifyEmailForm({
   onVerified: () => void;
   onBack: () => void;
 }) {
-  const t = useTranslations('Auth'),
-    locale = useLocale(),
-    verify = useVerifyEmail(),
-    resend = useResendVerification();
-  const [cooldown, setCooldown] = useState(60),
-    [message, setMessage] = useState('');
+  const t = useTranslations('Auth');
+  const locale = useLocale();
+  const verify = useVerifyEmail();
+  const resend = useResendVerification();
+  const [cooldown, setCooldown] = useState(60);
+  const [message, setMessage] = useState('');
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
