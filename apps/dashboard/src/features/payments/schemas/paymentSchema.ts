@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { bookingFiltersSchema } from '@/features/bookings';
+import type { BookingFilters } from '@/features/bookings';
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const paymentSchema = z.object({
   id: z.uuid(),
@@ -53,46 +53,16 @@ export const paymentSchema = z.object({
     })
     .nullable(),
 });
-const providerId = z.union([
-  z.literal(''),
-  z
-    .string()
-    .regex(/^[1-9][0-9]{0,15}$/)
-    .refine((value) => Number.isSafeInteger(Number(value))),
-]);
-export const paymentFiltersSchema = bookingFiltersSchema
-  .omit({ travelDate: true })
-  .extend({
-    bookingId: z.union([z.literal(''), z.uuid()]),
-    createdDate: z.union([z.literal(''), z.iso.date()]),
-    orderId: providerId,
-    transactionId: providerId,
-    intentionId: z.union([
-      z.literal(''),
-      z.string().regex(/^pi_test_[A-Za-z0-9_-]{1,200}$/),
-    ]),
-    sessionStatus: z.enum([
-      '',
-      'REQUESTING',
-      'READY',
-      'UNKNOWN',
-      'FAILED',
-      'EXPIRED',
-    ]),
-    settlementStatus: z.enum([
-      '',
-      'REQUESTED',
-      'UNKNOWN',
-      'SUCCEEDED',
-      'REVIEW',
-    ]),
-  });
-export const paymentListSchema = paymentFiltersSchema.extend({
-  limit: z.number().int().min(1).max(100),
-  offset: z.number().int().min(0).max(100000),
-});
 export type Payment = z.infer<typeof paymentSchema>;
-export type PaymentFilterValues = z.infer<typeof paymentFiltersSchema>;
+export type PaymentFilterValues = Omit<BookingFilters, 'travelDate'> & {
+  bookingId: string;
+  createdDate: string;
+  orderId: string;
+  transactionId: string;
+  intentionId: string;
+  sessionStatus: '' | 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
+  settlementStatus: '' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
+};
 
 export const emptyPaymentFilters: PaymentFilterValues = {
   reference: '',

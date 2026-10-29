@@ -2,7 +2,7 @@
 import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib';
 import { getLocale } from 'next-intl/server';
-import type { ListPage } from '@/shared/schemas';
+import type { ListPage } from '@/shared/types';
 import type { BusType } from '@/features/bus-types';
 import type { Amenity } from '@/features/amenities';
 import type { BusInput, BusListQuery } from '../schemas/busSchema';

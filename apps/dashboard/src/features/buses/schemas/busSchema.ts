@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { listQuerySchema } from '@/shared/schemas';
+import type { ListQuery } from '@/shared/types';
 import { busTypeSchema } from '@/features/bus-types';
 import { amenitySchema } from '@/features/amenities';
 export const busInputSchema = z.strictObject({
@@ -37,12 +37,11 @@ export const busSchema = busInputSchema.omit({ amenityIds: true }).extend({
   busType: busTypeSchema.nullable(),
   amenities: z.array(amenitySchema).max(30),
 });
-export const busListQuerySchema = listQuerySchema.extend({
-  busTypeId: z.union([z.literal(''), z.uuid()]),
-  isActive: z.enum(['', 'true', 'false']),
-});
 export const saveBusSchema = busInputSchema.extend({ id: z.uuid().optional() });
 export const busIdSchema = z.uuid();
 export type BusInput = z.infer<typeof busInputSchema>;
 export type BusFormValues = z.input<typeof busFormSchema>;
-export type BusListQuery = z.infer<typeof busListQuerySchema>;
+export type BusListQuery = ListQuery & {
+  busTypeId: string;
+  isActive: '' | 'true' | 'false';
+};

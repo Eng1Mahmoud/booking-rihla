@@ -10,10 +10,9 @@ export const userSchema = z.object({
   emailVerifiedAt: z.string().nullable(),
   createdAt: z.string(),
 });
-export const userFiltersSchema = z.object({
-  email: z.union([z.literal(''), z.email()]),
-  phone: z.union([z.literal(''), z.string().regex(/^\+[1-9]\d{7,14}$/)]),
-  isActive: z.enum(['', 'true', 'false']),
-});
 export type ManagedUser = z.infer<typeof userSchema>;
-export type UserFilters = z.infer<typeof userFiltersSchema>;
+export type UserFilters = {
+  email: string;
+  phone: string;
+  isActive: '' | 'true' | 'false';
+};

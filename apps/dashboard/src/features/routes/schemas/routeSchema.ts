@@ -20,13 +20,12 @@ export const routeFormSchema = routeInputSchema
     path: ['destinationStationId'],
     params: { messageKey: 'differentStations' },
   });
-export const routeListSchema = z.object({
-  limit: z.number().int().min(1).max(100),
-  offset: z.number().int().min(0).max(100000),
-  originStationId: z.union([z.literal(''), z.uuid()]),
-  destinationStationId: z.union([z.literal(''), z.uuid()]),
-  isActive: z.enum(['', 'true', 'false']),
-});
 export type Route = z.infer<typeof routeSchema>;
 export type RouteInput = z.infer<typeof routeInputSchema>;
-export type RouteListQuery = z.infer<typeof routeListSchema>;
+export type RouteListQuery = {
+  limit: number;
+  offset: number;
+  originStationId: string;
+  destinationStationId: string;
+  isActive: '' | 'true' | 'false';
+};

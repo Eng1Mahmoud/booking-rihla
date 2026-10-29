@@ -2,7 +2,7 @@
 import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib';
 import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/schemas';
+import type { ListPage, ListQuery } from '@/shared/types';
 import type { CityInput } from '../schemas/citySchema';
 import type { City, CityRow } from '../types/city';
 

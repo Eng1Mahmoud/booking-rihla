@@ -2,7 +2,7 @@
 import { apiFetch } from '@/shared/lib/api';
 import type { ApiResult } from '@/shared/lib';
 import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/schemas';
+import type { ListPage, ListQuery } from '@/shared/types';
 import type { AmenityInput } from '../schemas/amenitySchema';
 import type { Amenity } from '../types/amenity';
 

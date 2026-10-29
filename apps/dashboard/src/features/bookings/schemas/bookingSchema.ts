@@ -55,25 +55,12 @@ export const bookingDetailSchema = bookingSchema.extend({
     }),
   ),
 });
-const uuidFilter = z.union([z.literal(''), z.uuid()]);
-export const bookingFiltersSchema = z.object({
-  reference: z.union([
-    z.literal(''),
-    z
-      .string()
-      .trim()
-      .toUpperCase()
-      .regex(/^BUS-[A-F0-9]{16}$/),
-  ]),
-  email: z.union([z.literal(''), z.email()]),
-  travelDate: z.union([z.literal(''), z.iso.date()]),
-  tripId: uuidFilter,
-  userId: uuidFilter,
-});
-export const bookingListSchema = bookingFiltersSchema.extend({
-  limit: z.number().int().min(1).max(100),
-  offset: z.number().int().min(0).max(100000),
-});
 export type Booking = z.infer<typeof bookingSchema>;
-export type BookingFilters = z.infer<typeof bookingFiltersSchema>;
+export type BookingFilters = {
+  reference: string;
+  email: string;
+  travelDate: string;
+  tripId: string;
+  userId: string;
+};
 export type BookingDetail = z.infer<typeof bookingDetailSchema>;

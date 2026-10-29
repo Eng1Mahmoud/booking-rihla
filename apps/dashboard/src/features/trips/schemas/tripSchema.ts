@@ -70,13 +70,6 @@ export const tripFormSchema = z
   })
   .pipe(tripInputSchema);
 export type TripFormValues = z.input<typeof tripFormSchema>;
-export const tripListSchema = z.object({
-  limit: z.number().int().min(1).max(100),
-  offset: z.number().int().min(0).max(100000),
-  routeId: z.union([z.literal(''), z.uuid()]),
-  busId: z.union([z.literal(''), z.uuid()]),
-  status: z.enum(['', 'SCHEDULED', 'CANCELLED']),
-});
 export const batchInputSchema = z
   .object({
     routeId: z.uuid(),
@@ -165,6 +158,12 @@ export const cancellationSchema = z.object({
 });
 export type Trip = z.infer<typeof tripSchema>;
 export type TripInput = z.infer<typeof tripInputSchema>;
-export type TripListQuery = z.infer<typeof tripListSchema>;
+export type TripListQuery = {
+  limit: number;
+  offset: number;
+  routeId: string;
+  busId: string;
+  status: '' | 'SCHEDULED' | 'CANCELLED';
+};
 export type BatchInput = z.infer<typeof batchInputSchema>;
 export type BatchPreview = z.infer<typeof batchPreviewSchema>;

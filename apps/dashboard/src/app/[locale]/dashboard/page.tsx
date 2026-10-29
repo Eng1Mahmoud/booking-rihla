@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
-import { DateFilter, reportDateSchema, cairoToday } from '@/features/dashboard';
+import { DateFilter, cairoToday } from '@/features/dashboard';
 import {
   DashboardOverview,
   getDashboardReports,
@@ -12,24 +11,9 @@ export default async function DashboardPage({
 }) {
   const t = await getTranslations('Dashboard');
   const params = await searchParams;
-  const parsed = reportDateSchema.safeParse(params.date ?? cairoToday());
-  if (!parsed.success)
-    return (
-      <section
-        className="min-w-0 rounded-2xl border bg-card p-5 sm:p-6 xl:px-[27px]"
-        role="alert"
-      >
-        <h1 className="text-2xl font-semibold">{t('invalidDate')}</h1>
-        <p className="my-4">{t('invalidDateHint')}</p>
-        <Link
-          href="/dashboard"
-          className="text-primary underline underline-offset-4"
-        >
-          {t('today')}
-        </Link>
-      </section>
-    );
-  const reports = await getDashboardReports(parsed.data);
+  const date =
+    (Array.isArray(params.date) ? params.date[0] : params.date) ?? cairoToday();
+  const reports = await getDashboardReports(date);
   return (
     <div id="overview">
       <div className="mb-6 flex flex-col gap-6 lg:min-h-32 lg:flex-row lg:items-start lg:justify-between">
@@ -42,7 +26,7 @@ export default async function DashboardPage({
           </p>
         </div>
         <div className="lg:w-2/5 lg:min-w-[330px]">
-          <DateFilter date={parsed.data} />
+          <DateFilter date={date} />
         </div>
       </div>
       <DashboardOverview {...reports} />
