@@ -1,28 +1,22 @@
 'use server';
-import { z } from 'zod';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListPage } from '@/shared/lib/readListPage';
-import { readRecord } from '@/shared/lib/readRecord';
-import {
-  paymentSchema,
-  paymentListSchema,
-  type PaymentFilters,
-} from '../schemas/paymentSchema';
+import { apiFetch } from '@/shared/lib/api';
+import type { Payment, PaymentFilters } from '../schemas/paymentSchema';
+
 export async function getPaymentsAction(
   input: PaymentFilters & { limit: number; offset: number },
 ) {
-  const parsed = await parseSchema(paymentListSchema, input);
-  if (!parsed.success) return parsed.error;
-  const { limit, offset, ...filters } = parsed.data;
-  return readListPage(
-    'admin/payments',
-    { limit, offset },
-    paymentSchema,
-    filters,
+  const { limit, offset, ...filters } = input;
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  return apiFetch<{ items: Payment[]; total: number }>(
+    'admin/payments?' + params,
   );
 }
+
 export async function getPaymentAction(id: string) {
-  const parsed = await parseSchema(z.uuid(), id);
-  if (!parsed.success) return parsed.error;
-  return readRecord('admin/payments/' + parsed.data, paymentSchema);
+  return apiFetch<Payment>('admin/payments/' + id);
 }

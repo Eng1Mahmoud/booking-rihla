@@ -1,38 +1,47 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
+import { apiFailure } from '@/shared/lib/apiResult';
 import type { ApiResult } from '@/shared/lib/apiResult';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListPage } from '@/shared/lib/readListPage';
-import { readListOptions } from '@/shared/lib/readListOptions';
-import {
-  listQuerySchema,
-  type ListPage,
-  type ListQuery,
-} from '@/shared/schemas/listSchema';
-import {
-  cityRowSchema,
-  cityIdSchema,
-  saveCitySchema,
-  type CityInput,
-} from '../schemas/citySchema';
+import { getLocale } from 'next-intl/server';
+import type { ListPage, ListQuery } from '@/shared/schemas/listSchema';
+import type { CityInput } from '../schemas/citySchema';
 import type { City, CityRow } from '../types/city';
 
 export async function getCityOptionsAction(): Promise<ApiResult<City[]>> {
-  return readListOptions('admin/cities', cityRowSchema, '');
+  const items: CityRow[] = [];
+  const locale = await getLocale();
+  for (let offset = 0; offset <= 100000; offset += 100) {
+    const params = new URLSearchParams({
+      search: '',
+      locale,
+      limit: '100',
+      offset: String(offset),
+    });
+    const page = await apiFetch<{ items: CityRow[]; total: number }>(
+      'admin/cities?' + params,
+    );
+    if (!page.success || !page.data) return { ...page, data: undefined };
+    items.push(...page.data.items);
+    if (items.length >= page.data.total || page.data.items.length < 100)
+      return { ...page, data: items };
+  }
+  return apiFailure(502, 'UPSTREAM_ERROR', locale);
 }
 
 export async function getCitiesAction(
   input: ListQuery,
 ): Promise<ApiResult<ListPage<CityRow>>> {
-  const parsed = await parseSchema(listQuerySchema, input);
-  if (!parsed.success) return parsed.error;
-  return readListPage('admin/cities', parsed.data, cityRowSchema);
+  const params = new URLSearchParams({
+    search: input.search,
+    locale: await getLocale(),
+    limit: String(input.limit),
+    offset: String(input.offset),
+  });
+  return apiFetch<ListPage<CityRow>>('admin/cities?' + params);
 }
 
 export async function saveCityAction(input: CityInput & { id?: string }) {
-  const parsed = await parseSchema(saveCitySchema, input);
-  if (!parsed.success) return parsed.error;
-  const { id, ...body } = parsed.data;
+  const { id, ...body } = input;
   return apiFetch<City>(id ? 'cities/' + id : 'cities', {
     method: id ? 'PATCH' : 'POST',
     body,
@@ -40,7 +49,5 @@ export async function saveCityAction(input: CityInput & { id?: string }) {
 }
 
 export async function deleteCityAction(id: string) {
-  const parsed = await parseSchema(cityIdSchema, id);
-  if (!parsed.success) return parsed.error;
-  return apiFetch<void>('cities/' + parsed.data, { method: 'DELETE' });
+  return apiFetch<void>('cities/' + id, { method: 'DELETE' });
 }

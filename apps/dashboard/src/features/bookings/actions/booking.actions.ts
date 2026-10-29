@@ -1,29 +1,26 @@
 'use server';
-import { z } from 'zod';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListPage } from '@/shared/lib/readListPage';
-import { readRecord } from '@/shared/lib/readRecord';
-import {
-  bookingSchema,
-  bookingDetailSchema,
-  bookingListSchema,
-  type BookingFilters,
+import { apiFetch } from '@/shared/lib/api';
+import type {
+  Booking,
+  BookingDetail,
+  BookingFilters,
 } from '../schemas/bookingSchema';
+
 export async function getBookingsAction(
   input: BookingFilters & { limit: number; offset: number },
 ) {
-  const parsed = await parseSchema(bookingListSchema, input);
-  if (!parsed.success) return parsed.error;
-  const { limit, offset, ...filters } = parsed.data;
-  return readListPage(
-    'admin/bookings',
-    { limit, offset },
-    bookingSchema,
-    filters,
+  const { limit, offset, ...filters } = input;
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  return apiFetch<{ items: Booking[]; total: number }>(
+    'admin/bookings?' + params,
   );
 }
+
 export async function getBookingAction(id: string) {
-  const parsed = await parseSchema(z.uuid(), id);
-  if (!parsed.success) return parsed.error;
-  return readRecord('admin/bookings/' + parsed.data, bookingDetailSchema);
+  return apiFetch<BookingDetail>('admin/bookings/' + id);
 }

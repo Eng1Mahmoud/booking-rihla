@@ -1,33 +1,26 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
 import { type ApiResult } from '@/shared/lib/apiResult';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListPage } from '@/shared/lib/readListPage';
+import { getLocale } from 'next-intl/server';
 import { type ListPage } from '@/shared/schemas/listSchema';
-import {
-  stationRowSchema,
-  stationIdSchema,
-  saveStationSchema,
-  stationListSchema,
-  type StationListQuery,
-  type StationInput,
-} from '../schemas/stationSchema';
+import type { StationListQuery, StationInput } from '../schemas/stationSchema';
 import type { Station, StationRow } from '../types/station';
 
 export async function getStationsAction(
   input: StationListQuery,
 ): Promise<ApiResult<ListPage<StationRow>>> {
-  const parsed = await parseSchema(stationListSchema, input);
-  if (!parsed.success) return parsed.error;
-  return readListPage('admin/stations', parsed.data, stationRowSchema, {
-    cityId: parsed.data.cityId ?? '',
+  const params = new URLSearchParams({
+    search: input.search,
+    locale: await getLocale(),
+    limit: String(input.limit),
+    offset: String(input.offset),
   });
+  if (input.cityId) params.set('cityId', input.cityId);
+  return apiFetch<ListPage<StationRow>>('admin/stations?' + params);
 }
 
 export async function saveStationAction(input: StationInput & { id?: string }) {
-  const parsed = await parseSchema(saveStationSchema, input);
-  if (!parsed.success) return parsed.error;
-  const { id, ...body } = parsed.data;
+  const { id, ...body } = input;
   return apiFetch<Station>(id ? 'stations/' + id : 'stations', {
     method: id ? 'PATCH' : 'POST',
     body,
@@ -35,7 +28,5 @@ export async function saveStationAction(input: StationInput & { id?: string }) {
 }
 
 export async function deleteStationAction(id: string) {
-  const parsed = await parseSchema(stationIdSchema, id);
-  if (!parsed.success) return parsed.error;
-  return apiFetch<void>('stations/' + parsed.data, { method: 'DELETE' });
+  return apiFetch<void>('stations/' + id, { method: 'DELETE' });
 }

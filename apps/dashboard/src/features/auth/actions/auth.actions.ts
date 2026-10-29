@@ -3,24 +3,21 @@ import { cookies } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
-import { parseSchema } from '@/shared/lib/parseSchema';
 import {
   deleteSessionCookies,
   getSessionCookies,
   setSessionCookies,
   tokensSchema,
 } from '@/shared/lib/session';
-import { loginSchema, type LoginValues } from '../schemas/loginSchema';
+import type { LoginValues } from '../schemas/loginSchema';
 import type { AuthUser, UserRole } from '../types/auth';
 export async function loginAction(
   input: LoginValues,
 ): Promise<ApiResult<{ role: UserRole }>> {
-  const parsed = await parseSchema(loginSchema, input);
-  if (!parsed.success) return parsed.error;
   const locale = await getLocale();
   const result = await apiFetch<unknown>('auth/login', {
     method: 'POST',
-    body: parsed.data,
+    body: input,
     accessToken: null,
   });
   if (!result.success) return { ...result, data: undefined };

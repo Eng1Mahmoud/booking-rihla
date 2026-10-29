@@ -1,13 +1,6 @@
 'use server';
 
 import { apiFetch } from '@/shared/lib/api';
-import { z } from 'zod';
-
-const bodySchema = z.object({
-  payload: z.string().trim().min(20).max(2048),
-  action: z.enum(['verify', 'board']).default('verify'),
-  language: z.enum(['ar', 'en']).optional(),
-});
 
 export type ScanTicketResult = {
   code:
@@ -36,19 +29,8 @@ export type ScanTicketResult = {
 };
 
 export async function scanTicketAction(input: unknown) {
-
-  const parsed = bodySchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      success: false as const,
-      status: 400,
-      code: 'VALIDATION_ERROR',
-      data: undefined,
-    };
-  }
-
   return apiFetch<ScanTicketResult>('admin/tickets/scan', {
     method: 'POST',
-    body: parsed.data,
+    body: input,
   });
 }

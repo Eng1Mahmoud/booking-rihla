@@ -1,56 +1,39 @@
 'use server';
-import { z } from 'zod';
 import { apiFetch } from '@/shared/lib/api';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListPage } from '@/shared/lib/readListPage';
-import { userSchema } from '@/features/users/schemas/userSchema';
-import {
-  administratorFiltersSchema,
-  type AdministratorFilters,
-} from '../schemas/administratorSchema';
+import type { ManagedUser } from '@/features/users/schemas/userSchema';
+import type { AdministratorFilters } from '../schemas/administratorSchema';
+
 export async function getAdministratorsAction(
   input: AdministratorFilters & { limit: number; offset: number },
 ) {
-  const parsed = await parseSchema(
-    administratorFiltersSchema.extend({
-      limit: z.number().int().min(1).max(100),
-      offset: z.number().int().min(0).max(100000),
-    }),
-    input,
+  const { limit, offset, ...filters } = input;
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  return apiFetch<{ items: ManagedUser[]; total: number }>(
+    'admin/admins?' + params,
   );
-  if (!parsed.success) return parsed.error;
-  const { limit, offset, ...filters } = parsed.data;
-  return readListPage('admin/admins', { limit, offset }, userSchema, filters);
 }
 
 export async function setAdministratorStatusAction(input: {
   id: string;
   isActive: boolean;
 }) {
-  const parsed = await parseSchema(
-    z.strictObject({ id: z.uuid(), isActive: z.boolean() }),
-    input,
-  );
-  if (!parsed.success) return parsed.error;
-  return apiFetch('admin/admins/' + parsed.data.id + '/status', {
+  return apiFetch('admin/admins/' + input.id + '/status', {
     method: 'PATCH',
-    body: { isActive: parsed.data.isActive },
+    body: { isActive: input.isActive },
   });
 }
+
 export async function setAdministratorRoleAction(input: {
   id: string;
   role: 'USER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
 }) {
-  const parsed = await parseSchema(
-    z.strictObject({
-      id: z.uuid(),
-      role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
-    }),
-    input,
-  );
-  if (!parsed.success) return parsed.error;
-  return apiFetch('admin/admins/' + parsed.data.id + '/role', {
+  return apiFetch('admin/admins/' + input.id + '/role', {
     method: 'PATCH',
-    body: { role: parsed.data.role },
+    body: { role: input.role },
   });
 }

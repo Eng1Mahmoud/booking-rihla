@@ -1,31 +1,47 @@
 'use server';
-import { z } from 'zod';
-import { getLocale } from 'next-intl/server';
-import { apiFailure } from '@/shared/lib/apiResult';
 import { apiFetch } from '@/shared/lib/api';
-import { parseSchema } from '@/shared/lib/parseSchema';
-import { readListOptions } from '@/shared/lib/readListOptions';
-import { readListPage } from '@/shared/lib/readListPage';
-import { routeSchema } from '@/features/routes/schemas/routeSchema';
-import { stationRowSchema } from '@/features/stations/schemas/stationSchema';
-import { busSchema } from '@/features/buses/schemas/busSchema';
-import {
-  tripSchema,
-  tripInputSchema,
-  tripListSchema,
-  batchInputSchema,
-  batchPreviewSchema,
-  cancellationSchema,
-  type Trip,
-  type TripInput,
-  type TripListQuery,
-  type BatchInput,
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
+import { getLocale } from 'next-intl/server';
+import type { Route } from '@/features/routes/schemas/routeSchema';
+import type { StationRow } from '@/features/stations/types/station';
+import type { Bus } from '@/features/buses/types/bus';
+import type {
+  Trip,
+  TripInput,
+  TripListQuery,
+  BatchInput,
+  BatchPreview,
 } from '../schemas/tripSchema';
 export async function getTripOptionsAction() {
+  async function listAll<T>(
+    path: string,
+    search: boolean,
+  ): Promise<ApiResult<T[]>> {
+    const items: T[] = [];
+    const locale = await getLocale();
+    for (let offset = 0; offset <= 100000; offset += 100) {
+      const params = new URLSearchParams({
+        limit: '100',
+        offset: String(offset),
+      });
+      if (search) {
+        params.set('search', '');
+        params.set('locale', locale);
+      }
+      const page = await apiFetch<{ items: T[]; total: number }>(
+        path + '?' + params,
+      );
+      if (!page.success || !page.data) return { ...page, data: undefined };
+      items.push(...page.data.items);
+      if (items.length >= page.data.total || page.data.items.length < 100)
+        return { ...page, data: items };
+    }
+    return apiFailure(502, 'UPSTREAM_ERROR', locale);
+  }
   const [routes, buses, stations] = await Promise.all([
-    readListOptions('routes', routeSchema),
-    readListOptions('admin/buses', busSchema, ''),
-    readListOptions('admin/stations', stationRowSchema, ''),
+    listAll<Route>('routes', false),
+    listAll<Bus>('admin/buses', true),
+    listAll<StationRow>('admin/stations', true),
   ]);
   if (!routes.success || !routes.data) return { ...routes, data: undefined };
   if (!buses.success || !buses.data) return { ...buses, data: undefined };
@@ -37,77 +53,41 @@ export async function getTripOptionsAction() {
   };
 }
 export async function getTripsAction(input: TripListQuery) {
-  const parsed = await parseSchema(tripListSchema, input);
-  if (!parsed.success) return parsed.error;
-  return readListPage('trips', parsed.data, tripSchema, {
-    routeId: parsed.data.routeId,
-    busId: parsed.data.busId,
-    status: parsed.data.status,
+  const params = new URLSearchParams({
+    limit: String(input.limit),
+    offset: String(input.offset),
   });
+  for (const key of ['routeId', 'busId', 'status'] as const)
+    if (input[key]) params.set(key, input[key]);
+  return apiFetch<{ items: Trip[]; total: number }>('trips?' + params);
 }
 export async function saveTripAction(input: TripInput & { id?: string }) {
-  const parsed = await parseSchema(
-    tripInputSchema
-      .extend({ id: z.uuid().optional() })
-      .refine((v) => Date.parse(v.arrivalAt) > Date.parse(v.departureAt)),
-    input,
-  );
-  if (!parsed.success) return parsed.error;
-  const { id, ...body } = parsed.data;
+  const { id, ...body } = input;
   return apiFetch<Trip>(id ? 'trips/' + id : 'trips', {
     method: id ? 'PATCH' : 'POST',
     body,
   });
 }
 export async function deleteTripAction(id: string) {
-  const parsed = await parseSchema(z.uuid(), id);
-  if (!parsed.success) return parsed.error;
-  return apiFetch<void>('trips/' + parsed.data, { method: 'DELETE' });
+  return apiFetch<void>('trips/' + id, { method: 'DELETE' });
 }
 export async function previewTripBatchAction(input: BatchInput) {
-  const parsed = await parseSchema(batchInputSchema, input);
-  if (!parsed.success) return parsed.error;
-  const result = await apiFetch<unknown>('trips/batch/preview', {
+  return apiFetch<BatchPreview>('trips/batch/preview', {
     method: 'POST',
-    body: parsed.data,
+    body: input,
   });
-  if (!result.success) return { ...result, data: undefined };
-  const response = batchPreviewSchema.safeParse(result.data);
-  if (
-    !response.success ||
-    response.data.totalTrips !== response.data.trips.length ||
-    response.data.canCreate !==
-      response.data.trips.every((trip) => trip.conflicts.length === 0)
-  )
-    return apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
-  return { ...result, data: response.data };
 }
 export async function createTripBatchAction(input: BatchInput) {
-  const parsed = await parseSchema(batchInputSchema, input);
-  if (!parsed.success) return parsed.error;
-  const result = await apiFetch<unknown>('trips/batch', {
-    method: 'POST',
-    body: parsed.data,
-  });
-  if (!result.success) return { ...result, data: undefined };
-  const response = z
-    .object({
-      totalTrips: z.number().int().min(1).max(90),
-      trips: z.array(tripSchema).min(1).max(90),
-    })
-    .safeParse(result.data);
-  if (
-    !response.success ||
-    response.data.totalTrips !== response.data.trips.length
-  )
-    return apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
-  return { ...result, data: { totalTrips: response.data.totalTrips } };
+  const result = await apiFetch<{ totalTrips: number; trips: Trip[] }>(
+    'trips/batch',
+    { method: 'POST', body: input },
+  );
+  if (!result.success || !result.data) return { ...result, data: undefined };
+  return { ...result, data: { totalTrips: result.data.totalTrips } };
 }
 export async function cancelTripAction(input: { id: string; reason: string }) {
-  const parsed = await parseSchema(cancellationSchema, input);
-  if (!parsed.success) return parsed.error;
-  return apiFetch('admin/trips/' + parsed.data.id + '/cancel', {
+  return apiFetch('admin/trips/' + input.id + '/cancel', {
     method: 'POST',
-    body: { reason: parsed.data.reason },
+    body: { reason: input.reason },
   });
 }

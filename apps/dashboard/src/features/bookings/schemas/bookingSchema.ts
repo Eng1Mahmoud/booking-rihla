@@ -76,3 +76,4 @@ export const bookingListSchema = bookingFiltersSchema.extend({
 });
 export type Booking = z.infer<typeof bookingSchema>;
 export type BookingFilters = z.infer<typeof bookingFiltersSchema>;
+export type BookingDetail = z.infer<typeof bookingDetailSchema>;
