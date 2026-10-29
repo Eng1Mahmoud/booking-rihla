@@ -1,7 +1,6 @@
 'use server';
 import { z } from 'zod';
 import { apiFetch } from '@/shared/lib/api';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListPage } from '@/shared/lib/readListPage';
 import { userSchema } from '@/features/users/schemas/userSchema';
@@ -20,8 +19,6 @@ export async function getAdministratorsAction(
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   const { limit, offset, ...filters } = parsed.data;
   return readListPage('admin/admins', { limit, offset }, userSchema, filters);
 }
@@ -35,8 +32,6 @@ export async function setAdministratorStatusAction(input: {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   return apiFetch('admin/admins/' + parsed.data.id + '/status', {
     method: 'PATCH',
     body: { isActive: parsed.data.isActive },
@@ -54,8 +49,6 @@ export async function setAdministratorRoleAction(input: {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   return apiFetch('admin/admins/' + parsed.data.id + '/role', {
     method: 'PATCH',
     body: { role: parsed.data.role },

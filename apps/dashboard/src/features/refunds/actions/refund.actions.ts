@@ -1,6 +1,5 @@
 'use server';
 import { z } from 'zod';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListPage } from '@/shared/lib/readListPage';
 import { apiFetch } from '@/shared/lib/api';
@@ -17,8 +16,6 @@ export async function getRefundsAction(input: {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   return readListPage('admin/refunds', parsed.data, refundSchema);
 }
 export async function executeRefundAction(input: {
@@ -30,8 +27,6 @@ export async function executeRefundAction(input: {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   return apiFetch(
     'admin/refunds/' + parsed.data.id + '/' + parsed.data.operation,
     { method: 'POST' },

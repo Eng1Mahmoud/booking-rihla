@@ -1,6 +1,5 @@
 'use server';
 import { z } from 'zod';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListPage } from '@/shared/lib/readListPage';
 import { readRecord } from '@/shared/lib/readRecord';
@@ -14,8 +13,6 @@ export async function getPaymentsAction(
 ) {
   const parsed = await parseSchema(paymentListSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const { limit, offset, ...filters } = parsed.data;
   return readListPage(
     'admin/payments',
@@ -27,7 +24,5 @@ export async function getPaymentsAction(
 export async function getPaymentAction(id: string) {
   const parsed = await parseSchema(z.uuid(), id);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readRecord('admin/payments/' + parsed.data, paymentSchema);
 }

@@ -1,6 +1,5 @@
 'use server';
 
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { apiFetch } from '@/shared/lib/api';
 import { z } from 'zod';
 
@@ -37,8 +36,6 @@ export type ScanTicketResult = {
 };
 
 export async function scanTicketAction(input: unknown) {
-  const access = await checkStaffAccess(['STAFF', 'ADMIN', 'SUPER_ADMIN']);
-  if (!access.success) return access;
 
   const parsed = bodySchema.safeParse(input);
   if (!parsed.success) {

@@ -8,7 +8,6 @@ import {
   type ListPage,
   type ListQuery,
 } from '@/shared/schemas/listSchema';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import {
   busTypeSchema,
   busTypeIdSchema,
@@ -22,16 +21,12 @@ export async function getBusTypesAction(
 ): Promise<ApiResult<ListPage<BusType>>> {
   const parsed = await parseSchema(listQuerySchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readListPage('admin/bus-types', parsed.data, busTypeSchema);
 }
 
 export async function saveBusTypeAction(input: BusTypeInput & { id?: string }) {
   const parsed = await parseSchema(saveBusTypeSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const { id, ...body } = parsed.data;
   return apiFetch<BusType>(id ? 'bus-types/' + id : 'bus-types', {
     method: id ? 'PATCH' : 'POST',
@@ -42,7 +37,5 @@ export async function saveBusTypeAction(input: BusTypeInput & { id?: string }) {
 export async function deleteBusTypeAction(id: string) {
   const parsed = await parseSchema(busTypeIdSchema, id);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return apiFetch<void>('bus-types/' + parsed.data, { method: 'DELETE' });
 }

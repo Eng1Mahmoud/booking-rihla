@@ -2,7 +2,6 @@
 import { z } from 'zod';
 import { getLocale } from 'next-intl/server';
 import { apiFailure } from '@/shared/lib/apiResult';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { apiFetch } from '@/shared/lib/api';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListOptions } from '@/shared/lib/readListOptions';
@@ -23,8 +22,6 @@ import {
   type BatchInput,
 } from '../schemas/tripSchema';
 export async function getTripOptionsAction() {
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const [routes, buses, stations] = await Promise.all([
     readListOptions('routes', routeSchema),
     readListOptions('admin/buses', busSchema, ''),
@@ -42,8 +39,6 @@ export async function getTripOptionsAction() {
 export async function getTripsAction(input: TripListQuery) {
   const parsed = await parseSchema(tripListSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readListPage('trips', parsed.data, tripSchema, {
     routeId: parsed.data.routeId,
     busId: parsed.data.busId,
@@ -58,8 +53,6 @@ export async function saveTripAction(input: TripInput & { id?: string }) {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const { id, ...body } = parsed.data;
   return apiFetch<Trip>(id ? 'trips/' + id : 'trips', {
     method: id ? 'PATCH' : 'POST',
@@ -69,15 +62,11 @@ export async function saveTripAction(input: TripInput & { id?: string }) {
 export async function deleteTripAction(id: string) {
   const parsed = await parseSchema(z.uuid(), id);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return apiFetch<void>('trips/' + parsed.data, { method: 'DELETE' });
 }
 export async function previewTripBatchAction(input: BatchInput) {
   const parsed = await parseSchema(batchInputSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const result = await apiFetch<unknown>('trips/batch/preview', {
     method: 'POST',
     body: parsed.data,
@@ -96,8 +85,6 @@ export async function previewTripBatchAction(input: BatchInput) {
 export async function createTripBatchAction(input: BatchInput) {
   const parsed = await parseSchema(batchInputSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const result = await apiFetch<unknown>('trips/batch', {
     method: 'POST',
     body: parsed.data,
@@ -119,8 +106,6 @@ export async function createTripBatchAction(input: BatchInput) {
 export async function cancelTripAction(input: { id: string; reason: string }) {
   const parsed = await parseSchema(cancellationSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess(['SUPER_ADMIN']);
-  if (!access.success) return access;
   return apiFetch('admin/trips/' + parsed.data.id + '/cancel', {
     method: 'POST',
     body: { reason: parsed.data.reason },

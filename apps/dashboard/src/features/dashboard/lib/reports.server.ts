@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { getLocale } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
-import { requireAdministrator } from '@/features/auth/lib/access.server';
 import {
   operationReportSchema,
   paymentReportSchema,
@@ -20,7 +19,6 @@ async function readReport<T>(
     : apiFailure(502, 'UPSTREAM_ERROR', await getLocale());
 }
 export async function getDashboardReports(date: string) {
-  await requireAdministrator();
   const query = encodeURIComponent(date);
   const [operations, payments] = await Promise.all([
     readReport(

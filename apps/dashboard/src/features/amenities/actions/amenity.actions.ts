@@ -8,7 +8,6 @@ import {
   type ListPage,
   type ListQuery,
 } from '@/shared/schemas/listSchema';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import {
   amenitySchema,
   amenityIdSchema,
@@ -22,16 +21,12 @@ export async function getAmenitiesAction(
 ): Promise<ApiResult<ListPage<Amenity>>> {
   const parsed = await parseSchema(listQuerySchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readListPage('admin/amenities', parsed.data, amenitySchema);
 }
 
 export async function saveAmenityAction(input: AmenityInput & { id?: string }) {
   const parsed = await parseSchema(saveAmenitySchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const { id, ...body } = parsed.data;
   return apiFetch<Amenity>(id ? 'amenities/' + id : 'amenities', {
     method: id ? 'PATCH' : 'POST',
@@ -42,7 +37,5 @@ export async function saveAmenityAction(input: AmenityInput & { id?: string }) {
 export async function deleteAmenityAction(id: string) {
   const parsed = await parseSchema(amenityIdSchema, id);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return apiFetch<void>('amenities/' + parsed.data, { method: 'DELETE' });
 }

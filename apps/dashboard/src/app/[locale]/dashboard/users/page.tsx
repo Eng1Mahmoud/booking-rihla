@@ -1,6 +1,7 @@
-import { requireAdministrator } from '@/features/auth/lib/access.server';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import { UsersManager } from '@/features/users/components/UsersManager';
+
 export default async function UsersPage() {
-  const user = await requireAdministrator();
-  return <UsersManager superAdmin={user.role === 'SUPER_ADMIN'} />;
+  const user = await getSignedInUser();
+  return <UsersManager superAdmin={user?.role === 'SUPER_ADMIN'} />;
 }

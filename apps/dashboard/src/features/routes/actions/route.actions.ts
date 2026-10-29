@@ -1,6 +1,5 @@
 'use server';
 import { z } from 'zod';
-import { checkStaffAccess } from '@/features/auth/lib/access.server';
 import { apiFetch } from '@/shared/lib/api';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { readListOptions } from '@/shared/lib/readListOptions';
@@ -15,15 +14,11 @@ import {
   type RouteListQuery,
 } from '../schemas/routeSchema';
 export async function getRouteStationsAction() {
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readListOptions('admin/stations', stationRowSchema, '');
 }
 export async function getRoutesAction(input: RouteListQuery) {
   const parsed = await parseSchema(routeListSchema, input);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return readListPage('routes', parsed.data, routeSchema, {
     originStationId: parsed.data.originStationId,
     destinationStationId: parsed.data.destinationStationId,
@@ -38,8 +33,6 @@ export async function saveRouteAction(input: RouteInput & { id?: string }) {
     input,
   );
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   const { id, ...body } = parsed.data;
   return apiFetch<Route>(id ? 'routes/' + id : 'routes', {
     method: id ? 'PATCH' : 'POST',
@@ -49,7 +42,5 @@ export async function saveRouteAction(input: RouteInput & { id?: string }) {
 export async function deleteRouteAction(id: string) {
   const parsed = await parseSchema(z.uuid(), id);
   if (!parsed.success) return parsed.error;
-  const access = await checkStaffAccess();
-  if (!access.success) return access;
   return apiFetch<void>('routes/' + parsed.data, { method: 'DELETE' });
 }
