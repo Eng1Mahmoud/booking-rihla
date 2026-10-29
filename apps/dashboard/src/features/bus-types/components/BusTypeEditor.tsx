@@ -8,7 +8,7 @@ import {
   FormDialogActions,
 } from '@/shared/components/dialogs/FormDialog';
 import {
-  busTypeInputSchema,
+  createBusTypeFormSchema,
   type BusTypeInput,
 } from '../schemas/busTypeSchema';
 import type { BusType } from '../types/busType';
@@ -28,6 +28,7 @@ export function BusTypeEditor({
 }) {
   const t = useTranslations('BusTypes');
   const common = useTranslations('Common');
+  const formMessages = useTranslations('Forms');
   return (
     <FormDialog
       title={t(entry ? 'editBusType' : 'addBusType')}
@@ -37,7 +38,7 @@ export function BusTypeEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={busTypeInputSchema}
+        schema={createBusTypeFormSchema(formMessages)}
         defaultValues={{
           code: entry?.code ?? '',
           nameAr: entry?.nameAr ?? '',

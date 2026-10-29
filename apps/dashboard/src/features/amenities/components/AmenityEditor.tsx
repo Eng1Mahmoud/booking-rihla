@@ -8,7 +8,7 @@ import {
   FormDialogActions,
 } from '@/shared/components/dialogs/FormDialog';
 import {
-  amenityInputSchema,
+  createAmenityFormSchema,
   type AmenityInput,
 } from '../schemas/amenitySchema';
 import type { Amenity } from '../types/amenity';
@@ -28,6 +28,7 @@ export function AmenityEditor({
 }) {
   const t = useTranslations('Amenities');
   const common = useTranslations('Common');
+  const formMessages = useTranslations('Forms');
   return (
     <FormDialog
       title={t(entry ? 'editAmenity' : 'addAmenity')}
@@ -37,7 +38,7 @@ export function AmenityEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={amenityInputSchema}
+        schema={createAmenityFormSchema(formMessages)}
         defaultValues={{
           code: entry?.code ?? '',
           nameAr: entry?.nameAr ?? '',

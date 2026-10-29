@@ -8,7 +8,7 @@ import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
 import { useForgotPassword } from '../../hooks/useAuth';
-import { recoveryEmailSchema } from '../../schemas/recoverySchema';
+import { createRecoveryEmailFormSchema } from '../../schemas/recoverySchema';
 import { ResetPasswordForm } from './ResetPasswordForm';
 
 export function PasswordRecoveryFlow({
@@ -17,6 +17,7 @@ export function PasswordRecoveryFlow({
   initialStep: 'request' | 'reset';
 }) {
   const t = useTranslations('Recovery');
+  const formMessages = useTranslations('Forms');
   const forgotPassword = useForgotPassword();
   const [step, setStep] = useState<'request' | 'reset' | 'done'>(initialStep);
   const [requestedEmail, setRequestedEmail] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function PasswordRecoveryFlow({
       </p>
       {step === 'request' ? (
         <Form
-          schema={recoveryEmailSchema}
+          schema={createRecoveryEmailFormSchema(formMessages)}
           defaultValues={{ email: '' }}
           onSubmit={async (values) => {
             await forgotPassword.mutateAsync(values);

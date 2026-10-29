@@ -1,8 +1,12 @@
 import { z } from 'zod';
-import { registerSchema } from '@/features/auth/schemas/authSchema';
+import type { useTranslations } from 'next-intl';
 
-export const profileSchema = z.strictObject({
-  name: registerSchema.shape.name,
-  phone: registerSchema.shape.phone,
-});
-export type ProfileInput = z.infer<typeof profileSchema>;
+import { createRegisterFormSchema } from '@/features/auth/schemas/authSchema';
+export function createProfileFormSchema(
+  t?: ReturnType<typeof useTranslations<'Forms'>>,
+) {
+  const { name, phone } = createRegisterFormSchema(t).shape;
+  return z.strictObject({ name, phone }, { error: t?.('invalid') });
+}
+export type ProfileInput = z.output<ReturnType<typeof createProfileFormSchema>>;
+export const profileSchema = createProfileFormSchema();

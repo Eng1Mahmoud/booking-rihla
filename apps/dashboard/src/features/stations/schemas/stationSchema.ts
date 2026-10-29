@@ -1,15 +1,25 @@
 import { z } from 'zod';
-import {
-  cityInputSchema,
-  citySchema,
-} from '@/features/cities/schemas/citySchema';
+import type { useTranslations } from 'next-intl';
+
 import type { ListQuery } from '@/shared/types/list';
-export const stationInputSchema = cityInputSchema.extend({ cityId: z.uuid() });
-export const stationSchema = stationInputSchema.extend({ id: z.uuid() });
-export const stationRowSchema = stationSchema.extend({ city: citySchema });
-export const saveStationSchema = stationInputSchema.extend({
-  id: z.uuid().optional(),
-});
-export const stationIdSchema = z.uuid();
-export type StationInput = z.infer<typeof stationInputSchema>;
+export function createStationFormSchema(
+  t: ReturnType<typeof useTranslations<'Forms'>>,
+) {
+  const name = z
+    .string({ error: t('required') })
+    .trim()
+    .min(1, { error: t('required') })
+    .max(100, { error: t('maxLength', { value: '100' }) });
+  return z.strictObject(
+    {
+      nameAr: name,
+      nameEn: name,
+      cityId: z.uuid({
+        error: (issue) => (issue.input === '' ? t('required') : t('selection')),
+      }),
+    },
+    { error: t?.('invalid') },
+  );
+}
+export type StationInput = z.output<ReturnType<typeof createStationFormSchema>>;
 export type StationListQuery = ListQuery & { cityId?: string };

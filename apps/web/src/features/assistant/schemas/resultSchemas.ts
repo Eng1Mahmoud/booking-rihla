@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { useTranslations } from 'next-intl';
+import { isCalendarDate } from '@/features/trips/schemas/searchSchema';
 import { searchSchema } from '@/features/trips/schemas/searchSchema';
 
 export const assistantTripSchema = z
@@ -52,3 +54,26 @@ export const assistantSearchSchema = searchSchema.safeExtend({
   sortBy: z.enum(['departure', 'price']).optional(),
 });
 export type AssistantSearch = z.infer<typeof assistantSearchSchema>;
+
+export function createSuggestionSchema(
+  mode: 'date' | 'time' | null,
+  today: string,
+  t: ReturnType<typeof useTranslations<'Forms'>>,
+) {
+  return z.object(
+    {
+      value:
+        mode === 'date'
+          ? z
+              .string({ error: t('required') })
+              .refine(isCalendarDate, { error: t('date') })
+              .refine((value) => !isCalendarDate(value) || value >= today, {
+                error: t('upcomingDate'),
+              })
+          : z
+              .string({ error: t('required') })
+              .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, { error: t('time') }),
+    },
+    { error: t?.('invalid') },
+  );
+}

@@ -8,7 +8,7 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import type { ReactNode } from 'react';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { cn } from '@/shared/lib/cn';
@@ -33,50 +33,8 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
   shouldUnregister,
 }: Props<Input, Output>) {
   const locale = useLocale();
-  const t = useTranslations('Forms');
   const form = useForm<Input, unknown, Output>({
-    resolver: zodResolver(schema, {
-      error: (issue) => {
-        const messageKey =
-          issue.code === 'custom' ? issue.params?.messageKey : undefined;
-        if (
-          issue.input === '' ||
-          issue.input === undefined ||
-          issue.input === null
-        )
-          return t('required');
-        if (typeof messageKey === 'string' && t.has(messageKey))
-          return t(messageKey);
-        if (issue.code === 'invalid_format') {
-          if (issue.format === 'email') return t('email');
-          if (issue.format === 'uuid') return t('selection');
-          if (issue.format === 'date') return t('date');
-          if (issue.format === 'datetime') return t('dateTime');
-        }
-        if (issue.code === 'invalid_value') return t('selection');
-        if (issue.code === 'invalid_type' && issue.expected === 'int')
-          return t('wholeNumber');
-        if (issue.code === 'too_small') {
-          const key =
-            issue.origin === 'string'
-              ? 'minLength'
-              : issue.origin === 'array'
-                ? 'minItems'
-                : 'minValue';
-          return t(key, { value: String(issue.minimum) });
-        }
-        if (issue.code === 'too_big') {
-          const key =
-            issue.origin === 'string'
-              ? 'maxLength'
-              : issue.origin === 'array'
-                ? 'maxItems'
-                : 'maxValue';
-          return t(key, { value: String(issue.maximum) });
-        }
-        return t('invalid');
-      },
-    }),
+    resolver: zodResolver(schema),
     defaultValues,
     mode: 'onTouched',
     shouldUnregister,

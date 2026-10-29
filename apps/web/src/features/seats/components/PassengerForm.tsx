@@ -6,7 +6,7 @@ import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import type { Seat } from '@/features/trips/types/trip';
 import type { AuthUser } from '@/features/auth/types/auth';
 import {
-  passengerSchema,
+  createPassengerFormSchema,
   type PassengerValues,
 } from '../schemas/passengerSchema';
 import type { FieldPath } from 'react-hook-form';
@@ -26,9 +26,10 @@ export function PassengerForm({
   disabled: boolean;
 }) {
   const t = useTranslations('Seats');
+  const formMessages = useTranslations('Forms');
   return (
     <Form
-      schema={passengerSchema}
+      schema={createPassengerFormSchema(formMessages)}
       defaultValues={{ contactPhone: user.phone, names: {} }}
       shouldUnregister
       onSubmit={(values) =>

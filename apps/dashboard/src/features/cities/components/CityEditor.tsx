@@ -6,7 +6,7 @@ import {
   FormDialog,
   FormDialogActions,
 } from '@/shared/components/dialogs/FormDialog';
-import { cityInputSchema, type CityInput } from '../schemas/citySchema';
+import { createCityFormSchema, type CityInput } from '../schemas/citySchema';
 import type { City } from '../types/city';
 
 export function CityEditor({
@@ -24,6 +24,7 @@ export function CityEditor({
 }) {
   const t = useTranslations('Cities');
   const common = useTranslations('Common');
+  const formMessages = useTranslations('Forms');
   return (
     <FormDialog
       title={t(entry ? 'editCity' : 'addCity')}
@@ -33,7 +34,7 @@ export function CityEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={cityInputSchema}
+        schema={createCityFormSchema(formMessages)}
         defaultValues={{
           nameAr: entry?.nameAr ?? '',
           nameEn: entry?.nameEn ?? '',

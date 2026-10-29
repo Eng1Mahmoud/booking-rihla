@@ -8,14 +8,18 @@ import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { getProtectedRoute } from '@/middleware/roleRoutes';
 import { loginAction } from '../actions/auth.actions';
-import { loginSchema, type LoginValues } from '../schemas/loginSchema';
+import {
+  createLoginFormSchema,
+  type LoginValues,
+} from '../schemas/loginSchema';
 export function LoginForm({ returnTo }: { returnTo: string }) {
   const t = useTranslations('Auth');
+  const formMessages = useTranslations('Forms');
   const router = useRouter();
   const client = useQueryClient();
   return (
     <Form
-      schema={loginSchema}
+      schema={createLoginFormSchema(formMessages)}
       defaultValues={{ email: '', password: '' }}
       onSubmit={async (values) => {
         const { role } = await invokeAction(() => loginAction(values));

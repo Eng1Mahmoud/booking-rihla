@@ -74,3 +74,14 @@ Gemini, camera permissions or authenticated workflows.
   Pass required data and callbacks rather than the complete page hook result.
 - Keep simple local state in the component. Comments explain non-obvious reasons
   and business constraints rather than describing each JSX element.
+
+## Form validation
+
+- Define a direct createFeatureFormSchema(t) factory in the feature schema file.
+  Keep validation rules and their translated messages together.
+- Form only uses zodResolver(schema); it does not translate validation issues.
+  Server failures continue to appear in its general error alert.
+- Infer form input/output types from the factory. Describe public API responses
+  with TypeScript types instead of adding schemas used only for type inference.
+- Keep shared rules in the same schema factory when existing Server Actions also
+  validate them; translations may be optional for that server use.

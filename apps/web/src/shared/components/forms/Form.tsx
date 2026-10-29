@@ -8,7 +8,7 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import type { ReactNode } from 'react';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { cn } from '@/shared/lib/cn';
@@ -33,9 +33,8 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
   shouldUnregister,
 }: Props<Input, Output>) {
   const locale = useLocale();
-  const t = useTranslations('Forms');
   const form = useForm<Input, unknown, Output>({
-    resolver: zodResolver(schema, { error: () => t('invalid') }),
+    resolver: zodResolver(schema),
     defaultValues,
     shouldUnregister,
   });

@@ -6,10 +6,14 @@ import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { UserAvatar } from './UserAvatar';
 import { useProfile } from '../hooks/useProfile';
-import { profileSchema, type ProfileInput } from '../schemas/profileSchema';
+import {
+  createProfileFormSchema,
+  type ProfileInput,
+} from '../schemas/profileSchema';
 
 export function AccountProfile() {
   const t = useTranslations('Account');
+  const formMessages = useTranslations('Forms');
   const { user, update } = useProfile();
   if (!user) return null;
 
@@ -52,7 +56,7 @@ export function AccountProfile() {
         </div>
         <Form
           key={user.id}
-          schema={profileSchema}
+          schema={createProfileFormSchema(formMessages)}
           defaultValues={{ name: user.name, phone: user.phone }}
           onSubmit={save}
         >

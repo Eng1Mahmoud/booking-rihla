@@ -1,9 +1,8 @@
-import type { z } from 'zod';
-import type { stationRowSchema } from '@/features/stations/schemas/stationSchema';
+import type { StationRow } from '@/features/stations/types/station';
 import type { Route } from '../schemas/routeSchema';
 import type { DataTableColumn } from '@/shared/lib/dataTable';
 import { RowActions } from '@/shared/components/tables/RowActions';
-export type RouteStation = z.infer<typeof stationRowSchema>;
+export type RouteStation = StationRow;
 export function stationLabel(station: RouteStation, locale: string) {
   return locale === 'ar'
     ? station.city.nameAr + ' — ' + station.nameAr

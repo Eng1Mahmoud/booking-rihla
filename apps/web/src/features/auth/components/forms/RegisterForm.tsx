@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { registerSchema } from '../../schemas/authSchema';
+import {
+  registerSchema,
+  createRegisterFormSchema,
+} from '../../schemas/authSchema';
 import { useRegister } from '../../hooks/useAuth';
 type Values = z.input<typeof registerSchema>;
 export function RegisterForm({
@@ -14,11 +17,12 @@ export function RegisterForm({
   onRegistered: (challenge: { email: string; verificationId: string }) => void;
 }) {
   const t = useTranslations('Auth');
+  const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const registration = useRegister();
   return (
     <Form
-      schema={registerSchema}
+      schema={createRegisterFormSchema(formMessages)}
       defaultValues={{ name: '', email: '', phone: '', password: '' }}
       onSubmit={async (values) => {
         const data = await registration.mutateAsync({

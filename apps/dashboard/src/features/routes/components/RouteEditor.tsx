@@ -9,7 +9,7 @@ import {
 } from '@/shared/components/dialogs/FormDialog';
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import {
-  routeFormSchema,
+  createRouteFormSchema,
   type Route,
   type RouteInput,
 } from '../schemas/routeSchema';
@@ -30,6 +30,7 @@ export function RouteEditor({
   onCloseAutoFocus: (event: Event) => void;
 }) {
   const t = useTranslations('Routes');
+  const formMessages = useTranslations('Forms');
   const common = useTranslations('Common');
   const locale = useLocale();
   return (
@@ -41,7 +42,7 @@ export function RouteEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={routeFormSchema}
+        schema={createRouteFormSchema(formMessages)}
         defaultValues={{
           originStationId: entry?.originStationId ?? '',
           destinationStationId: entry?.destinationStationId ?? '',

@@ -1,5 +1,5 @@
 'use client';
-import { z } from 'zod';
+import { createAdministratorRoleFormSchema } from '../schemas/administratorSchema';
 import { useTranslations } from 'next-intl';
 import { Form } from '@/shared/components/forms/Form';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
@@ -9,9 +9,6 @@ import {
 } from '@/shared/components/dialogs/FormDialog';
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import type { ManagedUser } from '@/features/users/schemas/userSchema';
-const schema = z.object({
-  role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
-});
 export function AdministratorRoleEditor({
   entry,
   pending,
@@ -26,6 +23,7 @@ export function AdministratorRoleEditor({
   onCloseAutoFocus: (event: Event) => void;
 }) {
   const t = useTranslations('Users');
+  const formMessages = useTranslations('Forms');
   const states = useTranslations('States');
   return (
     <FormDialog
@@ -36,7 +34,7 @@ export function AdministratorRoleEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={schema}
+        schema={createAdministratorRoleFormSchema(formMessages)}
         defaultValues={{ role: entry.role }}
         onSubmit={(values) => onSave(values.role)}
       >

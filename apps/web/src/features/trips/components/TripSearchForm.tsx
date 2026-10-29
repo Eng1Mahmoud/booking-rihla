@@ -35,6 +35,7 @@ export function TripSearchForm({
 }) {
   const locale = useLocale();
   const t = useTranslations('Search');
+  const formMessages = useTranslations('Forms');
   const router = useRouter();
   const name = (city: City) => (locale === 'ar' ? city.nameAr : city.nameEn);
   const options = (
@@ -63,7 +64,7 @@ export function TripSearchForm({
   );
   return (
     <Form
-      schema={searchFormSchema(today)}
+      schema={searchFormSchema(today, formMessages)}
       defaultValues={{
         origin: defaults.originStationId
           ? 'station:' + defaults.originStationId

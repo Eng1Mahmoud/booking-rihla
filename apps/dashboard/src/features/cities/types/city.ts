@@ -1,4 +1,3 @@
-import type { z } from 'zod';
-import type { citySchema, cityRowSchema } from '../schemas/citySchema';
-export type City = z.infer<typeof citySchema>;
-export type CityRow = z.infer<typeof cityRowSchema>;
+import type { CityInput } from '../schemas/citySchema';
+export type City = CityInput & { id: string };
+export type CityRow = City & { stationCount: number };

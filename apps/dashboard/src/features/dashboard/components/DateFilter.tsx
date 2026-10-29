@@ -1,26 +1,25 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { z } from 'zod';
 import { useRouter } from '@/i18n/navigation';
 import { Form } from '@/shared/components/forms/Form';
 import { DatePickr } from '@/shared/components/forms/DatePickr';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { reportDateSchema } from '../schemas/reportSchema';
-const schema = z.object({ date: reportDateSchema });
+import { createReportDateFormSchema } from '../schemas/reportSchema';
 export function DateFilter({ date }: { date: string }) {
   const t = useTranslations('Dashboard');
+  const formMessages = useTranslations('Forms');
   const router = useRouter();
   return (
     <Form
       key={date}
-      schema={schema}
+      schema={createReportDateFormSchema(formMessages)}
       defaultValues={{ date }}
       className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:w-auto lg:min-w-0"
       onSubmit={(values) => {
         router.push('/dashboard?date=' + encodeURIComponent(values.date));
       }}
     >
-      <DatePickr<z.infer<typeof schema>>
+      <DatePickr
         name="date"
         fieldClassName="min-w-0 gap-2"
         className="rounded-[12px] lg:h-[50px]"

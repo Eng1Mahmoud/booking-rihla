@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { useTranslations } from 'next-intl';
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const metadata = {
   timeZone: z.literal('Africa/Cairo'),
@@ -57,3 +58,20 @@ export const paymentReportSchema = z.object({
     amountEGP: z.string().regex(/^\d+\.\d{2}$/),
   }),
 });
+
+export function createReportDateFormSchema(
+  t: ReturnType<typeof useTranslations<'Forms'>>,
+) {
+  return z.object(
+    {
+      date: z.iso
+        .date({
+          error: (issue) => (issue.input === '' ? t('required') : t('date')),
+        })
+        .refine((value) => value >= '2000-01-01' && value <= '9998-12-31', {
+          error: t('date'),
+        }),
+    },
+    { error: t?.('invalid') },
+  );
+}

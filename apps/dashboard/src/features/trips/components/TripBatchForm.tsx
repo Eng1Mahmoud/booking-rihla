@@ -9,7 +9,7 @@ import { FormCheckboxGroup } from '@/shared/components/forms/FormCheckboxGroup';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { routeLabel } from '@/features/routes/lib/routeColumns';
-import { batchFormSchema, type BatchInput } from '../schemas/tripSchema';
+import { createBatchFormSchema, type BatchInput } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
 
 export function TripBatchForm({
@@ -24,6 +24,7 @@ export function TripBatchForm({
   onChange: () => void;
 }) {
   const t = useTranslations('Trips');
+  const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const tomorrow = Temporal.Now.plainDateISO('Africa/Cairo')
     .add({ days: 1 })
@@ -33,7 +34,7 @@ export function TripBatchForm({
   return (
     <div onChangeCapture={onChange}>
       <Form
-        schema={batchFormSchema}
+        schema={createBatchFormSchema(formMessages)}
         defaultValues={{
           routeId: '',
           busId: '',

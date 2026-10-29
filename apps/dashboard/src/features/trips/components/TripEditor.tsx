@@ -11,7 +11,7 @@ import {
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import { routeLabel } from '@/features/routes/lib/routeColumns';
 import {
-  tripFormSchema,
+  createTripFormSchema,
   type Trip,
   type TripInput,
 } from '../schemas/tripSchema';
@@ -41,6 +41,7 @@ export function TripEditor({
       )
     : '120';
   const t = useTranslations('Trips');
+  const formMessages = useTranslations('Forms');
   const common = useTranslations('Common');
   const locale = useLocale();
   return (
@@ -52,7 +53,7 @@ export function TripEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={tripFormSchema}
+        schema={createTripFormSchema(formMessages)}
         defaultValues={{
           routeId: entry?.routeId ?? '',
           busId: entry?.busId ?? '',

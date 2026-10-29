@@ -11,7 +11,7 @@ import {
 import { FieldError } from '@/shared/components/ui/field';
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import {
-  busFormSchema,
+  createBusFormSchema,
   type BusInput,
   type BusFormValues,
 } from '../schemas/busSchema';
@@ -33,6 +33,7 @@ export function BusEditor({
   onCloseAutoFocus: (event: Event) => void;
 }) {
   const t = useTranslations('Buses');
+  const formMessages = useTranslations('Forms');
   const common = useTranslations('Common');
   const locale = useLocale();
   const id = useId();
@@ -45,7 +46,7 @@ export function BusEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={busFormSchema}
+        schema={createBusFormSchema(formMessages)}
         defaultValues={busFormValues(entry)}
         onSubmit={onSave}
       >

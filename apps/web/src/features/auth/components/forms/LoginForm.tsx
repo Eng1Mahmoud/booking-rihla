@@ -5,18 +5,19 @@ import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { useLogin } from '../../hooks/useAuth';
-import { loginSchema } from '../../schemas/authSchema';
+import { createLoginFormSchema } from '../../schemas/authSchema';
 import type { LoginInput } from '../../types/auth';
 
 export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
   const t = useTranslations('Auth');
+  const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const login = useLogin();
   const destination =
     returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
   return (
     <Form
-      schema={loginSchema}
+      schema={createLoginFormSchema(formMessages)}
       defaultValues={{ email: '', password: '' }}
       onSubmit={async (values) => {
         await login.mutateAsync(values);

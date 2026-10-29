@@ -1,46 +1,58 @@
 import { z } from 'zod';
+import type { useTranslations } from 'next-intl';
+
 import type { ListQuery } from '@/shared/types/list';
-import { busTypeSchema } from '@/features/bus-types/schemas/busTypeSchema';
-import { amenitySchema } from '@/features/amenities/schemas/amenitySchema';
-export const busInputSchema = z.strictObject({
-  plateNumber: z
-    .string()
-    .trim()
-    .min(1)
-    .max(32)
-    .transform((value) => value.replace(/\s+/g, ' ').toUpperCase()),
-  seatCount: z.number().int().min(1).max(100),
-  seatLayout: z.enum(['STANDARD_2_2']).nullable(),
-  isActive: z.boolean(),
-  busTypeId: z.uuid().nullable(),
-  amenityIds: z
-    .array(z.uuid())
-    .max(30)
-    .refine((ids) => new Set(ids).size === ids.length),
-});
-export const busFormSchema = busInputSchema.extend({
-  seatCount: z
-    .string()
-    .trim()
-    .refine((value) => /^[0-9]+$/.test(value), {
-      params: { messageKey: 'wholeNumber' },
-    })
-    .transform(Number)
-    .pipe(busInputSchema.shape.seatCount),
-  seatLayout: z.enum(['', 'STANDARD_2_2']).transform((value) => value || null),
-  busTypeId: z
-    .union([z.literal(''), z.uuid()])
-    .transform((value) => value || null),
-});
-export const busSchema = busInputSchema.omit({ amenityIds: true }).extend({
-  id: z.uuid(),
-  busType: busTypeSchema.nullable(),
-  amenities: z.array(amenitySchema).max(30),
-});
-export const saveBusSchema = busInputSchema.extend({ id: z.uuid().optional() });
-export const busIdSchema = z.uuid();
-export type BusInput = z.infer<typeof busInputSchema>;
-export type BusFormValues = z.input<typeof busFormSchema>;
+export function createBusFormSchema(
+  t: ReturnType<typeof useTranslations<'Forms'>>,
+) {
+  return z.strictObject(
+    {
+      plateNumber: z
+        .string({ error: t('required') })
+        .trim()
+        .min(1, { error: t('required') })
+        .max(32, { error: t('maxLength', { value: '32' }) })
+        .transform((value) => value.replace(/\s+/g, ' ').toUpperCase()),
+      seatCount: z
+        .string({ error: t('required') })
+        .trim()
+        .refine((value) => /^[0-9]+$/.test(value), {
+          error: (issue) =>
+            issue.input === '' ? t('required') : t('wholeNumber'),
+        })
+        .transform(Number)
+        .pipe(
+          z
+            .number({ error: t('wholeNumber') })
+            .int({ error: t('wholeNumber') })
+            .min(1, { error: t('minValue', { value: '1' }) })
+            .max(100, { error: t('maxValue', { value: '100' }) }),
+        ),
+      seatLayout: z
+        .enum(['', 'STANDARD_2_2'], { error: t('selection') })
+        .transform((value) => value || null),
+      isActive: z.boolean({ error: t('selection') }),
+      busTypeId: z
+        .union(
+          [
+            z.literal('', { error: t('selection') }),
+            z.uuid({ error: t('selection') }),
+          ],
+          { error: t('selection') },
+        )
+        .transform((value) => value || null),
+      amenityIds: z
+        .array(z.uuid({ error: t('selection') }), { error: t('selection') })
+        .max(30, { error: t('maxItems', { value: '30' }) })
+        .refine((ids) => new Set(ids).size === ids.length, {
+          error: t('selection'),
+        }),
+    },
+    { error: t?.('invalid') },
+  );
+}
+export type BusInput = z.output<ReturnType<typeof createBusFormSchema>>;
+export type BusFormValues = z.input<ReturnType<typeof createBusFormSchema>>;
 export type BusListQuery = ListQuery & {
   busTypeId: string;
   isActive: '' | 'true' | 'false';

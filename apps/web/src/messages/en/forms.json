@@ -6,5 +6,21 @@
   "retry": "Try again",
   "notFound": "This page could not be found.",
   "home": "Back to home",
-  "loadingHint": "Just a moment. Your journey continues here."
+  "loadingHint": "Just a moment. Your journey continues here.",
+  "required": "This field is required.",
+  "email": "Enter a valid email address, such as name@example.com.",
+  "selection": "Choose a valid option from the list.",
+  "date": "Enter a valid date.",
+  "time": "Enter a valid time in hours and minutes.",
+  "minLength": "Enter at least {value} characters.",
+  "maxLength": "Use {value} characters or fewer.",
+  "minItems": "Select at least {value} items.",
+  "maxItems": "Select {value} items or fewer.",
+  "positiveValue": "Enter a value greater than zero.",
+  "phone": "Enter an international phone number, such as +201012345678.",
+  "verificationCode": "Enter the six-digit verification code.",
+  "passwordBytes": "The password must not exceed 512 UTF-8 bytes.",
+  "passwordMismatch": "The passwords do not match.",
+  "upcomingDate": "Choose today or a later date.",
+  "differentLocations": "Choose a destination different from the origin."
 }

@@ -6,10 +6,9 @@ import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { Button } from '@/shared/components/ui/button';
-import { verifyEmailSchema } from '../../schemas/authSchema';
+import { createVerificationCodeFormSchema } from '../../schemas/authSchema';
 import { useVerifyEmail, useResendVerification } from '../../hooks/useAuth';
 import { errorMessage } from '@/shared/lib/apiResult';
-const codeSchema = verifyEmailSchema.pick({ code: true });
 export function VerifyEmailForm({
   challenge,
   onVerified,
@@ -20,6 +19,7 @@ export function VerifyEmailForm({
   onBack: () => void;
 }) {
   const t = useTranslations('Auth');
+  const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const verify = useVerifyEmail();
   const resend = useResendVerification();
@@ -32,7 +32,7 @@ export function VerifyEmailForm({
   }, [cooldown]);
   return (
     <Form
-      schema={codeSchema}
+      schema={createVerificationCodeFormSchema(formMessages)}
       defaultValues={{ code: '' }}
       onSubmit={async (values) => {
         await verify.mutateAsync({ ...challenge, ...values });
@@ -42,7 +42,7 @@ export function VerifyEmailForm({
       <p className="text-sm text-muted-foreground">
         {t('codeSent')} <bdi>{challenge.email}</bdi>
       </p>
-      <FormInput<z.input<typeof codeSchema>>
+      <FormInput<z.input<ReturnType<typeof createVerificationCodeFormSchema>>>
         name="code"
         label={t('code')}
         dir="ltr"

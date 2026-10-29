@@ -8,7 +8,7 @@ import {
   FormDialogActions,
 } from '@/shared/components/dialogs/FormDialog';
 import {
-  stationInputSchema,
+  createStationFormSchema,
   type StationInput,
 } from '../schemas/stationSchema';
 import type { Station } from '../types/station';
@@ -38,6 +38,7 @@ export function StationEditor({
 }) {
   const t = useTranslations('Stations');
   const common = useTranslations('Common');
+  const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const selectId = useId();
   return (
@@ -49,7 +50,7 @@ export function StationEditor({
       onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
-        schema={stationInputSchema}
+        schema={createStationFormSchema(formMessages)}
         defaultValues={{
           nameAr: entry?.nameAr ?? '',
           nameEn: entry?.nameEn ?? '',

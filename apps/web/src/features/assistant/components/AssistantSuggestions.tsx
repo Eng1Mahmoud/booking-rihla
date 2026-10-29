@@ -1,17 +1,16 @@
 'use client';
 import { useId, useState } from 'react';
-import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { Form } from '@/shared/components/forms/Form';
 import { DatePickr, TimePicker } from '@/shared/components/forms/DatePickr';
 import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { cairoDate, searchHref } from '@/features/trips/schemas/searchSchema';
 import {
-  cairoDate,
-  isCalendarDate,
-  searchHref,
-} from '@/features/trips/schemas/searchSchema';
-import type { AssistantSearch } from '../schemas/resultSchemas';
+  createSuggestionSchema,
+  type AssistantSearch,
+} from '../schemas/resultSchemas';
 
 export function AssistantSuggestions({
   search,
@@ -30,15 +29,8 @@ export function AssistantSuggestions({
   const [mode, setMode] = useState<'date' | 'time' | null>(null);
   const panelId = useId();
   const today = cairoDate();
-  const schema = z.object({
-    value:
-      mode === 'date'
-        ? z
-            .string()
-            .refine(isCalendarDate)
-            .refine((value) => value >= today)
-        : z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
-  });
+  const formMessages = useTranslations('Forms');
+  const schema = createSuggestionSchema(mode, today, formMessages);
   const allDayHref = searchHref({
     originCityId: search.originCityId,
     originStationId: search.originStationId,

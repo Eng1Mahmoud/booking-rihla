@@ -24,8 +24,9 @@ export function ResetPasswordForm({
   onReset: () => void;
 }) {
   const t = useTranslations('Recovery');
+  const formMessages = useTranslations('Forms');
   const resetPassword = useResetPassword();
-  const schema = createRecoveryResetSchema(t('mismatch'));
+  const schema = createRecoveryResetSchema(formMessages);
 
   return (
     <Form
