@@ -1,9 +1,7 @@
 'use client';
-
 import { useLocale, useTranslations } from 'next-intl';
 import { useWatch } from 'react-hook-form';
-import { DatePickr, TimePicker } from '@/shared/components/forms/DatePickr';
-import { FormInput } from '@/shared/components/forms/FormInput';
+import { DatePickr, TimePicker, FormInput } from '@/shared/components/forms';
 import { calculateTripSchedule } from '../lib/tripTime';
 import type { TripFormValues } from '../schemas/tripSchema';
 

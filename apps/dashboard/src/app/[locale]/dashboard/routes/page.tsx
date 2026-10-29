@@ -1,4 +1,4 @@
-import { RoutesManager } from '@/features/routes/components/RoutesManager';
+import { RoutesManager } from '@/features/routes';
 export default function RoutesPage() {
   return <RoutesManager />;
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { StationsManager } from '@/features/stations/components/StationsManager';
+import { StationsManager } from '@/features/stations';
 
 export default async function StationsPage({
   searchParams,

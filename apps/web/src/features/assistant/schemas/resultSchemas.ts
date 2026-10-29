@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { searchSchema } from '@/features/trips/schemas/searchSchema';
+import { searchSchema } from '@/features/trips';
 
 export const assistantTripSchema = z
   .object({

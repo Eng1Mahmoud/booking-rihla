@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
+import { LanguageSwitcher } from '@/shared/components/layout';
 
 export function StatusPageLayout({ children }: { children: ReactNode }) {
   return (

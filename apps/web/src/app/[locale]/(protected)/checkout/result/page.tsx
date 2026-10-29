@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import { notFound } from 'next/navigation';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { BookingDetail } from '@/features/bookings/components/BookingDetail';
-import { getBookingDetails } from '@/features/bookings/lib/bookings.server';
-import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import { BookingDetail, getBookingDetails } from '@/features/bookings/server';
+import { ApiError, errorMessage } from '@/shared/lib';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export const metadata = {

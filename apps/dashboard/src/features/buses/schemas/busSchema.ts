@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { listQuerySchema } from '@/shared/schemas/listSchema';
-import { busTypeSchema } from '@/features/bus-types/schemas/busTypeSchema';
-import { amenitySchema } from '@/features/amenities/schemas/amenitySchema';
+import { listQuerySchema } from '@/shared/schemas';
+import { busTypeSchema } from '@/features/bus-types';
+import { amenitySchema } from '@/features/amenities';
 export const busInputSchema = z.strictObject({
   plateNumber: z
     .string()

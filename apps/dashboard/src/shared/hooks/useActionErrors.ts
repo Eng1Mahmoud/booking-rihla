@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/navigation';
-import { ApiError } from '@/shared/lib/apiResult';
+import { ApiError } from '@/shared/lib';
 
 export function useActionErrors(
   queryError: unknown,

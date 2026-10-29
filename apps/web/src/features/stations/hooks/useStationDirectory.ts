@@ -1,7 +1,13 @@
+'use client';
+
 import { useState } from 'react';
-import { useTripCatalog } from '@/features/trips/hooks/useTrips';
-import type { City, Station, TripCatalog } from '@/features/trips/types/trip';
-import { displayName } from '@/shared/lib/format';
+import {
+  useTripCatalog,
+  type City,
+  type Station,
+  type TripCatalog,
+} from '@/features/trips';
+import { displayName } from '@/shared/lib';
 
 export type StationGroupData = {
   id: string;

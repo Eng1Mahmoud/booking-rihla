@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { BusFront } from 'lucide-react';
-import { LoginForm } from '@/features/auth/components/LoginForm';
-import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
+import { LoginForm } from '@/features/auth';
+import { LanguageSwitcher } from '@/shared/components/layout';
 export default async function LoginPage({
   searchParams,
 }: {

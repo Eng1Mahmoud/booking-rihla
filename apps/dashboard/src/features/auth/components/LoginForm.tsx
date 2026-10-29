@@ -2,10 +2,8 @@
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { Form } from '@/shared/components/forms/Form';
-import { FormInput } from '@/shared/components/forms/FormInput';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { invokeAction } from '@/shared/lib/apiResult';
+import { Form, FormInput, SubmitButton } from '@/shared/components/forms';
+import { invokeAction } from '@/shared/lib';
 import { getProtectedRoute } from '@/middleware/roleRoutes';
 import { loginAction } from '../actions/auth.actions';
 import { loginSchema, type LoginValues } from '../schemas/loginSchema';

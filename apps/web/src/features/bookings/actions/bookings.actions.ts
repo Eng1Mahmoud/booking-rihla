@@ -1,7 +1,6 @@
 'use server';
-
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib/apiResult';
+import type { ApiResult } from '@/shared/lib';
 import { parseSchema } from '@/shared/lib/parseSchema';
 import { getBookingPaymentState } from '../lib/bookings.server';
 import {
@@ -15,7 +14,7 @@ import {
 } from '../schemas/bookingSchema';
 import type {
   Booking,
-  BookingPayment,
+  BookingPaymentData,
   BookingListPage,
   PaymentState,
 } from '../types/booking';
@@ -31,7 +30,7 @@ export async function createBookingAction(input: CreateBookingInput) {
 
 export async function checkoutAction(
   input: CheckoutInput,
-): Promise<ApiResult<BookingPayment>> {
+): Promise<ApiResult<BookingPaymentData>> {
   const parsed = await parseSchema(checkoutSchema, input);
   if (!parsed.success) return parsed.error;
   const { id, prepare, idempotencyKey } = parsed.data;
@@ -49,7 +48,7 @@ export async function checkoutAction(
     )
       return { ...attempt, data: undefined };
   }
-  return apiFetch<BookingPayment>('bookings/' + id + '/checkout', {
+  return apiFetch<BookingPaymentData>('bookings/' + id + '/checkout', {
     method: 'POST',
     body: {},
   });
@@ -57,12 +56,12 @@ export async function checkoutAction(
 
 export async function refreshPaymentAction(
   id: string,
-): Promise<ApiResult<BookingPayment>> {
+): Promise<ApiResult<BookingPaymentData>> {
   const parsed = await parseSchema(bookingIdSchema, id);
   if (!parsed.success) return parsed.error;
   const owned = await apiFetch<Booking>('bookings/' + parsed.data);
   if (!owned.success) return { ...owned, data: undefined };
-  return apiFetch<BookingPayment>(
+  return apiFetch<BookingPaymentData>(
     'bookings/' + parsed.data + '/payment/refresh',
     {
       method: 'POST',

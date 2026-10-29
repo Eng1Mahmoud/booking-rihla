@@ -2,11 +2,9 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { CreditCard, RefreshCw, ArrowUpRight, RotateCcw } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
-import { cn } from '@/shared/lib/cn';
+import { Button } from '@/shared/components/ui';
+import { ErrorNotice, EmptyState } from '@/shared/components/feedback';
+import { formatDate, formatTime, formatPrice, cn } from '@/shared/lib';
 import type { PaymentHistoryPage, PaymentHistoryItem } from '../types/payment';
 import { usePaymentHistory } from '../hooks/usePaymentHistory';
 

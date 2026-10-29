@@ -1,23 +1,21 @@
 'use client';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Form } from '@/shared/components/forms/Form';
-import { NameFields } from '@/shared/components/forms/NameFields';
-import {
-  FormDialog,
-  FormDialogActions,
-} from '@/shared/components/dialogs/FormDialog';
+import { Form, NameFields } from '@/shared/components/forms';
+import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
 import {
   stationInputSchema,
   type StationInput,
 } from '../schemas/stationSchema';
 import type { Station } from '../types/station';
-import { Field, FieldError, FieldLabel } from '@/shared/components/ui/field';
 import {
+  Field,
+  FieldError,
+  FieldLabel,
   NativeSelect,
   NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import type { City } from '@/features/cities/types/city';
+} from '@/shared/components/ui';
+import type { City } from '@/features/cities';
 
 export function StationEditor({
   entry,

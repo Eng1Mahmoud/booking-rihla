@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { BookingDetail } from '@/features/bookings/components/BookingDetail';
-import { getBookingDetails } from '@/features/bookings/lib/bookings.server';
-import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import { BookingDetail, getBookingDetails } from '@/features/bookings/server';
+import { ApiError, errorMessage } from '@/shared/lib';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 export default async function BookingPage({
   params,

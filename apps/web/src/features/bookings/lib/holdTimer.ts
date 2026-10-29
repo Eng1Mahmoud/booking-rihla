@@ -1,8 +1,8 @@
-import type { BookingPayment } from '../types/booking';
+import type { BookingPaymentData } from '../types/booking';
 
 /** Seconds left on the seat hold, adjusted for client clock drift from dataUpdatedAt. */
 export function remainingHoldSeconds(
-  payment: Pick<BookingPayment, 'expiresAt' | 'serverTime'>,
+  payment: Pick<BookingPaymentData, 'expiresAt' | 'serverTime'>,
   now: number,
   dataUpdatedAt: number,
 ) {

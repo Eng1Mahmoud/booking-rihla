@@ -2,8 +2,8 @@
 import { useEffect, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib/apiResult';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { invokeAction } from '@/shared/lib';
+import { useAuth } from '@/features/auth';
 import {
   getPaymentStatusAction,
   refreshPaymentAction,

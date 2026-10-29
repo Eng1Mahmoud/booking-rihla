@@ -8,7 +8,7 @@ import {
   tokensSchema,
   type AuthTokens,
 } from '@/shared/lib/session';
-import type { AuthUser } from '@/features/auth/types/auth';
+import type { AuthUser } from '@/features/auth';
 import { getProtectedRoute, getRouteDetails } from './roleRoutes';
 
 export async function authMiddleware(

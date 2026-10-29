@@ -1,4 +1,4 @@
-import { BookingsManager } from '@/features/bookings/components/BookingsManager';
+import { BookingsManager } from '@/features/bookings';
 export default async function BookingsPage({
   searchParams,
 }: {

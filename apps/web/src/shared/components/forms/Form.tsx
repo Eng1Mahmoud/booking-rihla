@@ -10,9 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { errorMessage } from '@/shared/lib/apiResult';
-import { Alert, AlertDescription } from '../ui/alert';
-import { cn } from '@/shared/lib/cn';
+import { errorMessage, cn } from '@/shared/lib';
+import { Alert, AlertDescription } from '../ui';
 
 type Props<Input extends FieldValues, Output extends FieldValues> = {
   schema: z.ZodType<Output, Input>;

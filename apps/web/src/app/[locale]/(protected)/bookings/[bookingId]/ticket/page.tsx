@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { TicketView } from '@/features/tickets/components/TicketView';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
-import { getApiDataOrThrow } from '@/shared/lib/apiResult';
-import { getTicketAction } from '@/features/tickets/actions/tickets.actions';
-import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import { TicketView, getTicketAction } from '@/features/tickets';
+import { getSignedInUser } from '@/features/auth/server';
+import { getApiDataOrThrow, ApiError, errorMessage } from '@/shared/lib';
 import { Link } from '@/i18n/navigation';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 

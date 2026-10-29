@@ -1,5 +1,4 @@
 'use client';
-
 import type { ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -9,7 +8,7 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
+} from '@/shared/components/ui';
 
 export function ConfirmDialog({
   open,

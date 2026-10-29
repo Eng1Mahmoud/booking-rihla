@@ -1,7 +1,7 @@
 'use client';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 export function RefreshPage({ label }: { label: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();

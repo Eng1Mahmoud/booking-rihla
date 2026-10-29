@@ -2,22 +2,19 @@
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Users, ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
+import { RowActionMenu, DataTable } from '@/shared/components/tables';
 import {
+  Button,
+  Input,
   NativeSelect,
   NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { formatReportTime } from '@/features/dashboard/lib/format';
-import { AdministratorRoleEditor } from '@/features/administrators/components/AdministratorRoleEditor';
-import type { ManagedUser } from '@/features/users/schemas/userSchema';
-import type { UserFilters } from '../schemas/userSchema';
+} from '@/shared/components/ui';
+import { ConfirmDialog } from '@/shared/components/dialogs';
+import { ListError, EmptyState } from '@/shared/components/feedback';
+import type { DataTableColumn } from '@/shared/lib';
+import { formatReportTime } from '@/features/dashboard';
+import { AdministratorRoleEditor } from '@/features/administrators';
+import type { ManagedUser, UserFilters } from '../schemas/userSchema';
 import { useUsers } from '../hooks/useUsers';
 export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
   const page = useUsers(),

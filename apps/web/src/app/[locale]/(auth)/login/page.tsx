@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import { BusFront, Check } from 'lucide-react';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
-import { AuthFlow } from '@/features/auth/components/forms/AuthFlow';
+import { getSignedInUser } from '@/features/auth/server';
+import { AuthFlow } from '@/features/auth';
 
 export default async function LoginPage({
   searchParams,

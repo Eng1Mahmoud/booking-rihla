@@ -1,4 +1,4 @@
-import { AdministratorsManager } from '@/features/administrators/components/AdministratorsManager';
+import { AdministratorsManager } from '@/features/administrators';
 export default async function AdministratorsPage() {
   return <AdministratorsManager />;
 }

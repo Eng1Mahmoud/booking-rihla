@@ -1,4 +1,4 @@
-import { TripBatchManager } from '@/features/trips/components/TripBatchManager';
+import { TripBatchManager } from '@/features/trips';
 export default function TripBatchPage() {
   return <TripBatchManager />;
 }

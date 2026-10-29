@@ -3,13 +3,10 @@ import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
-import { ApiError } from '@/shared/lib/apiResult';
-import { getApiDataOrThrow } from '@/shared/lib/apiResult';
-import type { Trip, SeatList } from '@/features/trips/types/trip';
-import { TripDetails } from '@/features/trips/components/TripDetails';
+import { Button } from '@/shared/components/ui';
+import { EmptyState, RefreshPage } from '@/shared/components/feedback';
+import { ApiError, getApiDataOrThrow } from '@/shared/lib';
+import { type Trip, type SeatList, TripDetails } from '@/features/trips';
 export default async function TripPage({
   params,
 }: {

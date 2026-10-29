@@ -2,7 +2,7 @@
 import { tripKeys } from './queryKeys';
 import { useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib/apiResult';
+import { invokeAction } from '@/shared/lib';
 import {
   getTripCatalogAction,
   getTripsAction,

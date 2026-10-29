@@ -1,15 +1,10 @@
 import 'server-only';
-
 import { apiFetch } from '@/shared/lib/api';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
-import {
-  ApiError,
-  getApiDataOrThrow,
-  type ApiResult,
-} from '@/shared/lib/apiResult';
+import { getSignedInUser } from '@/features/auth/server';
+import { ApiError, getApiDataOrThrow, type ApiResult } from '@/shared/lib';
 import type {
   Booking,
-  BookingPayment,
+  BookingPaymentData,
   BookingDetails,
   PaymentState,
 } from '../types/booking';
@@ -20,7 +15,7 @@ export async function getBookingPaymentState(
 ): Promise<ApiResult<PaymentState>> {
   // The payment endpoint checks authentication and booking ownership.
   const [payment, availability] = await Promise.all([
-    apiFetch<BookingPayment>('bookings/' + id + '/payment'),
+    apiFetch<BookingPaymentData>('bookings/' + id + '/payment'),
     apiFetch<{ checkoutEnabled: boolean }>('payments/availability'),
   ]);
   if (!payment.success || !payment.data) return { ...payment, data: undefined };

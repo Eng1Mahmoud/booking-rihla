@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { PageStatus } from '@/shared/components/feedback/PageStatus';
-import { Button } from '@/shared/components/ui/button';
+import { PageStatus } from '@/shared/components/feedback';
+import { Button } from '@/shared/components/ui';
 
 export const metadata = { robots: { index: false, follow: false } };
 

@@ -10,9 +10,8 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { SiteHeader } from '@/shared/components/layout/SiteHeader';
 import { SiteFooter } from '@/shared/components/layout/SiteFooter';
-import { AccountMenu } from '@/features/auth/components/navigation/AccountMenu';
-import { HeaderNavigation } from '@/features/auth/components/navigation/HeaderNavigation';
-import { AssistantWidget } from '@/features/assistant/components/AssistantWidget';
+import { AccountMenu, HeaderNavigation } from '@/features/auth';
+import { AssistantWidget } from '@/features/assistant';
 export const metadata: Metadata = {
   title: 'Rihla | Bus booking',
   description: 'Find a bus trip and choose your seat.',

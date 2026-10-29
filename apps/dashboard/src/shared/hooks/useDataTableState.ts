@@ -1,8 +1,7 @@
 'use client';
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PaginationState, Updater } from '@tanstack/react-table';
-import { DEFAULT_TABLE_PAGE_SIZE } from '@/shared/lib/pagination';
+import { DEFAULT_TABLE_PAGE_SIZE } from '@/shared/lib';
 
 export function useDataTableState<TFilters extends Record<string, string>>({
   initialFilters,

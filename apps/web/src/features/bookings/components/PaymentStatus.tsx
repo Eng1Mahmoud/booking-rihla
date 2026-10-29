@@ -1,10 +1,10 @@
 'use client';
-import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/lib/cn';
+import { Button } from '@/shared/components/ui';
+import { cn } from '@/shared/lib';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { paymentOutcome } from '@/features/bookings/lib/paymentState';
-import type { BookingPayment } from '@/features/bookings/types/booking';
+import { paymentOutcome } from '../lib/paymentState';
+import type { BookingPaymentData } from '../types/booking';
 
 const outcomeBorder: Record<string, string> = {
   paid: 'border-emerald-600',
@@ -18,7 +18,7 @@ const outcomeBorder: Record<string, string> = {
   refunded: 'border-muted-foreground',
 };
 
-export function PaymentStatus({ payment }: { payment: BookingPayment }) {
+export function PaymentStatus({ payment }: { payment: BookingPaymentData }) {
   const t = useTranslations('PaymentResult');
   const outcome = paymentOutcome(payment);
   return (

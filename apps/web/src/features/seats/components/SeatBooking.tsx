@@ -2,12 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { RefreshCw, ArrowRight } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { QueryError } from '@/shared/components/feedback/QueryError';
-import { errorMessage } from '@/shared/lib/apiResult';
-import { formatPrice } from '@/shared/lib/format';
+import { Button } from '@/shared/components/ui';
+import { QueryError } from '@/shared/components/feedback';
+import { errorMessage, formatPrice } from '@/shared/lib';
 import { Link } from '@/i18n/navigation';
-import type { SeatList, Trip } from '@/features/trips/types/trip';
+import type { SeatList, Trip } from '@/features/trips';
 import { PassengerForm } from './PassengerForm';
 import { SeatMap } from './SeatMap';
 import { useSeatBooking } from '../hooks/useSeatBooking';

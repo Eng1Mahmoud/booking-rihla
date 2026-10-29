@@ -1,12 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { Form } from '@/shared/components/forms/Form';
-import { FormInput } from '@/shared/components/forms/FormInput';
-import { NameFields } from '@/shared/components/forms/NameFields';
-import {
-  FormDialog,
-  FormDialogActions,
-} from '@/shared/components/dialogs/FormDialog';
+import { Form, FormInput, NameFields } from '@/shared/components/forms';
+import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
 import {
   busTypeInputSchema,
   type BusTypeInput,

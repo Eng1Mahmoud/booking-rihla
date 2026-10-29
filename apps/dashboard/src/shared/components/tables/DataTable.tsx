@@ -1,17 +1,12 @@
 'use client';
-
 import { useEffect, type ReactNode } from 'react';
 import { useTable, type RowData } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
+import type { DataTableState } from '@/shared/hooks';
+import { dataTableFeatures, type DataTableColumn, cn } from '@/shared/lib';
 import {
-  dataTableFeatures,
-  type DataTableColumn,
-} from '@/shared/lib/dataTable';
-import { cn } from '@/shared/lib/cn';
-import { Button } from '@/shared/components/ui/button';
-import { Skeleton } from '@/shared/components/ui/skeleton';
-import {
+  Button,
+  Skeleton,
   Table,
   TableBody,
   TableCaption,
@@ -19,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui/table';
+} from '@/shared/components/ui';
 import { DataTableToolbar, type DataTableSearch } from './DataTableToolbar';
 import { DataTablePagination } from './DataTablePagination';
 

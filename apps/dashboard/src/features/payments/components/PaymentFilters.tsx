@@ -1,17 +1,17 @@
 'use client';
 import { useId } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/shared/components/ui/button';
-import { DatePickr } from '@/shared/components/ui/date-pickr';
-import { Input } from '@/shared/components/ui/input';
 import {
+  Button,
+  DatePickr,
+  Input,
   NativeSelect,
   NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
+} from '@/shared/components/ui';
+import type { DataTableState } from '@/shared/hooks';
 import {
   emptyPaymentFilters,
-  type PaymentFilters as FilterValues,
+  type PaymentFilterValues as FilterValues,
 } from '../schemas/paymentSchema';
 const primary = ['reference', 'email', 'createdDate'];
 export function PaymentFilters({

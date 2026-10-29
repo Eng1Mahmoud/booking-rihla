@@ -1,8 +1,7 @@
 import type { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { createNameColumns } from '@/shared/components/tables/NameColumns';
-import { RowActions } from '@/shared/components/tables/RowActions';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
+import { createNameColumns, RowActions } from '@/shared/components/tables';
+import type { DataTableColumn } from '@/shared/lib';
 import type { City, CityRow } from '../types/city';
 
 export function createCityColumns({

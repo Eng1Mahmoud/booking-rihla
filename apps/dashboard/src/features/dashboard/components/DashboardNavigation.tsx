@@ -7,7 +7,8 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from '@/shared/components/ui/sheet';
+  Button,
+} from '@/shared/components/ui';
 import {
   BusFront,
   CreditCard,
@@ -26,10 +27,9 @@ import {
   ShieldCheck,
   QrCode,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
 import { Link, usePathname } from '@/i18n/navigation';
-import { cn } from '@/shared/lib/cn';
-import type { UserRole } from '@/features/auth/types/auth';
+import { cn } from '@/shared/lib';
+import type { UserRole } from '@/features/auth';
 import { getProtectedRoute } from '@/middleware/roleRoutes';
 function NavigationLinks({ role }: { role: UserRole }) {
   const t = useTranslations('Dashboard');

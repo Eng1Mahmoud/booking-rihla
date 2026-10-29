@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useIsMutating } from '@tanstack/react-query';
 import { authKeys } from '../../hooks/queryKeys';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { VerifyEmailForm } from './VerifyEmailForm';

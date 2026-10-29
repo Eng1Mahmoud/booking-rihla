@@ -2,10 +2,10 @@
 import { useTranslations } from 'next-intl';
 import { Check, DoorOpen, Toilet } from 'lucide-react';
 import { useId, useRef, type KeyboardEvent } from 'react';
-import { cn } from '@/shared/lib/cn';
-import { seatPosition } from '@/features/seats/lib/seatLayout';
-import type { Seat, SeatList } from '@/features/trips/types/trip';
-import { SeatIcon, SteeringWheel } from '@/features/seats/components/SeatIcon';
+import { cn } from '@/shared/lib';
+import { seatPosition } from '../lib/seatLayout';
+import type { Seat, SeatList } from '@/features/trips';
+import { SeatIcon, SteeringWheel } from './SeatIcon';
 
 export function SeatMap({
   seats,

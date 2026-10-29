@@ -2,7 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { apiFetch } from '@/shared/lib/api';
-import { getApiDataOrThrow } from '@/shared/lib/apiResult';
+import { getApiDataOrThrow } from '@/shared/lib';
 import { getSessionCookies } from '@/shared/lib/session';
 import type { AuthUser } from '../types/auth';
 

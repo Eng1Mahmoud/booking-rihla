@@ -1,5 +1,5 @@
 import type { BookingFilter } from '../schemas/bookingSchema';
-import type { Trip } from '@/features/trips/types/trip';
+import type { Trip } from '@/features/trips';
 export type Booking = {
   id: string;
   reference: string;
@@ -22,7 +22,7 @@ export type BookingListPage = {
     hasMore: boolean;
   };
 };
-export type BookingPayment = {
+export type BookingPaymentData = {
   bookingId: string;
   bookingStatus: string;
   paymentStatus: string;
@@ -34,7 +34,7 @@ export type BookingPayment = {
 };
 
 export type PaymentState = {
-  payment: BookingPayment;
+  payment: BookingPaymentData;
   checkoutEnabled: boolean;
 };
 export type BookingDetails = PaymentState & {

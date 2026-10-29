@@ -1,8 +1,7 @@
 'use client';
-
 import { Link } from '@/i18n/navigation';
 import { BusFront, ArrowRight } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import type { AssistantTrip } from '../schemas/resultSchemas';
 export {
   assistantTripSchema,

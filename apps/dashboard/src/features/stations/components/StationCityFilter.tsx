@@ -1,11 +1,8 @@
 'use client';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import type { City } from '@/features/cities/types/city';
+import { NativeSelect, NativeSelectOption } from '@/shared/components/ui';
+import type { City } from '@/features/cities';
 export function StationCityFilter({
   cities,
   value,

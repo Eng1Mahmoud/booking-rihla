@@ -1,9 +1,6 @@
 import { z } from 'zod';
-import {
-  cityInputSchema,
-  citySchema,
-} from '@/features/cities/schemas/citySchema';
-import { listQuerySchema } from '@/shared/schemas/listSchema';
+import { cityInputSchema, citySchema } from '@/features/cities';
+import { listQuerySchema } from '@/shared/schemas';
 export const stationInputSchema = cityInputSchema.extend({ cityId: z.uuid() });
 export const stationSchema = stationInputSchema.extend({ id: z.uuid() });
 export const stationRowSchema = stationSchema.extend({ city: citySchema });

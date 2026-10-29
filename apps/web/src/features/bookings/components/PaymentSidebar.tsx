@@ -1,6 +1,6 @@
 'use client';
-import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/lib/cn';
+import { Button } from '@/shared/components/ui';
+import { cn, formatPrice } from '@/shared/lib';
 import { useTranslations } from 'next-intl';
 import {
   Clock,
@@ -9,11 +9,10 @@ import {
   AlertTriangle,
   LoaderCircle,
 } from 'lucide-react';
-import { formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
-import type { Booking, BookingPayment } from '../types/booking';
+import type { Booking, BookingPaymentData } from '../types/booking';
 import { PaymentStatus } from './PaymentStatus';
-import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
+import { ErrorNotice } from '@/shared/components/feedback';
 
 function OutcomeIcon({ outcome }: { outcome: string }) {
   if (outcome === 'paid') return <CheckCircle2 size={21} />;
@@ -60,7 +59,7 @@ export function PaymentSidebar({
   onRefresh,
 }: {
   booking: Booking;
-  payment: BookingPayment;
+  payment: BookingPaymentData;
   outcome: string;
   seconds: number;
   showTimer: boolean;

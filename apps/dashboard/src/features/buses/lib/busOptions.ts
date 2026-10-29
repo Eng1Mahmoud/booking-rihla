@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib/apiResult';
+import { invokeAction } from '@/shared/lib';
 import { getBusOptionsAction } from '../actions/bus.actions';
 export function busOptionsQuery(locale: string) {
   return queryOptions({

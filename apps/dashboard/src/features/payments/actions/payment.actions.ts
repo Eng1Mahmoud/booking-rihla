@@ -1,9 +1,9 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { Payment, PaymentFilters } from '../schemas/paymentSchema';
+import type { Payment, PaymentFilterValues } from '../schemas/paymentSchema';
 
 export async function getPaymentsAction(
-  input: PaymentFilters & { limit: number; offset: number },
+  input: PaymentFilterValues & { limit: number; offset: number },
 ) {
   const { limit, offset, ...filters } = input;
   const params = new URLSearchParams({

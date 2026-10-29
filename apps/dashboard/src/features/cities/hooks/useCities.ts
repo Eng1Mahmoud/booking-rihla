@@ -1,9 +1,11 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { useConfirmation } from '@/shared/hooks/useConfirmation';
-import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import {
+  useDataTableState,
+  useConfirmation,
+  useDialogFocus,
+} from '@/shared/hooks';
 import { useCitiesData } from './useCitiesData';
 import { createCityColumns } from '../lib/cityColumns';
 import type { CityInput } from '../schemas/citySchema';

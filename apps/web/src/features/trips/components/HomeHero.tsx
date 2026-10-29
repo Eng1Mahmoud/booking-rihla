@@ -2,7 +2,7 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { Armchair, ArrowLeft, Check, MapPin } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 
 export async function HomeHero({ children }: { children: ReactNode }) {
   const t = await getTranslations('Home');

@@ -1,7 +1,6 @@
 import type { useTranslations } from 'next-intl';
-import { createNameColumns } from '@/shared/components/tables/NameColumns';
-import { RowActions } from '@/shared/components/tables/RowActions';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
+import { createNameColumns, RowActions } from '@/shared/components/tables';
+import type { DataTableColumn } from '@/shared/lib';
 import type { Amenity } from '../types/amenity';
 
 export function createAmenityColumns({

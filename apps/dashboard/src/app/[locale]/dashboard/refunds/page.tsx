@@ -1,4 +1,4 @@
-import { RefundsManager } from '@/features/refunds/components/RefundsManager';
+import { RefundsManager } from '@/features/refunds';
 export default async function RefundsPage() {
   return <RefundsManager />;
 }

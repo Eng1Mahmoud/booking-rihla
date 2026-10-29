@@ -8,9 +8,9 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@/shared/components/ui/dialog';
-import { Button } from '@/shared/components/ui/button';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+  Button,
+} from '@/shared/components/ui';
+import { SubmitButton } from '@/shared/components/forms';
 
 export function FormDialog({
   title,

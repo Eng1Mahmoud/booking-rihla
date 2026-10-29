@@ -8,7 +8,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import type { TripCatalog } from '../types/trip';
 import { SeatPreview } from './SeatPreview';
 

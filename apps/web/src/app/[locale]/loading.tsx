@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { JourneyLoading } from '@/shared/components/feedback/JourneyLoading';
+import { JourneyLoading } from '@/shared/components/feedback';
 
 export default async function Loading() {
   const t = await getTranslations('Forms');

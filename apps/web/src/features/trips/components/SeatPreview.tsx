@@ -1,9 +1,8 @@
 'use client';
-
 import { useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { Armchair, Check, CircleGauge } from 'lucide-react';
-import { cn } from '@/shared/lib/cn';
+import { cn } from '@/shared/lib';
 
 const seats = Array.from({ length: 12 }, (_, index) => index + 1);
 const unavailable = [3, 8];

@@ -2,11 +2,15 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { BusFront, ArrowLeft, MapPin } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { QueryError } from '@/shared/components/feedback/QueryError';
-import { displayName, formatDate, formatTime } from '@/shared/lib/format';
-import { errorMessage } from '@/shared/lib/apiResult';
-import { SeatBooking } from '@/features/seats/components/SeatBooking';
+import { Button } from '@/shared/components/ui';
+import { QueryError } from '@/shared/components/feedback';
+import {
+  displayName,
+  formatDate,
+  formatTime,
+  errorMessage,
+} from '@/shared/lib';
+import { SeatBooking } from '@/features/seats';
 import { cairoDate } from '../schemas/searchSchema';
 import { useTripDetails } from '../hooks/useTrips';
 import type { Trip, SeatList } from '../types/trip';

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
@@ -13,9 +12,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Input } from '@/shared/components/ui/input';
-import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/lib/cn';
+import { Input, Button } from '@/shared/components/ui';
+import { cn } from '@/shared/lib';
 
 const categories = [
   {

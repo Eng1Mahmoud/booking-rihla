@@ -1,12 +1,16 @@
 'use client';
-import { Button } from '@/shared/components/ui/button';
+import { Button } from '@/shared/components/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTicket } from '../hooks/useTicket';
-import { errorMessage } from '@/shared/lib/apiResult';
+import {
+  errorMessage,
+  formatDate,
+  formatTime,
+  formatPrice,
+} from '@/shared/lib';
 import Image from 'next/image';
 import { Printer } from 'lucide-react';
 import type { TicketViewData } from '../types/ticket';
-import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import { Link } from '@/i18n/navigation';
 export function TicketView({
   initial,

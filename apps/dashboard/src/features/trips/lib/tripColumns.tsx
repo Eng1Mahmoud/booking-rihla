@@ -1,11 +1,8 @@
 import { Ban } from 'lucide-react';
-import { RowActions } from '@/shared/components/tables/RowActions';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { routeLabel } from '@/features/routes/lib/routeColumns';
-import {
-  formatReportTime,
-  formatGrossPaid,
-} from '@/features/dashboard/lib/format';
+import { RowActions } from '@/shared/components/tables';
+import type { DataTableColumn } from '@/shared/lib';
+import { routeLabel } from '@/features/routes';
+import { formatReportTime, formatGrossPaid } from '@/features/dashboard';
 import type { Trip } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
 export function createTripColumns({

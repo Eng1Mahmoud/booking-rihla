@@ -2,15 +2,14 @@
 import { useId, useState } from 'react';
 import { z } from 'zod';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { Form } from '@/shared/components/forms/Form';
-import { DatePickr, TimePicker } from '@/shared/components/forms/DatePickr';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { Button } from '@/shared/components/ui';
 import {
-  cairoDate,
-  isCalendarDate,
-  searchHref,
-} from '@/features/trips/schemas/searchSchema';
+  Form,
+  DatePickr,
+  TimePicker,
+  SubmitButton,
+} from '@/shared/components/forms';
+import { cairoDate, isCalendarDate, searchHref } from '@/features/trips';
 import type { AssistantSearch } from '../schemas/resultSchemas';
 
 export function AssistantSuggestions({

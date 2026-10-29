@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { bookingFiltersSchema } from '@/features/bookings/schemas/bookingSchema';
+import { bookingFiltersSchema } from '@/features/bookings';
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const paymentSchema = z.object({
   id: z.uuid(),
@@ -92,9 +92,9 @@ export const paymentListSchema = paymentFiltersSchema.extend({
   offset: z.number().int().min(0).max(100000),
 });
 export type Payment = z.infer<typeof paymentSchema>;
-export type PaymentFilters = z.infer<typeof paymentFiltersSchema>;
+export type PaymentFilterValues = z.infer<typeof paymentFiltersSchema>;
 
-export const emptyPaymentFilters: PaymentFilters = {
+export const emptyPaymentFilters: PaymentFilterValues = {
   reference: '',
   email: '',
   tripId: '',

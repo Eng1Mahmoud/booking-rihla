@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib/apiResult';
-import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import { invokeAction } from '@/shared/lib';
+import { useActionErrors } from '@/shared/hooks';
 import {
   getTripOptionsAction,
   previewTripBatchAction,

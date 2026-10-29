@@ -15,11 +15,10 @@ import {
   forgotPasswordAction,
   resetPasswordAction,
 } from '../actions/auth.actions';
-import { ApiError, invokeAction } from '@/shared/lib/apiResult';
-import type { LoginInput, RegisterInput } from '../types/auth';
+import { ApiError, invokeAction } from '@/shared/lib';
+import type { LoginInput, RegisterInput, AuthSession } from '../types/auth';
 import type { RecoveryValues } from '../schemas/recoverySchema';
-import type { AuthSession } from '../types/auth';
-import { authKeys } from '@/features/auth/hooks/queryKeys';
+import { authKeys } from './queryKeys';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 

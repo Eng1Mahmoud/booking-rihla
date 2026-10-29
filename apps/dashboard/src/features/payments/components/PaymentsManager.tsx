@@ -2,15 +2,10 @@
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { CreditCard, Eye } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { ListError } from '@/shared/components/feedback/ListError';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import {
-  formatReportTime,
-  formatGrossPaid,
-} from '@/features/dashboard/lib/format';
+import { RowActionMenu, DataTable } from '@/shared/components/tables';
+import { EmptyState, ListError } from '@/shared/components/feedback';
+import type { DataTableColumn } from '@/shared/lib';
+import { formatReportTime, formatGrossPaid } from '@/features/dashboard';
 import { usePayments } from '../hooks/usePayments';
 import { PaymentDetails } from './PaymentDetails';
 import type { Payment } from '../schemas/paymentSchema';

@@ -1,11 +1,12 @@
-import { getTripCatalog } from '@/features/trips/lib/trips.server';
+import {
+  getTripCatalog,
+  HomeHero,
+  HomeSections,
+  PopularRoutes,
+} from '@/features/trips/server';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { HomeHero } from '@/features/trips/components/HomeHero';
-import { HomeSearch } from '@/features/trips/components/HomeSearch';
-import { HomeSections } from '@/features/trips/components/HomeSections';
-import { PopularRoutes } from '@/features/trips/components/PopularRoutes';
-import { cairoDate } from '@/features/trips/schemas/searchSchema';
+import { HomeSearch, cairoDate } from '@/features/trips';
 export async function generateMetadata({
   params,
 }: {

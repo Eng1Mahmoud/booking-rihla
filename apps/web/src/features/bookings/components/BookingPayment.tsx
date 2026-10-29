@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { BookingDetails } from '../types/booking';
-import { ApiError } from '@/shared/lib/apiResult';
+import { ApiError } from '@/shared/lib';
 import { useCheckout } from '../hooks/useBookings';
 import { useBookingPayment } from '../hooks/useBookingPayment';
-import { paymentOutcome } from '@/features/bookings/lib/paymentState';
-import { remainingHoldSeconds } from '@/features/bookings/lib/holdTimer';
-import { PaymentChecking } from '@/features/bookings/components/PaymentChecking';
-import { PaymentSidebar } from '@/features/bookings/components/PaymentSidebar';
-import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
+import { paymentOutcome } from '../lib/paymentState';
+import { remainingHoldSeconds } from '../lib/holdTimer';
+import { PaymentChecking } from './PaymentChecking';
+import { PaymentSidebar } from './PaymentSidebar';
+import { ErrorNotice } from '@/shared/components/feedback';
 
 export function BookingPayment({
   initial,

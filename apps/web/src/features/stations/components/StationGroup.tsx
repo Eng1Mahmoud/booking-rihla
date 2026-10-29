@@ -1,9 +1,8 @@
 'use client';
-
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowUpRight, MapPin } from 'lucide-react';
-import type { StationGroupData } from '@/features/stations/hooks/useStationDirectory';
-import { displayName } from '@/shared/lib/format';
+import type { StationGroupData } from '../hooks/useStationDirectory';
+import { displayName } from '@/shared/lib';
 
 export function StationGroup({ id, city, stations }: StationGroupData) {
   const t = useTranslations('Stations');

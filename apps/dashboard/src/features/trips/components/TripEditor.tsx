@@ -1,15 +1,10 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
-import { Form } from '@/shared/components/forms/Form';
+import { Form, FormInput, FormSelect } from '@/shared/components/forms';
 import { TripTimingFields } from './TripTimingFields';
-import { FormInput } from '@/shared/components/forms/FormInput';
-import { FormSelect } from '@/shared/components/forms/FormSelect';
-import {
-  FormDialog,
-  FormDialogActions,
-} from '@/shared/components/dialogs/FormDialog';
-import { NativeSelectOption } from '@/shared/components/ui/native-select';
-import { routeLabel } from '@/features/routes/lib/routeColumns';
+import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
+import { NativeSelectOption } from '@/shared/components/ui';
+import { routeLabel } from '@/features/routes';
 import {
   tripFormSchema,
   type Trip,

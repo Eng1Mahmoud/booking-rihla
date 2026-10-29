@@ -1,8 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { BusFront } from 'lucide-react';
-import { QueryError } from '@/shared/components/feedback/QueryError';
-import { JourneyLoading } from '@/shared/components/feedback/JourneyLoading';
+import { QueryError, JourneyLoading } from '@/shared/components/feedback';
 import { TripSearchForm } from './TripSearchForm';
 import { useTripCatalog } from '../hooks/useTrips';
 import type { TripCatalog } from '../types/trip';

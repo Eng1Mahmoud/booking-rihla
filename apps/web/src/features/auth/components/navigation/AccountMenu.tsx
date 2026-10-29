@@ -5,15 +5,15 @@ import { ChevronDown, LogOut, LogIn } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useAuth, useLogout } from '../../hooks/useAuth';
 import { useLoginHref } from '../../hooks/useLoginHref';
-import { errorMessage } from '@/shared/lib/apiResult';
-import { Button } from '@/shared/components/ui/button';
+import { errorMessage } from '@/shared/lib';
 import {
+  Button,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from '@/shared/components/ui/dropdown-menu';
+} from '@/shared/components/ui';
 import { UserAvatar } from '@/features/account/components/UserAvatar';
 import { accountLinks } from '@/features/account/accountLinks';
 

@@ -1,5 +1,5 @@
 import { routing } from '@/i18n/routing';
-import type { UserRole } from '@/features/auth/types/auth';
+import type { UserRole } from '@/features/auth';
 
 const allRoles: UserRole[] = ['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'];
 

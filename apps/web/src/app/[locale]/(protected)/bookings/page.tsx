@@ -1,16 +1,14 @@
 import { apiFetch } from '@/shared/lib/api';
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { AccountLayout } from '@/features/account/components/AccountLayout';
-import { BookingHistory } from '@/features/bookings/components/BookingHistory';
-import { bookingsListInputSchema } from '@/features/bookings/schemas/bookingSchema';
-import type { BookingListPage } from '@/features/bookings/types/booking';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { AccountLayout } from '@/features/account/server';
 import {
-  ApiError,
-  getApiDataOrThrow,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+  BookingHistory,
+  bookingsListInputSchema,
+  type BookingListPage,
+} from '@/features/bookings';
+import { getSignedInUser } from '@/features/auth/server';
+import { ApiError, getApiDataOrThrow, errorMessage } from '@/shared/lib';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export default async function BookingsPage({

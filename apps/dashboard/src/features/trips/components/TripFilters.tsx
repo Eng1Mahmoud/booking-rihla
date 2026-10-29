@@ -1,12 +1,9 @@
 'use client';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
-import { routeLabel } from '@/features/routes/lib/routeColumns';
+import { NativeSelect, NativeSelectOption } from '@/shared/components/ui';
+import type { DataTableState } from '@/shared/hooks';
+import { routeLabel } from '@/features/routes';
 import type { TripListQuery } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
 type Filters = Pick<TripListQuery, 'routeId' | 'busId' | 'status'>;

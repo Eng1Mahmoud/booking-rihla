@@ -1,16 +1,15 @@
 'use client';
-
 import { useLocale, useTranslations } from 'next-intl';
 import { MapPin, Search } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import {
+  Button,
+  Input,
   NativeSelect,
   NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import { Skeleton } from '@/shared/components/ui/skeleton';
-import { QueryError } from '@/shared/components/feedback/QueryError';
-import type { TripCatalog } from '@/features/trips/types/trip';
+  Skeleton,
+} from '@/shared/components/ui';
+import { QueryError } from '@/shared/components/feedback';
+import type { TripCatalog } from '@/features/trips';
 import { StationGroup } from './StationGroup';
 import { useStationDirectory } from '../hooks/useStationDirectory';
 

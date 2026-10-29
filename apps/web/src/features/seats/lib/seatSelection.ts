@@ -1,4 +1,4 @@
-import type { Seat } from '@/features/trips/types/trip';
+import type { Seat } from '@/features/trips';
 
 /** Parse ?seats=id1,id2 and keep only currently available ids. */
 export function seatIdsFromQuery(value: string | null, seats: Seat[]) {

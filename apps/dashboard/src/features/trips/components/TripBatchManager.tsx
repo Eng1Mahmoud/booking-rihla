@@ -3,17 +3,12 @@ import { useLocale } from 'next-intl';
 import { useId } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { Form } from '@/shared/components/forms/Form';
-import { DatePickr, TimePicker } from '@/shared/components/forms/DatePickr';
-import { FormInput } from '@/shared/components/forms/FormInput';
-import { FormSelect } from '@/shared/components/forms/FormSelect';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
-import { NativeSelectOption } from '@/shared/components/ui/native-select';
-import { FieldError } from '@/shared/components/ui/field';
-import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { ListError } from '@/shared/components/feedback/ListError';
 import {
+  Button,
+  NativeSelectOption,
+  FieldError,
+  Alert,
+  AlertDescription,
   Table,
   TableHeader,
   TableHead,
@@ -21,9 +16,18 @@ import {
   TableCell,
   TableRow,
   TableCaption,
-} from '@/shared/components/ui/table';
-import { routeLabel } from '@/features/routes/lib/routeColumns';
-import { formatReportTime } from '@/features/dashboard/lib/format';
+} from '@/shared/components/ui';
+import {
+  Form,
+  DatePickr,
+  TimePicker,
+  FormInput,
+  FormSelect,
+  SubmitButton,
+} from '@/shared/components/forms';
+import { ListError } from '@/shared/components/feedback';
+import { routeLabel } from '@/features/routes';
+import { formatReportTime } from '@/features/dashboard';
 import { batchFormSchema } from '../schemas/tripSchema';
 import { useTripBatch } from '../hooks/useTripBatch';
 export function TripBatchManager() {

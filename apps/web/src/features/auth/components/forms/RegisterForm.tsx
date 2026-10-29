@@ -2,9 +2,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { z } from 'zod';
-import { Form } from '@/shared/components/forms/Form';
-import { FormInput } from '@/shared/components/forms/FormInput';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { Form, FormInput, SubmitButton } from '@/shared/components/forms';
 import { registerSchema } from '../../schemas/authSchema';
 import { useRegister } from '../../hooks/useAuth';
 type Values = z.input<typeof registerSchema>;

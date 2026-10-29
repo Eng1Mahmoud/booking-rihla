@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Dialog } from 'radix-ui';
@@ -17,11 +16,11 @@ import {
   LogIn,
 } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
-import { cn } from '@/shared/lib/cn';
-import { Button } from '@/shared/components/ui/button';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useLoginHref } from '@/features/auth/hooks/useLoginHref';
-import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
+import { cn } from '@/shared/lib';
+import { Button } from '@/shared/components/ui';
+import { useAuth } from '../../hooks/useAuth';
+import { useLoginHref } from '../../hooks/useLoginHref';
+import { LanguageSwitcher } from '@/shared/components/layout';
 
 export function HeaderNavigation() {
   const t = useTranslations('Header');

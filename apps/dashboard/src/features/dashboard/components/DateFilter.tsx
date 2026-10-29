@@ -2,9 +2,7 @@
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { useRouter } from '@/i18n/navigation';
-import { Form } from '@/shared/components/forms/Form';
-import { DatePickr } from '@/shared/components/forms/DatePickr';
-import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { Form, DatePickr, SubmitButton } from '@/shared/components/forms';
 import { reportDateSchema } from '../schemas/reportSchema';
 const schema = z.object({ date: reportDateSchema });
 export function DateFilter({ date }: { date: string }) {

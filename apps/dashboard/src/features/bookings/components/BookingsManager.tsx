@@ -2,18 +2,11 @@
 import { useMemo, useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Ticket, Eye } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
-import { Button } from '@/shared/components/ui/button';
-import { DatePickr } from '@/shared/components/ui/date-pickr';
-import { Input } from '@/shared/components/ui/input';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { ListError } from '@/shared/components/feedback/ListError';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import {
-  formatReportTime,
-  formatGrossPaid,
-} from '@/features/dashboard/lib/format';
+import { RowActionMenu, DataTable } from '@/shared/components/tables';
+import { Button, DatePickr, Input } from '@/shared/components/ui';
+import { EmptyState, ListError } from '@/shared/components/feedback';
+import type { DataTableColumn } from '@/shared/lib';
+import { formatReportTime, formatGrossPaid } from '@/features/dashboard';
 import { useBookings } from '../hooks/useBookings';
 import { BookingDetails } from './BookingDetails';
 import type { Booking } from '../schemas/bookingSchema';

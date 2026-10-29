@@ -1,4 +1,4 @@
-import { CitiesManager } from '@/features/cities/components/CitiesManager';
+import { CitiesManager } from '@/features/cities';
 export default function CitiesPage() {
   return <CitiesManager />;
 }

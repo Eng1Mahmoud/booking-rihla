@@ -1,8 +1,8 @@
 'use client';
 import { useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { invokeAction } from '@/shared/lib/apiResult';
+import { useAuth } from '@/features/auth';
+import { invokeAction } from '@/shared/lib';
 import { getPaymentHistoryAction } from '../actions/account.actions';
 import type { PaymentHistoryPage } from '../types/payment';
 import { accountKeys } from './queryKeys';

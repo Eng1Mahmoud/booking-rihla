@@ -5,8 +5,13 @@ import {
   type FieldValues,
   type FieldPath,
 } from 'react-hook-form';
-import { NativeSelect } from '../ui/native-select';
-import { Field, FieldLabel, FieldDescription, FieldError } from '../ui/field';
+import {
+  NativeSelect,
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+} from '../ui';
 type Props<T extends FieldValues> = Omit<
   ComponentProps<typeof NativeSelect>,
   'name' | 'id'

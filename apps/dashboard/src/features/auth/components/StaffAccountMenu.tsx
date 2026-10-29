@@ -4,15 +4,15 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
 import {
+  Button,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from '@/shared/components/ui/dropdown-menu';
-import { errorMessage, invokeAction } from '@/shared/lib/apiResult';
+} from '@/shared/components/ui';
+import { errorMessage, invokeAction } from '@/shared/lib';
 import { logoutAction } from '../actions/auth.actions';
 import type { UserRole } from '../types/auth';
 

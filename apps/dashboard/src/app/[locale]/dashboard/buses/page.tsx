@@ -1,4 +1,4 @@
-import { BusesManager } from '@/features/buses/components/BusesManager';
+import { BusesManager } from '@/features/buses';
 export default function BusesPage() {
   return <BusesManager />;
 }

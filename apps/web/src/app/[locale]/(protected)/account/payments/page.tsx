@@ -2,16 +2,14 @@ import { apiFetch } from '@/shared/lib/api';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { AccountLayout } from '@/features/account/components/AccountLayout';
-import { PaymentHistory } from '@/features/account/components/PaymentHistory';
-import { paymentHistoryOffsetSchema } from '@/features/account/schemas/paymentHistorySchema';
-import type { PaymentHistoryPage } from '@/features/account/types/payment';
-import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { AccountLayout } from '@/features/account/server';
 import {
-  ApiError,
-  getApiDataOrThrow,
-  errorMessage,
-} from '@/shared/lib/apiResult';
+  PaymentHistory,
+  paymentHistoryOffsetSchema,
+  type PaymentHistoryPage,
+} from '@/features/account';
+import { getSignedInUser } from '@/features/auth/server';
+import { ApiError, getApiDataOrThrow, errorMessage } from '@/shared/lib';
 import { ReadError } from '@/shared/components/feedback/ReadError';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };

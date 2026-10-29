@@ -1,10 +1,9 @@
 'use client';
 import { Plus, Route as RouteIcon } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
+import { Button } from '@/shared/components/ui';
+import { DataTable } from '@/shared/components/tables';
+import { ListError, EmptyState } from '@/shared/components/feedback';
+import { ConfirmDialog } from '@/shared/components/dialogs';
 import { useRoutes } from '../hooks/useRoutes';
 import { RouteEditor } from './RouteEditor';
 import { RouteFilters } from './RouteFilters';

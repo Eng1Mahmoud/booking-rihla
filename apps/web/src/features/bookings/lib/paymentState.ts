@@ -1,4 +1,4 @@
-import type { BookingPayment } from '@/features/bookings/types/booking';
+import type { BookingPaymentData } from '../types/booking';
 
 export function isPaymentPending(status: string) {
   return ['INITIALIZING', 'AWAITING_PAYMENT', 'UNKNOWN', 'PROCESSING'].includes(
@@ -7,12 +7,12 @@ export function isPaymentPending(status: string) {
 }
 
 /** True when the temporary seat hold has ended on the server clock. */
-export function isHoldExpired(payment: BookingPayment) {
+export function isHoldExpired(payment: BookingPaymentData) {
   if (!payment.expiresAt) return false;
   return Date.parse(payment.expiresAt) <= Date.parse(payment.serverTime);
 }
 
-export function paymentOutcome(payment: BookingPayment) {
+export function paymentOutcome(payment: BookingPaymentData) {
   if (payment.bookingStatus === 'CANCELLED') return 'cancelled';
   if (payment.paymentStatus === 'REFUNDED') return 'refunded';
   if (payment.paymentStatus === 'REFUND_REQUIRED') return 'refundRequired';
