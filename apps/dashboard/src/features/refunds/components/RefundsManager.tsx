@@ -1,22 +1,40 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import { Undo2 } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatGrossPaid } from '@/features/dashboard/lib/format';
-import { useRefunds } from '../hooks/useRefunds';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { Undo2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getRefundsAction } from '../actions/refund.actions';
 import { useRefundColumns } from '../hooks/useRefundColumns';
-
 export function RefundsManager() {
-  const page = useRefunds();
   const locale = useLocale();
-  const t = useTranslations('Refunds');
-  const columns = useRefundColumns({
-    blockedIds: page.blocked,
-    onAction: page.open,
+
+  const list = useDataTableState({ initialFilters: {} });
+  const query = useQuery({
+    queryKey: ['refunds', locale, list.params.limit, list.params.offset],
+    queryFn: () =>
+      invokeAction(() =>
+        getRefundsAction({
+          limit: list.params.limit,
+          offset: list.params.offset,
+        }),
+      ),
   });
+  const { columns, ...page } = useRefundColumns();
+  async function refresh() {
+    if (page.pending) return;
+    const result = await query.refetch();
+    // An uncertain refund can be retried only after fresh server data is available.
+    if (result.isSuccess) page.clearBlocked();
+  }
+
+  const t = useTranslations('Refunds');
+
   return (
     <section className="min-w-0">
       <h1
@@ -32,26 +50,26 @@ export function RefundsManager() {
       <p role="status" className="mb-4 text-primary">
         {page.notice}
       </p>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
+          state={list}
           columns={columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-240 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
-          onRefresh={page.refresh}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
+          onRefresh={refresh}
           emptyState={
             <EmptyState
               icon={Undo2}

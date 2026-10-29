@@ -1,23 +1,29 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { Eye } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import {
-  formatReportTime,
   formatGrossPaid,
+  formatReportTime,
 } from '@/features/dashboard/lib/format';
-import type { Payment } from '../schemas/paymentSchema';
-
-export function usePaymentColumns({
-  onDetails,
-}: {
-  onDetails: (id: string) => void;
-}): DataTableColumn<Payment>[] {
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import { type DataTableColumn } from '@/shared/lib/dataTable';
+import { Eye } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useCallback, useState } from 'react';
+import { type Payment } from '../schemas/paymentSchema';
+export function usePaymentColumns() {
   const locale = useLocale();
   const t = useTranslations('Payments');
   const states = useTranslations('States');
-  return [
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [selected, setSelected] = useState<string | null>(null);
+  const open = useCallback(
+    (id: string) => {
+      focus.remember();
+      setSelected(id);
+    },
+    [focus.remember],
+  );
+  const columns: DataTableColumn<Payment>[] = [
     {
       id: 'reference',
       header: t('reference'),
@@ -70,11 +76,18 @@ export function usePaymentColumns({
             {
               label: t('details'),
               icon: Eye,
-              onSelect: () => onDetails(row.original.id),
+              onSelect: () => open(row.original.id),
             },
           ]}
         />
       ),
     },
   ];
+  return {
+    columns,
+    focus,
+    selected,
+    open,
+    close: () => setSelected(null),
+  };
 }

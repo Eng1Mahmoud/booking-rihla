@@ -1,17 +1,64 @@
 'use client';
-import { useId } from 'react';
-import { Plus, CalendarDays } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui/button';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { useTrips } from '../hooks/useTrips';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { CalendarDays, Plus } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { useId } from 'react';
+import { getTripOptionsAction, getTripsAction } from '../actions/trip.actions';
+import { useTripColumns } from '../hooks/useTripColumns';
+import { type TripListQuery } from '../schemas/tripSchema';
+import { type TripOptions } from '../types/trip';
 import { TripEditor } from './TripEditor';
 import { TripFilters } from './TripFilters';
+const emptyOptions: TripOptions = { routes: [], stations: [], buses: [] };
 export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
-  const page = useTrips(superAdmin);
+  const locale = useLocale();
+  const client = useQueryClient();
+  const list = useDataTableState<{
+    routeId: string;
+    busId: string;
+    status: TripListQuery['status'];
+  }>({ initialFilters: { routeId: '', busId: '', status: '' } });
+  const query = useQuery({
+    queryKey: ['trips', locale, list.params],
+    queryFn: async () => {
+      const [page, options] = await Promise.all([
+        invokeAction(() =>
+          getTripsAction({
+            limit: list.params.limit,
+            offset: list.params.offset,
+            ...list.filters,
+          }),
+        ),
+        client.fetchQuery({
+          queryKey: ['catalog', locale, 'trip-options'],
+          queryFn: () => invokeAction(getTripOptionsAction),
+        }),
+      ]);
+      return { ...page, options };
+    },
+  });
+  const options = query.data?.options ?? emptyOptions;
+  const { columns, ...page } = useTripColumns({
+    options,
+    superAdmin,
+  });
+  async function refresh() {
+    page.clearNotice();
+    await client.invalidateQueries({
+      queryKey: ['catalog', locale, 'trip-options'],
+      refetchType: 'none',
+    });
+    await query.refetch();
+  }
+
   const t = page.t;
   const reasonId = useId();
   const reasonInvalid =
@@ -36,9 +83,9 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
             ref={page.focus.fallbackRef}
             onClick={page.create}
             disabled={
-              !page.query.data ||
-              !page.options.routes.some((route) => route.isActive) ||
-              !page.options.buses.some((bus) => bus.isActive)
+              !query.data ||
+              !options.routes.some((route) => route.isActive) ||
+              !options.buses.some((bus) => bus.isActive)
             }
             className="min-h-12"
           >
@@ -50,31 +97,31 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
       <p role="status" aria-live="polite" className="mb-4 text-sm text-primary">
         {page.notice}
       </p>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t(page.query.data ? 'staleHint' : 'readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
-          columns={page.columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          state={list}
+          columns={columns}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-300 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
-          onRefresh={page.refresh}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
+          onRefresh={refresh}
           filters={(state) => (
             <TripFilters
               state={state}
-              options={page.options}
-              disabled={page.query.isFetching}
+              options={options}
+              disabled={query.isFetching}
             />
           )}
           emptyState={
@@ -89,7 +136,7 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
       {page.editorOpen && (
         <TripEditor
           entry={page.editing}
-          options={page.options}
+          options={options}
           pending={page.save.isPending}
           onSave={(values) => page.save.mutateAsync(values)}
           onClose={page.closeEditor}

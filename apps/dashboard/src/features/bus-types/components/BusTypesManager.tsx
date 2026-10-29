@@ -1,19 +1,41 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { BusFront, Plus } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { Button } from '@/shared/components/ui/button';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { useBusTypes } from '../hooks/useBusTypes';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { BusFront, Plus } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getBusTypesAction } from '../actions/busType.actions';
+import { useBusTypeColumns } from '../hooks/useBusTypeColumns';
+import { type BusType } from '../types/busType';
 import { BusTypeEditor } from './BusTypeEditor';
-import type { BusType } from '../types/busType';
 const emptyRows: BusType[] = [];
-
 export function BusTypesManager() {
   const t = useTranslations('BusTypes');
-  const page = useBusTypes();
+  const locale = useLocale();
+  const list = useDataTableState({ initialFilters: {} });
+
+  const query = useQuery({
+    queryKey: ['fleet', locale, 'bus-types', list.params],
+    queryFn: () =>
+      invokeAction(() =>
+        getBusTypesAction({
+          search: list.params.search,
+          limit: list.params.limit,
+          offset: list.params.offset,
+        }),
+      ),
+  });
+  const { columns, ...page } = useBusTypeColumns();
+  function refresh() {
+    page.clearNotice();
+    void query.refetch();
+  }
+
   return (
     <section aria-labelledby="catalog-title">
       <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -31,7 +53,7 @@ export function BusTypesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!page.canAdd}
+          disabled={!query.data}
           onClick={page.openCreate}
         >
           <Plus aria-hidden="true" />
@@ -41,41 +63,41 @@ export function BusTypesManager() {
       <div role="status" aria-live="polite" className="text-sm text-primary">
         {page.notice && <p className="mb-4">{page.notice}</p>}
       </div>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t(page.query.data ? 'staleHint' : 'readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
-          columns={page.columns}
-          data={page.query.data?.items ?? emptyRows}
-          rowCount={page.query.data?.total}
+          state={list}
+          columns={columns}
+          data={query.data?.items ?? emptyRows}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('bus-typesTitle')}
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           search={{
             label: t('searchBusTypes'),
             placeholder: t('searchPlaceholder'),
           }}
-          onRefresh={page.refresh}
+          onRefresh={refresh}
           emptyState={
             <EmptyState
               icon={BusFront}
-              title={t(page.list.hasFilters ? 'noResults' : 'noBusTypes')}
+              title={t(list.hasFilters ? 'noResults' : 'noBusTypes')}
               description={t(
-                page.list.hasFilters ? 'noResultsHint' : 'noBusTypesHint',
+                list.hasFilters ? 'noResultsHint' : 'noBusTypesHint',
               )}
             />
           }
         />
       )}
-      {page.editorOpen && page.query.data && (
+      {page.editorOpen && query.data && (
         <BusTypeEditor {...page.editor} onCloseAutoFocus={page.focus.restore} />
       )}
       {page.confirmation.open && (

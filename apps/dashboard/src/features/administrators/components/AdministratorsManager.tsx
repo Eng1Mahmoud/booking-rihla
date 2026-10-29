@@ -1,31 +1,49 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { Users } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
+import { useUserColumns } from '@/features/users/hooks/useUserColumns';
 import { Link } from '@/i18n/navigation';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import {
   NativeSelect,
   NativeSelectOption,
 } from '@/shared/components/ui/native-select';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { Users } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getAdministratorsAction } from '../actions/administrator.actions';
+import { type AdministratorFilters } from '../schemas/administratorSchema';
 import { AdministratorRoleEditor } from './AdministratorRoleEditor';
-import type { AdministratorFilters } from '../schemas/administratorSchema';
-import { useAdministrators } from '../hooks/useAdministrators';
-import { useUserColumns } from '@/features/users/hooks/useUserColumns';
-
 export function AdministratorsManager() {
-  const page = useAdministrators();
-  const t = useTranslations('Users');
-  const states = useTranslations('States');
-  const columns = useUserColumns({
-    onStatus: page.openStatus,
-    onRole: page.openRole,
-    canChangeRole: true,
+  const locale = useLocale();
+
+  const list = useDataTableState<AdministratorFilters>({
+    initialFilters: { email: '', role: '', isActive: '' },
   });
+  const query = useQuery({
+    queryKey: ['administrators', locale, list.params],
+    queryFn: () =>
+      invokeAction(() =>
+        getAdministratorsAction({
+          limit: list.params.limit,
+          offset: list.params.offset,
+          ...list.filters,
+        }),
+      ),
+  });
+  const { columns, ...page } = useUserColumns({
+    canChangeRole: true,
+    administrator: true,
+  });
+  const t = useTranslations('Users');
+
+  const states = useTranslations('States');
+
   return (
     <section className="min-w-0">
       <h1
@@ -48,14 +66,14 @@ export function AdministratorsManager() {
         {page.notice}
       </p>
       <form
-        key={JSON.stringify(page.list.filters)}
+        key={JSON.stringify(list.filters)}
         className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border bg-card p-5"
         onSubmit={(event) => {
           event.preventDefault();
           const data = new FormData(event.currentTarget);
-          page.list.resetFilters(
+          list.resetFilters(
             Object.fromEntries(
-              Object.keys(page.list.filters).map((key) => [
+              Object.keys(list.filters).map((key) => [
                 key,
                 String(data.get(key) ?? '').trim(),
               ]),
@@ -69,7 +87,7 @@ export function AdministratorsManager() {
             name="email"
             type="email"
             dir="ltr"
-            defaultValue={page.list.filters.email}
+            defaultValue={list.filters.email}
             className="min-h-11 bg-card"
           />
         </label>
@@ -77,7 +95,7 @@ export function AdministratorsManager() {
           <span>{t('role')}</span>
           <NativeSelect
             name="role"
-            defaultValue={page.list.filters.role}
+            defaultValue={list.filters.role}
             className="min-h-11"
           >
             <NativeSelectOption value="">{t('all')}</NativeSelectOption>
@@ -96,7 +114,7 @@ export function AdministratorsManager() {
           <span>{t('status')}</span>
           <NativeSelect
             name="isActive"
-            defaultValue={page.list.filters.isActive}
+            defaultValue={list.filters.isActive}
             className="min-h-11"
           >
             <NativeSelectOption value="">{t('all')}</NativeSelectOption>
@@ -113,34 +131,34 @@ export function AdministratorsManager() {
           type="button"
           variant="outline"
           className="min-h-11"
-          onClick={() => page.list.resetFilters()}
+          onClick={() => list.resetFilters()}
         >
           {t('clear')}
         </Button>
       </form>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
-          pending={page.query.isFetching}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
           onRetry={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
+          state={list}
           columns={columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('administrators')}
           tableClassName="min-w-320 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           onRefresh={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
           emptyState={
             <EmptyState

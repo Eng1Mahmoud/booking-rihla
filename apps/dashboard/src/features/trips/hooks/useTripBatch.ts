@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib/apiResult';
-import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
 import {
   getTripOptionsAction,
   previewTripBatchAction,
@@ -24,28 +23,18 @@ export function useTripBatch() {
   } | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const actionError = useActionErrors(options.error, {
-    BUS_SCHEDULE_CONFLICT: t('conflict'),
-    INVALID_DEPARTURE_TIME: t('invalidTime'),
-    NO_DEPARTURES: t('noDepartures'),
-    BUS_INACTIVE: t('inactive'),
-    ROUTE_INACTIVE: t('inactive'),
-  });
   const preview = useMutation({
     retry: false,
     mutationFn: async (input: BatchInput) => {
       setReview(null);
       setNotice('');
       setError('');
-      try {
-        const result = await invokeAction(() => previewTripBatchAction(input));
-        setReview({
-          input: { ...input, weekdays: [...input.weekdays] },
-          preview: result,
-        });
-      } catch (error) {
-        throw actionError(error);
-      }
+
+      const result = await invokeAction(() => previewTripBatchAction(input));
+      setReview({
+        input: { ...input, weekdays: [...input.weekdays] },
+        preview: result,
+      });
     },
   });
   const create = useMutation({
@@ -61,7 +50,7 @@ export function useTripBatch() {
         await client.invalidateQueries({ queryKey: ['trips'] });
       } catch (error) {
         setReview(null);
-        setError(actionError(error).message);
+        setError(errorMessage(error, locale));
       }
     },
   });

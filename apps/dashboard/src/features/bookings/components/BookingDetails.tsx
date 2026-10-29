@@ -2,8 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { invokeAction } from '@/shared/lib/apiResult';
-import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
 import { FormDialog } from '@/shared/components/dialogs/FormDialog';
 import { RecordDetails } from '@/shared/components/feedback/RecordDetails';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -28,7 +27,6 @@ export function BookingDetails({
     queryKey: ['booking', locale, id],
     queryFn: () => invokeAction(() => getBookingAction(id)),
   });
-  useActionErrors(query.error, {});
   const booking = query.data;
   return (
     <FormDialog
@@ -42,7 +40,7 @@ export function BookingDetails({
       {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
+          description={errorMessage(query.error, locale)}
           pending={query.isFetching}
           onRetry={() => {
             void query.refetch();

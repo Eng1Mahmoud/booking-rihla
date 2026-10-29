@@ -1,7 +1,7 @@
-import type { DataTableColumn } from '@/shared/lib/dataTable';
 import { cn } from '@/shared/lib/cn';
+import type { DataTableColumn } from '@/shared/lib/dataTable';
 
-export function createNameColumns<T extends { nameAr: string; nameEn: string }>(
+export function getNameColumns<T extends { nameAr: string; nameEn: string }>(
   locale: string,
   labels: { nameAr: string; nameEn: string },
 ): DataTableColumn<T>[] {

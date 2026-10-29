@@ -51,9 +51,11 @@ modules such as auth.server.ts and their server-only boundary.
   explain real business rules; remove wrappers that only add navigation between files.
 - Keep dashboard table columns in a separate file. When columns need locale or
   translation hooks, use hooks/use<Entity>Columns.tsx and read that context inside
-  the hook. Pass feature data and action callbacks explicitly. Pure column factories
-  can stay in lib/<entity>Columns.tsx. Use useMemo only when stable references or
-  measured calculation costs justify it. Reuse identical column definitions.
+  the hook. Table components own list queries and filters; column hooks own row
+  mutations, selection and dialog state. Pass required data and permissions instead
+  of action callbacks. Avoid extra page/data hooks for this flow.
+  Use useMemo only when stable references or measured calculation costs justify
+  it. Reuse identical column definitions.
 - Reuse existing shared components, Tailwind tokens and next-intl messages.
   Do not introduce CSS modules or another styling system.
 - Keep simple components simple. Do not move a few lines into a hook merely to
@@ -85,3 +87,12 @@ Gemini, camera permissions or authenticated workflows.
   with TypeScript types instead of adding schemas used only for type inference.
 - Keep shared rules in the same schema factory when existing Server Actions also
   validate them; translations may be optional for that server use.
+
+## API error messages
+
+- Display the translated message received from the backend. Do not remap API error
+  codes to feature translations or clear React Query data on request failures.
+- Let invokeAction propagate API failures to the form or confirmation dialog.
+  Keep a catch only when it updates required feature state, such as uncertain refunds.
+- Keep the existing shared fallback for failures where no backend response arrives.
+  Refresh affected queries after successful mutations.

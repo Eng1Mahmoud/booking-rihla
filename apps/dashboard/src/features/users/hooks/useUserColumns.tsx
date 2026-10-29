@@ -1,24 +1,95 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import {
+  setAdministratorRoleAction,
+  setAdministratorStatusAction,
+} from '@/features/administrators/actions/administrator.actions';
 import { formatReportTime } from '@/features/dashboard/lib/format';
-import type { ManagedUser } from '../schemas/userSchema';
-
+import { useRouter } from '@/i18n/navigation';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { useConfirmation } from '@/shared/hooks/useConfirmation';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { type DataTableColumn } from '@/shared/lib/dataTable';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useCallback, useState } from 'react';
+import { setUserStatusAction } from '../actions/user.actions';
+import { type ManagedUser } from '../schemas/userSchema';
 export function useUserColumns({
-  onStatus,
-  onRole,
   canChangeRole,
+  administrator = false,
 }: {
-  onStatus: (user: ManagedUser) => void;
-  onRole: (user: ManagedUser) => void;
   canChangeRole: boolean;
-}): DataTableColumn<ManagedUser>[] {
+  administrator?: boolean;
+}) {
   const locale = useLocale();
   const t = useTranslations('Users');
   const states = useTranslations('States');
-  return [
+  const client = useQueryClient();
+  const router = useRouter();
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [target, setTarget] = useState<ManagedUser | null>(null);
+  const [editingRole, setEditingRole] = useState<ManagedUser | null>(null);
+  const [notice, setNotice] = useState('');
+
+  async function refreshAccounts() {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ['users'] }),
+      client.invalidateQueries({ queryKey: ['administrators'] }),
+    ]);
+  }
+  const status = useMutation({
+    retry: false,
+    mutationFn: async () => {
+      if (!target) return;
+
+      await invokeAction(() =>
+        (administrator ? setAdministratorStatusAction : setUserStatusAction)({
+          id: target.id,
+          isActive: !target.isActive,
+        }),
+      );
+      await refreshAccounts();
+      setTarget(null);
+      setNotice(t('updated'));
+    },
+  });
+  const role = useMutation({
+    retry: false,
+    mutationFn: async (role: ManagedUser['role']) => {
+      if (!editingRole) return;
+
+      await invokeAction(() =>
+        setAdministratorRoleAction({ id: editingRole.id, role }),
+      );
+      await refreshAccounts();
+      setEditingRole(null);
+      setNotice(t('updated'));
+      router.refresh();
+    },
+  });
+  const confirmation = useConfirmation(async () => {
+    await status.mutateAsync();
+  });
+  const openStatus = useCallback(
+    (user: ManagedUser) => {
+      focus.remember();
+      confirmation.reset();
+      setNotice('');
+      setTarget(user);
+    },
+    [focus.remember, confirmation.reset],
+  );
+  const openRole = useCallback(
+    (user: ManagedUser) => {
+      focus.remember();
+      setNotice('');
+      setEditingRole(user);
+    },
+    [focus.remember],
+  );
+  const columns: DataTableColumn<ManagedUser>[] = [
     { id: 'name', header: t('name'), cell: ({ row }) => row.original.name },
     {
       id: 'email',
@@ -62,14 +133,14 @@ export function useUserColumns({
               label: t(row.original.isActive ? 'suspend' : 'activate'),
               icon: row.original.isActive ? UserRoundX : UserRoundCheck,
               destructive: row.original.isActive,
-              onSelect: () => onStatus(row.original),
+              onSelect: () => openStatus(row.original),
             },
             ...(canChangeRole
               ? [
                   {
                     label: t('changeRole'),
                     icon: ShieldCheck,
-                    onSelect: () => onRole(row.original),
+                    onSelect: () => openRole(row.original),
                   },
                 ]
               : []),
@@ -78,4 +149,22 @@ export function useUserColumns({
       ),
     },
   ];
+  return {
+    columns,
+    focus,
+    target,
+    editingRole,
+    notice,
+    status,
+    role,
+    confirmation,
+    openStatus,
+    openRole,
+    closeStatus: () => {
+      if (!confirmation.pending) setTarget(null);
+    },
+    closeRole: () => {
+      if (!role.isPending) setEditingRole(null);
+    },
+  };
 }

@@ -1,26 +1,78 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { Undo2, RefreshCw } from 'lucide-react';
+import {
+  formatGrossPaid,
+  formatReportTime,
+} from '@/features/dashboard/lib/format';
 import { Link } from '@/i18n/navigation';
 import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
-import {
-  formatReportTime,
-  formatGrossPaid,
-} from '@/features/dashboard/lib/format';
-import type { Refund } from '../schemas/refundSchema';
-
-export function useRefundColumns({
-  blockedIds,
-  onAction,
-}: {
-  blockedIds: string[];
-  onAction: (refund: Refund, operation: 'issue' | 'reconcile') => void;
-}): DataTableColumn<Refund>[] {
+import { useConfirmation } from '@/shared/hooks/useConfirmation';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import { ApiError, invokeAction } from '@/shared/lib/apiResult';
+import { type DataTableColumn } from '@/shared/lib/dataTable';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { RefreshCw, Undo2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useCallback, useState } from 'react';
+import { executeRefundAction } from '../actions/refund.actions';
+import { type Refund } from '../schemas/refundSchema';
+export function useRefundColumns() {
   const locale = useLocale();
   const t = useTranslations('Refunds');
   const states = useTranslations('States');
-  return [
+  const client = useQueryClient();
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [target, setTarget] = useState<{
+    refund: Refund;
+    operation: 'issue' | 'reconcile';
+  } | null>(null);
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [notice, setNotice] = useState('');
+
+  const mutation = useMutation({
+    retry: false,
+    mutationFn: async () => {
+      if (!target || blocked.includes(target.refund.id)) return;
+      const selected = target;
+      try {
+        await invokeAction(() =>
+          executeRefundAction({
+            id: selected.refund.id,
+            operation: selected.operation,
+          }),
+        );
+        await Promise.all(
+          ['refunds', 'payments', 'payment', 'bookings', 'booking'].map((key) =>
+            client.invalidateQueries({ queryKey: [key] }),
+          ),
+        );
+        setTarget(null);
+        setNotice(t('updated'));
+      } catch (error) {
+        if (
+          !(error instanceof ApiError) ||
+          error.status === 0 ||
+          error.status >= 500
+        )
+          setBlocked((current) => [
+            ...new Set([...current, selected.refund.id]),
+          ]);
+        throw error;
+      }
+    },
+  });
+  const confirmation = useConfirmation(async () => {
+    await mutation.mutateAsync();
+  });
+  const open = useCallback(
+    (refund: Refund, operation: 'issue' | 'reconcile') => {
+      focus.remember();
+      confirmation.reset();
+      setNotice('');
+      setTarget({ refund, operation });
+    },
+    [focus.remember, confirmation.reset],
+  );
+  const columns: DataTableColumn<Refund>[] = [
     {
       id: 'booking',
       header: t('booking'),
@@ -55,7 +107,7 @@ export function useRefundColumns({
       meta: { headerClassName: 'w-24 text-center' },
       cell: ({ row }) => {
         const refund = row.original;
-        const blocked = blockedIds.includes(refund.id);
+        const isBlocked = blocked.includes(refund.id);
         return (
           <div className="grid justify-items-center gap-2">
             <RowActionMenu
@@ -66,8 +118,8 @@ export function useRefundColumns({
                       {
                         label: t('issue'),
                         icon: Undo2,
-                        disabled: blocked,
-                        onSelect: () => onAction(refund, 'issue'),
+                        disabled: isBlocked,
+                        onSelect: () => open(refund, 'issue'),
                       },
                     ]
                   : []),
@@ -76,8 +128,8 @@ export function useRefundColumns({
                       {
                         label: t('reconcile'),
                         icon: RefreshCw,
-                        disabled: blocked,
-                        onSelect: () => onAction(refund, 'reconcile'),
+                        disabled: isBlocked,
+                        onSelect: () => open(refund, 'reconcile'),
                       },
                     ]
                   : []),
@@ -88,7 +140,7 @@ export function useRefundColumns({
                 {t('completed')}
               </span>
             )}
-            {blocked && (
+            {isBlocked && (
               <span className="text-sm text-destructive">
                 {t('refreshFirst')}
               </span>
@@ -98,4 +150,18 @@ export function useRefundColumns({
       },
     },
   ];
+  return {
+    focus,
+    target,
+    blocked,
+    notice,
+    confirmation,
+    columns,
+    pending: mutation.isPending,
+    clearBlocked: () => setBlocked([]),
+    open,
+    close: () => {
+      if (!confirmation.pending) setTarget(null);
+    },
+  };
 }

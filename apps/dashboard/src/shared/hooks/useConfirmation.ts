@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 
 export function useConfirmation(onConfirm: () => void | Promise<void>) {
-  const t = useTranslations('ConfirmDialog');
+  const locale = useLocale();
   const inFlight = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -18,7 +19,11 @@ export function useConfirmation(onConfirm: () => void | Promise<void>) {
     try {
       await onConfirm();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t('failed'));
+      setError(
+        cause instanceof Error && !(cause instanceof ApiError)
+          ? cause.message
+          : errorMessage(cause, locale),
+      );
     } finally {
       inFlight.current = false;
       setPending(false);

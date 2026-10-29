@@ -1,23 +1,92 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { MapPin, Plus } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { Button } from '@/shared/components/ui/button';
+import { getCityOptionsAction } from '@/features/cities/actions/city.actions';
+import { Link, useRouter } from '@/i18n/navigation';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { useStations } from '../hooks/useStations';
-import { StationEditor } from './StationEditor';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MapPin, Plus } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useMemo, useTransition } from 'react';
+import { getStationsAction } from '../actions/station.actions';
+import { useStationColumns } from '../hooks/useStationColumns';
+import { type StationRow } from '../types/station';
 import { StationCityFilter } from './StationCityFilter';
-import type { StationRow } from '../types/station';
+import { StationEditor } from './StationEditor';
 const emptyRows: StationRow[] = [];
-
 export function StationsManager({ cityId = '' }: { cityId?: string }) {
   const t = useTranslations('Stations');
-  const page = useStations(cityId);
+  const locale = useLocale();
+  const list = useDataTableState({ initialFilters: { cityId } });
+  const client = useQueryClient();
+  const cityOptions = queryOptions({
+    queryKey: ['locations', locale, 'city-options'],
+    queryFn: () => invokeAction(getCityOptionsAction),
+  });
+
+  const query = useQuery({
+    queryKey: ['locations', locale, 'stations', list.params],
+    queryFn: async () => {
+      const [page, cities] = await Promise.all([
+        invokeAction(() =>
+          getStationsAction({
+            search: list.params.search,
+            limit: list.params.limit,
+            offset: list.params.offset,
+            cityId: list.params.filters.cityId || undefined,
+          }),
+        ),
+        client.fetchQuery(cityOptions),
+      ]);
+      return { ...page, cities };
+    },
+  });
+  const { columns, ...page } = useStationColumns();
+  const router = useRouter();
+  const [filterPending, startFilterTransition] = useTransition();
+  const { setFilter } = list;
+  useEffect(() => setFilter('cityId', cityId), [cityId, setFilter]);
+  const cachedCities =
+    query.data?.cities ?? client.getQueryData(cityOptions.queryKey);
+  const collator = useMemo(() => new Intl.Collator(locale), [locale]);
+  const cities = useMemo(
+    () =>
+      (cachedCities ?? []).toSorted((a, b) =>
+        collator.compare(
+          a[locale === 'ar' ? 'nameAr' : 'nameEn'],
+          b[locale === 'ar' ? 'nameAr' : 'nameEn'],
+        ),
+      ),
+    [cachedCities, collator, locale],
+  );
+  function changeCity(nextCityId: string) {
+    list.setFilter('cityId', nextCityId);
+    startFilterTransition(() =>
+      router.replace(
+        '/dashboard/stations' + (nextCityId ? '?cityId=' + nextCityId : ''),
+        { scroll: false },
+      ),
+    );
+  }
+  function resetFilters() {
+    list.resetFilters({ cityId: '' });
+    if (list.filters.cityId || cityId) changeCity('');
+  }
+  async function refresh() {
+    page.clearNotice();
+    await client.invalidateQueries({
+      queryKey: cityOptions.queryKey,
+      refetchType: 'none',
+    });
+    return query.refetch();
+  }
+
   return (
-    <section aria-labelledby="catalog-title" aria-busy={page.filterPending}>
+    <section aria-labelledby="catalog-title" aria-busy={filterPending}>
       <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1
@@ -33,7 +102,7 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!page.canAdd}
+          disabled={!(query.data && cities.length)}
           onClick={page.openCreate}
         >
           <Plus aria-hidden="true" />
@@ -43,40 +112,40 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
       <div role="status" aria-live="polite" className="text-sm text-primary">
         {page.notice && <p className="mb-4">{page.notice}</p>}
       </div>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t(page.query.data ? 'staleHint' : 'readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
-          columns={page.columns}
-          data={page.query.data?.items ?? emptyRows}
-          rowCount={page.query.data?.total}
+          state={list}
+          columns={columns}
+          data={query.data?.items ?? emptyRows}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('stationsTitle')}
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           search={{
             label: t('searchStations'),
             placeholder: t('searchPlaceholder'),
           }}
-          onRefresh={page.refresh}
+          onRefresh={refresh}
           filters={(controls) => (
             <StationCityFilter
-              cities={page.cities}
+              cities={cities}
               value={controls.filters.cityId}
-              onChange={page.changeCity}
-              disabled={page.filterPending}
+              onChange={changeCity}
+              disabled={filterPending}
             />
           )}
-          onResetFilters={page.resetFilters}
+          onResetFilters={resetFilters}
           beforeTable={
-            page.query.data && !page.cities.length ? (
+            query.data && !cities.length ? (
               <p className="mx-5 mb-5 rounded-[12px] bg-secondary p-4 text-sm">
                 {t('needsCity')}{' '}
                 <Link
@@ -91,19 +160,19 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
           emptyState={
             <EmptyState
               icon={MapPin}
-              title={t(page.list.hasFilters ? 'noResults' : 'noStations')}
+              title={t(list.hasFilters ? 'noResults' : 'noStations')}
               description={t(
-                page.list.hasFilters ? 'noResultsHint' : 'noStationsHint',
+                list.hasFilters ? 'noResultsHint' : 'noStationsHint',
               )}
             />
           }
         />
       )}
-      {page.editorOpen && page.query.data && (
+      {page.editorOpen && query.data && (
         <StationEditor
           {...page.editor}
-          cities={page.cities}
-          cityId={page.list.filters.cityId}
+          cities={cities}
+          cityId={list.filters.cityId}
           onCloseAutoFocus={page.focus.restore}
         />
       )}

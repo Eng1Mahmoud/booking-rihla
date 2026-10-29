@@ -1,15 +1,68 @@
 'use client';
-import { Plus, Route as RouteIcon } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { ListError } from '@/shared/components/feedback/ListError';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { useRoutes } from '../hooks/useRoutes';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Route as RouteIcon } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import {
+  getRoutesAction,
+  getRouteStationsAction,
+} from '../actions/route.actions';
+import { useRouteColumns } from '../hooks/useRouteColumns';
+import { type RouteListQuery } from '../schemas/routeSchema';
 import { RouteEditor } from './RouteEditor';
 import { RouteFilters } from './RouteFilters';
 export function RoutesManager() {
-  const page = useRoutes();
+  const locale = useLocale();
+  const client = useQueryClient();
+  const list = useDataTableState<{
+    originStationId: string;
+    destinationStationId: string;
+    isActive: RouteListQuery['isActive'];
+  }>({
+    initialFilters: {
+      originStationId: '',
+      destinationStationId: '',
+      isActive: '',
+    },
+  });
+  const query = useQuery({
+    queryKey: ['routes', locale, list.params],
+    queryFn: async () => {
+      const [page, stations] = await Promise.all([
+        invokeAction(() =>
+          getRoutesAction({
+            limit: list.params.limit,
+            offset: list.params.offset,
+            ...list.filters,
+          }),
+        ),
+        client.fetchQuery({
+          queryKey: ['catalog', locale, 'route-stations'],
+          queryFn: () => invokeAction(getRouteStationsAction),
+        }),
+      ]);
+      return { ...page, stations };
+    },
+  });
+  const stations = query.data?.stations ?? [];
+  const { columns, ...page } = useRouteColumns({
+    stations,
+  });
+  async function refresh() {
+    page.clearNotice();
+    await client.invalidateQueries({
+      queryKey: ['catalog', locale, 'route-stations'],
+      refetchType: 'none',
+    });
+    await query.refetch();
+  }
+
   const t = page.t;
   return (
     <section className="min-w-0" aria-labelledby="routes-title">
@@ -25,7 +78,7 @@ export function RoutesManager() {
         <Button
           ref={page.focus.fallbackRef}
           onClick={page.create}
-          disabled={!page.query.data || page.stations.length < 2}
+          disabled={!query.data || stations.length < 2}
           className="min-h-12"
         >
           <Plus aria-hidden="true" />
@@ -35,31 +88,31 @@ export function RoutesManager() {
       <p role="status" aria-live="polite" className="mb-4 text-sm text-primary">
         {page.notice}
       </p>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t(page.query.data ? 'staleHint' : 'readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
-          columns={page.columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          state={list}
+          columns={columns}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-200 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
-          onRefresh={page.refresh}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
+          onRefresh={refresh}
           filters={(state) => (
             <RouteFilters
               state={state}
-              stations={page.stations}
-              disabled={page.query.isFetching}
+              stations={stations}
+              disabled={query.isFetching}
             />
           )}
           emptyState={
@@ -74,7 +127,7 @@ export function RoutesManager() {
       {page.editorOpen && (
         <RouteEditor
           entry={page.editing}
-          stations={page.stations}
+          stations={stations}
           pending={page.save.isPending}
           onSave={(values) => page.save.mutateAsync(values)}
           onClose={page.closeEditor}

@@ -1,24 +1,30 @@
 'use client';
-import { useLocale, useTranslations } from 'next-intl';
-import type { DataTableColumn } from '@/shared/lib/dataTable';
-import { Eye } from 'lucide-react';
-import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import {
-  formatReportTime,
   formatGrossPaid,
+  formatReportTime,
 } from '@/features/dashboard/lib/format';
-import type { Booking } from '../schemas/bookingSchema';
-
-export function useBookingColumns({
-  onDetails,
-}: {
-  onDetails: (id: string) => void;
-}): DataTableColumn<Booking>[] {
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import { type DataTableColumn } from '@/shared/lib/dataTable';
+import { Eye } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useCallback, useState } from 'react';
+import { type Booking } from '../schemas/bookingSchema';
+export function useBookingColumns(bookingId = '') {
   const locale = useLocale();
   const t = useTranslations('Bookings');
   const states = useTranslations('States');
+  const focus = useDialogFocus<HTMLHeadingElement>();
+  const [selected, setSelected] = useState<string | null>(bookingId || null);
+  const open = useCallback(
+    (id: string) => {
+      focus.remember();
+      setSelected(id);
+    },
+    [focus.remember],
+  );
   const name = locale === 'ar' ? 'nameAr' : 'nameEn';
-  return [
+  const columns: DataTableColumn<Booking>[] = [
     {
       id: 'reference',
       header: t('reference'),
@@ -74,11 +80,18 @@ export function useBookingColumns({
             {
               label: t('details'),
               icon: Eye,
-              onSelect: () => onDetails(row.original.id),
+              onSelect: () => open(row.original.id),
             },
           ]}
         />
       ),
     },
   ];
+  return {
+    columns,
+    focus,
+    selected,
+    open,
+    close: () => setSelected(null),
+  };
 }

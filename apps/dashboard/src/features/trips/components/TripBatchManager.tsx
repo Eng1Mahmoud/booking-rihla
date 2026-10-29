@@ -1,5 +1,6 @@
 'use client';
-import { useTranslations } from 'next-intl';
+import { errorMessage } from '@/shared/lib/apiResult';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/shared/components/ui/button';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
@@ -9,6 +10,8 @@ import { TripBatchForm } from './TripBatchForm';
 import { TripBatchPreview } from './TripBatchPreview';
 
 export function TripBatchManager() {
+  const locale = useLocale();
+
   const page = useTripBatch();
   const t = useTranslations('Trips');
   return (
@@ -27,7 +30,7 @@ export function TripBatchManager() {
       {page.options.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
+          description={errorMessage(page.options.error, locale)}
           pending={page.options.isFetching}
           onRetry={() => {
             void page.options.refetch();

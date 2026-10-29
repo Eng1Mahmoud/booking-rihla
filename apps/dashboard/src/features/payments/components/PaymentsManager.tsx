@@ -1,18 +1,40 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { CreditCard } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import { usePayments } from '../hooks/usePayments';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { CreditCard } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getPaymentsAction } from '../actions/payment.actions';
 import { usePaymentColumns } from '../hooks/usePaymentColumns';
+import {
+  emptyPaymentFilters,
+  type PaymentFilterValues,
+} from '../schemas/paymentSchema';
 import { PaymentDetails } from './PaymentDetails';
 import { PaymentFilters } from './PaymentFilters';
-
 export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
-  const page = usePayments(bookingId);
+  const locale = useLocale();
+
+  const list = useDataTableState<PaymentFilterValues>({
+    initialFilters: { ...emptyPaymentFilters, bookingId },
+  });
+  const query = useQuery({
+    queryKey: ['payments', locale, list.params],
+    queryFn: () =>
+      invokeAction(() =>
+        getPaymentsAction({
+          limit: list.params.limit,
+          offset: list.params.offset,
+          ...list.filters,
+        }),
+      ),
+  });
+  const { columns, ...page } = usePaymentColumns();
   const t = useTranslations('Payments');
-  const columns = usePaymentColumns({ onDetails: page.open });
+
   return (
     <section className="min-w-0">
       <h1
@@ -25,30 +47,30 @@ export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
-      <PaymentFilters state={page.list} />
-      {page.query.isError && (
+      <PaymentFilters state={list} />
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
-          pending={page.query.isFetching}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
           onRetry={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
+          state={list}
           columns={columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-300 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           onRefresh={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
           emptyState={
             <EmptyState

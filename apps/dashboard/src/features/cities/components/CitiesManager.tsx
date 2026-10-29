@@ -1,19 +1,40 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { Building2, Plus } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
-import { Button } from '@/shared/components/ui/button';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
-import { useCities } from '../hooks/useCities';
-import { CityEditor } from './CityEditor';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { Building2, Plus } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getCitiesAction } from '../actions/city.actions';
+import { useCityColumns } from '../hooks/useCityColumns';
 import type { CityRow } from '../types/city';
+import { CityEditor } from './CityEditor';
 const emptyRows: CityRow[] = [];
 
 export function CitiesManager() {
   const t = useTranslations('Cities');
-  const page = useCities();
+  const locale = useLocale();
+  const list = useDataTableState({ initialFilters: {} });
+  const query = useQuery({
+    queryKey: ['locations', locale, 'cities', list.params],
+    queryFn: () =>
+      invokeAction(() =>
+        getCitiesAction({
+          search: list.params.search,
+          limit: list.params.limit,
+          offset: list.params.offset,
+        }),
+      ),
+  });
+  const { columns, ...page } = useCityColumns();
+  function refresh() {
+    page.clearNotice();
+    void query.refetch();
+  }
   return (
     <section aria-labelledby="catalog-title">
       <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -31,7 +52,7 @@ export function CitiesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!page.canAdd}
+          disabled={!query.data}
           onClick={page.openCreate}
         >
           <Plus aria-hidden="true" />
@@ -41,41 +62,41 @@ export function CitiesManager() {
       <div role="status" aria-live="polite" className="text-sm text-primary">
         {page.notice && <p className="mb-4">{page.notice}</p>}
       </div>
-      {page.query.isError && (
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t(page.query.data ? 'staleHint' : 'readFailedHint')}
-          pending={page.query.isFetching}
-          onRetry={page.refresh}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
+          onRetry={refresh}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
-          columns={page.columns}
-          data={page.query.data?.items ?? emptyRows}
-          rowCount={page.query.data?.total}
+          state={list}
+          columns={columns}
+          data={query.data?.items ?? emptyRows}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('citiesTitle')}
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           search={{
             label: t('searchCities'),
             placeholder: t('searchPlaceholder'),
           }}
-          onRefresh={page.refresh}
+          onRefresh={refresh}
           emptyState={
             <EmptyState
               icon={Building2}
-              title={t(page.list.hasFilters ? 'noResults' : 'noCities')}
+              title={t(list.hasFilters ? 'noResults' : 'noCities')}
               description={t(
-                page.list.hasFilters ? 'noResultsHint' : 'noCitiesHint',
+                list.hasFilters ? 'noResultsHint' : 'noCitiesHint',
               )}
             />
           }
         />
       )}
-      {page.editorOpen && page.query.data && (
+      {page.editorOpen && query.data && (
         <CityEditor {...page.editor} onCloseAutoFocus={page.focus.restore} />
       )}
       {page.confirmation.open && (

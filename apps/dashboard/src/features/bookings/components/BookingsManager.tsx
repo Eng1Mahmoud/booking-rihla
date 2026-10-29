@@ -1,14 +1,17 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { Ticket } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables/DataTable';
+import type { BookingFilters as BookingFilterValues } from '../schemas/bookingSchema';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
-import { useBookings } from '../hooks/useBookings';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
+import { useQuery } from '@tanstack/react-query';
+import { Ticket } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getBookingsAction } from '../actions/booking.actions';
 import { useBookingColumns } from '../hooks/useBookingColumns';
-import { BookingFilters } from './BookingFilters';
 import { BookingDetails } from './BookingDetails';
-
+import { BookingFilters } from './BookingFilters';
 export function BookingsManager({
   tripId = '',
   bookingId = '',
@@ -16,10 +19,31 @@ export function BookingsManager({
   tripId?: string;
   bookingId?: string;
 }) {
-  const page = useBookings(tripId, bookingId);
+  const locale = useLocale();
+
+  const list = useDataTableState<BookingFilterValues>({
+    initialFilters: {
+      reference: '',
+      email: '',
+      travelDate: '',
+      tripId,
+      userId: '',
+    },
+  });
+  const query = useQuery({
+    queryKey: ['bookings', locale, list.params],
+    queryFn: () =>
+      invokeAction(() =>
+        getBookingsAction({
+          limit: list.params.limit,
+          offset: list.params.offset,
+          ...list.filters,
+        }),
+      ),
+  });
+  const { columns, ...page } = useBookingColumns(bookingId);
   const t = useTranslations('Bookings');
 
-  const columns = useBookingColumns({ onDetails: page.open });
   return (
     <section className="min-w-0">
       <h1
@@ -32,30 +56,30 @@ export function BookingsManager({
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
-      <BookingFilters state={page.list} />
-      {page.query.isError && (
+      <BookingFilters state={list} />
+      {query.isError && (
         <ListError
           title={t('readFailed')}
-          description={t('readFailedHint')}
-          pending={page.query.isFetching}
+          description={errorMessage(query.error, locale)}
+          pending={query.isFetching}
           onRetry={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
         />
       )}
-      {(page.query.isPending || page.query.data) && (
+      {(query.isPending || query.data) && (
         <DataTable
-          state={page.list}
+          state={list}
           columns={columns}
-          data={page.query.data?.items ?? []}
-          rowCount={page.query.data?.total}
+          data={query.data?.items ?? []}
+          rowCount={query.data?.total}
           getRowId={(row) => row.id}
           caption={t('title')}
           tableClassName="min-w-300 [&_td]:wrap-anywhere"
-          isLoading={page.query.isPending}
-          isFetching={page.query.isFetching}
+          isLoading={query.isPending}
+          isFetching={query.isFetching}
           onRefresh={() => {
-            void page.query.refetch();
+            void query.refetch();
           }}
           emptyState={
             <EmptyState
