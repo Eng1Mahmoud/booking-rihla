@@ -1,8 +1,8 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { z } from 'zod';
 import { parseSchema } from '@/shared/lib/parseSchema';
-import type { SeatList } from '@/features/trips';
+import { z } from 'zod';
+import type { SeatList } from '@/features/trips/types/trip';
 
 export async function getTripSeatsAction(id: string) {
   const parsed = await parseSchema(z.uuid(), id);

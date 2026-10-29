@@ -1,7 +1,11 @@
 import 'server-only';
 import { apiFetch } from '@/shared/lib/api';
-import { getSignedInUser } from '@/features/auth/server';
-import { ApiError, getApiDataOrThrow, type ApiResult } from '@/shared/lib';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import {
+  ApiError,
+  getApiDataOrThrow,
+  type ApiResult,
+} from '@/shared/lib/apiResult';
 import type {
   Booking,
   BookingPaymentData,

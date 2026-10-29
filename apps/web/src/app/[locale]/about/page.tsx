@@ -10,7 +10,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 
 export async function generateMetadata({
   params,

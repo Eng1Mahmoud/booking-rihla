@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { FaqContent } from '@/features/faqs';
-import { PageIntro } from '@/shared/components/layout';
-import { Button } from '@/shared/components/ui';
+import { FaqContent } from '@/features/faqs/components/FaqContent';
+import { PageIntro } from '@/shared/components/layout/PageIntro';
+import { Button } from '@/shared/components/ui/button';
 import { Link } from '@/i18n/navigation';
 
 export async function generateMetadata({

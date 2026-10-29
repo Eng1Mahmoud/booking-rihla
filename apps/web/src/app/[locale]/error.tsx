@@ -1,8 +1,8 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { PageStatus } from '@/shared/components/feedback';
+import { Button } from '@/shared/components/ui/button';
+import { PageStatus } from '@/shared/components/feedback/PageStatus';
 
 export default function ErrorPage({
   reset,

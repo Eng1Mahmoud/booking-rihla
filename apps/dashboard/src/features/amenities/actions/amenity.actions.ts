@@ -1,8 +1,8 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib';
+import type { ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/types';
+import type { ListPage, ListQuery } from '@/shared/types/list';
 import type { AmenityInput } from '../schemas/amenitySchema';
 import type { Amenity } from '../types/amenity';
 

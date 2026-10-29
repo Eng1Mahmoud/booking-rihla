@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useLocale, useTranslations } from 'next-intl';
-import { Form, FormInput, SubmitButton } from '@/shared/components/forms';
-import { Button } from '@/shared/components/ui';
-import { ApiError, errorMessage } from '@/shared/lib';
+import { Form } from '@/shared/components/forms/Form';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import { Button } from '@/shared/components/ui/button';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 import { useForgotPassword, useResetPassword } from '../../hooks/useAuth';
 import {
   createRecoveryResetSchema,

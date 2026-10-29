@@ -1,7 +1,7 @@
 'use client';
 import type { ComponentProps } from 'react';
 import { DropdownMenu as DropdownPrimitive } from 'radix-ui';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 
 /** Non-modal by default so opening menus does not lock body scroll / shift layout. */
 export function DropdownMenu({

@@ -2,20 +2,15 @@
 import { useId, useState, type ComponentProps, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Eye, EyeOff } from 'lucide-react';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 import {
   useFormContext,
   type FieldValues,
   type FieldPath,
 } from 'react-hook-form';
-import {
-  Input,
-  Button,
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-} from '../ui';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Field, FieldLabel, FieldDescription, FieldError } from '../ui/field';
 type Props<T extends FieldValues> = Omit<
   ComponentProps<typeof Input>,
   'name' | 'id'

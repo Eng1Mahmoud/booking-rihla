@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { getSignedInUser } from '@/features/auth/server';
-import { DashboardShell } from '@/features/dashboard/server';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { DashboardShell } from '@/features/dashboard/components/DashboardShell';
 
 export default async function DashboardLayout({
   children,

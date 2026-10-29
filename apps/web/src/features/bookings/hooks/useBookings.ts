@@ -7,10 +7,10 @@ import {
   checkoutAction,
 } from '../actions/bookings.actions';
 import type { CreateBookingInput } from '../schemas/bookingSchema';
-import { invokeAction } from '@/shared/lib';
+import { invokeAction } from '@/shared/lib/apiResult';
 import { bookingKeys } from './queryKeys';
 import type { BookingListPage } from '../types/booking';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function useCreateBooking() {
   return useMutation({

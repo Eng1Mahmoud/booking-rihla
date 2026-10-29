@@ -1,9 +1,9 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib';
-import { useActionErrors } from '@/shared/hooks';
-import type { ListQuery } from '@/shared/types';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import type { ListQuery } from '@/shared/types/list';
 import {
   getAmenitiesAction,
   saveAmenityAction,

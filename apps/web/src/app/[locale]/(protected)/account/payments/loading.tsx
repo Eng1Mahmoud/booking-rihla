@@ -1,5 +1,5 @@
-import { AccountLayout } from '@/features/account/server';
-import { Skeleton } from '@/shared/components/ui';
+import { AccountLayout } from '@/features/account/components/AccountLayout';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import { getTranslations } from 'next-intl/server';
 
 export default async function LoadingPayments() {

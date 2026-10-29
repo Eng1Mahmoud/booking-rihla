@@ -1,10 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { EmptyState, RefreshPage } from '@/shared/components/feedback';
-import { getTripCatalog, getTrips } from '@/features/trips/server';
-import { getApiDataOrThrow } from '@/shared/lib';
-import { TripResults, searchSchema } from '@/features/trips';
+import { Button } from '@/shared/components/ui/button';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
+import { getTripCatalog, getTrips } from '@/features/trips/lib/trips.server';
+import { getApiDataOrThrow } from '@/shared/lib/apiResult';
+import { TripResults } from '@/features/trips/components/TripResults';
+import { searchSchema } from '@/features/trips/schemas/searchSchema';
 export default async function TripsPage({
   params,
   searchParams,

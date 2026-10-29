@@ -1,10 +1,14 @@
 'use client';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
-import { Form, FormSelect } from '@/shared/components/forms';
-import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
-import { NativeSelectOption } from '@/shared/components/ui';
-import type { ManagedUser } from '@/features/users';
+import { Form } from '@/shared/components/forms/Form';
+import { FormSelect } from '@/shared/components/forms/FormSelect';
+import {
+  FormDialog,
+  FormDialogActions,
+} from '@/shared/components/dialogs/FormDialog';
+import { NativeSelectOption } from '@/shared/components/ui/native-select';
+import type { ManagedUser } from '@/features/users/schemas/userSchema';
 const schema = z.object({
   role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
 });

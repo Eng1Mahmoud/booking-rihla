@@ -1,12 +1,13 @@
 'use client';
 import { useId, type ComponentProps, type ReactNode } from 'react';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 import {
   useFormContext,
   type FieldValues,
   type FieldPath,
 } from 'react-hook-form';
-import { NativeSelect, Field, FieldLabel, FieldError } from '../ui';
+import { NativeSelect } from '../ui/native-select';
+import { Field, FieldLabel, FieldError } from '../ui/field';
 type Props<T extends FieldValues> = Omit<
   ComponentProps<typeof NativeSelect>,
   'name' | 'id'

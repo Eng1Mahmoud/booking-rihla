@@ -7,17 +7,15 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import {
-  Form,
-  FormSelect,
-  DatePickr,
-  SubmitButton,
-} from '@/shared/components/forms';
+import { Form } from '@/shared/components/forms/Form';
+import { FormSelect } from '@/shared/components/forms/FormSelect';
+import { DatePickr } from '@/shared/components/forms/DatePickr';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import {
   NativeSelectOptGroup,
   NativeSelectOption,
-  Button,
-} from '@/shared/components/ui';
+} from '@/shared/components/ui/native-select';
+import { Button } from '@/shared/components/ui/button';
 import type { City, Station } from '../types/trip';
 import type { Search } from '../schemas/searchSchema';
 import {

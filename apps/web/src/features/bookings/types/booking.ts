@@ -1,5 +1,5 @@
 import type { BookingFilter } from '../schemas/bookingSchema';
-import type { Trip } from '@/features/trips';
+import type { Trip } from '@/features/trips/types/trip';
 export type Booking = {
   id: string;
   reference: string;

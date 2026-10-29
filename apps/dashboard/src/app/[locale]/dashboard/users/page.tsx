@@ -1,5 +1,5 @@
-import { getSignedInUser } from '@/features/auth/server';
-import { UsersManager } from '@/features/users';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
+import { UsersManager } from '@/features/users/components/UsersManager';
 
 export default async function UsersPage() {
   const user = await getSignedInUser();

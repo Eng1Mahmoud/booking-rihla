@@ -1,11 +1,9 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  useDataTableState,
-  useConfirmation,
-  useDialogFocus,
-} from '@/shared/hooks';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { useConfirmation } from '@/shared/hooks/useConfirmation';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
 import { useBusesData } from './useBusesData';
 import { createBusColumns } from '../lib/busColumns';
 import type { BusInput } from '../schemas/busSchema';

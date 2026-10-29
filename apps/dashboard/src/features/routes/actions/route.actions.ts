@@ -1,8 +1,8 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure } from '@/shared/lib';
+import { apiFailure } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { StationRow } from '@/features/stations';
+import type { StationRow } from '@/features/stations/types/station';
 import type { Route, RouteInput, RouteListQuery } from '../schemas/routeSchema';
 export async function getRouteStationsAction() {
   const stations: StationRow[] = [];

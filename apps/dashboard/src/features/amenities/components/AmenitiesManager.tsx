@@ -1,10 +1,11 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { Wifi, Plus } from 'lucide-react';
-import { DataTable } from '@/shared/components/tables';
-import { Button } from '@/shared/components/ui';
-import { EmptyState, ListError } from '@/shared/components/feedback';
-import { ConfirmDialog } from '@/shared/components/dialogs';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { Button } from '@/shared/components/ui/button';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { useAmenities } from '../hooks/useAmenities';
 import { AmenityEditor } from './AmenityEditor';
 import type { Amenity } from '../types/amenity';

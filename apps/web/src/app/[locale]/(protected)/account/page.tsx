@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { AccountLayout } from '@/features/account/server';
-import { AccountProfile } from '@/features/account';
+import { AccountLayout } from '@/features/account/components/AccountLayout';
+import { AccountProfile } from '@/features/account/components/AccountProfile';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AccountPage() {

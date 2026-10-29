@@ -8,7 +8,7 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
-} from '@/shared/components/ui';
+} from '@/shared/components/ui/alert-dialog';
 
 export function ConfirmDialog({
   open,

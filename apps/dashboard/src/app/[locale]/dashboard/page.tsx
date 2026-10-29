@@ -1,9 +1,8 @@
 import { getTranslations } from 'next-intl/server';
-import { DateFilter, cairoToday } from '@/features/dashboard';
-import {
-  DashboardOverview,
-  getDashboardReports,
-} from '@/features/dashboard/server';
+import { DateFilter } from '@/features/dashboard/components/DateFilter';
+import { cairoToday } from '@/features/dashboard/lib/format';
+import { DashboardOverview } from '@/features/dashboard/components/DashboardOverview';
+import { getDashboardReports } from '@/features/dashboard/lib/reports.server';
 export default async function DashboardPage({
   searchParams,
 }: {

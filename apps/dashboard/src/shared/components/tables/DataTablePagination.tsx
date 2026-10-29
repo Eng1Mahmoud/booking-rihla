@@ -2,8 +2,8 @@
 import type { RowData } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
-import type { DataTableInstance } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import type { DataTableInstance } from '@/shared/lib/dataTable';
 
 export function DataTablePagination<TData extends RowData>({
   table,

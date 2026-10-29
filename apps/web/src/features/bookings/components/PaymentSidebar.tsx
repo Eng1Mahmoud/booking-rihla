@@ -1,6 +1,7 @@
 'use client';
-import { Button } from '@/shared/components/ui';
-import { cn, formatPrice } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
+import { formatPrice } from '@/shared/lib/format';
 import { useTranslations } from 'next-intl';
 import {
   Clock,
@@ -12,7 +13,7 @@ import {
 import { Link } from '@/i18n/navigation';
 import type { Booking, BookingPaymentData } from '../types/booking';
 import { PaymentStatus } from './PaymentStatus';
-import { ErrorNotice } from '@/shared/components/feedback';
+import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
 
 function OutcomeIcon({ outcome }: { outcome: string }) {
   if (outcome === 'paid') return <CheckCircle2 size={21} />;

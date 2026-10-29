@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import { useId } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';

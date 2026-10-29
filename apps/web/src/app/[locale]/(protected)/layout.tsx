@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { getSignedInUser } from '@/features/auth/server';
+import { getSignedInUser } from '@/features/auth/lib/auth.server';
 import { ReadError } from '@/shared/components/feedback/ReadError';
-import { errorMessage } from '@/shared/lib';
+import { errorMessage } from '@/shared/lib/apiResult';
 
 /** Second-line RSC guard; middleware already enforces protected paths. */
 export default async function ProtectedLayout({

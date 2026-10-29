@@ -1,8 +1,8 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib';
+import type { ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { ListPage } from '@/shared/types';
+import type { ListPage } from '@/shared/types/list';
 import type { StationListQuery, StationInput } from '../schemas/stationSchema';
 import type { Station, StationRow } from '../types/station';
 

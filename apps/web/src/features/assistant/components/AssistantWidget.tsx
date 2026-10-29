@@ -17,8 +17,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Button } from '@/shared/components/ui';
-import { cn } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 import { AssistantResults } from './AssistantResults';
 import { useSpeechToText } from '../hooks/useSpeech';
 

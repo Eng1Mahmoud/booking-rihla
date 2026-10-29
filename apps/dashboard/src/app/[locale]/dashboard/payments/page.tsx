@@ -1,4 +1,4 @@
-import { PaymentsManager } from '@/features/payments';
+import { PaymentsManager } from '@/features/payments/components/PaymentsManager';
 export default async function PaymentsPage({
   searchParams,
 }: {

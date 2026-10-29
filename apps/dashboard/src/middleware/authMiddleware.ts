@@ -1,5 +1,4 @@
 import { apiFetch } from '@/shared/lib/api';
-import { NextResponse, type NextRequest } from 'next/server';
 import {
   authCookies,
   getSessionCookies,
@@ -8,7 +7,8 @@ import {
   tokensSchema,
   type AuthTokens,
 } from '@/shared/lib/session';
-import type { AuthUser } from '@/features/auth';
+import { NextResponse, type NextRequest } from 'next/server';
+import type { AuthUser } from '@/features/auth/types/auth';
 import { getProtectedRoute, getRouteDetails } from './roleRoutes';
 
 export async function authMiddleware(

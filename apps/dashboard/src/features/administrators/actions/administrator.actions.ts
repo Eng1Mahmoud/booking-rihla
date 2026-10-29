@@ -1,6 +1,6 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ManagedUser } from '@/features/users';
+import type { ManagedUser } from '@/features/users/schemas/userSchema';
 import type { AdministratorFilters } from '../schemas/administratorSchema';
 
 export async function getAdministratorsAction(

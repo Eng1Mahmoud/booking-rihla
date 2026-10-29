@@ -2,9 +2,10 @@
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib';
-import { useActionErrors, type DataTableState } from '@/shared/hooks';
-import { cityOptionsQuery } from '@/features/cities';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import type { DataTableState } from '@/shared/hooks/useDataTableState';
+import { cityOptionsQuery } from '@/features/cities/lib/cityOptions';
 import {
   getStationsAction,
   saveStationAction,

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { Armchair, Check, CircleGauge } from 'lucide-react';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 
 const seats = Array.from({ length: 12 }, (_, index) => index + 1);
 const unavailable = [3, 8];

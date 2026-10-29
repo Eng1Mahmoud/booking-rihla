@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 
 export function RefreshPage({
   label,

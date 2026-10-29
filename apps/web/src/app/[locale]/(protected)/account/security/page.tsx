@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { KeyRound } from 'lucide-react';
-import { AccountLayout } from '@/features/account/server';
-import { AccountSessions } from '@/features/account';
-import { Button } from '@/shared/components/ui';
+import { AccountLayout } from '@/features/account/components/AccountLayout';
+import { AccountSessions } from '@/features/account/components/AccountSessions';
+import { Button } from '@/shared/components/ui/button';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function SecurityPage() {

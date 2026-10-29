@@ -4,7 +4,7 @@ import { parseSchema } from '@/shared/lib/parseSchema';
 import { paymentHistoryOffsetSchema } from '../schemas/paymentHistorySchema';
 import { profileSchema, type ProfileInput } from '../schemas/profileSchema';
 import type { PaymentHistoryPage } from '../types/payment';
-import type { AuthUser } from '@/features/auth';
+import type { AuthUser } from '@/features/auth/types/auth';
 
 export async function updateProfileAction(input: ProfileInput) {
   const parsed = await parseSchema(profileSchema, input);

@@ -2,12 +2,17 @@
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Undo2, RefreshCw } from 'lucide-react';
-import { RowActionMenu, DataTable } from '@/shared/components/tables';
+import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
+import { DataTable } from '@/shared/components/tables/DataTable';
 import { Link } from '@/i18n/navigation';
-import { ConfirmDialog } from '@/shared/components/dialogs';
-import { ListError, EmptyState } from '@/shared/components/feedback';
-import type { DataTableColumn } from '@/shared/lib';
-import { formatGrossPaid, formatReportTime } from '@/features/dashboard';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import type { DataTableColumn } from '@/shared/lib/dataTable';
+import {
+  formatGrossPaid,
+  formatReportTime,
+} from '@/features/dashboard/lib/format';
 import { useRefunds } from '../hooks/useRefunds';
 import type { Refund } from '../schemas/refundSchema';
 export function RefundsManager() {

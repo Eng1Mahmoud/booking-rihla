@@ -1,7 +1,7 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib';
 import { parseSchema } from '@/shared/lib/parseSchema';
+import type { ApiResult } from '@/shared/lib/apiResult';
 import { getBookingPaymentState } from '../lib/bookings.server';
 import {
   createBookingSchema,

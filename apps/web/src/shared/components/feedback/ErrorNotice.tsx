@@ -1,8 +1,8 @@
 'use client';
 import { useLocale } from 'next-intl';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { ApiError, errorLinks, errorMessage } from '@/shared/lib';
+import { ApiError, errorLinks, errorMessage } from '@/shared/lib/apiResult';
 
 export function ErrorNotice({
   error,

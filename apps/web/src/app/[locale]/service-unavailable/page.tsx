@@ -1,8 +1,8 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { PageStatus } from '@/shared/components/feedback';
-import { Button } from '@/shared/components/ui';
-import { getSessionRetryPath } from '@/shared/lib';
+import { PageStatus } from '@/shared/components/feedback/PageStatus';
+import { Button } from '@/shared/components/ui/button';
+import { getSessionRetryPath } from '@/shared/lib/sessionRetryPath';
 import { RotateCw } from 'lucide-react';
 
 export const metadata = { robots: { index: false, follow: false } };

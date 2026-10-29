@@ -1,7 +1,9 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Form, FormInput, SubmitButton } from '@/shared/components/forms';
+import { Form } from '@/shared/components/forms/Form';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
 import { useLogin } from '../../hooks/useAuth';
 import { loginSchema } from '../../schemas/authSchema';
 import type { LoginInput } from '../../types/auth';

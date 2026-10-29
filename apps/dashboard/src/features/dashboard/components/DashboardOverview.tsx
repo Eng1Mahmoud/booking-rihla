@@ -1,7 +1,8 @@
 import { Armchair, BusFront, Database, Ticket } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { cn, type ApiResult } from '@/shared/lib';
-import { RefreshPage } from '@/shared/components/feedback';
+import { cn } from '@/shared/lib/cn';
+import type { ApiResult } from '@/shared/lib/apiResult';
+import { RefreshPage } from '@/shared/components/feedback/RefreshPage';
 import type { OperationReport, PaymentReport } from '../types/report';
 import { formatGrossPaid } from '../lib/format';
 type Row = { label: string; value: number; tone?: string };

@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { useAuth } from '@/features/auth';
-import { useCreateBooking } from '@/features/bookings';
-import { ApiError, errorMessage } from '@/shared/lib';
-import type { SeatList, Trip } from '@/features/trips';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useCreateBooking } from '@/features/bookings/hooks/useBookings';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
+import type { SeatList, Trip } from '@/features/trips/types/trip';
 import { useSeatSelection } from './useSeatSelection';
 
 /**

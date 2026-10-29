@@ -1,4 +1,5 @@
-import { type DataTableColumn, cn } from '@/shared/lib';
+import type { DataTableColumn } from '@/shared/lib/dataTable';
+import { cn } from '@/shared/lib/cn';
 
 export function createNameColumns<T extends { nameAr: string; nameEn: string }>(
   locale: string,

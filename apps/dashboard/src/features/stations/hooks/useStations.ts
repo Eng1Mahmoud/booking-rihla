@@ -8,11 +8,9 @@ import {
 } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import {
-  useDataTableState,
-  useConfirmation,
-  useDialogFocus,
-} from '@/shared/hooks';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { useConfirmation } from '@/shared/hooks/useConfirmation';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
 import { useStationsData } from './useStationsData';
 import { createStationColumns } from '../lib/stationColumns';
 import type { StationInput } from '../schemas/stationSchema';

@@ -1,8 +1,13 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
-import { Form, FormInput, FormSelect } from '@/shared/components/forms';
-import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
-import { NativeSelectOption } from '@/shared/components/ui';
+import { Form } from '@/shared/components/forms/Form';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { FormSelect } from '@/shared/components/forms/FormSelect';
+import {
+  FormDialog,
+  FormDialogActions,
+} from '@/shared/components/dialogs/FormDialog';
+import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import {
   routeFormSchema,
   type Route,

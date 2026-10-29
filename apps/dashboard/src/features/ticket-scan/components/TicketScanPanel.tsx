@@ -1,12 +1,13 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import {
   scanTicketAction,
   type ScanTicketResult,
 } from '../actions/scan.actions';
-import { cn, ApiError, errorMessage } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
+import { ApiError, errorMessage } from '@/shared/lib/apiResult';
 
 type Detector = {
   detect: (source: ImageBitmapSource) => Promise<{ rawValue?: string }[]>;

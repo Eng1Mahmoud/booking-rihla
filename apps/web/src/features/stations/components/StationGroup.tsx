@@ -2,7 +2,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import type { StationGroupData } from '../hooks/useStationDirectory';
-import { displayName } from '@/shared/lib';
+import { displayName } from '@/shared/lib/format';
 
 export function StationGroup({ id, city, stations }: StationGroupData) {
   const t = useTranslations('Stations');

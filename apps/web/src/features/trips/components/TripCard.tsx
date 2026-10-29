@@ -1,8 +1,8 @@
 import { useTranslations } from 'next-intl';
 import { BusFront, ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { displayName, formatPrice, formatTime } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { displayName, formatPrice, formatTime } from '@/shared/lib/format';
 import { cairoDate } from '../schemas/searchSchema';
 import type { Trip } from '../types/trip';
 

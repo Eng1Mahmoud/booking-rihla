@@ -2,11 +2,15 @@
 import { useEffect, type ReactNode } from 'react';
 import { useTable, type RowData } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
-import type { DataTableState } from '@/shared/hooks';
-import { dataTableFeatures, type DataTableColumn, cn } from '@/shared/lib';
+import type { DataTableState } from '@/shared/hooks/useDataTableState';
 import {
-  Button,
-  Skeleton,
+  dataTableFeatures,
+  type DataTableColumn,
+} from '@/shared/lib/dataTable';
+import { cn } from '@/shared/lib/cn';
+import { Button } from '@/shared/components/ui/button';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import {
   Table,
   TableBody,
   TableCaption,
@@ -14,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui';
+} from '@/shared/components/ui/table';
 import { DataTableToolbar, type DataTableSearch } from './DataTableToolbar';
 import { DataTablePagination } from './DataTablePagination';
 

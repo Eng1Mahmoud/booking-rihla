@@ -1,6 +1,6 @@
 import 'server-only';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib';
+import type { ApiResult } from '@/shared/lib/apiResult';
 import type { Trip, City, Station, TripCatalog } from '../types/trip';
 import type { Search } from '../schemas/searchSchema';
 

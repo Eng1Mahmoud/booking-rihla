@@ -1,7 +1,11 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { Form, NameFields } from '@/shared/components/forms';
-import { FormDialog, FormDialogActions } from '@/shared/components/dialogs';
+import { Form } from '@/shared/components/forms/Form';
+import { NameFields } from '@/shared/components/forms/NameFields';
+import {
+  FormDialog,
+  FormDialogActions,
+} from '@/shared/components/dialogs/FormDialog';
 import { cityInputSchema, type CityInput } from '../schemas/citySchema';
 import type { City } from '../types/city';
 

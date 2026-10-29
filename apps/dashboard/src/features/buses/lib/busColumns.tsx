@@ -1,6 +1,6 @@
 import type { useTranslations } from 'next-intl';
-import { RowActions } from '@/shared/components/tables';
-import type { DataTableColumn } from '@/shared/lib';
+import { RowActions } from '@/shared/components/tables/RowActions';
+import type { DataTableColumn } from '@/shared/lib/dataTable';
 import type { Bus } from '../types/bus';
 export function createBusColumns({
   locale,

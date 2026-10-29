@@ -1,8 +1,8 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib';
-import { useActionErrors } from '@/shared/hooks';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { useActionErrors } from '@/shared/hooks/useActionErrors';
 import type { BusListQuery, BusInput } from '../schemas/busSchema';
 import { busOptionsQuery } from '../lib/busOptions';
 import {

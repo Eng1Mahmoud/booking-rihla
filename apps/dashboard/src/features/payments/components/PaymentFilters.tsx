@@ -1,14 +1,14 @@
 'use client';
 import { useId } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/shared/components/ui/button';
+import { DatePickr } from '@/shared/components/ui/date-pickr';
+import { Input } from '@/shared/components/ui/input';
 import {
-  Button,
-  DatePickr,
-  Input,
   NativeSelect,
   NativeSelectOption,
-} from '@/shared/components/ui';
-import type { DataTableState } from '@/shared/hooks';
+} from '@/shared/components/ui/native-select';
+import type { DataTableState } from '@/shared/hooks/useDataTableState';
 import {
   emptyPaymentFilters,
   type PaymentFilterValues as FilterValues,

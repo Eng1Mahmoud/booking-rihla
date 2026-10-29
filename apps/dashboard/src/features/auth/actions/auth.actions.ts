@@ -2,13 +2,13 @@
 import { cookies } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure, type ApiResult } from '@/shared/lib';
 import {
   deleteSessionCookies,
   getSessionCookies,
   setSessionCookies,
   tokensSchema,
 } from '@/shared/lib/session';
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import type { LoginValues } from '../schemas/loginSchema';
 import type { AuthUser, UserRole } from '../types/auth';
 export async function loginAction(

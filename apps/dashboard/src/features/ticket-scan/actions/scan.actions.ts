@@ -1,5 +1,4 @@
 'use server';
-
 import { apiFetch } from '@/shared/lib/api';
 
 export type ScanTicketResult = {

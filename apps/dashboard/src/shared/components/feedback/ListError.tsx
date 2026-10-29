@@ -1,6 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 
 export function ListError({
   title,

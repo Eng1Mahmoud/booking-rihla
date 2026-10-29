@@ -1,8 +1,11 @@
 'use client';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { NativeSelect, NativeSelectOption } from '@/shared/components/ui';
-import type { DataTableState } from '@/shared/hooks';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/shared/components/ui/native-select';
+import type { DataTableState } from '@/shared/hooks/useDataTableState';
 import type { RouteListQuery } from '../schemas/routeSchema';
 import { stationLabel, type RouteStation } from '../lib/routeColumns';
 type Filters = Pick<

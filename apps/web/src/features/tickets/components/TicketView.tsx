@@ -1,13 +1,9 @@
 'use client';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTicket } from '../hooks/useTicket';
-import {
-  errorMessage,
-  formatDate,
-  formatTime,
-  formatPrice,
-} from '@/shared/lib';
+import { errorMessage } from '@/shared/lib/apiResult';
+import { formatDate, formatTime, formatPrice } from '@/shared/lib/format';
 import Image from 'next/image';
 import { Printer } from 'lucide-react';
 import type { TicketViewData } from '../types/ticket';

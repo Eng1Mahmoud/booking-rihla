@@ -4,8 +4,8 @@ import { flushSync } from 'react-dom';
 import { ticketKeys } from './queryKeys';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { useAuth } from '@/features/auth';
-import { invokeAction } from '@/shared/lib';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { invokeAction } from '@/shared/lib/apiResult';
 import { getTicketAction } from '../actions/tickets.actions';
 import type { TicketViewData } from '../types/ticket';
 

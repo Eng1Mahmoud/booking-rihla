@@ -2,8 +2,9 @@
 import { useId, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { RefreshCw, Search } from 'lucide-react';
-import { Button, Input } from '@/shared/components/ui';
-import { cn } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { cn } from '@/shared/lib/cn';
 
 export type DataTableSearch = { label: string; placeholder: string };
 

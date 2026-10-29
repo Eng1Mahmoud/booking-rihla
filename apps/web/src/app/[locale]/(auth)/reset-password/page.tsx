@@ -1,4 +1,4 @@
-import { PasswordRecovery } from '@/features/auth/server';
+import { PasswordRecovery } from '@/features/auth/components/password-recovery/PasswordRecovery';
 export const metadata = {
   referrer: 'no-referrer' as const,
   robots: { index: false, follow: false },

@@ -1,4 +1,4 @@
-import { StationsManager } from '@/features/stations';
+import { StationsManager } from '@/features/stations/components/StationsManager';
 
 export default async function StationsPage({
   searchParams,

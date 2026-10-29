@@ -1,10 +1,10 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure, type ApiResult } from '@/shared/lib';
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { Route } from '@/features/routes';
-import type { StationRow } from '@/features/stations';
-import type { Bus } from '@/features/buses';
+import type { Route } from '@/features/routes/schemas/routeSchema';
+import type { StationRow } from '@/features/stations/types/station';
+import type { Bus } from '@/features/buses/types/bus';
 import type {
   Trip,
   TripInput,

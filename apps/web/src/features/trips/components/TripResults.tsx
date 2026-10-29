@@ -1,9 +1,12 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { QueryError, EmptyState } from '@/shared/components/feedback';
-import { displayName, errorMessage, cn } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { QueryError } from '@/shared/components/feedback/QueryError';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { displayName } from '@/shared/lib/format';
+import { errorMessage } from '@/shared/lib/apiResult';
+import { cn } from '@/shared/lib/cn';
 import { TripSearchForm } from './TripSearchForm';
 import { TripCard } from './TripCard';
 import {

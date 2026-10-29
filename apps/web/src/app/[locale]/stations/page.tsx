@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
-import { getTripCatalog } from '@/features/trips/server';
-import { StationDirectory } from '@/features/stations';
-import { PageIntro } from '@/shared/components/layout';
+import { getTripCatalog } from '@/features/trips/lib/trips.server';
+import { StationDirectory } from '@/features/stations/components/StationDirectory';
+import { PageIntro } from '@/shared/components/layout/PageIntro';
 import { Info, BusFront } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import { Link } from '@/i18n/navigation';
 
 export async function generateMetadata({

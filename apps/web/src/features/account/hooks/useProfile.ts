@@ -1,7 +1,9 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { invokeAction } from '@/shared/lib';
-import { useAuth, authKeys, type AuthSession } from '@/features/auth';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { authKeys } from '@/features/auth/hooks/queryKeys';
+import type { AuthSession } from '@/features/auth/types/auth';
 import { updateProfileAction } from '../actions/account.actions';
 import type { ProfileInput } from '../schemas/profileSchema';
 

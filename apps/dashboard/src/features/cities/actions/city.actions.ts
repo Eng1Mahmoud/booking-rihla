@@ -1,8 +1,8 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure, type ApiResult } from '@/shared/lib';
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/types';
+import type { ListPage, ListQuery } from '@/shared/types/list';
 import type { CityInput } from '../schemas/citySchema';
 import type { City, CityRow } from '../types/city';
 

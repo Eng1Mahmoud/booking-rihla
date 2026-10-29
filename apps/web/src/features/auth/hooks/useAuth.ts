@@ -15,7 +15,7 @@ import {
   forgotPasswordAction,
   resetPasswordAction,
 } from '../actions/auth.actions';
-import { ApiError, invokeAction } from '@/shared/lib';
+import { ApiError, invokeAction } from '@/shared/lib/apiResult';
 import type { LoginInput, RegisterInput, AuthSession } from '../types/auth';
 import type { RecoveryValues } from '../schemas/recoverySchema';
 import { authKeys } from './queryKeys';

@@ -1,8 +1,9 @@
 'use client';
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApiError, createQueryClient } from '@/shared/lib';
-import { resetAuthCache } from '@/features/auth';
+import { ApiError } from '@/shared/lib/apiResult';
+import { createQueryClient } from '@/shared/lib/queryClient';
+import { resetAuthCache } from '@/features/auth/hooks/useAuth';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 export function AppProviders({ children }: { children: ReactNode }) {
   const router = useRouter();

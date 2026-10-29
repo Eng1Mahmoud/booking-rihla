@@ -1,7 +1,8 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, Button } from '@/shared/components/ui';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
 
 // The feature supplies the message and refetch; this component only renders them.
 export function QueryError({

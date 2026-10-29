@@ -2,10 +2,11 @@
 import { useId } from 'react';
 import { Plus, CalendarDays } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { DataTable } from '@/shared/components/tables';
-import { ListError, EmptyState } from '@/shared/components/feedback';
-import { ConfirmDialog } from '@/shared/components/dialogs';
+import { Button } from '@/shared/components/ui/button';
+import { DataTable } from '@/shared/components/tables/DataTable';
+import { ListError } from '@/shared/components/feedback/ListError';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { useTrips } from '../hooks/useTrips';
 import { TripEditor } from './TripEditor';
 import { TripFilters } from './TripFilters';

@@ -2,11 +2,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { invokeAction } from '@/shared/lib';
-import { useActionErrors } from '@/shared/hooks';
-import { FormDialog } from '@/shared/components/dialogs';
-import { RecordDetails, ListError } from '@/shared/components/feedback';
-import { formatReportTime, formatGrossPaid } from '@/features/dashboard';
+import { invokeAction } from '@/shared/lib/apiResult';
+import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import { FormDialog } from '@/shared/components/dialogs/FormDialog';
+import { RecordDetails } from '@/shared/components/feedback/RecordDetails';
+import { ListError } from '@/shared/components/feedback/ListError';
+import {
+  formatReportTime,
+  formatGrossPaid,
+} from '@/features/dashboard/lib/format';
 import { getPaymentAction } from '../actions/payment.actions';
 export function PaymentDetails({
   id,

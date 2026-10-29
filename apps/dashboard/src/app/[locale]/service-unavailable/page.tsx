@@ -2,9 +2,9 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { RotateCw } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { PageStatus } from '@booking-bus/ui/page-status';
-import { Button } from '@/shared/components/ui';
-import { StatusPageLayout } from '@/shared/components/feedback';
-import { getSessionRetryPath } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { StatusPageLayout } from '@/shared/components/feedback/StatusPageLayout';
+import { getSessionRetryPath } from '@/shared/lib/sessionRetryPath';
 
 export const metadata = { robots: { index: false, follow: false } };
 

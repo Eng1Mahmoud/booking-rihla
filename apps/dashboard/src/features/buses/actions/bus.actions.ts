@@ -1,10 +1,10 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { apiFailure, type ApiResult } from '@/shared/lib';
+import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { ListPage } from '@/shared/types';
-import type { BusType } from '@/features/bus-types';
-import type { Amenity } from '@/features/amenities';
+import type { ListPage } from '@/shared/types/list';
+import type { BusType } from '@/features/bus-types/types/busType';
+import type { Amenity } from '@/features/amenities/types/amenity';
 import type { BusInput, BusListQuery } from '../schemas/busSchema';
 import type { Bus, BusOptions } from '../types/bus';
 export async function getBusOptionsAction(): Promise<ApiResult<BusOptions>> {

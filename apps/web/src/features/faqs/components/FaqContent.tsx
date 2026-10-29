@@ -12,8 +12,9 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { Input, Button } from '@/shared/components/ui';
-import { cn } from '@/shared/lib';
+import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 
 const categories = [
   {

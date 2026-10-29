@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
-import { displayName, formatDate, formatTime } from '@/shared/lib';
+import { displayName, formatDate, formatTime } from '@/shared/lib/format';
 import type { BookingDetails } from '../types/booking';
 import { BookingPayment } from './BookingPayment';
 

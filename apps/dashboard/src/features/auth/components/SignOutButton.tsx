@@ -4,8 +4,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { LogOut } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import { Button } from '@/shared/components/ui';
-import { errorMessage, invokeAction } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { errorMessage, invokeAction } from '@/shared/lib/apiResult';
 import { logoutAction } from '../actions/auth.actions';
 export function SignOutButton() {
   const t = useTranslations('Auth');

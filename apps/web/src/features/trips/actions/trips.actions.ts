@@ -1,7 +1,7 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import { z } from 'zod';
 import { parseSchema } from '@/shared/lib/parseSchema';
+import { z } from 'zod';
 import { searchSchema, type Search } from '../schemas/searchSchema';
 import { getTripCatalog, getTrips } from '../lib/trips.server';
 import type { Trip } from '../types/trip';

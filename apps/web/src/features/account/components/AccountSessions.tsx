@@ -2,9 +2,9 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { LogOut } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
-import { useLogout } from '@/features/auth';
-import { errorMessage } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { useLogout } from '@/features/auth/hooks/useAuth';
+import { errorMessage } from '@/shared/lib/apiResult';
 
 export function AccountSessions() {
   const t = useTranslations('Account');

@@ -9,11 +9,8 @@ import type { PickerProps } from '@booking-bus/ui/date-pickr';
 import {
   DatePickr as CalendarPickr,
   TimePicker as ClockPicker,
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-} from '../ui';
+} from '../ui/date-pickr';
+import { Field, FieldLabel, FieldDescription, FieldError } from '../ui/field';
 
 type Props<T extends FieldValues> = Omit<
   PickerProps,

@@ -16,11 +16,11 @@ import {
   LogIn,
 } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
-import { cn } from '@/shared/lib';
-import { Button } from '@/shared/components/ui';
+import { cn } from '@/shared/lib/cn';
+import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { useLoginHref } from '../../hooks/useLoginHref';
-import { LanguageSwitcher } from '@/shared/components/layout';
+import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
 
 export function HeaderNavigation() {
   const t = useTranslations('Header');

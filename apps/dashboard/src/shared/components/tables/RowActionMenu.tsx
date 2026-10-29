@@ -2,13 +2,13 @@
 import { useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { EllipsisVertical, type LucideIcon } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
 import {
-  Button,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '@/shared/components/ui';
+} from '@/shared/components/ui/dropdown-menu';
 
 export type RowAction = {
   label: string;

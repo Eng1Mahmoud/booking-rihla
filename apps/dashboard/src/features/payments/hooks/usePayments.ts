@@ -2,12 +2,10 @@
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import {
-  useDataTableState,
-  useActionErrors,
-  useDialogFocus,
-} from '@/shared/hooks';
-import { invokeAction } from '@/shared/lib';
+import { useDataTableState } from '@/shared/hooks/useDataTableState';
+import { useActionErrors } from '@/shared/hooks/useActionErrors';
+import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
+import { invokeAction } from '@/shared/lib/apiResult';
 import { getPaymentsAction } from '../actions/payment.actions';
 import {
   emptyPaymentFilters,

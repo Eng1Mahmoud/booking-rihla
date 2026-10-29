@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 import { TableScrollArea } from '@/shared/components/tables/TableScrollArea';
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {

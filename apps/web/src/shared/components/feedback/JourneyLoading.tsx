@@ -1,5 +1,5 @@
 import { BusFront, MapPin } from 'lucide-react';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 
 export function JourneyLoading({
   title,

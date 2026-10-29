@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { BusFront, ExternalLink } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { LanguageSwitcher } from '@/shared/components/layout';
-import { StaffAccountMenu, type AuthUser } from '@/features/auth';
+import { LanguageSwitcher } from '@/shared/components/layout/LanguageSwitcher';
+import { StaffAccountMenu } from '@/features/auth/components/StaffAccountMenu';
+import type { AuthUser } from '@/features/auth/types/auth';
 import { DashboardNavigation } from './DashboardNavigation';
 export async function DashboardShell({
   user,

@@ -1,8 +1,10 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { Form, FormInput, SubmitButton } from '@/shared/components/forms';
-import type { Seat } from '@/features/trips';
-import type { AuthUser } from '@/features/auth';
+import { Form } from '@/shared/components/forms/Form';
+import { FormInput } from '@/shared/components/forms/FormInput';
+import { SubmitButton } from '@/shared/components/forms/SubmitButton';
+import type { Seat } from '@/features/trips/types/trip';
+import type { AuthUser } from '@/features/auth/types/auth';
 import {
   passengerSchema,
   type PassengerValues,

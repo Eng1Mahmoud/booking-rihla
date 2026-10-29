@@ -2,8 +2,8 @@
 import type { ComponentProps } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
-import { Button } from '../ui';
-import { cn } from '@/shared/lib';
+import { Button } from '../ui/button';
+import { cn } from '@/shared/lib/cn';
 export function SubmitButton({
   children,
   disabled,

@@ -1,15 +1,16 @@
 'use client';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import { useBookings } from '../hooks/useBookings';
-import { ErrorNotice, EmptyState } from '@/shared/components/feedback';
+import { ErrorNotice } from '@/shared/components/feedback/ErrorNotice';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import {
   bookingFilterSchema,
   type BookingFilter,
 } from '../schemas/bookingSchema';
 import type { BookingListPage } from '../types/booking';
 import { Link } from '@/i18n/navigation';
-import { displayName, formatDate, formatPrice } from '@/shared/lib';
+import { displayName, formatDate, formatPrice } from '@/shared/lib/format';
 function historyHref(filter: BookingFilter, offset = 0) {
   return (
     '/bookings?' +

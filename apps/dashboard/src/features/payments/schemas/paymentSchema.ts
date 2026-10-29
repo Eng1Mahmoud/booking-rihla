@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { BookingFilters } from '@/features/bookings';
+import type { BookingFilters } from '@/features/bookings/schemas/bookingSchema';
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const paymentSchema = z.object({
   id: z.uuid(),

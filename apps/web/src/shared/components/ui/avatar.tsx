@@ -1,7 +1,7 @@
 'use client';
 import type { ComponentProps } from 'react';
 import { Avatar as AvatarPrimitive } from 'radix-ui';
-import { cn } from '@/shared/lib';
+import { cn } from '@/shared/lib/cn';
 
 export function Avatar({
   className,

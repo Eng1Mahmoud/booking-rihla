@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { registerSchema } from '@/features/auth';
+import { registerSchema } from '@/features/auth/schemas/authSchema';
 
 export const createBookingSchema = z
   .strictObject({

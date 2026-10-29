@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Skeleton } from '@/shared/components/ui';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 export default async function Loading() {
   const t = await getTranslations('Forms');
   return (

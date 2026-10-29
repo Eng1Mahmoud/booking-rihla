@@ -1,6 +1,6 @@
 'use client';
-import { Button } from '@/shared/components/ui';
-import { cn } from '@/shared/lib';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { paymentOutcome } from '../lib/paymentState';

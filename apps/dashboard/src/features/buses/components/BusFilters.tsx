@@ -1,7 +1,10 @@
 'use client';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { NativeSelect, NativeSelectOption } from '@/shared/components/ui';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/shared/components/ui/native-select';
 import type { BusOptions } from '../types/bus';
 export function BusFilters({
   options,
