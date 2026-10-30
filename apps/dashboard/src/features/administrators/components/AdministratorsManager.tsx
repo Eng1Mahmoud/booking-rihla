@@ -5,44 +5,26 @@ import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/shared/components/ui/native-select';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getAdministratorsAction } from '../actions/administrator.actions';
-import { type AdministratorFilters } from '../schemas/administratorSchema';
+import { AdministratorFilters } from './AdministratorFilters';
 import { AdministratorRoleEditor } from './AdministratorRoleEditor';
 export function AdministratorsManager() {
+  const { query } = useTableQuery({
+    action: getAdministratorsAction,
+    queryKey: 'administrators',
+  });
+
   const locale = useLocale();
 
-  const list = useDataTableState<AdministratorFilters>({
-    initialFilters: { email: '', role: '', isActive: '' },
-  });
-  const query = useQuery({
-    queryKey: ['administrators', locale, list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getAdministratorsAction({
-          limit: list.params.limit,
-          offset: list.params.offset,
-          ...list.filters,
-        }),
-      ),
-  });
   const { columns, ...page } = useUserColumns({
     canChangeRole: true,
     administrator: true,
   });
   const t = useTranslations('Users');
-
-  const states = useTranslations('States');
 
   return (
     <section className="min-w-0">
@@ -65,77 +47,7 @@ export function AdministratorsManager() {
       <p role="status" className="mb-4 text-primary">
         {page.notice}
       </p>
-      <form
-        key={JSON.stringify(list.filters)}
-        className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border bg-card p-5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const data = new FormData(event.currentTarget);
-          list.resetFilters(
-            Object.fromEntries(
-              Object.keys(list.filters).map((key) => [
-                key,
-                String(data.get(key) ?? '').trim(),
-              ]),
-            ) as AdministratorFilters,
-          );
-        }}
-      >
-        <label className="grid min-w-0 flex-1 basis-56 gap-2 text-sm">
-          <span>{t('email')}</span>
-          <Input
-            name="email"
-            type="email"
-            dir="ltr"
-            defaultValue={list.filters.email}
-            className="min-h-11 bg-card"
-          />
-        </label>
-        <label className="grid gap-2 text-sm">
-          <span>{t('role')}</span>
-          <NativeSelect
-            name="role"
-            defaultValue={list.filters.role}
-            className="min-h-11"
-          >
-            <NativeSelectOption value="">{t('all')}</NativeSelectOption>
-            <NativeSelectOption value="STAFF">
-              {states('STAFF')}
-            </NativeSelectOption>
-            <NativeSelectOption value="ADMIN">
-              {states('ADMIN')}
-            </NativeSelectOption>
-            <NativeSelectOption value="SUPER_ADMIN">
-              {states('SUPER_ADMIN')}
-            </NativeSelectOption>
-          </NativeSelect>
-        </label>
-        <label className="grid gap-2 text-sm">
-          <span>{t('status')}</span>
-          <NativeSelect
-            name="isActive"
-            defaultValue={list.filters.isActive}
-            className="min-h-11"
-          >
-            <NativeSelectOption value="">{t('all')}</NativeSelectOption>
-            <NativeSelectOption value="true">{t('active')}</NativeSelectOption>
-            <NativeSelectOption value="false">
-              {t('suspended')}
-            </NativeSelectOption>
-          </NativeSelect>
-        </label>
-        <Button type="submit" className="min-h-11">
-          {t('apply')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-11"
-          onClick={() => list.resetFilters()}
-        >
-          {t('clear')}
-        </Button>
-      </form>
+      <AdministratorFilters />
       {query.isError && (
         <ListError
           title={t('readFailed')}
@@ -148,7 +60,6 @@ export function AdministratorsManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}

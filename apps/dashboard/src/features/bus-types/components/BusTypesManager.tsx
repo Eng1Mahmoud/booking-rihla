@@ -4,32 +4,24 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { BusFront, Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { getBusTypesAction } from '../actions/busType.actions';
 import { useBusTypeColumns } from '../hooks/useBusTypeColumns';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
+import { getBusTypesAction } from '../actions/busType.actions';
 import { type BusType } from '../types/busType';
 import { BusTypeEditor } from './BusTypeEditor';
 const emptyRows: BusType[] = [];
 export function BusTypesManager() {
+  const { query, hasActiveFilters } = useTableQuery({
+    action: getBusTypesAction,
+    queryKey: ['fleet', 'bus-types'],
+  });
+
   const t = useTranslations('BusTypes');
   const locale = useLocale();
-  const list = useDataTableState({ initialFilters: {} });
 
-  const query = useQuery({
-    queryKey: ['fleet', locale, 'bus-types', list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getBusTypesAction({
-          search: list.params.search,
-          limit: list.params.limit,
-          offset: list.params.offset,
-        }),
-      ),
-  });
   const { columns, ...page } = useBusTypeColumns();
   function refresh() {
     page.clearNotice();
@@ -73,7 +65,6 @@ export function BusTypesManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? emptyRows}
           rowCount={query.data?.total}
@@ -89,9 +80,9 @@ export function BusTypesManager() {
           emptyState={
             <EmptyState
               icon={BusFront}
-              title={t(list.hasFilters ? 'noResults' : 'noBusTypes')}
+              title={t(hasActiveFilters ? 'noResults' : 'noBusTypes')}
               description={t(
-                list.hasFilters ? 'noResultsHint' : 'noBusTypesHint',
+                hasActiveFilters ? 'noResultsHint' : 'noBusTypesHint',
               )}
             />
           }

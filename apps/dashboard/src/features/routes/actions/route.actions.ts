@@ -3,7 +3,7 @@ import { apiFetch } from '@/shared/lib/api';
 import { apiFailure } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
 import type { StationRow } from '@/features/stations/types/station';
-import type { Route, RouteInput, RouteListQuery } from '../schemas/routeSchema';
+import type { Route, RouteInput } from '../schemas/routeSchema';
 export async function getRouteStationsAction() {
   const stations: StationRow[] = [];
   const locale = await getLocale();
@@ -24,18 +24,8 @@ export async function getRouteStationsAction() {
   }
   return apiFailure(502, 'UPSTREAM_ERROR', locale);
 }
-export async function getRoutesAction(input: RouteListQuery) {
-  const params = new URLSearchParams({
-    limit: String(input.limit),
-    offset: String(input.offset),
-  });
-  for (const key of [
-    'originStationId',
-    'destinationStationId',
-    'isActive',
-  ] as const)
-    if (input[key]) params.set(key, input[key]);
-  return apiFetch<{ items: Route[]; total: number }>('routes?' + params);
+export async function getRoutesAction(query: string) {
+  return apiFetch<{ items: Route[]; total: number }>('routes?' + query);
 }
 export async function saveRouteAction(input: RouteInput & { id?: string }) {
   const { id, ...body } = input;

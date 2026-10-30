@@ -4,63 +4,24 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Plus, Route as RouteIcon } from 'lucide-react';
 import { useLocale } from 'next-intl';
-import {
-  getRoutesAction,
-  getRouteStationsAction,
-} from '../actions/route.actions';
 import { useRouteColumns } from '../hooks/useRouteColumns';
-import { type RouteListQuery } from '../schemas/routeSchema';
+import { useRoutesQuery } from '../hooks/useRoutesQuery';
 import { RouteEditor } from './RouteEditor';
 import { RouteFilters } from './RouteFilters';
 export function RoutesManager() {
+  const { query, refresh: refreshQuery, stations } = useRoutesQuery();
+
   const locale = useLocale();
-  const client = useQueryClient();
-  const list = useDataTableState<{
-    originStationId: string;
-    destinationStationId: string;
-    isActive: RouteListQuery['isActive'];
-  }>({
-    initialFilters: {
-      originStationId: '',
-      destinationStationId: '',
-      isActive: '',
-    },
-  });
-  const query = useQuery({
-    queryKey: ['routes', locale, list.params],
-    queryFn: async () => {
-      const [page, stations] = await Promise.all([
-        invokeAction(() =>
-          getRoutesAction({
-            limit: list.params.limit,
-            offset: list.params.offset,
-            ...list.filters,
-          }),
-        ),
-        client.fetchQuery({
-          queryKey: ['catalog', locale, 'route-stations'],
-          queryFn: () => invokeAction(getRouteStationsAction),
-        }),
-      ]);
-      return { ...page, stations };
-    },
-  });
-  const stations = query.data?.stations ?? [];
+
   const { columns, ...page } = useRouteColumns({
     stations,
   });
-  async function refresh() {
+  function refresh() {
     page.clearNotice();
-    await client.invalidateQueries({
-      queryKey: ['catalog', locale, 'route-stations'],
-      refetchType: 'none',
-    });
-    await query.refetch();
+    void refreshQuery();
   }
 
   const t = page.t;
@@ -98,7 +59,6 @@ export function RoutesManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}
@@ -108,13 +68,9 @@ export function RoutesManager() {
           isLoading={query.isPending}
           isFetching={query.isFetching}
           onRefresh={refresh}
-          filters={(state) => (
-            <RouteFilters
-              state={state}
-              stations={stations}
-              disabled={query.isFetching}
-            />
-          )}
+          filters={
+            <RouteFilters stations={stations} disabled={query.isFetching} />
+          }
           emptyState={
             <EmptyState
               icon={RouteIcon}

@@ -1,26 +1,36 @@
 'use client';
-import { useId } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
 import {
   NativeSelect,
   NativeSelectOption,
 } from '@/shared/components/ui/native-select';
+import { useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { useId } from 'react';
+
 import type { BusOptions } from '../types/bus';
 export function BusFilters({
   options,
-  typeId,
-  status,
   disabled,
-  onTypeChange,
-  onStatusChange,
 }: {
   options?: BusOptions;
-  typeId: string;
-  status: '' | 'true' | 'false';
   disabled: boolean;
-  onTypeChange: (value: string) => void;
-  onStatusChange: (value: '' | 'true' | 'false') => void;
 }) {
+  function updateFilter(name: string, value: string) {
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set('filter.' + name, value);
+    else url.searchParams.delete('filter.' + name);
+    url.searchParams.delete('offset');
+    if (url.href !== window.location.href)
+      window.history.pushState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  const urlParams = useSearchParams();
+  const activeFilters = {
+    busTypeId: urlParams.get('filter.busTypeId') ?? '',
+    isActive: urlParams.get('filter.isActive') ?? '',
+  };
+  const typeId = activeFilters.busTypeId;
+  const status = activeFilters.isActive;
   const t = useTranslations('Buses');
   const locale = useLocale();
   const id = useId();
@@ -38,7 +48,7 @@ export function BusFilters({
           value={typeId}
           disabled={disabled}
           className="h-12 bg-card"
-          onChange={(event) => onTypeChange(event.target.value)}
+          onChange={(event) => updateFilter('busTypeId', event.target.value)}
         >
           <NativeSelectOption value="">{t('allTypes')}</NativeSelectOption>
           {typeId && !options?.busTypes.some((item) => item.id === typeId) && (
@@ -68,7 +78,7 @@ export function BusFilters({
           onChange={(event) => {
             const value = event.target.value;
             if (value === '' || value === 'true' || value === 'false')
-              onStatusChange(value);
+              updateFilter('isActive', value);
           }}
         >
           <NativeSelectOption value="">{t('allStatuses')}</NativeSelectOption>

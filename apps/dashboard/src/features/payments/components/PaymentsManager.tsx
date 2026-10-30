@@ -2,36 +2,22 @@
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { CreditCard } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { getPaymentsAction } from '../actions/payment.actions';
 import { usePaymentColumns } from '../hooks/usePaymentColumns';
-import {
-  emptyPaymentFilters,
-  type PaymentFilterValues,
-} from '../schemas/paymentSchema';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
+import { getPaymentsAction } from '../actions/payment.actions';
 import { PaymentDetails } from './PaymentDetails';
 import { PaymentFilters } from './PaymentFilters';
-export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
+export function PaymentsManager() {
+  const { query } = useTableQuery({
+    action: getPaymentsAction,
+    queryKey: 'payments',
+  });
+
   const locale = useLocale();
 
-  const list = useDataTableState<PaymentFilterValues>({
-    initialFilters: { ...emptyPaymentFilters, bookingId },
-  });
-  const query = useQuery({
-    queryKey: ['payments', locale, list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getPaymentsAction({
-          limit: list.params.limit,
-          offset: list.params.offset,
-          ...list.filters,
-        }),
-      ),
-  });
   const { columns, ...page } = usePaymentColumns();
   const t = useTranslations('Payments');
 
@@ -47,7 +33,7 @@ export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
-      <PaymentFilters state={list} />
+      <PaymentFilters />
       {query.isError && (
         <ListError
           title={t('readFailed')}
@@ -60,7 +46,6 @@ export function PaymentsManager({ bookingId = '' }: { bookingId?: string }) {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}

@@ -93,7 +93,7 @@ export function BookingDetails({
             ))}
           </ul>
           <Link
-            href={'/dashboard/payments?bookingId=' + booking.id}
+            href={'/dashboard/payments?filter.bookingId=' + booking.id}
             className="mt-5 inline-flex min-h-11 items-center text-primary underline underline-offset-4"
           >
             {t('viewPayments')}

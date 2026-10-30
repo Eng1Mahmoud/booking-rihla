@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import type { useTranslations } from 'next-intl';
+import { z } from 'zod';
 
 export function createRouteFormSchema(
   t: ReturnType<typeof useTranslations<'Forms'>>,

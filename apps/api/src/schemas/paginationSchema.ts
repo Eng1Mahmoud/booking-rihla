@@ -9,6 +9,7 @@ function pageNumber(min: number, max: number) {
 }
 
 export const paginationQuerySchema = z.strictObject({
+  locale: z.enum(['ar', 'en']).optional(),
   limit: pageNumber(1, 100).default(20),
   offset: pageNumber(0, 100_000).default(0),
 });

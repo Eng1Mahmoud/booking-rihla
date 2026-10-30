@@ -1,26 +1,40 @@
 'use client';
-import { useId } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
 import {
   NativeSelect,
   NativeSelectOption,
 } from '@/shared/components/ui/native-select';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
-import type { RouteListQuery } from '../schemas/routeSchema';
+import { useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { useId } from 'react';
 import { stationLabel, type RouteStation } from '../lib/routeColumns';
+import type { RouteListQuery } from '../schemas/routeSchema';
+
 type Filters = Pick<
   RouteListQuery,
   'originStationId' | 'destinationStationId' | 'isActive'
 >;
 export function RouteFilters({
-  state,
   stations,
   disabled,
 }: {
-  state: DataTableState<Filters>;
   stations: RouteStation[];
   disabled: boolean;
 }) {
+  function updateFilter(name: string, value: string) {
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set('filter.' + name, value);
+    else url.searchParams.delete('filter.' + name);
+    url.searchParams.delete('offset');
+    if (url.href !== window.location.href)
+      window.history.pushState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  const urlParams = useSearchParams();
+  const activeFilters = {
+    originStationId: urlParams.get('filter.originStationId') ?? '',
+    destinationStationId: urlParams.get('filter.destinationStationId') ?? '',
+    isActive: urlParams.get('filter.isActive') ?? '',
+  } as Filters;
   const id = useId();
   const t = useTranslations('Routes');
   const locale = useLocale();
@@ -34,16 +48,16 @@ export function RouteFilters({
           <NativeSelect
             id={id + name}
             disabled={disabled}
-            value={state.filters[name]}
-            onChange={(event) => state.setFilter(name, event.target.value)}
+            value={activeFilters[name]}
+            onChange={(event) => updateFilter(name, event.target.value)}
             className="h-12 bg-card"
           >
             <NativeSelectOption value="">{t('allStations')}</NativeSelectOption>
-            {state.filters[name] &&
+            {activeFilters[name] &&
               !stations.some(
-                (station) => station.id === state.filters[name],
+                (station) => station.id === activeFilters[name],
               ) && (
-                <NativeSelectOption value={state.filters[name]}>
+                <NativeSelectOption value={activeFilters[name]}>
                   {t('missingStation')}
                 </NativeSelectOption>
               )}
@@ -64,13 +78,10 @@ export function RouteFilters({
         </label>
         <NativeSelect
           id={id + 'status'}
-          value={state.filters.isActive}
+          value={activeFilters.isActive}
           disabled={disabled}
           onChange={(event) =>
-            state.setFilter(
-              'isActive',
-              event.target.value as Filters['isActive'],
-            )
+            updateFilter('isActive', event.target.value as Filters['isActive'])
           }
           className="h-12 bg-card"
         >

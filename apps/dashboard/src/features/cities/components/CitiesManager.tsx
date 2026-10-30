@@ -4,11 +4,10 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Building2, Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getCitiesAction } from '../actions/city.actions';
 import { useCityColumns } from '../hooks/useCityColumns';
 import type { CityRow } from '../types/city';
@@ -16,20 +15,14 @@ import { CityEditor } from './CityEditor';
 const emptyRows: CityRow[] = [];
 
 export function CitiesManager() {
+  const { query, hasActiveFilters } = useTableQuery({
+    action: getCitiesAction,
+    queryKey: ['locations', 'cities'],
+  });
+
   const t = useTranslations('Cities');
   const locale = useLocale();
-  const list = useDataTableState({ initialFilters: {} });
-  const query = useQuery({
-    queryKey: ['locations', locale, 'cities', list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getCitiesAction({
-          search: list.params.search,
-          limit: list.params.limit,
-          offset: list.params.offset,
-        }),
-      ),
-  });
+
   const { columns, ...page } = useCityColumns();
   function refresh() {
     page.clearNotice();
@@ -72,7 +65,6 @@ export function CitiesManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? emptyRows}
           rowCount={query.data?.total}
@@ -88,9 +80,9 @@ export function CitiesManager() {
           emptyState={
             <EmptyState
               icon={Building2}
-              title={t(list.hasFilters ? 'noResults' : 'noCities')}
+              title={t(hasActiveFilters ? 'noResults' : 'noCities')}
               description={t(
-                list.hasFilters ? 'noResultsHint' : 'noCitiesHint',
+                hasActiveFilters ? 'noResultsHint' : 'noCitiesHint',
               )}
             />
           }

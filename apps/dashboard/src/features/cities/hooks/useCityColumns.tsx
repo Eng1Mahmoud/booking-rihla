@@ -73,7 +73,7 @@ export function useCityColumns() {
       header: t('stationsTitle'),
       cell: ({ row }) => (
         <Link
-          href={'/dashboard/stations?cityId=' + row.original.id}
+          href={'/dashboard/stations?filter.cityId=' + row.original.id}
           className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           {t('stationCount', { count: row.original.stationCount })}

@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -6,17 +8,25 @@ import {
   NativeSelectOption,
 } from '@/shared/components/ui/native-select';
 import type { City } from '@/features/cities/types/city';
-export function StationCityFilter({
+export function StationFilters({
   cities,
-  value,
-  onChange,
   disabled,
 }: {
   cities: City[];
-  value: string;
-  onChange: (value: string) => void;
   disabled: boolean;
 }) {
+  function updateFilter(name: string, value: string) {
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set('filter.' + name, value);
+    else url.searchParams.delete('filter.' + name);
+    url.searchParams.delete('offset');
+    if (url.href !== window.location.href)
+      window.history.pushState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  const urlParams = useSearchParams();
+  const activeFilters = { cityId: urlParams.get('filter.cityId') ?? '' };
+  const value = activeFilters.cityId;
   const t = useTranslations('Stations');
   const locale = useLocale();
   const id = useId();
@@ -30,7 +40,7 @@ export function StationCityFilter({
         value={value}
         disabled={disabled}
         className="h-12 bg-card"
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => updateFilter('cityId', event.target.value)}
       >
         <NativeSelectOption value="">{t('allCities')}</NativeSelectOption>
         {value && !cities.some((city) => city.id === value) && (

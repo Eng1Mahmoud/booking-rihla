@@ -1,21 +1,12 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ApiResult } from '@/shared/lib/apiResult';
-import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/types/list';
+
+import type { ListPage } from '@/shared/types/list';
 import type { BusTypeInput } from '../schemas/busTypeSchema';
 import type { BusType } from '../types/busType';
 
-export async function getBusTypesAction(
-  input: ListQuery,
-): Promise<ApiResult<ListPage<BusType>>> {
-  const params = new URLSearchParams({
-    search: input.search,
-    locale: await getLocale(),
-    limit: String(input.limit),
-    offset: String(input.offset),
-  });
-  return apiFetch<ListPage<BusType>>('admin/bus-types?' + params);
+export async function getBusTypesAction(query: string) {
+  return apiFetch<ListPage<BusType>>('admin/bus-types?' + query);
 }
 
 export async function saveBusTypeAction(input: BusTypeInput & { id?: string }) {

@@ -1,92 +1,40 @@
 'use client';
-import { getCityOptionsAction } from '@/features/cities/actions/city.actions';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { MapPin, Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useMemo, useTransition } from 'react';
-import { getStationsAction } from '../actions/station.actions';
 import { useStationColumns } from '../hooks/useStationColumns';
+import { useStationsQuery } from '../hooks/useStationsQuery';
 import { type StationRow } from '../types/station';
-import { StationCityFilter } from './StationCityFilter';
 import { StationEditor } from './StationEditor';
+import { StationFilters } from './StationFilters';
 const emptyRows: StationRow[] = [];
-export function StationsManager({ cityId = '' }: { cityId?: string }) {
+export function StationsManager() {
+  const {
+    query,
+    refresh: refreshQuery,
+    cities,
+    filters,
+    hasActiveFilters,
+  } = useStationsQuery();
+
   const t = useTranslations('Stations');
   const locale = useLocale();
-  const list = useDataTableState({ initialFilters: { cityId } });
-  const client = useQueryClient();
-  const cityOptions = queryOptions({
-    queryKey: ['locations', locale, 'city-options'],
-    queryFn: () => invokeAction(getCityOptionsAction),
-  });
 
-  const query = useQuery({
-    queryKey: ['locations', locale, 'stations', list.params],
-    queryFn: async () => {
-      const [page, cities] = await Promise.all([
-        invokeAction(() =>
-          getStationsAction({
-            search: list.params.search,
-            limit: list.params.limit,
-            offset: list.params.offset,
-            cityId: list.params.filters.cityId || undefined,
-          }),
-        ),
-        client.fetchQuery(cityOptions),
-      ]);
-      return { ...page, cities };
-    },
-  });
   const { columns, ...page } = useStationColumns();
-  const router = useRouter();
-  const [filterPending, startFilterTransition] = useTransition();
-  const { setFilter } = list;
-  useEffect(() => setFilter('cityId', cityId), [cityId, setFilter]);
-  const cachedCities =
-    query.data?.cities ?? client.getQueryData(cityOptions.queryKey);
-  const collator = useMemo(() => new Intl.Collator(locale), [locale]);
-  const cities = useMemo(
-    () =>
-      (cachedCities ?? []).toSorted((a, b) =>
-        collator.compare(
-          a[locale === 'ar' ? 'nameAr' : 'nameEn'],
-          b[locale === 'ar' ? 'nameAr' : 'nameEn'],
-        ),
-      ),
-    [cachedCities, collator, locale],
-  );
-  function changeCity(nextCityId: string) {
-    list.setFilter('cityId', nextCityId);
-    startFilterTransition(() =>
-      router.replace(
-        '/dashboard/stations' + (nextCityId ? '?cityId=' + nextCityId : ''),
-        { scroll: false },
-      ),
-    );
-  }
-  function resetFilters() {
-    list.resetFilters({ cityId: '' });
-    if (list.filters.cityId || cityId) changeCity('');
-  }
-  async function refresh() {
+
+  function refresh() {
     page.clearNotice();
-    await client.invalidateQueries({
-      queryKey: cityOptions.queryKey,
-      refetchType: 'none',
-    });
-    return query.refetch();
+    void refreshQuery();
   }
 
   return (
-    <section aria-labelledby="catalog-title" aria-busy={filterPending}>
+    <section aria-labelledby="catalog-title" aria-busy={query.isFetching}>
       <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1
@@ -122,7 +70,6 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? emptyRows}
           rowCount={query.data?.total}
@@ -135,15 +82,9 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
             placeholder: t('searchPlaceholder'),
           }}
           onRefresh={refresh}
-          filters={(controls) => (
-            <StationCityFilter
-              cities={cities}
-              value={controls.filters.cityId}
-              onChange={changeCity}
-              disabled={filterPending}
-            />
-          )}
-          onResetFilters={resetFilters}
+          filters={
+            <StationFilters cities={cities} disabled={query.isFetching} />
+          }
           beforeTable={
             query.data && !cities.length ? (
               <p className="mx-5 mb-5 rounded-[12px] bg-secondary p-4 text-sm">
@@ -160,9 +101,9 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
           emptyState={
             <EmptyState
               icon={MapPin}
-              title={t(list.hasFilters ? 'noResults' : 'noStations')}
+              title={t(hasActiveFilters ? 'noResults' : 'noStations')}
               description={t(
-                list.hasFilters ? 'noResultsHint' : 'noStationsHint',
+                hasActiveFilters ? 'noResultsHint' : 'noStationsHint',
               )}
             />
           }
@@ -172,7 +113,7 @@ export function StationsManager({ cityId = '' }: { cityId?: string }) {
         <StationEditor
           {...page.editor}
           cities={cities}
-          cityId={list.filters.cityId}
+          cityId={filters.cityId}
           onCloseAutoFocus={page.focus.restore}
         />
       )}

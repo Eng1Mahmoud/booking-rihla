@@ -4,27 +4,20 @@ import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Undo2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { getRefundsAction } from '../actions/refund.actions';
 import { useRefundColumns } from '../hooks/useRefundColumns';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
+import { getRefundsAction } from '../actions/refund.actions';
 export function RefundsManager() {
+  const { query } = useTableQuery({
+    action: getRefundsAction,
+    queryKey: 'refunds',
+  });
+
   const locale = useLocale();
 
-  const list = useDataTableState({ initialFilters: {} });
-  const query = useQuery({
-    queryKey: ['refunds', locale, list.params.limit, list.params.offset],
-    queryFn: () =>
-      invokeAction(() =>
-        getRefundsAction({
-          limit: list.params.limit,
-          offset: list.params.offset,
-        }),
-      ),
-  });
   const { columns, ...page } = useRefundColumns();
   async function refresh() {
     if (page.pending) return;
@@ -60,7 +53,6 @@ export function RefundsManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}

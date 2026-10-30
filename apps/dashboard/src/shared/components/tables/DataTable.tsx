@@ -1,8 +1,18 @@
 'use client';
-import { useEffect, type ReactNode } from 'react';
-import { useTable, type RowData } from '@tanstack/react-table';
+import { useCallback, useEffect, type ReactNode } from 'react';
+import {
+  useTable,
+  type RowData,
+  type PaginationState,
+  type Updater,
+} from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
+import { useSearchParams } from 'next/navigation';
+
+import {
+  getTablePagination,
+  DEFAULT_TABLE_PAGE_SIZE,
+} from '@/shared/lib/pagination';
 import {
   dataTableFeatures,
   type DataTableColumn,
@@ -22,11 +32,7 @@ import {
 import { DataTableToolbar, type DataTableSearch } from './DataTableToolbar';
 import { DataTablePagination } from './DataTablePagination';
 
-export function DataTable<
-  TData extends RowData,
-  TFilters extends Record<string, string>,
->({
-  state,
+export function DataTable<TData extends RowData>({
   columns,
   data,
   rowCount,
@@ -38,11 +44,9 @@ export function DataTable<
   isLoading = false,
   isFetching = false,
   onRefresh,
-  onResetFilters,
   emptyState,
   beforeTable,
 }: {
-  state: DataTableState<TFilters>;
   columns: DataTableColumn<TData>[];
   data: TData[];
   rowCount?: number;
@@ -50,14 +54,31 @@ export function DataTable<
   getRowId: (row: TData) => string;
   caption: string;
   search?: DataTableSearch;
-  filters?: (state: DataTableState<TFilters>) => ReactNode;
+  filters?: ReactNode;
   isLoading?: boolean;
   isFetching?: boolean;
   onRefresh?: () => void;
-  onResetFilters?: () => void;
   emptyState?: ReactNode;
   beforeTable?: ReactNode;
 }) {
+  const urlParams = useSearchParams();
+  const pagination = getTablePagination(urlParams);
+  const hasActiveFilters = Array.from(urlParams.entries()).some(
+    ([name, value]) => name.startsWith('filter.') && Boolean(value.trim()),
+  );
+  const updatePagination = useCallback((update: Updater<PaginationState>) => {
+    const url = new URL(window.location.href);
+    const current = getTablePagination(url.searchParams);
+    const next = typeof update === 'function' ? update(current) : update;
+    if (next.pageSize === DEFAULT_TABLE_PAGE_SIZE)
+      url.searchParams.delete('limit');
+    else url.searchParams.set('limit', String(next.pageSize));
+    if (next.pageIndex)
+      url.searchParams.set('offset', String(next.pageIndex * next.pageSize));
+    else url.searchParams.delete('offset');
+    if (url.href !== window.location.href)
+      window.history.pushState(null, '', url.pathname + url.search + url.hash);
+  }, []);
   const t = useTranslations('DataTable');
   const table = useTable({
     features: dataTableFeatures,
@@ -66,29 +87,18 @@ export function DataTable<
     getRowId,
     manualPagination: true,
     rowCount: rowCount ?? 0,
-    state: { pagination: state.pagination },
-    onPaginationChange: state.setPagination,
+    state: { pagination },
+    onPaginationChange: updatePagination,
   });
-  const { pageIndex, pageSize } = state.pagination;
-  const { setPagination } = state;
+  const { pageIndex, pageSize } = pagination;
   useEffect(() => {
-    if (rowCount === undefined || isFetching || isLoading || state.isSearching)
-      return;
+    if (rowCount === undefined || isFetching || isLoading) return;
     const lastPage = Math.max(0, Math.ceil(rowCount / pageSize) - 1);
     if (pageIndex > lastPage)
-      setPagination((current) => ({ ...current, pageIndex: lastPage }));
-  }, [
-    rowCount,
-    isFetching,
-    isLoading,
-    state.isSearching,
-    pageIndex,
-    pageSize,
-    setPagination,
-  ]);
+      updatePagination((current) => ({ ...current, pageIndex: lastPage }));
+  }, [rowCount, isFetching, isLoading, pageIndex, pageSize, updatePagination]);
   const pending =
     isLoading ||
-    state.isSearching ||
     rowCount === undefined ||
     (rowCount !== undefined &&
       rowCount > 0 &&
@@ -97,14 +107,12 @@ export function DataTable<
     <div
       data-slot="data-table"
       className="min-w-0 overflow-hidden rounded-2xl border bg-card"
-      aria-busy={isFetching || state.isSearching}
+      aria-busy={isFetching}
     >
       {(search || filters || onRefresh) && (
         <DataTableToolbar
           search={search}
-          value={state.search}
-          onSearchChange={state.setSearch}
-          filters={filters?.(state)}
+          filters={filters}
           isFetching={isFetching}
           onRefresh={onRefresh}
         />
@@ -174,21 +182,30 @@ export function DataTable<
       {!isLoading && table.getRowModel().rows.length === 0 && (
         <div className="grid justify-items-center gap-3 border-t px-5 py-14 text-center">
           {emptyState}
-          {state.hasFilters && (
+          {hasActiveFilters && (
             <Button
               variant="outline"
               className="mt-2 min-h-11"
-              onClick={onResetFilters ?? (() => state.resetFilters())}
+              onClick={() => {
+                const url = new URL(window.location.href);
+                for (const name of Array.from(url.searchParams.keys())) {
+                  if (name.startsWith('filter.')) url.searchParams.delete(name);
+                }
+                url.searchParams.delete('offset');
+                if (url.href !== window.location.href)
+                  window.history.pushState(
+                    null,
+                    '',
+                    url.pathname + url.search + url.hash,
+                  );
+              }}
             >
               {t('clearFilters')}
             </Button>
           )}
         </div>
       )}
-      <DataTablePagination
-        table={table}
-        pending={pending || isFetching}
-      />
+      <DataTablePagination table={table} pending={pending || isFetching} />
     </div>
   );
 }

@@ -1,20 +1,10 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
 import type { ManagedUser } from '@/features/users/schemas/userSchema';
-import type { AdministratorFilters } from '../schemas/administratorSchema';
 
-export async function getAdministratorsAction(
-  input: AdministratorFilters & { limit: number; offset: number },
-) {
-  const { limit, offset, ...filters } = input;
-  const params = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  for (const [key, value] of Object.entries(filters))
-    if (value) params.set(key, value);
+export async function getAdministratorsAction(query: string) {
   return apiFetch<{ items: ManagedUser[]; total: number }>(
-    'admin/admins?' + params,
+    'admin/admins?' + query,
   );
 }
 

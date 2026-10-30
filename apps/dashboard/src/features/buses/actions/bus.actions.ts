@@ -5,7 +5,7 @@ import { getLocale } from 'next-intl/server';
 import type { ListPage } from '@/shared/types/list';
 import type { BusType } from '@/features/bus-types/types/busType';
 import type { Amenity } from '@/features/amenities/types/amenity';
-import type { BusInput, BusListQuery } from '../schemas/busSchema';
+import type { BusInput } from '../schemas/busSchema';
 import type { Bus, BusOptions } from '../types/bus';
 export async function getBusOptionsAction(): Promise<ApiResult<BusOptions>> {
   async function listAll<T>(path: string): Promise<ApiResult<T[]>> {
@@ -40,18 +40,8 @@ export async function getBusOptionsAction(): Promise<ApiResult<BusOptions>> {
     data: { busTypes: types.data, amenities: amenities.data },
   };
 }
-export async function getBusesAction(
-  input: BusListQuery,
-): Promise<ApiResult<ListPage<Bus>>> {
-  const params = new URLSearchParams({
-    search: input.search,
-    locale: await getLocale(),
-    limit: String(input.limit),
-    offset: String(input.offset),
-  });
-  for (const key of ['busTypeId', 'isActive'] as const)
-    if (input[key]) params.set(key, input[key]);
-  return apiFetch<ListPage<Bus>>('admin/buses?' + params);
+export async function getBusesAction(query: string) {
+  return apiFetch<ListPage<Bus>>('admin/buses?' + query);
 }
 export async function saveBusAction(input: BusInput & { id?: string }) {
   const { id, ...body } = input;

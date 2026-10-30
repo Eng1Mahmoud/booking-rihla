@@ -11,7 +11,8 @@ apply them when changing a feature rather than reorganizing files without a reas
   useFeatureData hook separates substantial data logic from a page hook; do not
   add one for a single short query.
 - actions/: async Next.js Server Actions that call the existing apiFetch client.
-  Keep endpoint paths, request mapping and response types explicit.
+  Keep endpoint paths and response types explicit. List actions accept a prepared
+  query string; useTableQuery serializes filters, pagination and locale.
 - lib/: meaningful pure calculations or server reads. Keep single-use query
   configuration in its hook; do not create a file just to wrap an options object.
 - schemas/: Zod schemas for forms and existing boundary normalization. Use DTO
@@ -51,9 +52,16 @@ modules such as auth.server.ts and their server-only boundary.
   explain real business rules; remove wrappers that only add navigation between files.
 - Keep dashboard table columns in a separate file. When columns need locale or
   translation hooks, use hooks/use<Entity>Columns.tsx and read that context inside
-  the hook. Table components own list queries and filters; column hooks own row
-  mutations, selection and dialog state. Pass required data and permissions instead
-  of action callbacks. Avoid extra page/data hooks for this flow.
+  the hook. Column hooks own row mutations, selection and dialog state.
+  Filter components own their controls and update filter.<name> URL parameters.
+  useTableQuery reads those parameters dynamically, prepares pagination and locale,
+  includes them in the cache key, and calls a list action with the query string. Keep UI
+  parameters such as a bookingId for an open detail panel outside the filter prefix.
+  Simple tables call useTableQuery with action and queryKey directly. Keep feature
+  query hooks only for related option data and custom refresh work; use loadRelatedData
+  to preserve parallel reads and existing metadata cache keys. DataTable owns URL
+  pagination. Share its parsing rules in shared/lib/pagination.ts.
+  Pass only required lookup data and permissions.
   Use useMemo only when stable references or measured calculation costs justify
   it. Reuse identical column definitions.
 - Reuse existing shared components, Tailwind tokens and next-intl messages.

@@ -1,19 +1,10 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-import type { ManagedUser, UserFilters } from '../schemas/userSchema';
+import type { ManagedUser } from '../schemas/userSchema';
 
-export async function getUsersAction(
-  input: UserFilters & { limit: number; offset: number },
-) {
-  const { limit, offset, ...filters } = input;
-  const params = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  for (const [key, value] of Object.entries(filters))
-    if (value) params.set(key, value);
+export async function getUsersAction(query: string) {
   return apiFetch<{ items: ManagedUser[]; total: number }>(
-    'admin/users?' + params,
+    'admin/users?' + query,
   );
 }
 

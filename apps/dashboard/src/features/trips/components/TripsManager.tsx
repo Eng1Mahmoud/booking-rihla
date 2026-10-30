@@ -1,62 +1,34 @@
 'use client';
+import { useTripsQuery } from '../hooks/useTripsQuery';
 import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { errorMessage } from '@/shared/lib/apiResult';
+
 import { CalendarDays, Plus } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { useId } from 'react';
-import { getTripOptionsAction, getTripsAction } from '../actions/trip.actions';
+
 import { useTripColumns } from '../hooks/useTripColumns';
-import { type TripListQuery } from '../schemas/tripSchema';
-import { type TripOptions } from '../types/trip';
+
 import { TripEditor } from './TripEditor';
 import { TripFilters } from './TripFilters';
-const emptyOptions: TripOptions = { routes: [], stations: [], buses: [] };
 export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
+  const { query, refresh: refreshQuery, options } = useTripsQuery();
+
   const locale = useLocale();
-  const client = useQueryClient();
-  const list = useDataTableState<{
-    routeId: string;
-    busId: string;
-    status: TripListQuery['status'];
-  }>({ initialFilters: { routeId: '', busId: '', status: '' } });
-  const query = useQuery({
-    queryKey: ['trips', locale, list.params],
-    queryFn: async () => {
-      const [page, options] = await Promise.all([
-        invokeAction(() =>
-          getTripsAction({
-            limit: list.params.limit,
-            offset: list.params.offset,
-            ...list.filters,
-          }),
-        ),
-        client.fetchQuery({
-          queryKey: ['catalog', locale, 'trip-options'],
-          queryFn: () => invokeAction(getTripOptionsAction),
-        }),
-      ]);
-      return { ...page, options };
-    },
-  });
-  const options = query.data?.options ?? emptyOptions;
+
   const { columns, ...page } = useTripColumns({
     options,
     superAdmin,
   });
-  async function refresh() {
+  function refresh() {
     page.clearNotice();
-    await client.invalidateQueries({
-      queryKey: ['catalog', locale, 'trip-options'],
-      refetchType: 'none',
-    });
-    await query.refetch();
+    void refreshQuery();
   }
 
   const t = page.t;
@@ -107,7 +79,6 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}
@@ -117,13 +88,9 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
           isLoading={query.isPending}
           isFetching={query.isFetching}
           onRefresh={refresh}
-          filters={(state) => (
-            <TripFilters
-              state={state}
-              options={options}
-              disabled={query.isFetching}
-            />
-          )}
+          filters={
+            <TripFilters options={options} disabled={query.isFetching} />
+          }
           emptyState={
             <EmptyState
               icon={CalendarDays}

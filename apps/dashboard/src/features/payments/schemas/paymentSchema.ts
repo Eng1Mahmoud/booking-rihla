@@ -63,17 +63,3 @@ export type PaymentFilterValues = Omit<BookingFilters, 'travelDate'> & {
   sessionStatus: '' | 'REQUESTING' | 'READY' | 'UNKNOWN' | 'FAILED' | 'EXPIRED';
   settlementStatus: '' | 'REQUESTED' | 'UNKNOWN' | 'SUCCEEDED' | 'REVIEW';
 };
-
-export const emptyPaymentFilters: PaymentFilterValues = {
-  reference: '',
-  email: '',
-  tripId: '',
-  userId: '',
-  bookingId: '',
-  createdDate: '',
-  orderId: '',
-  transactionId: '',
-  intentionId: '',
-  sessionStatus: '',
-  settlementStatus: '',
-};

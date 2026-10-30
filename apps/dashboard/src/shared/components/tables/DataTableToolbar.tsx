@@ -1,5 +1,6 @@
 'use client';
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -10,19 +11,41 @@ export type DataTableSearch = { label: string; placeholder: string };
 
 export function DataTableToolbar({
   search,
-  value,
-  onSearchChange,
   filters,
   isFetching,
   onRefresh,
 }: {
   search?: DataTableSearch;
-  value: string;
-  onSearchChange: (value: string) => void;
   filters?: ReactNode;
   isFetching: boolean;
   onRefresh?: () => void;
 }) {
+  const urlParams = useSearchParams();
+  const urlQuery = urlParams.toString();
+  const searchText = urlParams.get('filter.search') ?? '';
+  const [value, setValue] = useState(searchText);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    setValue(searchText);
+    return () => clearTimeout(timer.current);
+  }, [searchText, urlQuery]);
+  function onSearchChange(value: string) {
+    setValue(value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const url = new URL(window.location.href);
+      const searchText = value.trim();
+      if (searchText) url.searchParams.set('filter.search', searchText);
+      else url.searchParams.delete('filter.search');
+      url.searchParams.delete('offset');
+      if (url.href !== window.location.href)
+        window.history.replaceState(
+          null,
+          '',
+          url.pathname + url.search + url.hash,
+        );
+    }, 300);
+  }
   const id = useId();
   const t = useTranslations('DataTable');
   return (

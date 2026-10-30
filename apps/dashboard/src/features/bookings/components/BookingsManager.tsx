@@ -1,46 +1,23 @@
 'use client';
-import type { BookingFilters as BookingFilterValues } from '../schemas/bookingSchema';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Ticket } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { getBookingsAction } from '../actions/booking.actions';
 import { useBookingColumns } from '../hooks/useBookingColumns';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
+import { getBookingsAction } from '../actions/booking.actions';
 import { BookingDetails } from './BookingDetails';
 import { BookingFilters } from './BookingFilters';
-export function BookingsManager({
-  tripId = '',
-  bookingId = '',
-}: {
-  tripId?: string;
-  bookingId?: string;
-}) {
+export function BookingsManager({ bookingId = '' }: { bookingId?: string }) {
+  const { query } = useTableQuery({
+    action: getBookingsAction,
+    queryKey: 'bookings',
+  });
+
   const locale = useLocale();
 
-  const list = useDataTableState<BookingFilterValues>({
-    initialFilters: {
-      reference: '',
-      email: '',
-      travelDate: '',
-      tripId,
-      userId: '',
-    },
-  });
-  const query = useQuery({
-    queryKey: ['bookings', locale, list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getBookingsAction({
-          limit: list.params.limit,
-          offset: list.params.offset,
-          ...list.filters,
-        }),
-      ),
-  });
   const { columns, ...page } = useBookingColumns(bookingId);
   const t = useTranslations('Bookings');
 
@@ -56,7 +33,7 @@ export function BookingsManager({
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
-      <BookingFilters state={list} />
+      <BookingFilters />
       {query.isError && (
         <ListError
           title={t('readFailed')}
@@ -69,7 +46,6 @@ export function BookingsManager({
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? []}
           rowCount={query.data?.total}

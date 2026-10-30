@@ -4,64 +4,25 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { BusFront, Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { getBusOptionsAction, getBusesAction } from '../actions/bus.actions';
 import { useBusColumns } from '../hooks/useBusColumns';
+import { useBusesQuery } from '../hooks/useBusesQuery';
 import { type Bus } from '../types/bus';
 import { BusEditor } from './BusEditor';
 import { BusFilters } from './BusFilters';
 const emptyRows: Bus[] = [];
 export function BusesManager() {
+  const { query, refresh: refreshQuery, hasActiveFilters } = useBusesQuery();
+
   const t = useTranslations('Buses');
   const locale = useLocale();
-  const list = useDataTableState<{
-    busTypeId: string;
-    isActive: '' | 'true' | 'false';
-  }>({ initialFilters: { busTypeId: '', isActive: '' } });
-  const client = useQueryClient();
 
-  const busOptions = queryOptions({
-    queryKey: ['fleet', locale, 'bus-options'],
-    queryFn: () => invokeAction(getBusOptionsAction),
-    staleTime: 30000,
-  });
-  const params = {
-    search: list.params.search,
-    limit: list.params.limit,
-    offset: list.params.offset,
-    busTypeId: list.filters.busTypeId,
-    isActive: list.filters.isActive,
-  };
-  const query = useQuery({
-    queryKey: ['fleet', locale, 'buses', params],
-    queryFn: async () => {
-      const [page, options] = await Promise.all([
-        invokeAction(() =>
-          getBusesAction({
-            search: list.params.search,
-            limit: list.params.limit,
-            offset: list.params.offset,
-            busTypeId: list.filters.busTypeId,
-            isActive: list.filters.isActive,
-          }),
-        ),
-        client.fetchQuery(busOptions),
-      ]);
-      return { ...page, options };
-    },
-  });
   const { columns, ...page } = useBusColumns();
-  async function refresh() {
+  function refresh() {
     page.clearNotice();
-    await client.invalidateQueries({
-      queryKey: busOptions.queryKey,
-      refetchType: 'none',
-    });
-    return query.refetch();
+    void refreshQuery();
   }
 
   return (
@@ -101,7 +62,6 @@ export function BusesManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? emptyRows}
           rowCount={query.data?.total}
@@ -113,22 +73,17 @@ export function BusesManager() {
             label: t('searchBuses'),
             placeholder: t('searchPlaceholder'),
           }}
-          filters={(state) => (
-            <BusFilters
-              options={query.data?.options}
-              typeId={state.filters.busTypeId}
-              status={state.filters.isActive}
-              onTypeChange={(value) => state.setFilter('busTypeId', value)}
-              onStatusChange={(value) => state.setFilter('isActive', value)}
-              disabled={!query.data}
-            />
-          )}
+          filters={
+            <BusFilters options={query.data?.options} disabled={!query.data} />
+          }
           onRefresh={refresh}
           emptyState={
             <EmptyState
               icon={BusFront}
-              title={t(list.hasFilters ? 'noResults' : 'noBuses')}
-              description={t(list.hasFilters ? 'noResultsHint' : 'noBusesHint')}
+              title={t(hasActiveFilters ? 'noResults' : 'noBuses')}
+              description={t(
+                hasActiveFilters ? 'noResultsHint' : 'noBusesHint',
+              )}
             />
           }
         />

@@ -8,7 +8,6 @@ import type { Bus } from '@/features/buses/types/bus';
 import type {
   Trip,
   TripInput,
-  TripListQuery,
   BatchInput,
   BatchPreview,
 } from '../schemas/tripSchema';
@@ -52,14 +51,8 @@ export async function getTripOptionsAction() {
     data: { routes: routes.data, buses: buses.data, stations: stations.data },
   };
 }
-export async function getTripsAction(input: TripListQuery) {
-  const params = new URLSearchParams({
-    limit: String(input.limit),
-    offset: String(input.offset),
-  });
-  for (const key of ['routeId', 'busId', 'status'] as const)
-    if (input[key]) params.set(key, input[key]);
-  return apiFetch<{ items: Trip[]; total: number }>('trips?' + params);
+export async function getTripsAction(query: string) {
+  return apiFetch<{ items: Trip[]; total: number }>('trips?' + query);
 }
 export async function saveTripAction(input: TripInput & { id?: string }) {
   const { id, ...body } = input;

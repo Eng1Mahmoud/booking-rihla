@@ -4,32 +4,24 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-import { useDataTableState } from '@/shared/hooks/useDataTableState';
-import { invokeAction, errorMessage } from '@/shared/lib/apiResult';
-import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '@/shared/lib/apiResult';
 import { Plus, Wifi } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getAmenitiesAction } from '../actions/amenity.actions';
 import { useAmenityColumns } from '../hooks/useAmenityColumns';
 import { type Amenity } from '../types/amenity';
 import { AmenityEditor } from './AmenityEditor';
 const emptyRows: Amenity[] = [];
 export function AmenitiesManager() {
+  const { query, hasActiveFilters } = useTableQuery({
+    action: getAmenitiesAction,
+    queryKey: ['fleet', 'amenities'],
+  });
+
   const t = useTranslations('Amenities');
   const locale = useLocale();
-  const list = useDataTableState({ initialFilters: {} });
 
-  const query = useQuery({
-    queryKey: ['fleet', locale, 'amenities', list.params],
-    queryFn: () =>
-      invokeAction(() =>
-        getAmenitiesAction({
-          search: list.params.search,
-          limit: list.params.limit,
-          offset: list.params.offset,
-        }),
-      ),
-  });
   const { columns, ...page } = useAmenityColumns();
   function refresh() {
     page.clearNotice();
@@ -73,7 +65,6 @@ export function AmenitiesManager() {
       )}
       {(query.isPending || query.data) && (
         <DataTable
-          state={list}
           columns={columns}
           data={query.data?.items ?? emptyRows}
           rowCount={query.data?.total}
@@ -89,9 +80,9 @@ export function AmenitiesManager() {
           emptyState={
             <EmptyState
               icon={Wifi}
-              title={t(list.hasFilters ? 'noResults' : 'noAmenities')}
+              title={t(hasActiveFilters ? 'noResults' : 'noAmenities')}
               description={t(
-                list.hasFilters ? 'noResultsHint' : 'noAmenitiesHint',
+                hasActiveFilters ? 'noResultsHint' : 'noAmenitiesHint',
               )}
             />
           }

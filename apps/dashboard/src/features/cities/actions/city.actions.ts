@@ -2,7 +2,7 @@
 import { apiFetch } from '@/shared/lib/api';
 import { apiFailure, type ApiResult } from '@/shared/lib/apiResult';
 import { getLocale } from 'next-intl/server';
-import type { ListPage, ListQuery } from '@/shared/types/list';
+import type { ListPage } from '@/shared/types/list';
 import type { CityInput } from '../schemas/citySchema';
 import type { City, CityRow } from '../types/city';
 
@@ -27,16 +27,8 @@ export async function getCityOptionsAction(): Promise<ApiResult<City[]>> {
   return apiFailure(502, 'UPSTREAM_ERROR', locale);
 }
 
-export async function getCitiesAction(
-  input: ListQuery,
-): Promise<ApiResult<ListPage<CityRow>>> {
-  const params = new URLSearchParams({
-    search: input.search,
-    locale: await getLocale(),
-    limit: String(input.limit),
-    offset: String(input.offset),
-  });
-  return apiFetch<ListPage<CityRow>>('admin/cities?' + params);
+export async function getCitiesAction(query: string) {
+  return apiFetch<ListPage<CityRow>>('admin/cities?' + query);
 }
 
 export async function saveCityAction(input: CityInput & { id?: string }) {

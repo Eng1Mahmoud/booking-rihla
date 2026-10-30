@@ -1,33 +1,47 @@
 'use client';
-import { useId } from 'react';
-import { useTranslations } from 'next-intl';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { DatePickr } from '@/shared/components/ui/date-pickr';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
-import type { BookingFilters as FilterValues } from '../schemas/bookingSchema';
+import { Input } from '@/shared/components/ui/input';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useId } from 'react';
 
 const filterFields = ['reference', 'email', 'travelDate'] as const;
 
-export function BookingFilters({
-  state,
-}: {
-  state: DataTableState<FilterValues>;
-}) {
+export function BookingFilters() {
+  const urlParams = useSearchParams();
+  const activeFilters = {
+    reference: urlParams.get('filter.reference') ?? '',
+    email: urlParams.get('filter.email') ?? '',
+    travelDate: urlParams.get('filter.travelDate') ?? '',
+    tripId: urlParams.get('filter.tripId') ?? '',
+    userId: urlParams.get('filter.userId') ?? '',
+  };
   const t = useTranslations('Bookings');
   const filterId = useId();
   // Preserve linked trip/user filters when applying the visible search fields.
   return (
     <form
-      key={JSON.stringify(state.filters)}
+      key={JSON.stringify(activeFilters)}
       className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border bg-card p-5"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        const filters = Object.fromEntries(
-          filterFields.map((key) => [key, String(data.get(key) ?? '').trim()]),
-        );
-        state.resetFilters({ ...state.filters, ...filters });
+
+        const url = new URL(window.location.href);
+        for (const name of filterFields) {
+          const value = String(data.get(name) ?? '').trim();
+          if (value) url.searchParams.set('filter.' + name, value);
+          else url.searchParams.delete('filter.' + name);
+        }
+        url.searchParams.delete('filter.search');
+        url.searchParams.delete('offset');
+        if (url.href !== window.location.href)
+          window.history.pushState(
+            null,
+            '',
+            url.pathname + url.search + url.hash,
+          );
       }}
     >
       {filterFields.map((field) => (
@@ -41,7 +55,7 @@ export function BookingFilters({
             <DatePickr
               id={filterId + field}
               name="travelDate"
-              defaultValue={state.filters[field]}
+              defaultValue={activeFilters[field]}
               className="min-h-11 bg-card"
             />
           ) : (
@@ -49,7 +63,7 @@ export function BookingFilters({
               id={filterId + field}
               name={field}
               type={field === 'email' ? 'email' : 'text'}
-              defaultValue={state.filters[field]}
+              defaultValue={activeFilters[field]}
               dir="ltr"
               className="min-h-11 bg-card"
             />
@@ -65,13 +79,17 @@ export function BookingFilters({
         className="min-h-11"
         onClick={(event) => {
           event.currentTarget.form?.reset();
-          state.resetFilters({
-            reference: '',
-            email: '',
-            travelDate: '',
-            tripId: '',
-            userId: '',
-          });
+          const url = new URL(window.location.href);
+          for (const name of Array.from(url.searchParams.keys())) {
+            if (name.startsWith('filter.')) url.searchParams.delete(name);
+          }
+          url.searchParams.delete('offset');
+          if (url.href !== window.location.href)
+            window.history.pushState(
+              null,
+              '',
+              url.pathname + url.search + url.hash,
+            );
         }}
       >
         {t('clear')}

@@ -5,20 +5,34 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@/shared/components/ui/native-select';
-import type { DataTableState } from '@/shared/hooks/useDataTableState';
+import { useSearchParams } from 'next/navigation';
+
 import { routeLabel } from '@/features/routes/lib/routeColumns';
 import type { TripListQuery } from '../schemas/tripSchema';
 import type { TripOptions } from '../types/trip';
 type Filters = Pick<TripListQuery, 'routeId' | 'busId' | 'status'>;
 export function TripFilters({
-  state,
   options,
   disabled,
 }: {
-  state: DataTableState<Filters>;
   options: TripOptions;
   disabled: boolean;
 }) {
+  function updateFilter(name: string, value: string) {
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set('filter.' + name, value);
+    else url.searchParams.delete('filter.' + name);
+    url.searchParams.delete('offset');
+    if (url.href !== window.location.href)
+      window.history.pushState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  const urlParams = useSearchParams();
+  const activeFilters = {
+    routeId: urlParams.get('filter.routeId') ?? '',
+    busId: urlParams.get('filter.busId') ?? '',
+    status: urlParams.get('filter.status') ?? '',
+  } as Filters;
   const id = useId();
   const t = useTranslations('Trips');
   const locale = useLocale();
@@ -34,16 +48,16 @@ export function TripFilters({
         <NativeSelect
           id={id + 'route'}
           disabled={disabled}
-          value={state.filters.routeId}
-          onChange={(event) => state.setFilter('routeId', event.target.value)}
+          value={activeFilters.routeId}
+          onChange={(event) => updateFilter('routeId', event.target.value)}
           className="h-12 bg-card"
         >
           <NativeSelectOption value="">{t('allRoutes')}</NativeSelectOption>
-          {state.filters.routeId &&
+          {activeFilters.routeId &&
             !options.routes.some(
-              (route) => route.id === state.filters.routeId,
+              (route) => route.id === activeFilters.routeId,
             ) && (
-              <NativeSelectOption value={state.filters.routeId}>
+              <NativeSelectOption value={activeFilters.routeId}>
                 {t('missingOption')}
               </NativeSelectOption>
             )}
@@ -61,14 +75,14 @@ export function TripFilters({
         <NativeSelect
           id={id + 'bus'}
           disabled={disabled}
-          value={state.filters.busId}
-          onChange={(event) => state.setFilter('busId', event.target.value)}
+          value={activeFilters.busId}
+          onChange={(event) => updateFilter('busId', event.target.value)}
           className="h-12 bg-card"
         >
           <NativeSelectOption value="">{t('allBuses')}</NativeSelectOption>
-          {state.filters.busId &&
-            !options.buses.some((bus) => bus.id === state.filters.busId) && (
-              <NativeSelectOption value={state.filters.busId}>
+          {activeFilters.busId &&
+            !options.buses.some((bus) => bus.id === activeFilters.busId) && (
+              <NativeSelectOption value={activeFilters.busId}>
                 {t('missingOption')}
               </NativeSelectOption>
             )}
@@ -89,9 +103,9 @@ export function TripFilters({
         <NativeSelect
           id={id + 'status'}
           disabled={disabled}
-          value={state.filters.status}
+          value={activeFilters.status}
           onChange={(event) =>
-            state.setFilter('status', event.target.value as Filters['status'])
+            updateFilter('status', event.target.value as Filters['status'])
           }
           className="h-12 bg-card"
         >
