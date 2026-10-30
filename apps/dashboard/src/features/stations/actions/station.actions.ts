@@ -1,6 +1,5 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-
 import type { ListPage } from '@/shared/types/list';
 import type { StationInput } from '../schemas/stationSchema';
 import type { Station, StationRow } from '../types/station';
@@ -19,4 +18,8 @@ export async function saveStationAction(input: StationInput & { id?: string }) {
 
 export async function deleteStationAction(id: string) {
   return apiFetch<void>('stations/' + id, { method: 'DELETE' });
+}
+
+export async function getStationAction(id: string) {
+  return apiFetch<Station>('stations/' + encodeURIComponent(id));
 }

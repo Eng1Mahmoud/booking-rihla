@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -11,15 +12,15 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useStationColumns } from '../hooks/useStationColumns';
 import { useStationsQuery } from '../hooks/useStationsQuery';
 import { type StationRow } from '../types/station';
-import { StationEditor } from './StationEditor';
 import { StationFilters } from './StationFilters';
 const emptyRows: StationRow[] = [];
 export function StationsManager() {
+  const urlParams = useSearchParams();
+
   const {
     query,
     refresh: refreshQuery,
     cities,
-    filters,
     hasActiveFilters,
   } = useStationsQuery();
 
@@ -50,11 +51,15 @@ export function StationsManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!(query.data && cities.length)}
-          onClick={page.openCreate}
+          asChild
         >
-          <Plus aria-hidden="true" />
-          {t('addStation')}
+          <Link
+            href={'/dashboard/stations/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('addStation')}
+          </Link>
         </Button>
       </div>
       <div role="status" aria-live="polite" className="text-sm text-primary">
@@ -109,14 +114,7 @@ export function StationsManager() {
           }
         />
       )}
-      {page.editorOpen && query.data && (
-        <StationEditor
-          {...page.editor}
-          cities={cities}
-          cityId={filters.cityId}
-          onCloseAutoFocus={page.focus.restore}
-        />
-      )}
+
       {page.confirmation.open && (
         <ConfirmDialog
           open

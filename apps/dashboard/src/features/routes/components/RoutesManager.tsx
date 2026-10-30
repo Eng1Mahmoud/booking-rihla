@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -9,9 +11,10 @@ import { Plus, Route as RouteIcon } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { useRouteColumns } from '../hooks/useRouteColumns';
 import { useRoutesQuery } from '../hooks/useRoutesQuery';
-import { RouteEditor } from './RouteEditor';
 import { RouteFilters } from './RouteFilters';
 export function RoutesManager() {
+  const urlParams = useSearchParams();
+
   const { query, refresh: refreshQuery, stations } = useRoutesQuery();
 
   const locale = useLocale();
@@ -36,14 +39,14 @@ export function RoutesManager() {
             {t('intro')}
           </p>
         </div>
-        <Button
-          ref={page.focus.fallbackRef}
-          onClick={page.create}
-          disabled={!query.data || stations.length < 2}
-          className="min-h-12"
-        >
-          <Plus aria-hidden="true" />
-          {t('add')}
+        <Button ref={page.focus.fallbackRef} className="min-h-12" asChild>
+          <Link
+            href={'/dashboard/routes/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('add')}
+          </Link>
         </Button>
       </div>
       <p role="status" aria-live="polite" className="mb-4 text-sm text-primary">
@@ -78,16 +81,6 @@ export function RoutesManager() {
               description={t('emptyHint')}
             />
           }
-        />
-      )}{' '}
-      {page.editorOpen && (
-        <RouteEditor
-          entry={page.editing}
-          stations={stations}
-          pending={page.save.isPending}
-          onSave={(values) => page.save.mutateAsync(values)}
-          onClose={page.closeEditor}
-          onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}
       {page.deleting && (

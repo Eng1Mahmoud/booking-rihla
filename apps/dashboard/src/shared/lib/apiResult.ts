@@ -1,3 +1,4 @@
+import { unstable_rethrow } from 'next/navigation';
 // HTTP status supports action error handling; Route Handlers omit status/retryAfter from JSON.
 export type ApiResult<T = unknown> = {
   success: boolean;
@@ -72,6 +73,7 @@ export async function invokeAction<T>(
   try {
     result = await action();
   } catch (error) {
+    unstable_rethrow(error);
     // Next attaches a digest to server exceptions; they are not connectivity failures.
     if (error instanceof Error && 'digest' in error)
       throw new ApiError(500, 'SERVER_ACTION_FAILED');

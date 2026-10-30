@@ -1,10 +1,7 @@
 'use client';
-import {
-  setAdministratorRoleAction,
-  setAdministratorStatusAction,
-} from '@/features/administrators/actions/administrator.actions';
+import { useSearchParams } from 'next/navigation';
+import { setAdministratorStatusAction } from '@/features/administrators/actions/administrator.actions';
 import { formatReportTime } from '@/features/dashboard/lib/format';
-import { useRouter } from '@/i18n/navigation';
 import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { useConfirmation } from '@/shared/hooks/useConfirmation';
 import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
@@ -23,14 +20,15 @@ export function useUserColumns({
   canChangeRole: boolean;
   administrator?: boolean;
 }) {
+  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('Users');
   const states = useTranslations('States');
   const client = useQueryClient();
-  const router = useRouter();
+
   const focus = useDialogFocus<HTMLHeadingElement>();
   const [target, setTarget] = useState<ManagedUser | null>(null);
-  const [editingRole, setEditingRole] = useState<ManagedUser | null>(null);
+
   const [notice, setNotice] = useState('');
 
   async function refreshAccounts() {
@@ -55,20 +53,7 @@ export function useUserColumns({
       setNotice(t('updated'));
     },
   });
-  const role = useMutation({
-    retry: false,
-    mutationFn: async (role: ManagedUser['role']) => {
-      if (!editingRole) return;
 
-      await invokeAction(() =>
-        setAdministratorRoleAction({ id: editingRole.id, role }),
-      );
-      await refreshAccounts();
-      setEditingRole(null);
-      setNotice(t('updated'));
-      router.refresh();
-    },
-  });
   const confirmation = useConfirmation(async () => {
     await status.mutateAsync();
   });
@@ -81,14 +66,7 @@ export function useUserColumns({
     },
     [focus.remember, confirmation.reset],
   );
-  const openRole = useCallback(
-    (user: ManagedUser) => {
-      focus.remember();
-      setNotice('');
-      setEditingRole(user);
-    },
-    [focus.remember],
-  );
+
   const columns: DataTableColumn<ManagedUser>[] = [
     { id: 'name', header: t('name'), cell: ({ row }) => row.original.name },
     {
@@ -140,7 +118,13 @@ export function useUserColumns({
                   {
                     label: t('changeRole'),
                     icon: ShieldCheck,
-                    onSelect: () => openRole(row.original),
+                    href:
+                      '/dashboard/' +
+                      (administrator ? 'administrators' : 'users') +
+                      '/' +
+                      encodeURIComponent(row.original.id) +
+                      '/role?' +
+                      urlParams.toString(),
                   },
                 ]
               : []),
@@ -153,18 +137,12 @@ export function useUserColumns({
     columns,
     focus,
     target,
-    editingRole,
     notice,
     status,
-    role,
     confirmation,
     openStatus,
-    openRole,
     closeStatus: () => {
       if (!confirmation.pending) setTarget(null);
-    },
-    closeRole: () => {
-      if (!role.isPending) setEditingRole(null);
     },
   };
 }

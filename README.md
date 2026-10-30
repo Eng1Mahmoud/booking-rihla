@@ -285,7 +285,9 @@ Codex folder at `C:/Users/engm9/OneDrive/Dokumente/ChatGPT/booking-bus` contains
 snapshots/evidence. This README is the project's single documentation file.
 
 Keep changes small and follow existing feature modules. The dashboard reuses
-DataTable/useTableQuery and ConfirmDialog/useConfirmation; shared UI primitives
+DataTable/useTableQuery for lists and ConfirmDialog/useConfirmation for action
+confirmations. Create/edit forms and booking/payment details have dedicated routes;
+their back links preserve the list filters and pagination. Shared UI primitives
 stay in shared/components/ui. Use Tailwind utilities for layout and globals.css
 for theme, fonts and base rules. Preserve API role checks, passenger/staff session
 separation and booking/payment safeguards. Phone numbers retain LTR order with

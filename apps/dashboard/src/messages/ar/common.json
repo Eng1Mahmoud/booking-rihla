@@ -11,5 +11,8 @@
   "deleteNamed": "حذف {name}",
   "retry": "إعادة المحاولة",
   "city": "المدينة",
-  "actionsNamed": "إجراءات {name}"
+  "actionsNamed": "إجراءات {name}",
+  "backToList": "العودة إلى القائمة",
+  "loading": "جارٍ تحميل البيانات…",
+  "readFailed": "تعذر تحميل البيانات"
 }

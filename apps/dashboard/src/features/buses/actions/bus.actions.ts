@@ -53,3 +53,7 @@ export async function saveBusAction(input: BusInput & { id?: string }) {
 export async function deleteBusAction(id: string) {
   return apiFetch<void>('buses/' + id, { method: 'DELETE' });
 }
+
+export async function getBusAction(id: string) {
+  return apiFetch<Bus>('buses/' + encodeURIComponent(id));
+}

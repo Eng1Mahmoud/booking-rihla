@@ -18,6 +18,8 @@ export function getRouteDetails(pathname: string) {
   return { locale, path };
 }
 export function getProtectedRoute(path: string) {
+  if (/^\/dashboard\/users\/[^/]+\/role\/?$/.test(path))
+    return { path: '/dashboard/users', roles: ['SUPER_ADMIN'] as UserRole[] };
   return protectedRoutes.find(
     (route) => path === route.path || path.startsWith(route.path + '/'),
   );

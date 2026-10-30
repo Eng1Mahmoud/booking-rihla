@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -11,9 +13,11 @@ import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getAmenitiesAction } from '../actions/amenity.actions';
 import { useAmenityColumns } from '../hooks/useAmenityColumns';
 import { type Amenity } from '../types/amenity';
-import { AmenityEditor } from './AmenityEditor';
+
 const emptyRows: Amenity[] = [];
 export function AmenitiesManager() {
+  const urlParams = useSearchParams();
+
   const { query, hasActiveFilters } = useTableQuery({
     action: getAmenitiesAction,
     queryKey: ['fleet', 'amenities'],
@@ -45,11 +49,15 @@ export function AmenitiesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!query.data}
-          onClick={page.openCreate}
+          asChild
         >
-          <Plus aria-hidden="true" />
-          {t('addAmenity')}
+          <Link
+            href={'/dashboard/amenities/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('addAmenity')}
+          </Link>
         </Button>
       </div>
       <div role="status" aria-live="polite" className="text-sm text-primary">
@@ -88,9 +96,7 @@ export function AmenitiesManager() {
           }
         />
       )}
-      {page.editorOpen && query.data && (
-        <AmenityEditor {...page.editor} onCloseAutoFocus={page.focus.restore} />
-      )}
+
       {page.confirmation.open && (
         <ConfirmDialog
           open

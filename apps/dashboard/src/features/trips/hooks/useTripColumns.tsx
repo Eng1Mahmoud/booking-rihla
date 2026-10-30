@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import {
   formatGrossPaid,
   formatReportTime,
@@ -13,12 +14,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ban } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
-import {
-  cancelTripAction,
-  deleteTripAction,
-  saveTripAction,
-} from '../actions/trip.actions';
-import { type Trip, type TripInput } from '../schemas/tripSchema';
+import { cancelTripAction, deleteTripAction } from '../actions/trip.actions';
+import { type Trip } from '../schemas/tripSchema';
 import { type TripOptions } from '../types/trip';
 export function useTripColumns({
   options,
@@ -27,27 +24,18 @@ export function useTripColumns({
   options: TripOptions;
   superAdmin: boolean;
 }) {
+  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('Trips');
   const common = useTranslations('Common');
   const client = useQueryClient();
   const focus = useDialogFocus();
-  const [editing, setEditing] = useState<Trip | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
+
   const [deleting, setDeleting] = useState<Trip | null>(null);
   const [cancelling, setCancelling] = useState<Trip | null>(null);
   const [reason, setReason] = useState('');
   const [notice, setNotice] = useState('');
 
-  const save = useMutation({
-    retry: false,
-    mutationFn: async (values: TripInput) => {
-      await invokeAction(() => saveTripAction({ ...values, id: editing?.id }));
-      await client.invalidateQueries({ queryKey: ['trips'] });
-      setEditorOpen(false);
-      setNotice(t(editing ? 'updated' : 'created'));
-    },
-  });
   const remove = useMutation({
     retry: false,
     mutationFn: async (id: string) => {
@@ -82,15 +70,7 @@ export function useTripColumns({
   const cancelConfirmation = useConfirmation(async () => {
     await cancel.mutateAsync();
   });
-  const edit = useCallback(
-    (trip: Trip) => {
-      focus.remember();
-      setNotice('');
-      setEditing(trip);
-      setEditorOpen(true);
-    },
-    [focus.remember],
-  );
+
   const requestDelete = useCallback(
     (trip: Trip) => {
       focus.remember();
@@ -169,7 +149,12 @@ export function useTripColumns({
         return (
           <RowActions
             name={name(trip)}
-            onEdit={() => edit(trip)}
+            editHref={
+              '/dashboard/trips/' +
+              encodeURIComponent(trip.id) +
+              '/edit?' +
+              urlParams.toString()
+            }
             onDelete={() => requestDelete(trip)}
             additionalActions={
               superAdmin
@@ -188,25 +173,13 @@ export function useTripColumns({
       },
     },
   ];
-  function create() {
-    focus.remember(focus.fallbackRef.current);
-    setEditing(null);
-    setNotice('');
-    setEditorOpen(true);
-  }
+
   return {
     t,
     focus,
     columns,
     notice,
     clearNotice: () => setNotice(''),
-    create,
-    editing,
-    editorOpen,
-    save,
-    closeEditor: () => {
-      if (!save.isPending) setEditorOpen(false);
-    },
     deleting,
     confirmation,
     closeConfirmation: () => {

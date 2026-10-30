@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -11,7 +13,7 @@ import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getCitiesAction } from '../actions/city.actions';
 import { useCityColumns } from '../hooks/useCityColumns';
 import type { CityRow } from '../types/city';
-import { CityEditor } from './CityEditor';
+
 const emptyRows: CityRow[] = [];
 
 export function CitiesManager() {
@@ -20,6 +22,7 @@ export function CitiesManager() {
     queryKey: ['locations', 'cities'],
   });
 
+  const urlParams = useSearchParams();
   const t = useTranslations('Cities');
   const locale = useLocale();
 
@@ -45,11 +48,15 @@ export function CitiesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!query.data}
-          onClick={page.openCreate}
+          asChild
         >
-          <Plus aria-hidden="true" />
-          {t('addCity')}
+          <Link
+            href={'/dashboard/cities/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('addCity')}
+          </Link>
         </Button>
       </div>
       <div role="status" aria-live="polite" className="text-sm text-primary">
@@ -87,9 +94,6 @@ export function CitiesManager() {
             />
           }
         />
-      )}
-      {page.editorOpen && query.data && (
-        <CityEditor {...page.editor} onCloseAutoFocus={page.focus.restore} />
       )}
       {page.confirmation.open && (
         <ConfirmDialog

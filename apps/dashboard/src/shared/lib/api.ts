@@ -1,5 +1,6 @@
 import 'server-only';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { getSessionCookies } from './session';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
@@ -119,6 +120,20 @@ export async function apiFetch<T = unknown>(
       data: backendResult.data as T,
       status: response.status,
     };
+
+    // Let the middleware recheck the session and role on a fresh page request.
+    if (!path.startsWith('auth/')) {
+      if (result.status === 401 && result.code === 'UNAUTHENTICATED') {
+        const returnTo = (await headers()).get('x-bus-return-to');
+        const pagePath =
+          returnTo?.startsWith('/') && !returnTo.startsWith('//')
+            ? returnTo
+            : '/dashboard';
+        redirect('/' + locale + pagePath);
+      }
+      if (result.status === 403) redirect('/' + locale + '/forbidden');
+    }
+
     if (requestId && response.status >= 500) {
       result.requestId = requestId;
     }
@@ -127,7 +142,8 @@ export async function apiFetch<T = unknown>(
       result.retryAfter = retryAfter;
     }
     return result;
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     // A failed response does not prove the operation failed. Never retry here.
     return apiFailure(502, 'UPSTREAM_UNAVAILABLE', locale);
   }

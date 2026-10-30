@@ -1,5 +1,5 @@
 'use client';
-
+import { unstable_rethrow } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { ApiError, errorMessage } from '@/shared/lib/apiResult';
@@ -19,6 +19,7 @@ export function useConfirmation(onConfirm: () => void | Promise<void>) {
     try {
       await onConfirm();
     } catch (cause) {
+      unstable_rethrow(cause);
       setError(
         cause instanceof Error && !(cause instanceof ApiError)
           ? cause.message

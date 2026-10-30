@@ -1,6 +1,5 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-
 import type { ListPage } from '@/shared/types/list';
 import type { AmenityInput } from '../schemas/amenitySchema';
 import type { Amenity } from '../types/amenity';
@@ -19,4 +18,8 @@ export async function saveAmenityAction(input: AmenityInput & { id?: string }) {
 
 export async function deleteAmenityAction(id: string) {
   return apiFetch<void>('amenities/' + id, { method: 'DELETE' });
+}
+
+export async function getAmenityAction(id: string) {
+  return apiFetch<Amenity>('amenities/' + encodeURIComponent(id));
 }

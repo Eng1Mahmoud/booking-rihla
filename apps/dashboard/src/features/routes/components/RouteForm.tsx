@@ -1,12 +1,22 @@
 'use client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { invokeAction } from '@/shared/lib/apiResult';
+import {
+  saveRouteAction,
+  getRouteAction,
+  getRouteStationsAction,
+} from '../actions/route.actions';
 import { useLocale, useTranslations } from 'next-intl';
 import { Form } from '@/shared/components/forms/Form';
 import { FormInput } from '@/shared/components/forms/FormInput';
 import { FormSelect } from '@/shared/components/forms/FormSelect';
 import {
-  FormDialog,
-  FormDialogActions,
-} from '@/shared/components/dialogs/FormDialog';
+  ContentPage,
+  PageFormActions,
+  PageQueryState,
+} from '@/shared/components/layout/ContentPage';
 import { NativeSelectOption } from '@/shared/components/ui/native-select';
 import {
   createRouteFormSchema,
@@ -14,32 +24,37 @@ import {
   type RouteInput,
 } from '../schemas/routeSchema';
 import { stationLabel, type RouteStation } from '../lib/routeColumns';
-export function RouteEditor({
-  entry,
+export function RouteForm({
+  entry = null,
   stations,
-  pending,
-  onSave,
-  onClose,
-  onCloseAutoFocus,
 }: {
-  entry: Route | null;
+  entry?: Route | null;
   stations: RouteStation[];
-  pending: boolean;
-  onSave: (values: RouteInput) => Promise<unknown>;
-  onClose: () => void;
-  onCloseAutoFocus: (event: Event) => void;
 }) {
+  const client = useQueryClient();
+  const router = useRouter();
+  const urlParams = useSearchParams();
+  const backHref = '/dashboard/routes?' + urlParams.toString();
+
+  const save = useMutation({
+    retry: false,
+    mutationFn: async (values: RouteInput) => {
+      await invokeAction(() => saveRouteAction({ ...values, id: entry?.id }));
+      await client.invalidateQueries({ queryKey: ['routes'] });
+      router.push(backHref);
+    },
+  });
+  const pending = save.isPending;
   const t = useTranslations('Routes');
   const formMessages = useTranslations('Forms');
   const common = useTranslations('Common');
   const locale = useLocale();
   return (
-    <FormDialog
+    <ContentPage
+      backHref={backHref}
       title={t(entry ? 'edit' : 'add')}
       description={t('formHint')}
       pending={pending}
-      onClose={onClose}
-      onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
         schema={createRouteFormSchema(formMessages)}
@@ -51,9 +66,7 @@ export function RouteEditor({
           ),
           isActive: entry?.isActive ?? true,
         }}
-        onSubmit={async (values) => {
-          await onSave(values);
-        }}
+        onSubmit={save.mutateAsync}
       >
         {(form) => (
           <>
@@ -95,14 +108,52 @@ export function RouteEditor({
                 {t('active')}
               </label>
             </fieldset>
-            <FormDialogActions
+            <PageFormActions
               pending={pending}
-              onCancel={onClose}
+              backHref={backHref}
               submitLabel={common('saveChanges')}
             />
           </>
         )}
       </Form>
-    </FormDialog>
+    </ContentPage>
+  );
+}
+
+// Mount the form after its initial read; background events must not overwrite edits.
+export function RouteFormPage({ id }: { id?: string }) {
+  const locale = useLocale();
+  const t = useTranslations('Routes');
+  const urlParams = useSearchParams();
+  const query = useQuery({
+    queryKey: ['routes', locale, 'routes-form', id ?? 'new'],
+    queryFn: async () => {
+      const [entry, stations] = await Promise.all([
+        id ? invokeAction(() => getRouteAction(id)) : Promise.resolve(null),
+        invokeAction(getRouteStationsAction),
+      ]);
+      return { entry, stations };
+    },
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  if (!query.data)
+    return (
+      <ContentPage
+        title={t(id ? 'edit' : 'add')}
+        description={t('formHint')}
+        backHref={'/dashboard/routes?' + urlParams.toString()}
+      >
+        <PageQueryState query={query} />
+      </ContentPage>
+    );
+  return (
+    <RouteForm
+      key={id ?? 'new'}
+      entry={query.data.entry}
+      stations={query.data.stations}
+    />
   );
 }

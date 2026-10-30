@@ -1,12 +1,22 @@
 'use client';
+import { getCityOptionsAction } from '@/features/cities/actions/city.actions';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { invokeAction } from '@/shared/lib/apiResult';
+import {
+  saveStationAction,
+  getStationAction,
+} from '../actions/station.actions';
 import { useId } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Form } from '@/shared/components/forms/Form';
 import { NameFields } from '@/shared/components/forms/NameFields';
 import {
-  FormDialog,
-  FormDialogActions,
-} from '@/shared/components/dialogs/FormDialog';
+  ContentPage,
+  PageFormActions,
+  PageQueryState,
+} from '@/shared/components/layout/ContentPage';
 import {
   createStationFormSchema,
   type StationInput,
@@ -19,35 +29,38 @@ import {
 } from '@/shared/components/ui/native-select';
 import type { City } from '@/features/cities/types/city';
 
-export function StationEditor({
-  entry,
+export function StationForm({
+  entry = null,
   cities,
-  cityId,
-  pending,
-  onClose,
-  onSave,
-  onCloseAutoFocus,
 }: {
-  entry: Station | null;
+  entry?: Station | null;
   cities: City[];
-  cityId: string;
-  pending: boolean;
-  onClose: () => void;
-  onSave: (values: StationInput) => Promise<void>;
-  onCloseAutoFocus: (event: Event) => void;
 }) {
+  const client = useQueryClient();
+  const router = useRouter();
+  const urlParams = useSearchParams();
+  const backHref = '/dashboard/stations?' + urlParams.toString();
+  const cityId = urlParams.get('filter.cityId') ?? '';
+  const save = useMutation({
+    retry: false,
+    mutationFn: async (values: StationInput) => {
+      await invokeAction(() => saveStationAction({ ...values, id: entry?.id }));
+      await client.invalidateQueries({ queryKey: ['locations'] });
+      router.push(backHref);
+    },
+  });
+  const pending = save.isPending;
   const t = useTranslations('Stations');
   const common = useTranslations('Common');
   const formMessages = useTranslations('Forms');
   const locale = useLocale();
   const selectId = useId();
   return (
-    <FormDialog
+    <ContentPage
+      backHref={backHref}
       title={t(entry ? 'editStation' : 'addStation')}
       description={t('stationFormHint')}
       pending={pending}
-      onClose={onClose}
-      onCloseAutoFocus={onCloseAutoFocus}
     >
       <Form
         schema={createStationFormSchema(formMessages)}
@@ -56,7 +69,7 @@ export function StationEditor({
           nameEn: entry?.nameEn ?? '',
           cityId: entry?.cityId ?? cityId,
         }}
-        onSubmit={onSave}
+        onSubmit={save.mutateAsync}
       >
         {(form) => (
           <>
@@ -90,14 +103,52 @@ export function StationEditor({
                 />
               </Field>
             </fieldset>
-            <FormDialogActions
+            <PageFormActions
               pending={pending}
-              onCancel={onClose}
+              backHref={backHref}
               submitLabel={entry ? common('saveChanges') : t('addStation')}
             />
           </>
         )}
       </Form>
-    </FormDialog>
+    </ContentPage>
+  );
+}
+
+// Mount the form after its initial read; background events must not overwrite edits.
+export function StationFormPage({ id }: { id?: string }) {
+  const locale = useLocale();
+  const t = useTranslations('Stations');
+  const urlParams = useSearchParams();
+  const query = useQuery({
+    queryKey: ['locations', locale, 'stations-form', id ?? 'new'],
+    queryFn: async () => {
+      const [entry, cities] = await Promise.all([
+        id ? invokeAction(() => getStationAction(id)) : Promise.resolve(null),
+        invokeAction(getCityOptionsAction),
+      ]);
+      return { entry, cities };
+    },
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  if (!query.data)
+    return (
+      <ContentPage
+        title={t(id ? 'editStation' : 'addStation')}
+        description={t('stationFormHint')}
+        backHref={'/dashboard/stations?' + urlParams.toString()}
+      >
+        <PageQueryState query={query} />
+      </ContentPage>
+    );
+  return (
+    <StationForm
+      key={id ?? 'new'}
+      entry={query.data.entry}
+      cities={query.data.cities}
+    />
   );
 }

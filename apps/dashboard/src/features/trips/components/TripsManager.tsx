@@ -1,23 +1,21 @@
 'use client';
-import { useTripsQuery } from '../hooks/useTripsQuery';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import { useTripsQuery } from '../hooks/useTripsQuery';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
 import { Button } from '@/shared/components/ui/button';
-
 import { errorMessage } from '@/shared/lib/apiResult';
-
 import { CalendarDays, Plus } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { useId } from 'react';
-
 import { useTripColumns } from '../hooks/useTripColumns';
-
-import { TripEditor } from './TripEditor';
 import { TripFilters } from './TripFilters';
 export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
+  const urlParams = useSearchParams();
+
   const { query, refresh: refreshQuery, options } = useTripsQuery();
 
   const locale = useLocale();
@@ -51,18 +49,14 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
           <Button asChild variant="outline" className="min-h-12">
             <Link href="/dashboard/trips/batch">{t('batch')}</Link>
           </Button>
-          <Button
-            ref={page.focus.fallbackRef}
-            onClick={page.create}
-            disabled={
-              !query.data ||
-              !options.routes.some((route) => route.isActive) ||
-              !options.buses.some((bus) => bus.isActive)
-            }
-            className="min-h-12"
-          >
-            <Plus aria-hidden="true" />
-            {t('add')}
+          <Button ref={page.focus.fallbackRef} className="min-h-12" asChild>
+            <Link
+              href={'/dashboard/trips/new?' + urlParams.toString()}
+              prefetch={false}
+            >
+              <Plus aria-hidden="true" />
+              {t('add')}
+            </Link>
           </Button>
         </div>
       </div>
@@ -98,16 +92,6 @@ export function TripsManager({ superAdmin }: { superAdmin: boolean }) {
               description={t('emptyHint')}
             />
           }
-        />
-      )}{' '}
-      {page.editorOpen && (
-        <TripEditor
-          entry={page.editing}
-          options={options}
-          pending={page.save.isPending}
-          onSave={(values) => page.save.mutateAsync(values)}
-          onClose={page.closeEditor}
-          onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}
       {page.deleting && (

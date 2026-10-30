@@ -11,7 +11,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getAdministratorsAction } from '../actions/administrator.actions';
 import { AdministratorFilters } from './AdministratorFilters';
-import { AdministratorRoleEditor } from './AdministratorRoleEditor';
+
 export function AdministratorsManager() {
   const { query } = useTableQuery({
     action: getAdministratorsAction,
@@ -96,17 +96,6 @@ export function AdministratorsManager() {
           onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}
-      {page.editingRole && (
-        <AdministratorRoleEditor
-          entry={page.editingRole}
-          pending={page.role.isPending}
-          onSave={async (role) => {
-            await page.role.mutateAsync(role);
-          }}
-          onClose={page.closeRole}
-          onCloseAutoFocus={page.focus.restore}
-        />
-      )}
     </section>
   );
 }

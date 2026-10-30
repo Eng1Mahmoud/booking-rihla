@@ -42,3 +42,7 @@ export async function saveCityAction(input: CityInput & { id?: string }) {
 export async function deleteCityAction(id: string) {
   return apiFetch<void>('cities/' + id, { method: 'DELETE' });
 }
+
+export async function getCityAction(id: string) {
+  return apiFetch<City>('cities/' + encodeURIComponent(id));
+}

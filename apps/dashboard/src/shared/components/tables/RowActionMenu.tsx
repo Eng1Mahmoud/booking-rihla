@@ -1,5 +1,6 @@
 'use client';
 import { useRef } from 'react';
+import { Link } from '@/i18n/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { EllipsisVertical, type LucideIcon } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -13,7 +14,8 @@ import {
 export type RowAction = {
   label: string;
   icon?: LucideIcon;
-  onSelect: () => void;
+  onSelect?: () => void;
+  href?: string;
   disabled?: boolean;
   destructive?: boolean;
 };
@@ -64,25 +66,39 @@ export function RowActionMenu({
           }}
         >
           {actions.map(
-            ({ label, icon: Icon, onSelect, disabled, destructive }) => (
-              <DropdownMenuItem
-                key={label}
-                disabled={disabled}
-                className={
-                  destructive
-                    ? 'text-destructive focus:bg-destructive/5 focus:text-destructive'
-                    : undefined
-                }
-                onSelect={() => {
-                  selectedAction.current = onSelect;
-                }}
-              >
-                {Icon && <Icon aria-hidden="true" />}
-                <span className="min-w-0 whitespace-normal wrap-anywhere">
-                  {label}
-                </span>
-              </DropdownMenuItem>
-            ),
+            ({ label, icon: Icon, onSelect, href, disabled, destructive }) => {
+              const className = destructive
+                ? 'text-destructive focus:bg-destructive/5 focus:text-destructive'
+                : undefined;
+              const content = (
+                <>
+                  {Icon && <Icon aria-hidden="true" />}
+                  <span className="min-w-0 whitespace-normal wrap-anywhere">
+                    {label}
+                  </span>
+                </>
+              );
+              if (href && !disabled)
+                return (
+                  <DropdownMenuItem key={label} className={className} asChild>
+                    <Link href={href} prefetch={false}>
+                      {content}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              return (
+                <DropdownMenuItem
+                  key={label}
+                  disabled={disabled}
+                  className={className}
+                  onSelect={() => {
+                    selectedAction.current = onSelect ?? null;
+                  }}
+                >
+                  {content}
+                </DropdownMenuItem>
+              );
+            },
           )}
         </DropdownMenuContent>
       </DropdownMenu>

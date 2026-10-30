@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -10,10 +12,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useBusColumns } from '../hooks/useBusColumns';
 import { useBusesQuery } from '../hooks/useBusesQuery';
 import { type Bus } from '../types/bus';
-import { BusEditor } from './BusEditor';
 import { BusFilters } from './BusFilters';
 const emptyRows: Bus[] = [];
 export function BusesManager() {
+  const urlParams = useSearchParams();
+
   const { query, refresh: refreshQuery, hasActiveFilters } = useBusesQuery();
 
   const t = useTranslations('Buses');
@@ -42,11 +45,15 @@ export function BusesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!query.data}
-          onClick={page.openCreate}
+          asChild
         >
-          <Plus aria-hidden="true" />
-          {t('addBus')}
+          <Link
+            href={'/dashboard/buses/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('addBus')}
+          </Link>
         </Button>
       </div>
       <div role="status" aria-live="polite" className="text-sm text-primary">
@@ -88,13 +95,7 @@ export function BusesManager() {
           }
         />
       )}
-      {page.editorOpen && query.data && (
-        <BusEditor
-          {...page.editor}
-          options={query.data.options}
-          onCloseAutoFocus={page.focus.restore}
-        />
-      )}
+
       {page.confirmation.open && (
         <ConfirmDialog
           open

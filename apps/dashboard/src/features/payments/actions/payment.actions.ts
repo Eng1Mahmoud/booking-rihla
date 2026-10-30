@@ -9,5 +9,5 @@ export async function getPaymentsAction(query: string) {
 }
 
 export async function getPaymentAction(id: string) {
-  return apiFetch<Payment>('admin/payments/' + id);
+  return apiFetch<Payment>('admin/payments/' + encodeURIComponent(id));
 }

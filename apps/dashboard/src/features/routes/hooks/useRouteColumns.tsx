@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { RowActions } from '@/shared/components/tables/RowActions';
 import { useConfirmation } from '@/shared/hooks/useConfirmation';
 import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
@@ -7,33 +8,24 @@ import { type DataTableColumn } from '@/shared/lib/dataTable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
-import { deleteRouteAction, saveRouteAction } from '../actions/route.actions';
+import { deleteRouteAction } from '../actions/route.actions';
 import {
   routeLabel,
   stationLabel,
   type RouteStation,
 } from '../lib/routeColumns';
-import { type Route, type RouteInput } from '../schemas/routeSchema';
+import { type Route } from '../schemas/routeSchema';
 export function useRouteColumns({ stations }: { stations: RouteStation[] }) {
+  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('Routes');
   const common = useTranslations('Common');
   const client = useQueryClient();
   const focus = useDialogFocus();
-  const [editing, setEditing] = useState<Route | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
+
   const [deleting, setDeleting] = useState<Route | null>(null);
   const [notice, setNotice] = useState('');
 
-  const save = useMutation({
-    retry: false,
-    mutationFn: async (values: RouteInput) => {
-      await invokeAction(() => saveRouteAction({ ...values, id: editing?.id }));
-      await client.invalidateQueries({ queryKey: ['routes'] });
-      setEditorOpen(false);
-      setNotice(t(editing ? 'updated' : 'created'));
-    },
-  });
   const remove = useMutation({
     retry: false,
     mutationFn: async (id: string) => {
@@ -47,15 +39,7 @@ export function useRouteColumns({ stations }: { stations: RouteStation[] }) {
     setDeleting(null);
     setNotice(t('deleted'));
   });
-  const edit = useCallback(
-    (route: Route) => {
-      focus.remember();
-      setNotice('');
-      setEditing(route);
-      setEditorOpen(true);
-    },
-    [focus.remember],
-  );
+
   const requestDelete = useCallback(
     (route: Route) => {
       focus.remember();
@@ -101,31 +85,24 @@ export function useRouteColumns({ stations }: { stations: RouteStation[] }) {
       cell: ({ row }) => (
         <RowActions
           name={routeLabel(row.original, stations, locale)}
-          onEdit={() => edit(row.original)}
+          editHref={
+            '/dashboard/routes/' +
+            encodeURIComponent(row.original.id) +
+            '/edit?' +
+            urlParams.toString()
+          }
           onDelete={() => requestDelete(row.original)}
         />
       ),
     },
   ];
-  function create() {
-    focus.remember(focus.fallbackRef.current);
-    setEditing(null);
-    setNotice('');
-    setEditorOpen(true);
-  }
+
   return {
     t,
     focus,
     columns,
     notice,
     clearNotice: () => setNotice(''),
-    create,
-    editing,
-    editorOpen,
-    save,
-    closeEditor: () => {
-      if (!save.isPending) setEditorOpen(false);
-    },
     deleting,
     confirmation,
     closeConfirmation: () => {

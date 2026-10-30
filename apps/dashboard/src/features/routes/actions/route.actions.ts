@@ -37,3 +37,7 @@ export async function saveRouteAction(input: RouteInput & { id?: string }) {
 export async function deleteRouteAction(id: string) {
   return apiFetch<void>('routes/' + id, { method: 'DELETE' });
 }
+
+export async function getRouteAction(id: string) {
+  return apiFetch<Route>('routes/' + encodeURIComponent(id));
+}

@@ -11,5 +11,8 @@
   "deleteNamed": "Delete {name}",
   "retry": "Try again",
   "city": "City",
-  "actionsNamed": "Actions for {name}"
+  "actionsNamed": "Actions for {name}",
+  "backToList": "Back to list",
+  "loading": "Loading data…",
+  "readFailed": "Could not load data"
 }

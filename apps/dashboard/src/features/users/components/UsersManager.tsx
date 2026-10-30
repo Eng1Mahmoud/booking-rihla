@@ -2,17 +2,13 @@
 import { UserFilters } from './UserFilters';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getUsersAction } from '../actions/user.actions';
-import { AdministratorRoleEditor } from '@/features/administrators/components/AdministratorRoleEditor';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
 import { DataTable } from '@/shared/components/tables/DataTable';
-
 import { errorMessage } from '@/shared/lib/apiResult';
-
 import { Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-
 import { useUserColumns } from '../hooks/useUserColumns';
 
 export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
@@ -93,17 +89,6 @@ export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
           onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}
-      {page.editingRole && (
-        <AdministratorRoleEditor
-          entry={page.editingRole}
-          pending={page.role.isPending}
-          onSave={async (role) => {
-            await page.role.mutateAsync(role);
-          }}
-          onClose={page.closeRole}
-          onCloseAutoFocus={page.focus.restore}
-        />
-      )}
     </section>
   );
 }

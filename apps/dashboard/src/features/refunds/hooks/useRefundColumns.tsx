@@ -1,4 +1,5 @@
 'use client';
+import { unstable_rethrow } from 'next/navigation';
 import {
   formatGrossPaid,
   formatReportTime,
@@ -48,6 +49,7 @@ export function useRefundColumns() {
         setTarget(null);
         setNotice(t('updated'));
       } catch (error) {
+        unstable_rethrow(error);
         if (
           !(error instanceof ApiError) ||
           error.status === 0 ||
@@ -79,7 +81,9 @@ export function useRefundColumns() {
       meta: { headerClassName: 'w-60' },
       cell: ({ row }) => (
         <Link
-          href={'/dashboard/bookings?bookingId=' + row.original.bookingId}
+          href={
+            '/dashboard/bookings/' + encodeURIComponent(row.original.bookingId)
+          }
           className="inline-flex min-h-11 items-center break-all text-primary underline underline-offset-4"
         >
           <bdi>{row.original.bookingId}</bdi>

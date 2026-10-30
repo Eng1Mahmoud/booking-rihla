@@ -84,3 +84,7 @@ export async function cancelTripAction(input: { id: string; reason: string }) {
     body: { reason: input.reason },
   });
 }
+
+export async function getTripAction(id: string) {
+  return apiFetch<Trip>('trips/' + encodeURIComponent(id));
+}

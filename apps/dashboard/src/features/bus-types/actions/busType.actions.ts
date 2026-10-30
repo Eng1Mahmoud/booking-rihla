@@ -1,6 +1,5 @@
 'use server';
 import { apiFetch } from '@/shared/lib/api';
-
 import type { ListPage } from '@/shared/types/list';
 import type { BusTypeInput } from '../schemas/busTypeSchema';
 import type { BusType } from '../types/busType';
@@ -19,4 +18,8 @@ export async function saveBusTypeAction(input: BusTypeInput & { id?: string }) {
 
 export async function deleteBusTypeAction(id: string) {
   return apiFetch<void>('bus-types/' + id, { method: 'DELETE' });
+}
+
+export async function getBusTypeAction(id: string) {
+  return apiFetch<BusType>('bus-types/' + encodeURIComponent(id));
 }

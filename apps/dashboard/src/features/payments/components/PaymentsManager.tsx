@@ -8,7 +8,6 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePaymentColumns } from '../hooks/usePaymentColumns';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getPaymentsAction } from '../actions/payment.actions';
-import { PaymentDetails } from './PaymentDetails';
 import { PaymentFilters } from './PaymentFilters';
 export function PaymentsManager() {
   const { query } = useTableQuery({
@@ -18,18 +17,12 @@ export function PaymentsManager() {
 
   const locale = useLocale();
 
-  const { columns, ...page } = usePaymentColumns();
+  const columns = usePaymentColumns();
   const t = useTranslations('Payments');
 
   return (
     <section className="min-w-0">
-      <h1
-        ref={page.focus.fallbackRef}
-        tabIndex={-1}
-        className="text-3xl font-bold tracking-tight"
-      >
-        {t('title')}
-      </h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
@@ -64,13 +57,6 @@ export function PaymentsManager() {
               description={t('emptyHint')}
             />
           }
-        />
-      )}{' '}
-      {page.selected && (
-        <PaymentDetails
-          id={page.selected}
-          onClose={page.close}
-          onCloseAutoFocus={page.focus.restore}
         />
       )}
     </section>

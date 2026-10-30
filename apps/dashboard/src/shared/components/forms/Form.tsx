@@ -1,4 +1,5 @@
 'use client';
+import { unstable_rethrow } from 'next/navigation';
 import {
   useForm,
   FormProvider,
@@ -50,6 +51,7 @@ export function Form<Input extends FieldValues, Output extends FieldValues>({
             try {
               await onSubmit(values);
             } catch (error) {
+              unstable_rethrow(error);
               const message = errorMessage(error, locale);
               form.setError('root.server', { message });
             }

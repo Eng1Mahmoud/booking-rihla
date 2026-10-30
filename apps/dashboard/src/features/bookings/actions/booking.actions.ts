@@ -9,5 +9,5 @@ export async function getBookingsAction(query: string) {
 }
 
 export async function getBookingAction(id: string) {
-  return apiFetch<BookingDetail>('admin/bookings/' + id);
+  return apiFetch<BookingDetail>('admin/bookings/' + encodeURIComponent(id));
 }

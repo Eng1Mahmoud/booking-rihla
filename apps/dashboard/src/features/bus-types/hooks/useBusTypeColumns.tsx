@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { getNameColumns } from '@/shared/components/tables/NameColumns';
 import { RowActions } from '@/shared/components/tables/RowActions';
 import { useConfirmation } from '@/shared/hooks/useConfirmation';
@@ -8,30 +9,15 @@ import { type DataTableColumn } from '@/shared/lib/dataTable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
-import {
-  deleteBusTypeAction,
-  saveBusTypeAction,
-} from '../actions/busType.actions';
-import { type BusTypeInput } from '../schemas/busTypeSchema';
+import { deleteBusTypeAction } from '../actions/busType.actions';
 import { type BusType } from '../types/busType';
 export function useBusTypeColumns() {
+  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('BusTypes');
   const common = useTranslations('Common');
   const client = useQueryClient();
-  const saveMutation = useMutation({
-    retry: false,
-    mutationFn: async ({
-      id,
-      values,
-    }: {
-      id?: string;
-      values: BusTypeInput;
-    }) => {
-      await invokeAction(() => saveBusTypeAction({ ...values, id }));
-      await client.invalidateQueries({ queryKey: ['fleet'] });
-    },
-  });
+
   const remove = useMutation({
     retry: false,
     mutationFn: async (id: string) => {
@@ -41,8 +27,7 @@ export function useBusTypeColumns() {
   });
   const focus = useDialogFocus();
   const [notice, setNotice] = useState('');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editing, setEditing] = useState<BusType | null>(null);
+
   const [deleting, setDeleting] = useState<BusType | null>(null);
   const confirmation = useConfirmation(async () => {
     if (!deleting) return;
@@ -51,15 +36,7 @@ export function useBusTypeColumns() {
     setDeleting(null);
     setNotice(t('deleted'));
   });
-  const openEdit = useCallback(
-    (entry: BusType) => {
-      focus.remember();
-      setEditing(entry);
-      setNotice('');
-      setEditorOpen(true);
-    },
-    [focus.remember],
-  );
+
   const openDelete = useCallback(
     (entry: BusType) => {
       focus.remember();
@@ -91,27 +68,18 @@ export function useBusTypeColumns() {
       cell: ({ row }) => (
         <RowActions
           name={row.original[locale === 'ar' ? 'nameAr' : 'nameEn']}
-          onEdit={() => openEdit(row.original)}
+          editHref={
+            '/dashboard/bus-types/' +
+            encodeURIComponent(row.original.id) +
+            '/edit?' +
+            urlParams.toString()
+          }
           onDelete={() => openDelete(row.original)}
         />
       ),
     },
   ];
-  function openCreate() {
-    focus.remember(focus.fallbackRef.current);
-    setEditing(null);
-    setNotice('');
-    setEditorOpen(true);
-  }
-  async function saveEntry(values: BusTypeInput) {
-    setNotice('');
-    await saveMutation.mutateAsync({ id: editing?.id, values });
-    setEditorOpen(false);
-    setNotice(t(editing ? 'updated' : 'created'));
-  }
-  function closeEditor() {
-    if (!saveMutation.isPending) setEditorOpen(false);
-  }
+
   function closeConfirmation() {
     if (!confirmation.pending) setDeleting(null);
   }
@@ -119,15 +87,7 @@ export function useBusTypeColumns() {
     columns,
     notice,
     clearNotice: () => setNotice(''),
-    openCreate,
     focus,
-    editorOpen,
-    editor: {
-      entry: editing,
-      pending: saveMutation.isPending,
-      onSave: saveEntry,
-      onClose: closeEditor,
-    },
     confirmation: {
       open: Boolean(deleting),
       name: deleting?.[locale === 'ar' ? 'nameAr' : 'nameEn'] ?? '',

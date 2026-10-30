@@ -1,4 +1,6 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/components/dialogs/ConfirmDialog';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ListError } from '@/shared/components/feedback/ListError';
@@ -11,9 +13,11 @@ import { useBusTypeColumns } from '../hooks/useBusTypeColumns';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getBusTypesAction } from '../actions/busType.actions';
 import { type BusType } from '../types/busType';
-import { BusTypeEditor } from './BusTypeEditor';
+
 const emptyRows: BusType[] = [];
 export function BusTypesManager() {
+  const urlParams = useSearchParams();
+
   const { query, hasActiveFilters } = useTableQuery({
     action: getBusTypesAction,
     queryKey: ['fleet', 'bus-types'],
@@ -45,11 +49,15 @@ export function BusTypesManager() {
         <Button
           ref={page.focus.fallbackRef}
           className="min-h-12 shrink-0"
-          disabled={!query.data}
-          onClick={page.openCreate}
+          asChild
         >
-          <Plus aria-hidden="true" />
-          {t('addBusType')}
+          <Link
+            href={'/dashboard/bus-types/new?' + urlParams.toString()}
+            prefetch={false}
+          >
+            <Plus aria-hidden="true" />
+            {t('addBusType')}
+          </Link>
         </Button>
       </div>
       <div role="status" aria-live="polite" className="text-sm text-primary">
@@ -88,9 +96,7 @@ export function BusTypesManager() {
           }
         />
       )}
-      {page.editorOpen && query.data && (
-        <BusTypeEditor {...page.editor} onCloseAutoFocus={page.focus.restore} />
-      )}
+
       {page.confirmation.open && (
         <ConfirmDialog
           open

@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { getNameColumns } from '@/shared/components/tables/NameColumns';
 import { RowActions } from '@/shared/components/tables/RowActions';
@@ -9,22 +10,16 @@ import type { DataTableColumn } from '@/shared/lib/dataTable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
-import { deleteCityAction, saveCityAction } from '../actions/city.actions';
-import type { CityInput } from '../schemas/citySchema';
+import { deleteCityAction } from '../actions/city.actions';
 import type { City, CityRow } from '../types/city';
 
 export function useCityColumns() {
+  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('Cities');
   const common = useTranslations('Common');
   const client = useQueryClient();
-  const saveMutation = useMutation({
-    retry: false,
-    mutationFn: async ({ id, values }: { id?: string; values: CityInput }) => {
-      await invokeAction(() => saveCityAction({ ...values, id }));
-      await client.invalidateQueries({ queryKey: ['locations'] });
-    },
-  });
+
   const remove = useMutation({
     retry: false,
     mutationFn: async (id: string) => {
@@ -34,8 +29,7 @@ export function useCityColumns() {
   });
   const focus = useDialogFocus();
   const [notice, setNotice] = useState('');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editing, setEditing] = useState<City | null>(null);
+
   const [deleting, setDeleting] = useState<City | null>(null);
   const confirmation = useConfirmation(async () => {
     if (!deleting) return;
@@ -44,15 +38,7 @@ export function useCityColumns() {
     setDeleting(null);
     setNotice(t('deleted'));
   });
-  const openEdit = useCallback(
-    (entry: City) => {
-      focus.remember();
-      setEditing(entry);
-      setNotice('');
-      setEditorOpen(true);
-    },
-    [focus.remember],
-  );
+
   const openDelete = useCallback(
     (entry: City) => {
       focus.remember();
@@ -87,27 +73,18 @@ export function useCityColumns() {
       cell: ({ row }) => (
         <RowActions
           name={row.original[locale === 'ar' ? 'nameAr' : 'nameEn']}
-          onEdit={() => openEdit(row.original)}
+          editHref={
+            '/dashboard/cities/' +
+            encodeURIComponent(row.original.id) +
+            '/edit?' +
+            urlParams.toString()
+          }
           onDelete={() => openDelete(row.original)}
         />
       ),
     },
   ];
-  function openCreate() {
-    focus.remember(focus.fallbackRef.current);
-    setEditing(null);
-    setNotice('');
-    setEditorOpen(true);
-  }
-  async function saveCity(values: CityInput) {
-    setNotice('');
-    await saveMutation.mutateAsync({ id: editing?.id, values });
-    setEditorOpen(false);
-    setNotice(t(editing ? 'updated' : 'created'));
-  }
-  function closeEditor() {
-    if (!saveMutation.isPending) setEditorOpen(false);
-  }
+
   function closeConfirmation() {
     if (!confirmation.pending) setDeleting(null);
   }
@@ -115,15 +92,7 @@ export function useCityColumns() {
     columns,
     notice,
     clearNotice: () => setNotice(''),
-    openCreate,
     focus,
-    editorOpen,
-    editor: {
-      entry: editing,
-      pending: saveMutation.isPending,
-      onSave: saveCity,
-      onClose: closeEditor,
-    },
     confirmation: {
       open: Boolean(deleting),
       name: deleting?.[locale === 'ar' ? 'nameAr' : 'nameEn'] ?? '',

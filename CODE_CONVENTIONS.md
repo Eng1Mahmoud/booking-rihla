@@ -52,11 +52,14 @@ modules such as auth.server.ts and their server-only boundary.
   explain real business rules; remove wrappers that only add navigation between files.
 - Keep dashboard table columns in a separate file. When columns need locale or
   translation hooks, use hooks/use<Entity>Columns.tsx and read that context inside
-  the hook. Column hooks own row mutations, selection and dialog state.
+  the hook. Column hooks own row actions and confirmation state. Create/edit forms
+  own their save mutation and render on dedicated routes. Load form and detail
+  records/options with useQuery in the feature component; route files pass IDs only.
+  Mount forms after their initial read and avoid background refetches overwriting edits.
   Filter components own their controls and update filter.<name> URL parameters.
   useTableQuery reads those parameters dynamically, prepares pagination and locale,
-  includes them in the cache key, and calls a list action with the query string. Keep UI
-  parameters such as a bookingId for an open detail panel outside the filter prefix.
+  includes them in the cache key, and calls a list action with the query string.
+  Use route segments for records; reserve filter.<name> for applied list filters.
   Simple tables call useTableQuery with action and queryKey directly. Keep feature
   query hooks only for related option data and custom refresh work; use loadRelatedData
   to preserve parallel reads and existing metadata cache keys. DataTable owns URL
@@ -64,6 +67,8 @@ modules such as auth.server.ts and their server-only boundary.
   Pass only required lookup data and permissions.
   Use useMemo only when stable references or measured calculation costs justify
   it. Reuse identical column definitions.
+- Use dedicated pages for forms and record details. Keep dialogs for confirming
+  actions. Preserve list query parameters in create/edit/detail and back links.
 - Reuse existing shared components, Tailwind tokens and next-intl messages.
   Do not introduce CSS modules or another styling system.
 - Keep simple components simple. Do not move a few lines into a hook merely to

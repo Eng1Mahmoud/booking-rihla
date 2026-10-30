@@ -8,9 +8,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useBookingColumns } from '../hooks/useBookingColumns';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getBookingsAction } from '../actions/booking.actions';
-import { BookingDetails } from './BookingDetails';
 import { BookingFilters } from './BookingFilters';
-export function BookingsManager({ bookingId = '' }: { bookingId?: string }) {
+export function BookingsManager() {
   const { query } = useTableQuery({
     action: getBookingsAction,
     queryKey: 'bookings',
@@ -18,18 +17,12 @@ export function BookingsManager({ bookingId = '' }: { bookingId?: string }) {
 
   const locale = useLocale();
 
-  const { columns, ...page } = useBookingColumns(bookingId);
+  const columns = useBookingColumns();
   const t = useTranslations('Bookings');
 
   return (
     <section className="min-w-0">
-      <h1
-        ref={page.focus.fallbackRef}
-        tabIndex={-1}
-        className="text-3xl font-bold tracking-tight"
-      >
-        {t('title')}
-      </h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
       <p className="mt-2 mb-7 max-w-[65ch] text-muted-foreground">
         {t('intro')}
       </p>
@@ -64,13 +57,6 @@ export function BookingsManager({ bookingId = '' }: { bookingId?: string }) {
               description={t('emptyHint')}
             />
           }
-        />
-      )}{' '}
-      {page.selected && (
-        <BookingDetails
-          id={page.selected}
-          onClose={page.close}
-          onCloseAutoFocus={page.focus.restore}
         />
       )}
     </section>

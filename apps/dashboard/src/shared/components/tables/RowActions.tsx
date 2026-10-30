@@ -5,12 +5,12 @@ import { RowActionMenu, type RowAction } from './RowActionMenu';
 
 export function RowActions({
   name,
-  onEdit,
+  editHref,
   onDelete,
   additionalActions = [],
 }: {
   name: string;
-  onEdit: () => void;
+  editHref: string;
   onDelete: () => void;
   additionalActions?: RowAction[];
 }) {
@@ -19,7 +19,7 @@ export function RowActions({
     <RowActionMenu
       name={name}
       actions={[
-        { label: t('edit'), icon: Pencil, onSelect: onEdit },
+        { label: t('edit'), icon: Pencil, href: editHref },
         {
           label: t('delete'),
           icon: Trash2,
