@@ -1,6 +1,8 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
-import { setAdministratorStatusAction } from '@/features/administrators/actions/administrator.actions';
+import {
+  setAdministratorRoleAction,
+  setAdministratorStatusAction,
+} from '@/features/administrators/actions/administrator.actions';
 import { formatReportTime } from '@/features/dashboard/lib/format';
 import { RowActionMenu } from '@/shared/components/tables/RowActionMenu';
 import { useConfirmation } from '@/shared/hooks/useConfirmation';
@@ -8,11 +10,11 @@ import { useDialogFocus } from '@/shared/hooks/useDialogFocus';
 import { invokeAction } from '@/shared/lib/apiResult';
 import { type DataTableColumn } from '@/shared/lib/dataTable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ShieldCheck, UserRoundCheck, UserRoundX } from 'lucide-react';
+import { KeyRound, UserRoundCheck, UserRoundX } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useState } from 'react';
 import { setUserStatusAction } from '../actions/user.actions';
-import { type ManagedUser } from '../schemas/userSchema';
+import { userRoles, type ManagedUser } from '../schemas/userSchema';
 export function useUserColumns({
   canChangeRole,
   administrator = false,
@@ -20,7 +22,6 @@ export function useUserColumns({
   canChangeRole: boolean;
   administrator?: boolean;
 }) {
-  const urlParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('Users');
   const states = useTranslations('States');
@@ -28,6 +29,10 @@ export function useUserColumns({
 
   const focus = useDialogFocus<HTMLHeadingElement>();
   const [target, setTarget] = useState<ManagedUser | null>(null);
+  const [rolePick, setRolePick] = useState<{
+    user: ManagedUser;
+    role: ManagedUser['role'];
+  } | null>(null);
 
   const [notice, setNotice] = useState('');
 
@@ -37,7 +42,7 @@ export function useUserColumns({
       client.invalidateQueries({ queryKey: ['administrators'] }),
     ]);
   }
-  const status = useMutation({
+  const statusChange = useMutation({
     retry: false,
     mutationFn: async () => {
       if (!target) return;
@@ -54,8 +59,28 @@ export function useUserColumns({
     },
   });
 
+  const roleChange = useMutation({
+    retry: false,
+    mutationFn: async () => {
+      if (!rolePick) return;
+
+      await invokeAction(() =>
+        setAdministratorRoleAction({
+          id: rolePick.user.id,
+          role: rolePick.role,
+        }),
+      );
+      await refreshAccounts();
+      setRolePick(null);
+      setNotice(t('updated'));
+    },
+  });
+
   const confirmation = useConfirmation(async () => {
-    await status.mutateAsync();
+    await statusChange.mutateAsync();
+  });
+  const roleConfirmation = useConfirmation(async () => {
+    await roleChange.mutateAsync();
   });
   const openStatus = useCallback(
     (user: ManagedUser) => {
@@ -65,6 +90,16 @@ export function useUserColumns({
       setTarget(user);
     },
     [focus.remember, confirmation.reset],
+  );
+
+  const openRole = useCallback(
+    (user: ManagedUser, role: ManagedUser['role']) => {
+      focus.remember();
+      roleConfirmation.reset();
+      setNotice('');
+      setRolePick({ user, role });
+    },
+    [focus.remember, roleConfirmation.reset],
   );
 
   const columns: DataTableColumn<ManagedUser>[] = [
@@ -117,14 +152,16 @@ export function useUserColumns({
               ? [
                   {
                     label: t('changeRole'),
-                    icon: ShieldCheck,
-                    href:
-                      '/dashboard/' +
-                      (administrator ? 'administrators' : 'users') +
-                      '/' +
-                      encodeURIComponent(row.original.id) +
-                      '/role?' +
-                      urlParams.toString(),
+                    icon: KeyRound,
+                    items: userRoles.map((role) => ({
+                      label: states(role),
+                      onSelect: () => openRole(row.original, role),
+                      disabled:
+                        role === row.original.role ||
+                        (role !== 'USER' &&
+                          (!row.original.isActive ||
+                            !row.original.emailVerifiedAt)),
+                    })),
                   },
                 ]
               : []),
@@ -138,11 +175,16 @@ export function useUserColumns({
     focus,
     target,
     notice,
-    status,
+    statusChange,
     confirmation,
     openStatus,
     closeStatus: () => {
       if (!confirmation.pending) setTarget(null);
+    },
+    rolePick,
+    roleConfirmation,
+    closeRole: () => {
+      if (!roleConfirmation.pending) setRolePick(null);
     },
   };
 }

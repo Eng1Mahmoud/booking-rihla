@@ -9,7 +9,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/shared/components/ui/dropdown-menu';
+
+export type RowMenuItem = {
+  label: string;
+  onSelect?: () => void;
+  disabled?: boolean;
+};
 
 export type RowAction = {
   label: string;
@@ -18,6 +27,8 @@ export type RowAction = {
   href?: string;
   disabled?: boolean;
   destructive?: boolean;
+  // When set, renders a submenu of these items instead of a direct action.
+  items?: RowMenuItem[];
 };
 
 export function RowActionMenu({
@@ -65,41 +76,73 @@ export function RowActionMenu({
             action();
           }}
         >
-          {actions.map(
-            ({ label, icon: Icon, onSelect, href, disabled, destructive }) => {
-              const className = destructive
-                ? 'text-destructive focus:bg-destructive/5 focus:text-destructive'
-                : undefined;
-              const content = (
-                <>
-                  {Icon && <Icon aria-hidden="true" />}
-                  <span className="min-w-0 whitespace-normal wrap-anywhere">
-                    {label}
-                  </span>
-                </>
-              );
-              if (href && !disabled)
-                return (
-                  <DropdownMenuItem key={label} className={className} asChild>
-                    <Link href={href} prefetch={false}>
-                      {content}
-                    </Link>
-                  </DropdownMenuItem>
-                );
+          {actions.map((action) => {
+            const { label: text, icon: Icon, destructive, disabled } = action;
+            const className = destructive
+              ? 'text-destructive focus:bg-destructive/5 focus:text-destructive'
+              : undefined;
+            const content = (
+              <>
+                {Icon && <Icon aria-hidden="true" />}
+                <span className="min-w-0 whitespace-normal wrap-anywhere">
+                  {text}
+                </span>
+              </>
+            );
+            if (action.items)
               return (
-                <DropdownMenuItem
-                  key={label}
-                  disabled={disabled}
-                  className={className}
-                  onSelect={() => {
-                    selectedAction.current = onSelect ?? null;
-                  }}
-                >
-                  {content}
+                <DropdownMenuSub key={text}>
+                  <DropdownMenuSubTrigger
+                    disabled={disabled}
+                    className={className}
+                  >
+                    {content}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent
+                    aria-label={text}
+                    className="w-56 max-w-[calc(100vw-2rem)]"
+                  >
+                    {action.items.map(
+                      ({
+                        label: itemText,
+                        onSelect,
+                        disabled: itemDisabled,
+                      }) => (
+                        <DropdownMenuItem
+                          key={itemText}
+                          disabled={itemDisabled}
+                          onSelect={() => {
+                            selectedAction.current = onSelect ?? null;
+                          }}
+                        >
+                          {itemText}
+                        </DropdownMenuItem>
+                      ),
+                    )}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              );
+            if (action.href && !disabled)
+              return (
+                <DropdownMenuItem key={text} className={className} asChild>
+                  <Link href={action.href} prefetch={false}>
+                    {content}
+                  </Link>
                 </DropdownMenuItem>
               );
-            },
-          )}
+            return (
+              <DropdownMenuItem
+                key={text}
+                disabled={disabled}
+                className={className}
+                onSelect={() => {
+                  selectedAction.current = action.onSelect ?? null;
+                }}
+              >
+                {content}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

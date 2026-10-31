@@ -13,7 +13,10 @@ export const protectedRoutes: { path: string; roles: UserRole[] }[] = [
   { path: '/dashboard', roles: admin },
 ];
 
-const userRolePage = /^\/dashboard\/users\/[^/]+\/role$/;
+// Longest paths first so specific pages win over the /dashboard fallback.
+const sortedRoutes = [...protectedRoutes].sort(
+  (a, b) => b.path.length - a.path.length,
+);
 
 export function getRouteDetails(pathname: string) {
   const firstSegment = pathname.split('/')[1];
@@ -29,9 +32,7 @@ export function getRouteDetails(pathname: string) {
 
 export function getProtectedRoute(path: string) {
   const page = path.replace(/\/+$/, '') || '/';
-  if (userRolePage.test(page)) return { path: page, roles: superAdmin };
-
-  return [...protectedRoutes]
-    .sort((a, b) => b.path.length - a.path.length)
-    .find((route) => page === route.path || page.startsWith(route.path + '/'));
+  return sortedRoutes.find(
+    (route) => page === route.path || page.startsWith(route.path + '/'),
+  );
 }

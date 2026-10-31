@@ -1,4 +1,5 @@
 'use client';
+import { useUserColumns } from '@/features/users/hooks/useUserColumns';
 import { UserFilters } from './UserFilters';
 import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getUsersAction } from '../actions/user.actions';
@@ -9,7 +10,6 @@ import { DataTable } from '@/shared/components/tables/DataTable';
 import { errorMessage } from '@/shared/lib/apiResult';
 import { Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useUserColumns } from '../hooks/useUserColumns';
 
 export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
   const { query } = useTableQuery({
@@ -24,6 +24,7 @@ export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
   });
 
   const t = useTranslations('Users');
+  const states = useTranslations('States');
 
   return (
     <section className="min-w-0">
@@ -86,6 +87,22 @@ export function UsersManager({ superAdmin }: { superAdmin: boolean }) {
           error={page.confirmation.error}
           onConfirm={page.confirmation.confirm}
           onCancel={page.closeStatus}
+          onCloseAutoFocus={page.focus.restore}
+        />
+      )}{' '}
+      {page.rolePick && (
+        <ConfirmDialog
+          open
+          title={t('changeRole')}
+          description={t('roleConfirm', {
+            name: page.rolePick.user.name,
+            role: states(page.rolePick.role),
+          })}
+          pending={page.roleConfirmation.pending}
+          error={page.roleConfirmation.error}
+          confirmLabel={t('saveRole')}
+          onConfirm={page.roleConfirmation.confirm}
+          onCancel={page.closeRole}
           onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}

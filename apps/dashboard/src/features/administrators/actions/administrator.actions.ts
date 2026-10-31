@@ -27,7 +27,3 @@ export async function setAdministratorRoleAction(input: {
     body: { role: input.role },
   });
 }
-
-export async function getAdministratorAction(id: string) {
-  return apiFetch<ManagedUser>('admin/admins/' + encodeURIComponent(id));
-}
