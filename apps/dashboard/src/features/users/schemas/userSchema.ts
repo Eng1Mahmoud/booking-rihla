@@ -1,10 +1,11 @@
 import { z } from 'zod';
+export const userRoles = ['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN'] as const;
 export const userSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   email: z.string(),
   phone: z.string(),
-  role: z.enum(['USER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']),
+  role: z.enum(userRoles),
   language: z.string(),
   isActive: z.boolean(),
   emailVerifiedAt: z.string().nullable(),

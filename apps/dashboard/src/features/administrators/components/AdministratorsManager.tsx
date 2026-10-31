@@ -25,6 +25,7 @@ export function AdministratorsManager() {
     administrator: true,
   });
   const t = useTranslations('Users');
+  const states = useTranslations('States');
 
   return (
     <section className="min-w-0">
@@ -93,6 +94,22 @@ export function AdministratorsManager() {
           error={page.confirmation.error}
           onConfirm={page.confirmation.confirm}
           onCancel={page.closeStatus}
+          onCloseAutoFocus={page.focus.restore}
+        />
+      )}{' '}
+      {page.rolePick && (
+        <ConfirmDialog
+          open
+          title={t('changeRole')}
+          description={t('roleConfirm', {
+            name: page.rolePick.user.name,
+            role: states(page.rolePick.role),
+          })}
+          pending={page.roleConfirmation.pending}
+          error={page.roleConfirmation.error}
+          confirmLabel={t('saveRole')}
+          onConfirm={page.roleConfirmation.confirm}
+          onCancel={page.closeRole}
           onCloseAutoFocus={page.focus.restore}
         />
       )}{' '}

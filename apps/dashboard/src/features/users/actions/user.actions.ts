@@ -17,7 +17,3 @@ export async function setUserStatusAction(input: {
     body: { isActive: input.isActive },
   });
 }
-
-export async function getUserAction(id: string) {
-  return apiFetch<ManagedUser>('admin/users/' + encodeURIComponent(id));
-}

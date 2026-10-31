@@ -21,6 +21,7 @@
   "suspendHint": "Suspend {name}? Active sessions will be revoked.",
   "activateHint": "Activate {name}? The account must still satisfy sign-in requirements.",
   "changeRole": "Change role",
+  "roleConfirm": "Assign the role {role} to {name}? Role changes revoke active sessions.",
   "roleHint": "Change access for {name}. Role changes revoke active sessions; an administrator account must be active and email-verified.",
   "saveRole": "Save role",
   "lastSuper": "Keep at least one active, verified super administrator.",
