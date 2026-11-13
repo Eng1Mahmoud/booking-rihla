@@ -1,86 +1,86 @@
-import { createScheduledJobRouter } from './routes/scheduledJobRoutes.ts';
-import { createAdminBusRouter } from './routes/adminBusRoutes.ts';
+import { createScheduledJobRouter } from './features/operations/scheduledJobRoutes.ts';
+import { createAdminBusRouter } from './features/fleet/adminBusRoutes.ts';
 import {
   adminBusService,
   type AdminBusService,
-} from './services/adminBusService.ts';
-import { createAdminFleetRouter } from './routes/adminFleetRoutes.ts';
+} from './features/fleet/adminBusService.ts';
+import { createAdminFleetRouter } from './features/fleet/adminFleetRoutes.ts';
 import {
   adminFleetService,
   type AdminFleetService,
-} from './services/adminFleetService.ts';
-import { createAdminCatalogRouter } from './routes/adminCatalogRoutes.ts';
+} from './features/fleet/adminFleetService.ts';
+import { createAdminCatalogRouter } from './features/catalog/adminCatalogRoutes.ts';
 import {
   adminCatalogService,
   type AdminCatalogService,
-} from './services/adminCatalogService.ts';
-import { createAccountRouter } from './routes/accountRoutes.ts';
+} from './features/catalog/adminCatalogService.ts';
+import { createAccountRouter } from './features/accounts/accountRoutes.ts';
 import {
   accountPaymentService,
   type AccountPaymentService,
-} from './services/accountPaymentService.ts';
+} from './features/accounts/accountPaymentService.ts';
 import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
-import { configuredPaymentCheckout } from './services/paymentCheckoutService.ts';
-import { createOperationRouter } from './routes/operationRoutes.ts';
+import { configuredPaymentCheckout } from './features/payments/paymentCheckoutService.ts';
+import { createOperationRouter } from './features/operations/operationRoutes.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
 import {
   readinessService,
   type ReadinessService,
-} from './services/readinessService.ts';
+} from './infrastructure/health/readinessService.ts';
 import { requestId } from './middlewares/requestId.ts';
-import type { AdminPaymentStatisticsService } from './services/adminPaymentStatisticsService.ts';
+import type { AdminPaymentStatisticsService } from './features/payments/adminPaymentStatisticsService.ts';
 import {
   adminStatisticsService,
   type AdminStatisticsService,
-} from './services/adminStatisticsService.ts';
-import { createAdminStatisticsRouter } from './routes/adminStatisticsRoutes.ts';
-import type { TicketService } from './services/ticketService.ts';
+} from './features/reports/adminStatisticsService.ts';
+import { createAdminStatisticsRouter } from './features/reports/adminStatisticsRoutes.ts';
+import type { TicketService } from './features/tickets/ticketService.ts';
 import {
   adminPaymentService,
   type AdminPaymentService,
-} from './services/adminPaymentService.ts';
-import { createAdminPaymentRouter } from './routes/adminPaymentRoutes.ts';
-import type { PaymentCheckoutService } from './services/paymentCheckoutService.ts';
-import type { PaymentAttemptService } from './services/paymentAttemptService.ts';
+} from './features/payments/adminPaymentService.ts';
+import { createAdminPaymentRouter } from './features/payments/adminPaymentRoutes.ts';
+import type { PaymentCheckoutService } from './features/payments/paymentCheckoutService.ts';
+import type { PaymentAttemptService } from './features/payments/paymentAttemptService.ts';
 import {
   paymobWebhookService,
   type PaymobWebhookService,
-} from './services/paymobWebhookService.ts';
-import { createPaymobWebhookRouter } from './routes/paymobWebhookRoutes.ts';
-import { createAssistantRouter } from './routes/assistantRoutes.ts';
+} from './features/payments/paymobWebhookService.ts';
+import { createPaymobWebhookRouter } from './features/payments/paymobWebhookRoutes.ts';
+import { createAssistantRouter } from './features/assistant/assistantRoutes.ts';
 
 import {
   administratorService,
   type AdministratorService,
-} from './services/administratorService.ts';
-import { createAdministratorRouter } from './routes/administratorRoutes.ts';
+} from './features/administrators/administratorService.ts';
+import { createAdministratorRouter } from './features/administrators/administratorRoutes.ts';
 import {
   adminUserService,
   type AdminUserService,
-} from './services/adminUserService.ts';
-import { createAdminUserRouter } from './routes/adminUserRoutes.ts';
+} from './features/users/adminUserService.ts';
+import { createAdminUserRouter } from './features/users/adminUserRoutes.ts';
 import {
   adminBookingService,
   type AdminBookingService,
-} from './services/adminBookingService.ts';
-import { createAdminBookingRouter } from './routes/adminBookingRoutes.ts';
-import { createTicketScanRouter } from './routes/ticketScanRoutes.ts';
-import type { TripBatchService } from './services/tripBatchService.ts';
+} from './features/bookings/adminBookingService.ts';
+import { createAdminBookingRouter } from './features/bookings/adminBookingRoutes.ts';
+import { createTicketScanRouter } from './features/tickets/ticketScanRoutes.ts';
+import type { TripBatchService } from './features/trips/tripBatchService.ts';
 import {
   busTypeService,
   type BusTypeService,
-} from './services/busTypeService.ts';
+} from './features/fleet/busTypeService.ts';
 import {
   amenityService,
   type AmenityService,
-} from './services/amenityService.ts';
-import { createBusTypeRouter } from './routes/busTypeRoutes.ts';
-import { createAmenityRouter } from './routes/amenityRoutes.ts';
+} from './features/amenities/amenityService.ts';
+import { createBusTypeRouter } from './features/fleet/busTypeRoutes.ts';
+import { createAmenityRouter } from './features/amenities/amenityRoutes.ts';
 import {
   bookingService,
   type BookingService,
-} from './services/bookingService.ts';
-import { createBookingRouter } from './routes/bookingRoutes.ts';
+} from './features/bookings/bookingService.ts';
+import { createBookingRouter } from './features/bookings/bookingRoutes.ts';
 import express from 'express';
 import { requireAuth } from './middlewares/requireAuth.ts';
 import { requireRole } from './middlewares/requireRole.ts';
@@ -88,40 +88,43 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { AppError } from './errors/AppError.ts';
 import { errorHandler } from './middlewares/errorHandler.ts';
-import { createCityRouter } from './routes/cityRoutes.ts';
-import { cityService, type CityService } from './services/cityService.ts';
+import { createCityRouter } from './features/cities/cityRoutes.ts';
+import {
+  cityService,
+  type CityService,
+} from './features/cities/cityService.ts';
 import {
   stationService,
   type StationService,
-} from './services/stationService.ts';
-import { createStationRouter } from './routes/stationRoutes.ts';
-import { busService, type BusService } from './services/busService.ts';
-import { createBusRouter } from './routes/busRoutes.ts';
+} from './features/stations/stationService.ts';
+import { createStationRouter } from './features/stations/stationRoutes.ts';
+import { busService, type BusService } from './features/buses/busService.ts';
+import { createBusRouter } from './features/buses/busRoutes.ts';
 
-import { routeService, type RouteService } from './services/routeService.ts';
-import { createRouteRouter } from './routes/routeRoutes.ts';
+import { routeService, type RouteService } from './features/routes/routeService.ts';
+import { createRouteRouter } from './features/routes/routeRoutes.ts';
 
-import { tripService, type TripService } from './services/tripService.ts';
-import { createTripRouter } from './routes/tripRoutes.ts';
+import { tripService, type TripService } from './features/trips/tripService.ts';
+import { createTripRouter } from './features/trips/tripRoutes.ts';
 
-import type { TripSearchService } from './services/tripSearchService.ts';
+import type { TripSearchService } from './features/trips/tripSearchService.ts';
 
-import type { TripDetailsService } from './services/tripDetailsService.ts';
+import type { TripDetailsService } from './features/trips/tripDetailsService.ts';
 
-import { authService, type AuthService } from './services/authService.ts';
-import { createAuthRouter } from './routes/authRoutes.ts';
+import { authService, type AuthService } from './features/auth/authService.ts';
+import { createAuthRouter } from './features/auth/authRoutes.ts';
 
 import {
   sessionService,
   type SessionService,
-} from './services/sessionService.ts';
-import { createSessionRouter } from './routes/sessionRoutes.ts';
+} from './features/auth/sessionService.ts';
+import { createSessionRouter } from './features/auth/sessionRoutes.ts';
 
 import {
   passwordResetService,
   type PasswordResetService,
-} from './services/passwordResetService.ts';
-import { createPasswordResetRouter } from './routes/passwordResetRoutes.ts';
+} from './features/auth/passwordResetService.ts';
+import { createPasswordResetRouter } from './features/auth/passwordResetRoutes.ts';
 
 export function createApp(
   corsOrigins: string[],

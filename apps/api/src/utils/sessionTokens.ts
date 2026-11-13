@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { z } from 'zod';
-import { userRoleSchema, type UserRole } from '../schemas/authSchema.ts';
+import { userRoleSchema, type UserRole } from '../features/auth/authSchema.ts';
 export const accessLifetimeSeconds = 900;
 export const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000;
 function key() {

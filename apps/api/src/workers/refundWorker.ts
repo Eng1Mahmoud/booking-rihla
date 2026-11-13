@@ -1,5 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises';
-import { configuredRefundService } from '../services/refundService.ts';
+import { configuredRefundService } from '../features/refunds/refundService.ts';
 let stopping = false;
 const stop = new AbortController();
 process.once('SIGINT', () => {

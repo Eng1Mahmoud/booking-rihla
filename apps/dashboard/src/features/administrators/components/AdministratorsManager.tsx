@@ -12,7 +12,11 @@ import { useTableQuery } from '@/shared/hooks/useTableQuery';
 import { getAdministratorsAction } from '../actions/administrator.actions';
 import { AdministratorFilters } from './AdministratorFilters';
 
-export function AdministratorsManager() {
+export function AdministratorsManager({
+  canChangeRole,
+}: {
+  canChangeRole: boolean;
+}) {
   const { query } = useTableQuery({
     action: getAdministratorsAction,
     queryKey: 'administrators',
@@ -21,7 +25,7 @@ export function AdministratorsManager() {
   const locale = useLocale();
 
   const { columns, ...page } = useUserColumns({
-    canChangeRole: true,
+    canChangeRole,
     administrator: true,
   });
   const t = useTranslations('Users');

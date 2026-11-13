@@ -1,4 +1,4 @@
-import type { FleetMetadata } from '../schemas/fleetMetadataSchema.ts';
+import type { FleetMetadata } from '../features/fleet/fleetMetadataSchema.ts';
 export function busMetadata(bus: {
   busType: FleetMetadata | null;
   amenityLinks: { amenity: FleetMetadata }[];

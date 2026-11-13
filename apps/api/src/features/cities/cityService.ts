@@ -1,0 +1,72 @@
+import { AppError } from '../../errors/AppError.ts';
+import {
+  isForeignKeyViolation,
+  isRestrictViolation,
+} from '../../utils/databaseErrors.ts';
+import type {
+  CreateCityInput,
+  CityListQuery,
+  UpdateCityInput,
+} from './citySchema.ts';
+
+export type City = CreateCityInput & { id: string };
+
+// Load Prisma only for city operations; health checks do not need a database.
+export const cityService = {
+  async list({ limit, offset }: CityListQuery): Promise<City[]> {
+    const { db } = await import('../../prisma/db.ts');
+    return await db.orm.public.City.orderBy([
+      (city) => city.nameEn.asc(),
+      (city) => city.id.asc(),
+    ])
+      .limit(limit)
+      .offset(offset)
+      .all();
+  },
+  async findById(id: string): Promise<City | null> {
+    const { db } = await import('../../prisma/db.ts');
+    return await db.orm.public.City.where({ id }).first();
+  },
+  async create(input: CreateCityInput): Promise<City> {
+    const { db } = await import('../../prisma/db.ts');
+    return await db.transaction(async (tx) => {
+      const saved = await tx.orm.public.City.create(input);
+      return saved;
+    });
+  },
+  async update(id: string, input: UpdateCityInput): Promise<City | null> {
+    const { db } = await import('../../prisma/db.ts');
+    return await db.transaction(async (tx) => {
+      await tx.execute(
+        db.raw
+          .sql`SELECT "id" FROM "public"."City" WHERE "id" = ${id} FOR UPDATE`
+          .affectedCount()
+          .build(),
+      );
+      const before = await tx.orm.public.City.where({ id }).first();
+      if (!before) return null;
+      const saved = await tx.orm.public.City.where({ id }).update(input);
+      return saved;
+    });
+  },
+  async remove(id: string): Promise<City | null> {
+    const { db } = await import('../../prisma/db.ts');
+    try {
+      return await db.transaction(async (tx) => {
+        const removed = await tx.orm.public.City.where({ id }).delete();
+        return removed;
+      });
+    } catch (error) {
+      if (isForeignKeyViolation(error) || isRestrictViolation(error)) {
+        throw new AppError(
+          409,
+          'CITY_HAS_STATIONS',
+          "Remove or move this city's stations before deleting it",
+        );
+      }
+      throw error;
+    }
+  },
+};
+
+export type CityService = typeof cityService;

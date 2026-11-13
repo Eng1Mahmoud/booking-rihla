@@ -3,7 +3,7 @@ import { AppError } from '../errors/AppError.ts';
 import {
   sessionService,
   type SessionService,
-} from '../services/sessionService.ts';
+} from '../features/auth/sessionService.ts';
 export function requireAuth(
   service: SessionService = sessionService,
 ): RequestHandler {

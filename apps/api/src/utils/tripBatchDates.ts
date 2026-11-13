@@ -1,8 +1,8 @@
 import { Temporal } from 'temporal-polyfill';
 import { AppError } from '../errors/AppError.ts';
 import { cairoTimeZone } from './cairoTime.ts';
-import type { TripBatchInput } from '../schemas/tripBatchSchema.ts';
-import type { CreateTripInput } from '../schemas/tripSchema.ts';
+import type { TripBatchInput } from '../features/trips/tripBatchSchema.ts';
+import type { CreateTripInput } from '../features/trips/tripSchema.ts';
 
 export type BatchDeparture = CreateTripInput & { date: string };
 export function buildBatchDepartures(

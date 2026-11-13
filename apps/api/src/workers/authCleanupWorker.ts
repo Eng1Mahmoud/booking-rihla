@@ -1,5 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
-import { cleanupAuthData } from '../services/authCleanupService.ts';
+import { cleanupAuthData } from '../features/auth/authCleanupService.ts';
 const once = process.argv.includes('--once');
 const stop = new AbortController();
 process.once('SIGINT', () => stop.abort());

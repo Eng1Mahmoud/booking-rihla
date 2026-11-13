@@ -1,5 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises';
-import { expireBookingHolds } from '../services/bookingHoldService.ts';
+import { expireBookingHolds } from '../features/bookings/bookingHoldService.ts';
 // Lazy expiry on checkout keeps correctness even when this optional worker is stopped.
 const once = process.argv.includes('--once');
 let stopping = false;

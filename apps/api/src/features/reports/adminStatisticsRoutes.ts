@@ -1,0 +1,24 @@
+import { AppError } from '../../errors/AppError.ts';
+import { Router, type RequestHandler } from 'express';
+import { rateLimit } from 'express-rate-limit';
+import { createAdminStatisticsController } from './adminStatisticsController.ts';
+import type { AdminStatisticsService } from './adminStatisticsService.ts';
+export function createAdminStatisticsRouter(
+  service: AdminStatisticsService,
+  admin: RequestHandler[],
+) {
+  const router = Router();
+  router.use(...admin);
+  router.use(
+    rateLimit({
+      windowMs: 60_000,
+      limit: 60,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_request, _response, next) =>
+        next(new AppError(429, 'RATE_LIMITED', 'Too many statistics requests')),
+    }),
+  );
+  router.get('/', createAdminStatisticsController(service).get);
+  return router;
+}

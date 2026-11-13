@@ -1,0 +1,48 @@
+import { createTripBatchController } from './tripBatchController.ts';
+import {
+  tripBatchService,
+  type TripBatchService,
+} from './tripBatchService.ts';
+import type { RequestHandler } from 'express';
+import { Router } from 'express';
+import { createTripController } from './tripController.ts';
+import type { TripService } from './tripService.ts';
+
+import { createTripSearchController } from './tripSearchController.ts';
+import {
+  tripSearchService,
+  type TripSearchService,
+} from './tripSearchService.ts';
+
+import { createTripDetailsController } from './tripDetailsController.ts';
+import {
+  tripDetailsService,
+  type TripDetailsService,
+} from './tripDetailsService.ts';
+
+export function createTripRouter(
+  service: TripService,
+  admin: RequestHandler[],
+  searchService: TripSearchService = tripSearchService,
+  detailsService: TripDetailsService = tripDetailsService,
+  batches: TripBatchService = tripBatchService,
+) {
+  const router = Router();
+  const controller = createTripController(service);
+  const detailsController = createTripDetailsController(detailsService);
+
+  const batchController = createTripBatchController(batches);
+  router.post('/batch/preview', ...admin, batchController.preview);
+  router.post('/batch', ...admin, batchController.create);
+
+  router.get('/', ...admin, controller.list);
+  router.get('/search', createTripSearchController(searchService));
+  router.get('/:id/details', detailsController.getById);
+  router.get('/:id/seats', detailsController.listSeats);
+  router.get('/:id', ...admin, controller.getById);
+  router.post('/', ...admin, controller.create);
+  router.patch('/:id', ...admin, controller.update);
+  router.delete('/:id', ...admin, controller.remove);
+
+  return router;
+}

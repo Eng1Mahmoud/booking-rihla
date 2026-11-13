@@ -1,4 +1,4 @@
-import type { TicketDetails } from '../services/ticketService.ts';
+import type { TicketDetails } from '../features/tickets/ticketService.ts';
 import {
   appPath,
   bodyParagraph,

@@ -1,0 +1,189 @@
+import { z } from 'zod';
+import { configuredPaymentReconciliation } from './paymentReconciliationService.ts';
+import { AppError } from '../../errors/AppError.ts';
+import {
+  checkoutKey,
+  decryptCheckout,
+} from './providers/checkoutEncryption.ts';
+import { paymobCheckoutUrlSchema } from './providers/checkoutUrl.ts';
+import { createPaymobProvider } from './providers/paymobProvider.ts';
+import { createPaymentSessionService } from './paymentSessionService.ts';
+import { withPayableBooking } from './payableBooking.ts';
+import { serializeBookingPayment } from './providers/paymentStatus.ts';
+import type { AuthContext } from '../auth/sessionService.ts';
+import type { db as database } from '../../prisma/db.ts';
+
+// One query loads the owner's booking and its payment evidence. GET has no
+// provider dependency and never decrypts a URL or changes financial state.
+function paymentRecords(db: typeof database) {
+  return db.orm.public.Booking.include('refund')
+    .include('trip')
+    .include('paymentAttempt', (attempt) =>
+      attempt.include('paymentSession', (operation) =>
+        operation.include('settlement'),
+      ),
+    );
+}
+async function getPayment(userId: string, bookingId: string) {
+  const { db } = await import('../../prisma/db.ts');
+  const row = await paymentRecords(db).where({ id: bookingId, userId }).first();
+  if (!row) throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
+  return serializeBookingPayment(row);
+}
+
+export function createPaymentCheckoutService(dependencies: {
+  sessions: Pick<ReturnType<typeof createPaymentSessionService>, 'start'>;
+  integrationId: number;
+  ownerId: number;
+  publicKey: string;
+  encryptionKey: Buffer;
+}) {
+  const scopeId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+  const integrationId = String(scopeId.parse(dependencies.integrationId)),
+    ownerId = String(scopeId.parse(dependencies.ownerId)),
+    key = Buffer.from(dependencies.encryptionKey),
+    publicKey = z
+      .string()
+      .regex(/^(?:egy_)?pk_?test_[A-Za-z0-9_-]+$/)
+      .parse(dependencies.publicKey);
+  if (key.length !== 32)
+    throw new Error('Invalid payment checkout encryption key');
+  return {
+    get: getPayment,
+    async start(auth: AuthContext, bookingId: string) {
+      // Payment session creation persists its send-once claim before network I/O.
+      await dependencies.sessions.start(auth, bookingId);
+      // Recheck after the network call and before decrypting. All reads/decryption
+      // here are local; no provider request is made while Trip is locked.
+      return withPayableBooking(auth, bookingId, async ({ tx }) => {
+        const row = await tx.orm.public.Booking.where({
+          id: bookingId,
+          userId: auth.user.id,
+        })
+          .include('paymentAttempt', (a) =>
+            a.include('paymentSession', (p) => p.include('settlement')),
+          )
+          .first();
+        const attempt = row?.paymentAttempt,
+          operation = attempt?.paymentSession;
+        if (!row || !attempt || !operation)
+          throw new Error('Payment operation missing');
+        if (
+          operation.integrationId !== integrationId ||
+          operation.ownerId !== ownerId
+        )
+          throw new AppError(
+            409,
+            'PAYMENT_PROVIDER_CHANGED',
+            'Payment configuration changed',
+          );
+        if (
+          attempt.amountPiastres !== row.totalPiastres ||
+          attempt.currency !== 'EGP' ||
+          Date.parse(attempt.expiresAt) !== Date.parse(row.expiresAt!)
+        )
+          throw new AppError(
+            409,
+            'PAYMENT_ATTEMPT_MISMATCH',
+            'The payment attempt no longer matches this booking',
+          );
+        const data = serializeBookingPayment(row);
+        if (operation.settlement || operation.reconciliationComplete)
+          throw new AppError(
+            409,
+            'CHECKOUT_CLOSED',
+            'Read this booking payment status',
+          );
+        let checkoutUrl: string | null = null;
+        if (
+          operation.status === 'READY' &&
+          operation.encryptedCheckoutUrl &&
+          operation.intentionId
+        ) {
+          const decoded = paymobCheckoutUrlSchema.parse(
+            decryptCheckout(operation.id, operation.encryptedCheckoutUrl, key),
+          );
+          if (new URL(decoded).searchParams.get('publicKey') !== publicKey)
+            throw new AppError(
+              409,
+              'PAYMENT_PROVIDER_CHANGED',
+              'Payment configuration changed',
+            );
+          checkoutUrl = decoded;
+        }
+        return { ...data, checkoutUrl };
+      });
+    },
+  };
+}
+// Explicit owner-triggered inquiry; GET status stays provider-free.
+async function refreshPayment(userId: string, bookingId: string) {
+  const { db } = await import('../../prisma/db.ts');
+  const row = await paymentRecords(db).where({ id: bookingId, userId }).first();
+  if (!row) throw new AppError(404, 'BOOKING_NOT_FOUND', 'Booking not found');
+  const current = serializeBookingPayment(row);
+  const operation = row.paymentAttempt?.paymentSession;
+  if (
+    !operation ||
+    operation.reconciliationComplete ||
+    ['PAID', 'REFUNDED', 'REFUND_REQUIRED', 'REVIEW'].includes(
+      current.paymentStatus,
+    )
+  )
+    return current;
+  const reconciliation = configuredPaymentReconciliation();
+  if (!reconciliation)
+    throw new AppError(
+      503,
+      'PAYMENT_UNAVAILABLE',
+      'Payment verification is unavailable',
+    );
+  // Reuse exact scope/amount/EGP verification and transactional seat/ticket checks.
+  // Never create an Intention, capture money or issue a refund here.
+  await reconciliation.reconcile(operation.id);
+  return getPayment(userId, bookingId);
+}
+// Construction validates readiness without database or provider I/O.
+export function configuredPaymentCheckout() {
+  const flag = process.env.PAYMOB_CHECKOUT_ENABLED;
+  if (flag === undefined || flag === 'false') return null;
+  if (flag !== 'true')
+    throw new Error('Invalid payment configuration: PAYMOB_CHECKOUT_ENABLED');
+  if (process.env.PAYMOB_ENABLED !== 'true')
+    throw new Error('Checkout requires PAYMOB_ENABLED');
+  if (process.env.PAYMOB_RECONCILIATION_ENABLED !== 'true')
+    throw new Error('Checkout requires PAYMOB_RECONCILIATION_ENABLED');
+  if (process.env.PAYMOB_REFUNDS_ENABLED !== 'true')
+    throw new Error(
+      'Checkout requires PAYMOB_REFUNDS_ENABLED for unfulfillable payments',
+    );
+  if (process.env.PAYMOB_WEBHOOK_ENABLED !== 'true')
+    throw new Error('Checkout requires owner-scoped PAYMOB_WEBHOOK_ENABLED');
+  const provider = createPaymobProvider();
+  const integrationId = Number(process.env.PAYMOB_INTEGRATION_ID);
+  const ownerId = Number(process.env.PAYMOB_OWNER_ID);
+  const key = checkoutKey(process.env);
+  return createPaymentCheckoutService({
+    sessions: createPaymentSessionService({
+      provider,
+      integrationId,
+      ownerId,
+      encryptionKey: key,
+    }),
+    integrationId,
+    ownerId,
+    publicKey: process.env.PAYMOB_PUBLIC_KEY!,
+    encryptionKey: key,
+  });
+}
+export const paymentCheckoutService = {
+  refresh: refreshPayment,
+  get: getPayment,
+  async start(auth: AuthContext, bookingId: string) {
+    const service = configuredPaymentCheckout();
+    if (!service)
+      throw new AppError(503, 'PAYMENT_UNAVAILABLE', 'Checkout is not enabled');
+    return service.start(auth, bookingId);
+  },
+};
+export type PaymentCheckoutService = typeof paymentCheckoutService;

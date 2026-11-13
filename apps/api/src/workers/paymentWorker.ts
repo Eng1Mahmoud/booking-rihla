@@ -1,5 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises';
-import { configuredPaymentReconciliation } from '../services/paymentReconciliationService.ts';
+import { configuredPaymentReconciliation } from '../features/payments/paymentReconciliationService.ts';
 const once = process.argv.includes('--once');
 let stopping = false;
 const stop = new AbortController();

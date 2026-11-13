@@ -1,9 +1,9 @@
-import { processBookingNotices } from '../services/bookingNoticeService.ts';
-import { processDepartureReminders } from '../services/departureReminderService.ts';
-import { processTicketOutbox } from '../services/ticketOutboxService.ts';
+import { processBookingNotices } from '../features/bookings/bookingNoticeService.ts';
+import { processDepartureReminders } from '../features/tickets/departureReminderService.ts';
+import { processTicketOutbox } from '../features/tickets/ticketOutboxService.ts';
 import 'dotenv/config';
 import { setTimeout } from 'node:timers/promises';
-import { processEmailOutbox } from '../services/emailOutboxService.ts';
+import { processEmailOutbox } from '../infrastructure/email/emailOutboxService.ts';
 let stopping = false;
 const stop = new AbortController();
 process.once('SIGINT', () => {
