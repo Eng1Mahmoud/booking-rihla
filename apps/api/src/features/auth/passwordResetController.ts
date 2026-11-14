@@ -6,7 +6,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from './passwordResetSchema.ts';
-import type { PasswordResetService } from './passwordResetService.ts';
+import { passwordResetService } from './passwordResetService.ts';
 function requireJson(request: Request) {
   if (!request.is('application/json'))
     throw new AppError(
@@ -21,34 +21,29 @@ function requireJson(request: Request) {
       'No query parameters are supported',
     );
 }
-export function createPasswordResetController(service: PasswordResetService) {
-  return {
-    async forgot(request: Request, response: Response) {
-      requireJson(request);
-      const input = forgotPasswordSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide only a valid email',
-        );
-      const started = Date.now();
-      await service.requestReset(input.data.email);
-      // Reduce easy timing differences between queued, throttled and unknown accounts.
-      await setTimeout(Math.max(0, 250 - (Date.now() - started)));
-      sendSuccess(response.status(202), undefined, 'PASSWORD_RESET_REQUESTED');
-    },
-    async reset(request: Request, response: Response) {
-      requireJson(request);
-      const input = resetPasswordSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide email, a six-digit code string, and matching newPassword/confirmPassword (12-128 characters, at most 512 bytes)',
-        );
-      await service.resetPassword(input.data);
-      sendSuccess(response, undefined, 'PASSWORD_RESET');
-    },
-  };
-}
+
+export const passwordResetController = {
+  async forgot(request: Request, response: Response) {
+    requireJson(request);
+    const input = forgotPasswordSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(400, 'VALIDATION_ERROR', 'Provide only a valid email');
+    const started = Date.now();
+    await passwordResetService.requestReset(input.data.email);
+    // Reduce easy timing differences between queued, throttled and unknown accounts.
+    await setTimeout(Math.max(0, 250 - (Date.now() - started)));
+    sendSuccess(response.status(202), undefined, 'PASSWORD_RESET_REQUESTED');
+  },
+  async reset(request: Request, response: Response) {
+    requireJson(request);
+    const input = resetPasswordSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide email, a six-digit code string, and matching newPassword/confirmPassword (12-128 characters, at most 512 bytes)',
+      );
+    await passwordResetService.resetPassword(input.data);
+    sendSuccess(response, undefined, 'PASSWORD_RESET');
+  },
+};

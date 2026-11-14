@@ -18,18 +18,14 @@ export async function getBookingPaymentState(
   id: string,
 ): Promise<ApiResult<PaymentState>> {
   // The payment endpoint checks authentication and booking ownership.
-  const [payment, availability] = await Promise.all([
-    apiFetch<BookingPaymentData>('bookings/' + id + '/payment'),
-    apiFetch<{ checkoutEnabled: boolean }>('payments/availability'),
-  ]);
+  const payment = await apiFetch<BookingPaymentData>(
+    'bookings/' + id + '/payment',
+  );
   if (!payment.success || !payment.data) return { ...payment, data: undefined };
   return {
     ...payment,
     data: {
       payment: { ...payment.data, checkoutUrl: undefined },
-      // Unavailable checkout must not hide an otherwise readable payment result.
-      checkoutEnabled:
-        availability.success && availability.data?.checkoutEnabled === true,
     },
   };
 }

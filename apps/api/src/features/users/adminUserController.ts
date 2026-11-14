@@ -7,71 +7,61 @@ import {
   adminUserListQuerySchema,
   updateUserStatusSchema,
 } from './adminUserSchema.ts';
-import type { AdminUserService } from './adminUserService.ts';
+import { adminUserService } from './adminUserService.ts';
 
-export function createAdminUserController(service: AdminUserService) {
-  function id(request: Request) {
-    const parsed = adminUserIdSchema.safeParse(request.params.id);
-    if (
-      !parsed.success ||
-      !adminUserDetailsQuerySchema.safeParse(request.query).success
-    )
+function id(request: Request) {
+  const parsed = adminUserIdSchema.safeParse(request.params.id);
+  if (
+    !parsed.success ||
+    !adminUserDetailsQuerySchema.safeParse(request.query).success
+  )
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'User id must be a valid UUID; no query parameters are supported',
+    );
+  return parsed.data;
+}
+export const adminUserController = {
+  async list(request: Request, response: Response) {
+    const query = adminUserListQuerySchema.safeParse(request.query);
+    if (!query.success)
       throw new AppError(
         400,
         'VALIDATION_ERROR',
-        'User id must be a valid UUID; no query parameters are supported',
+        'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
       );
-    return parsed.data;
-  }
-  return {
-    async list(request: Request, response: Response) {
-      const query = adminUserListQuerySchema.safeParse(request.query);
-      if (!query.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
-        );
-      const { items, total } = await service.list(query.data);
-      sendSuccess(response, {
-        items,
-        total,
-        pagination: { limit: query.data.limit, offset: query.data.offset },
-      });
-    },
-    async getById(request: Request, response: Response) {
-      const user = await service.findById(id(request));
-      if (!user)
-        throw new AppError(
-          404,
-          'USER_NOT_FOUND',
-          'Passenger account not found',
-        );
-      sendSuccess(response, user);
-    },
-    async updateStatus(request: Request, response: Response) {
-      const userId = id(request);
-      if (!request.is('application/json'))
-        throw new AppError(
-          415,
-          'UNSUPPORTED_MEDIA_TYPE',
-          'Content-Type must be application/json',
-        );
-      const input = updateUserStatusSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide only isActive as a boolean',
-        );
-      const user = await service.updateStatus(userId, input.data);
-      if (!user)
-        throw new AppError(
-          404,
-          'USER_NOT_FOUND',
-          'Passenger account not found',
-        );
-      sendSuccess(response, user);
-    },
-  };
-}
+    const { items, total } = await adminUserService.list(query.data);
+    sendSuccess(response, {
+      items,
+      total,
+      pagination: { limit: query.data.limit, offset: query.data.offset },
+    });
+  },
+  async getById(request: Request, response: Response) {
+    const user = await adminUserService.findById(id(request));
+    if (!user)
+      throw new AppError(404, 'USER_NOT_FOUND', 'Passenger account not found');
+    sendSuccess(response, user);
+  },
+  async updateStatus(request: Request, response: Response) {
+    const userId = id(request);
+    if (!request.is('application/json'))
+      throw new AppError(
+        415,
+        'UNSUPPORTED_MEDIA_TYPE',
+        'Content-Type must be application/json',
+      );
+    const input = updateUserStatusSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide only isActive as a boolean',
+      );
+    const user = await adminUserService.updateStatus(userId, input.data);
+    if (!user)
+      throw new AppError(404, 'USER_NOT_FOUND', 'Passenger account not found');
+    sendSuccess(response, user);
+  },
+};

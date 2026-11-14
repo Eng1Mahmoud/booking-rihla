@@ -1,15 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middlewares/requireAuth.ts';
-import { createAccountController } from './accountController.ts';
-import type { SessionService } from '../auth/sessionService.ts';
-import type { AccountPaymentService } from './accountPaymentService.ts';
+import { accountController } from './accountController.ts';
 
-export function createAccountRouter(
-  payments: AccountPaymentService,
-  sessions: SessionService,
-) {
-  const router = Router();
-  router.use(requireAuth(sessions));
-  router.get('/payments', createAccountController(payments).payments);
-  return router;
-}
+export const accountRouter = Router();
+accountRouter.use(requireAuth);
+accountRouter.get('/payments', accountController.payments);

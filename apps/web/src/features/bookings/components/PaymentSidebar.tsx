@@ -53,7 +53,6 @@ export function PaymentSidebar({
   busy,
   payError,
   locale,
-  checkoutUnavailable,
   holdExpiredMessage,
   refreshing,
   onPay,
@@ -68,7 +67,6 @@ export function PaymentSidebar({
   busy: boolean;
   payError: unknown;
   locale: 'ar' | 'en';
-  checkoutUnavailable: boolean;
   holdExpiredMessage: boolean;
   refreshing: boolean;
   onPay: () => void;
@@ -136,13 +134,6 @@ export function PaymentSidebar({
           role="status"
         >
           {t('expired')}
-        </p>
-      ) : checkoutUnavailable ? (
-        <p
-          className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-950"
-          role="status"
-        >
-          {t('checkoutUnavailable')}
         </p>
       ) : null}
       <Button

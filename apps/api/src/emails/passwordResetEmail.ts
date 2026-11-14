@@ -8,7 +8,6 @@ import {
 } from './layout.ts';
 
 export function passwordResetEmail(code: string, language: string) {
-  if (!/^\d{6}$/.test(code)) throw new Error('Invalid reset code format');
   const ar = language === 'ar';
   const subject = ar
     ? 'إعادة تعيين كلمة المرور — رحلة'

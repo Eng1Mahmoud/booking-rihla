@@ -1,14 +1,15 @@
-import { Router, type RequestHandler } from 'express';
-import { createAdminCatalogController } from './adminCatalogController.ts';
-import type { AdminCatalogService } from './adminCatalogService.ts';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
+import { Router } from 'express';
+import { adminCatalogController } from './adminCatalogController.ts';
 
-export function createAdminCatalogRouter(
-  service: AdminCatalogService,
-  admin: RequestHandler[],
-) {
-  const router = Router();
-  const controller = createAdminCatalogController(service);
-  router.get('/cities', ...admin, controller.cities);
-  router.get('/stations', ...admin, controller.stations);
-  return router;
-}
+export const adminCatalogRouter = Router();
+adminCatalogRouter.get(
+  '/cities',
+  ...adminMiddleware,
+  adminCatalogController.cities,
+);
+adminCatalogRouter.get(
+  '/stations',
+  ...adminMiddleware,
+  adminCatalogController.stations,
+);

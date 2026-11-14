@@ -23,9 +23,10 @@ export function departureReminderEmail(
       ? value.cityAr + ' - ' + value.nameAr
       : value.cityEn + ' - ' + value.nameEn;
 
-  const passengers = ticket.passengers
-    .map((p) => (ar ? 'المقعد ' : 'Seat ') + p.seatNumber + ': ' + p.name)
-    .join(' · ');
+  const passengerLines = ticket.passengers.map(
+    (passenger) =>
+      (ar ? 'المقعد ' : 'Seat ') + passenger.seatNumber + ': ' + passenger.name,
+  );
 
   const text = [
     ar
@@ -36,9 +37,7 @@ export function departureReminderEmail(
     (ar ? 'إلى: ' : 'To: ') + station(ticket.trip.destination),
     (ar ? 'المغادرة: ' : 'Departure: ') + departure,
     ar ? 'التوقيت المحلي للقاهرة' : 'Times are in Africa/Cairo',
-    ...ticket.passengers.map(
-      (p) => (ar ? 'المقعد ' : 'Seat ') + p.seatNumber + ': ' + p.name,
-    ),
+    ...passengerLines,
     ar
       ? 'احتفظ بتذكرتك ومرجع الحجز للرحلة.'
       : 'Keep your ticket and booking reference for the journey.',
@@ -66,7 +65,7 @@ export function departureReminderEmail(
       },
       {
         label: ar ? 'الركاب' : 'Passengers',
-        value: passengers,
+        value: passengerLines.join(' · '),
       },
     ]),
     mutedParagraph(

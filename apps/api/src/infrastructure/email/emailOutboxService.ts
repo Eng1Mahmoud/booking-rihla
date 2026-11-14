@@ -12,6 +12,8 @@ export async function processEmailOutbox(
   userId?: string,
 ) {
   const { db } = await import('../../prisma/db.ts');
+
+  // 1. Pick up to 20 account emails whose delivery time has arrived.
   const query = db.orm.public.EmailOutbox.where({
     sentAt: null,
     discardedAt: null,
@@ -25,12 +27,15 @@ export async function processEmailOutbox(
     pending,
     'account',
     async ({ tx, message, exhausted }) => {
+      // 2. Discard expired messages or messages with no recipient.
       const user = await tx.orm.public.User.where({
         id: message.userId,
       }).first();
       if (!user || exhausted || Date.parse(message.expiresAt) <= Date.now())
         return 'discarded' as const;
       return async () => {
+        // 3. Send a code only if it still matches the user's latest request.
+        // Password-change notifications do not contain a code.
         let code: string | undefined;
         if (message.purpose !== 'PASSWORD_CHANGED') {
           if (!user.isActive || !message.encryptedCode)
@@ -67,6 +72,7 @@ export async function processEmailOutbox(
               return 'discarded' as const;
           }
         }
+        // Mailjet failures are retried by processMailBatch.
         await send({
           id: message.id,
           email: user.email,

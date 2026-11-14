@@ -41,8 +41,6 @@
     "EXPIRED": "Expired",
     "REVIEW": "Under review"
   },
-  "checkingAvailability": "Checking payment availability…",
-  "checkoutUnavailable": "Online payment is currently unavailable. Check the recorded payment status above.",
   "historyFilterLabel": "Filter bookings",
   "historyFilters": {
     "all": "All",

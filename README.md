@@ -83,7 +83,7 @@ Start all three applications together from the repository root:
 npm run dev
 ```
 
-- API: `http://127.0.0.1:4000/api/v1/health`
+- API base URL: `http://127.0.0.1:4000/api/v1`
 - Passenger website: `http://localhost:3000/ar`
 - Staff dashboard: `http://localhost:3001/ar/login`
 
@@ -94,7 +94,9 @@ API. Set their `SITE_ORIGIN` to their corresponding localhost origin. Keep API
 ## Accounts and email
 
 Set `MJ_APIKEY`, `MJ_SECRETKEY` and the verified Mailjet sender `EMAIL_FROM` in the
-API environment. Run this optional local email polling process in another terminal:
+API environment. Set `WEB_APP_URL` to the passenger website origin without a
+trailing slash (locally `http://localhost:3000`); email links use this setting.
+Run this optional local email polling process in another terminal:
 
 ```sh
 npm run email:worker --workspace @booking-bus/api
@@ -234,8 +236,9 @@ all departure times. Voice output is intentionally excluded.
 
 On Render set `NODE_ENV=production`, `HOST=0.0.0.0`, the intended `PORT`, the
 appropriate trusted-proxy setting, HTTPS `CORS_ORIGINS`, and the existing database,
-authentication, Mailjet and verified Paymob settings. Use `/api/v1/ready` as the
-health check. Configure each Vercel frontend with the Render API's `/api/v1` URL.
+authentication, Mailjet and verified Paymob settings. The API does not expose a
+dedicated HTTP health-check endpoint.
+Configure each Vercel frontend with the Render API's `/api/v1` URL.
 Render Free can sleep or restart; the database outboxes and retry state preserve
 pending work. A successful deployment alone does not certify provider delivery.
 

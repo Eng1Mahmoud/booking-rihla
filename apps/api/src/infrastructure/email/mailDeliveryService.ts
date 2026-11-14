@@ -3,6 +3,10 @@ import type { db as database } from '../../prisma/db.ts';
 type Transaction = Parameters<Parameters<typeof database.transaction>[0]>[0];
 type Row<T> = NonNullable<Awaited<T>>;
 
+const MAX_DELIVERY_ATTEMPTS = 5;
+const INITIAL_RETRY_DELAY_MS = 30_000;
+const MAX_RETRY_DELAY_MS = 15 * 60_000;
+
 function noticeMessage(tx: Transaction, id: string) {
   return tx.orm.public.BookingNotice.where({ id })
     .include('booking', (booking) =>
@@ -32,16 +36,34 @@ async function lockMessage(
   queue: Queue,
   id: string,
 ) {
-  const query =
-    queue === 'account'
-      ? db.raw
-          .sql`SELECT "id" FROM "public"."EmailOutbox" WHERE "id" = ${id} FOR UPDATE`
-      : queue === 'notice'
-        ? db.raw
-            .sql`SELECT "id" FROM "public"."BookingNotice" WHERE "id" = ${id} FOR UPDATE`
-        : db.raw
-            .sql`SELECT "id" FROM "public"."Ticket" WHERE "id" = ${id} FOR UPDATE`;
+  let query;
+  switch (queue) {
+    case 'account':
+      query = db.raw
+        .sql`SELECT "id" FROM "public"."EmailOutbox" WHERE "id" = ${id} FOR UPDATE`;
+      break;
+    case 'notice':
+      query = db.raw
+        .sql`SELECT "id" FROM "public"."BookingNotice" WHERE "id" = ${id} FOR UPDATE`;
+      break;
+    default:
+      query = db.raw
+        .sql`SELECT "id" FROM "public"."Ticket" WHERE "id" = ${id} FOR UPDATE`;
+  }
   await tx.execute(query.affectedCount().build());
+}
+
+function deliveryState(message: Messages[Queue], queue: Queue) {
+  if (queue !== 'reminder') return message;
+
+  // Ticket delivery and its reminder have separate tracking columns.
+  const reminder = message as Messages['reminder'];
+  return {
+    sentAt: reminder.reminderSentAt,
+    discardedAt: reminder.reminderDiscardedAt,
+    attempts: reminder.reminderAttempts,
+    nextAttemptAt: reminder.reminderNextAttemptAt,
+  };
 }
 
 function readMessage(tx: Transaction, queue: Queue, id: string) {
@@ -100,22 +122,15 @@ export async function processMailBatch<K extends Queue>(
   const counts = { sent: 0, failed: 0, discarded: 0 };
   for (const candidate of candidates) {
     const outcome = await db.transaction(async (tx) => {
+      // 1. Lock and re-read: another worker may have processed the candidate.
       await lockMessage(tx, db, queue, candidate.id);
       const message = (await readMessage(tx, queue, candidate.id)) as
         Messages[K] | null;
       // Reminders use one clock snapshot for their due/eligibility/discard checks.
       const current = queue === 'reminder' ? clock() : undefined;
       if (!message) return null;
-      const reminder = message as Messages['reminder'];
-      const state =
-        queue === 'reminder'
-          ? {
-              sentAt: reminder.reminderSentAt,
-              discardedAt: reminder.reminderDiscardedAt,
-              attempts: reminder.reminderAttempts,
-              nextAttemptAt: reminder.reminderNextAttemptAt,
-            }
-          : message;
+      const messageId = message.id;
+      const state = deliveryState(message, queue);
       if (
         state.sentAt ||
         state.discardedAt ||
@@ -123,19 +138,23 @@ export async function processMailBatch<K extends Queue>(
       )
         return null;
       async function discard() {
-        await updateMessage(tx, queue, message!.id, {
+        await updateMessage(tx, queue, messageId, {
           discardedAt: new Date(current ?? clock()).toISOString(),
         });
         return 'discarded' as const;
       }
+
+      // 2. The owning service decides whether to send, skip or discard.
       const delivery = await prepare({
         tx,
         message,
-        exhausted: state.attempts >= 5,
+        exhausted: state.attempts >= MAX_DELIVERY_ATTEMPTS,
         current,
       });
       if (delivery === null) return null;
       if (delivery === 'discarded') return discard();
+
+      // 3. Send under the lock, then record acceptance by the provider.
       try {
         if ((await delivery()) === 'discarded') return await discard();
         await updateMessage(tx, queue, message.id, {
@@ -144,13 +163,18 @@ export async function processMailBatch<K extends Queue>(
         });
         return 'sent' as const;
       } catch {
+        // 4. Retry failures with a growing delay; stop after five attempts.
         const attempts = state.attempts + 1;
         await updateMessage(tx, queue, message.id, {
           attempts,
           nextAttemptAt: new Date(
-            clock() + Math.min(900000, 30000 * 2 ** (attempts - 1)),
+            clock() +
+              Math.min(
+                MAX_RETRY_DELAY_MS,
+                INITIAL_RETRY_DELAY_MS * 2 ** (attempts - 1),
+              ),
           ).toISOString(),
-          ...(attempts >= 5
+          ...(attempts >= MAX_DELIVERY_ATTEMPTS
             ? { discardedAt: new Date(clock()).toISOString() }
             : {}),
         });

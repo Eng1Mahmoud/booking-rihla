@@ -11,7 +11,7 @@ import type {
 
 export type City = CreateCityInput & { id: string };
 
-// Load Prisma only for city operations; health checks do not need a database.
+// Load Prisma only when a city operation needs the database.
 export const cityService = {
   async list({ limit, offset }: CityListQuery): Promise<City[]> {
     const { db } = await import('../../prisma/db.ts');

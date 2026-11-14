@@ -1,25 +1,15 @@
-import { Router, type RequestHandler } from 'express';
-import { rateLimit } from 'express-rate-limit';
-import { AppError } from '../../errors/AppError.ts';
-import { createTicketScanController } from './ticketScanController.ts';
-import type { TicketScanService } from './ticketScanService.ts';
+import { ticketScanLimiter } from '../../middlewares/rateLimiters.ts';
+import { gateStaffMiddleware } from '../../middlewares/authorizationMiddleware.ts';
+import { Router } from 'express';
 
-export function createTicketScanRouter(
-  staff: RequestHandler[],
-  service: TicketScanService,
-) {
-  const router = Router();
-  const controller = createTicketScanController(service);
-  const limiter = rateLimit({
-    windowMs: 60_000,
-    limit: 120,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    handler: (_request, _response, next) =>
-      next(new AppError(429, 'RATE_LIMITED', 'Too many scan attempts')),
-  });
+import { ticketScanController } from './ticketScanController.ts';
 
-  // STAFF, ADMIN, SUPER_ADMIN (caller wires requireRole).
-  router.post('/scan', ...staff, limiter, controller.scan);
-  return router;
-}
+export const ticketScanRouter = Router();
+
+// Ticket scanning is available to staff and administrators.
+ticketScanRouter.post(
+  '/scan',
+  ...gateStaffMiddleware,
+  ticketScanLimiter,
+  ticketScanController.scan,
+);

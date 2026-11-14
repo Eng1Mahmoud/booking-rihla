@@ -1,14 +1,15 @@
-import { Router, type RequestHandler } from 'express';
-import { createAdminFleetController } from './adminFleetController.ts';
-import type { AdminFleetService } from './adminFleetService.ts';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
+import { Router } from 'express';
+import { adminFleetController } from './adminFleetController.ts';
 
-export function createAdminFleetRouter(
-  service: AdminFleetService,
-  admin: RequestHandler[],
-) {
-  const router = Router();
-  const controller = createAdminFleetController(service);
-  router.get('/bus-types', ...admin, controller.busTypes);
-  router.get('/amenities', ...admin, controller.amenities);
-  return router;
-}
+export const adminFleetRouter = Router();
+adminFleetRouter.get(
+  '/bus-types',
+  ...adminMiddleware,
+  adminFleetController.busTypes,
+);
+adminFleetRouter.get(
+  '/amenities',
+  ...adminMiddleware,
+  adminFleetController.amenities,
+);

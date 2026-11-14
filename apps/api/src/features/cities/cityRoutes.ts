@@ -1,20 +1,10 @@
-import type { RequestHandler } from 'express';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
-import { createCityController } from './cityController.ts';
-import type { CityService } from './cityService.ts';
+import { cityController } from './cityController.ts';
 
-export function createCityRouter(
-  service: CityService,
-  admin: RequestHandler[],
-) {
-  const router = Router();
-  const controller = createCityController(service);
-
-  router.get('/', controller.list);
-  router.get('/:id', controller.getById);
-  router.post('/', ...admin, controller.create);
-  router.patch('/:id', ...admin, controller.update);
-  router.delete('/:id', ...admin, controller.remove);
-
-  return router;
-}
+export const cityRouter = Router();
+cityRouter.get('/', cityController.list);
+cityRouter.get('/:id', cityController.getById);
+cityRouter.post('/', ...adminMiddleware, cityController.create);
+cityRouter.patch('/:id', ...adminMiddleware, cityController.update);
+cityRouter.delete('/:id', ...adminMiddleware, cityController.remove);

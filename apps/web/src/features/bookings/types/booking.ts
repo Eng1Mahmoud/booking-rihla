@@ -35,7 +35,6 @@ export type BookingPaymentData = {
 
 export type PaymentState = {
   payment: BookingPaymentData;
-  checkoutEnabled: boolean;
 };
 export type BookingDetails = PaymentState & {
   booking: Booking;

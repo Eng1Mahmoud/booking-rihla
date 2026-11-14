@@ -1,204 +1,67 @@
-import { createScheduledJobRouter } from './features/operations/scheduledJobRoutes.ts';
-import { createAdminBusRouter } from './features/fleet/adminBusRoutes.ts';
-import {
-  adminBusService,
-  type AdminBusService,
-} from './features/fleet/adminBusService.ts';
-import { createAdminFleetRouter } from './features/fleet/adminFleetRoutes.ts';
-import {
-  adminFleetService,
-  type AdminFleetService,
-} from './features/fleet/adminFleetService.ts';
-import { createAdminCatalogRouter } from './features/catalog/adminCatalogRoutes.ts';
-import {
-  adminCatalogService,
-  type AdminCatalogService,
-} from './features/catalog/adminCatalogService.ts';
-import { createAccountRouter } from './features/accounts/accountRoutes.ts';
-import {
-  accountPaymentService,
-  type AccountPaymentService,
-} from './features/accounts/accountPaymentService.ts';
-import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
-import { createOperationRouter } from './features/operations/operationRoutes.ts';
-import { requestLogger } from './middlewares/requestLogger.ts';
-import {
-  readinessService,
-  type ReadinessService,
-} from './infrastructure/health/readinessService.ts';
-import { requestId } from './middlewares/requestId.ts';
-import {
-  adminPaymentStatisticsService,
-  type AdminPaymentStatisticsService,
-} from './features/payments/adminPaymentStatisticsService.ts';
-import {
-  adminStatisticsService,
-  type AdminStatisticsService,
-} from './features/reports/adminStatisticsService.ts';
-import { createAdminStatisticsRouter } from './features/reports/adminStatisticsRoutes.ts';
-import {
-  ticketService,
-  type TicketService,
-} from './features/tickets/ticketService.ts';
-import {
-  adminPaymentService,
-  type AdminPaymentService,
-} from './features/payments/adminPaymentService.ts';
-import { createAdminPaymentRouter } from './features/payments/adminPaymentRoutes.ts';
-import {
-  configuredPaymentCheckout,
-  paymentCheckoutService,
-  type PaymentCheckoutService,
-} from './features/payments/paymentCheckoutService.ts';
-import {
-  paymentAttemptService,
-  type PaymentAttemptService,
-} from './features/payments/paymentAttemptService.ts';
-import {
-  paymobWebhookService,
-  type PaymobWebhookService,
-} from './features/payments/paymobWebhookService.ts';
-import { createPaymobWebhookRouter } from './features/payments/paymobWebhookRoutes.ts';
-import { createAssistantRouter } from './features/assistant/assistantRoutes.ts';
-
-import {
-  administratorService,
-  type AdministratorService,
-} from './features/administrators/administratorService.ts';
-import { createAdministratorRouter } from './features/administrators/administratorRoutes.ts';
-import {
-  adminUserService,
-  type AdminUserService,
-} from './features/users/adminUserService.ts';
-import { createAdminUserRouter } from './features/users/adminUserRoutes.ts';
-import {
-  adminBookingService,
-  type AdminBookingService,
-} from './features/bookings/adminBookingService.ts';
-import { createAdminBookingRouter } from './features/bookings/adminBookingRoutes.ts';
-import { createTicketScanRouter } from './features/tickets/ticketScanRoutes.ts';
-import {
-  ticketScanService,
-  type TicketScanService,
-} from './features/tickets/ticketScanService.ts';
-import {
-  tripBatchService,
-  type TripBatchService,
-} from './features/trips/tripBatchService.ts';
-import {
-  busTypeService,
-  type BusTypeService,
-} from './features/fleet/busTypeService.ts';
-import {
-  amenityService,
-  type AmenityService,
-} from './features/amenities/amenityService.ts';
-import { createBusTypeRouter } from './features/fleet/busTypeRoutes.ts';
-import { createAmenityRouter } from './features/amenities/amenityRoutes.ts';
-import {
-  bookingService,
-  type BookingService,
-} from './features/bookings/bookingService.ts';
-import { createBookingRouter } from './features/bookings/bookingRoutes.ts';
+// HTTP framework and security libraries
 import express from 'express';
-import { requireAuth } from './middlewares/requireAuth.ts';
-import { requireRole } from './middlewares/requireRole.ts';
 import helmet from 'helmet';
 import cors from 'cors';
-import { AppError } from './errors/AppError.ts';
+
+// Shared request and error middleware
+import { requestId } from './middlewares/requestId.ts';
+import { requestLogger } from './middlewares/requestLogger.ts';
 import { errorHandler } from './middlewares/errorHandler.ts';
-import { createCityRouter } from './features/cities/cityRoutes.ts';
-import {
-  cityService,
-  type CityService,
-} from './features/cities/cityService.ts';
-import {
-  stationService,
-  type StationService,
-} from './features/stations/stationService.ts';
-import { createStationRouter } from './features/stations/stationRoutes.ts';
-import { busService, type BusService } from './features/buses/busService.ts';
-import { createBusRouter } from './features/buses/busRoutes.ts';
 
-import {
-  routeService,
-  type RouteService,
-} from './features/routes/routeService.ts';
-import { createRouteRouter } from './features/routes/routeRoutes.ts';
+// Application errors
+import { AppError } from './errors/AppError.ts';
 
-import { tripService, type TripService } from './features/trips/tripService.ts';
-import { createTripRouter } from './features/trips/tripRoutes.ts';
+// Internal scheduled jobs
+import { scheduledJobRouter } from './features/operations/scheduledJobRoutes.ts';
 
-import {
-  tripSearchService,
-  type TripSearchService,
-} from './features/trips/tripSearchService.ts';
+// Catalog, fleet, and trip routers
+import { cityRouter } from './features/cities/cityRoutes.ts';
+import { stationRouter } from './features/stations/stationRoutes.ts';
+import { busRouter } from './features/buses/busRoutes.ts';
+import { routeRouter } from './features/routes/routeRoutes.ts';
+import { tripRouter } from './features/trips/tripRoutes.ts';
+import { busTypeRouter } from './features/fleet/busTypeRoutes.ts';
+import { amenityRouter } from './features/amenities/amenityRoutes.ts';
 
-import {
-  tripDetailsService,
-  type TripDetailsService,
-} from './features/trips/tripDetailsService.ts';
+// Administrative catalog and operation routers
+import { adminBusRouter } from './features/fleet/adminBusRoutes.ts';
+import { adminFleetRouter } from './features/fleet/adminFleetRoutes.ts';
+import { adminCatalogRouter } from './features/catalog/adminCatalogRoutes.ts';
+import { operationRouter } from './features/operations/operationRoutes.ts';
 
-import { authService, type AuthService } from './features/auth/authService.ts';
-import { createAuthRouter } from './features/auth/authRoutes.ts';
-
-import {
-  sessionService,
-  type SessionService,
-} from './features/auth/sessionService.ts';
+// Account, authentication, and booking routers
+import { accountRouter } from './features/accounts/accountRoutes.ts';
+import { authRouter } from './features/auth/authRoutes.ts';
 import { createSessionRouter } from './features/auth/sessionRoutes.ts';
+import { passwordResetRouter } from './features/auth/passwordResetRoutes.ts';
+import { bookingRouter } from './features/bookings/bookingRoutes.ts';
 
-import {
-  passwordResetService,
-  type PasswordResetService,
-} from './features/auth/passwordResetService.ts';
-import { createPasswordResetRouter } from './features/auth/passwordResetRoutes.ts';
+// Administration and reporting routers
+import { adminBookingRouter } from './features/bookings/adminBookingRoutes.ts';
+import { ticketScanRouter } from './features/tickets/ticketScanRoutes.ts';
+import { adminStatisticsRouter } from './features/reports/adminStatisticsRoutes.ts';
+import { adminPaymentRouter } from './features/payments/adminPaymentRoutes.ts';
+import { adminUserRouter } from './features/users/adminUserRoutes.ts';
+import { administratorRouter } from './features/administrators/administratorRoutes.ts';
 
-export function createApp(
-  corsOrigins: string[],
-  services: {
-    readiness?: ReadinessService;
-    adminCatalog?: AdminCatalogService;
-    adminFleet?: AdminFleetService;
-    adminBuses?: AdminBusService;
-    cities?: CityService;
-    stations?: StationService;
-    buses?: BusService;
-    routes?: RouteService;
-    trips?: TripService;
-    tripBatches?: TripBatchService;
-    tripSearch?: TripSearchService;
-    tripDetails?: TripDetailsService;
-    auth?: AuthService;
-    sessions?: SessionService;
-    accountPayments?: AccountPaymentService;
-    passwordReset?: PasswordResetService;
-    bookings?: BookingService;
-    tickets?: TicketService;
-    ticketScanning?: TicketScanService;
-    adminBookings?: AdminBookingService;
-    adminPayments?: AdminPaymentService;
-    adminPaymentStatistics?: AdminPaymentStatisticsService;
-    adminStatistics?: AdminStatisticsService;
-    adminUsers?: AdminUserService;
-    administrators?: AdministratorService;
-    busTypes?: BusTypeService;
-    amenities?: AmenityService;
-    paymobWebhook?: PaymobWebhookService;
-    paymentAttempts?: PaymentAttemptService;
-    paymentCheckout?: PaymentCheckoutService;
-  } = {},
-) {
+// Payment callback and assistant routers
+import { paymobWebhookRouter } from './features/payments/paymobWebhookRoutes.ts';
+import { assistantRouter } from './features/assistant/assistantRoutes.ts';
+
+export function createApp() {
+  // 1. Read the frontend origins used by CORS and session CSRF protection.
+  const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim());
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    corsOrigins.some((origin) => !origin.startsWith('https://'))
+  )
+    throw new Error('Production CORS origins must use HTTPS');
+
+  // 2. Create the application and configure shared middleware.
   const app = express();
-
-  const sessions = services.sessions ?? sessionService;
-  const authenticate = requireAuth(sessions);
-  const admin = [authenticate, requireRole('ADMIN', 'SUPER_ADMIN')];
-  const superAdmin = [authenticate, requireRole('SUPER_ADMIN')];
-  const gateStaff = [
-    authenticate,
-    requireRole('STAFF', 'ADMIN', 'SUPER_ADMIN'),
-  ];
 
   app.disable('x-powered-by');
   app.use(requestId);
@@ -213,171 +76,44 @@ export function createApp(
   );
   app.use(express.json({ limit: '100kb' }));
 
-  app.get('/api/v1/ready', async (_request, response) => {
-    response.setHeader('Cache-Control', 'no-store');
-    if (app.locals.stopping) {
-      sendFailure(response, 503, 'SERVICE_UNAVAILABLE');
-      return;
-    }
-    try {
-      await (services.readiness ?? readinessService).check();
-      sendSuccess(response, { status: 'ready' });
-    } catch {
-      sendFailure(response, 503, 'SERVICE_UNAVAILABLE');
-    }
-  });
+  // 3. Internal scheduled jobs.
+  app.use('/api/v1/internal/jobs', scheduledJobRouter);
 
-  app.use('/api/v1/internal/jobs', createScheduledJobRouter());
+  // 4. Catalog, fleet, and trip endpoints; routers enforce operation permissions.
+  app.use('/api/v1/cities', cityRouter);
+  app.use('/api/v1/stations', stationRouter);
+  app.use('/api/v1/buses', busRouter);
+  app.use('/api/v1/routes', routeRouter);
+  app.use('/api/v1/trips', tripRouter);
+  app.use('/api/v1/bus-types', busTypeRouter);
+  app.use('/api/v1/amenities', amenityRouter);
 
-  app.get('/api/v1/health', (_request, response) => {
-    sendSuccess(response, { status: 'ok' });
-  });
+  // 5. Administrative catalog and trip/refund operations.
+  app.use('/api/v1/admin', adminBusRouter);
+  app.use('/api/v1/admin', adminFleetRouter);
+  app.use('/api/v1/admin', adminCatalogRouter);
+  app.use('/api/v1/admin', operationRouter);
 
-  app.use(
-    '/api/v1/cities',
-    createCityRouter(services.cities ?? cityService, admin),
-  );
-  app.use(
-    '/api/v1/stations',
-    createStationRouter(services.stations ?? stationService, admin),
-  );
+  // 6. Accounts, authentication, sessions, and passenger bookings.
+  app.use('/api/v1/account', accountRouter);
+  app.use('/api/v1/auth', authRouter);
+  app.use('/api/v1/auth', createSessionRouter(corsOrigins));
+  app.use('/api/v1/auth', passwordResetRouter);
+  app.use('/api/v1/bookings', bookingRouter);
 
-  app.use(
-    '/api/v1/buses',
-    createBusRouter(services.buses ?? busService, admin),
-  );
+  // 7. Staff and administrator management, scanning, and reporting.
+  app.use('/api/v1/admin/bookings', adminBookingRouter);
+  app.use('/api/v1/admin/tickets', ticketScanRouter);
+  app.use('/api/v1/admin/statistics', adminStatisticsRouter);
+  app.use('/api/v1/admin/payments', adminPaymentRouter);
+  app.use('/api/v1/admin/users', adminUserRouter);
+  app.use('/api/v1/admin/admins', administratorRouter);
 
-  app.use(
-    '/api/v1/routes',
-    createRouteRouter(services.routes ?? routeService, admin),
-  );
+  // 8. Payment provider callbacks and the passenger assistant.
+  app.use('/api/v1/payments/paymob', paymobWebhookRouter);
+  app.use('/api/v1/assistant', assistantRouter);
 
-  app.use(
-    '/api/v1/trips',
-    createTripRouter(
-      services.trips ?? tripService,
-      admin,
-      services.tripSearch ?? tripSearchService,
-      services.tripDetails ?? tripDetailsService,
-      services.tripBatches ?? tripBatchService,
-    ),
-  );
-
-  app.use(
-    '/api/v1/bus-types',
-    createBusTypeRouter(services.busTypes ?? busTypeService, admin),
-  );
-  app.use(
-    '/api/v1/amenities',
-    createAmenityRouter(services.amenities ?? amenityService, admin),
-  );
-
-  app.use(
-    '/api/v1/admin',
-    createAdminBusRouter(services.adminBuses ?? adminBusService, admin),
-  );
-  app.use(
-    '/api/v1/admin',
-    createAdminFleetRouter(services.adminFleet ?? adminFleetService, admin),
-  );
-  app.use(
-    '/api/v1/admin',
-    createAdminCatalogRouter(
-      services.adminCatalog ?? adminCatalogService,
-      admin,
-    ),
-  );
-  app.use('/api/v1/admin', createOperationRouter(superAdmin));
-
-  app.get('/api/v1/payments/availability', (_request, response) => {
-    let checkoutEnabled = false;
-    try {
-      checkoutEnabled = configuredPaymentCheckout() !== null;
-    } catch {
-      /* Keep checkout closed for invalid settings. */
-    }
-    sendSuccess(response.set('Cache-Control', 'no-store'), { checkoutEnabled });
-  });
-  app.use(
-    '/api/v1/account',
-    createAccountRouter(
-      services.accountPayments ?? accountPaymentService,
-      sessions,
-    ),
-  );
-  app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
-  app.use('/api/v1/auth', createSessionRouter(sessions, corsOrigins));
-
-  app.use(
-    '/api/v1/auth',
-    createPasswordResetRouter(services.passwordReset ?? passwordResetService),
-  );
-
-  app.use(
-    '/api/v1/bookings',
-    createBookingRouter(
-      services.bookings ?? bookingService,
-      sessions,
-      services.paymentAttempts ?? paymentAttemptService,
-      services.paymentCheckout ?? paymentCheckoutService,
-      services.tickets ?? ticketService,
-    ),
-  );
-
-  app.use(
-    '/api/v1/admin/bookings',
-    createAdminBookingRouter(
-      services.adminBookings ?? adminBookingService,
-      admin,
-    ),
-  );
-
-  app.use(
-    '/api/v1/admin/tickets',
-    createTicketScanRouter(
-      gateStaff,
-      services.ticketScanning ?? ticketScanService,
-    ),
-  );
-
-  app.use(
-    '/api/v1/admin/statistics',
-    createAdminStatisticsRouter(
-      services.adminStatistics ?? adminStatisticsService,
-      admin,
-    ),
-  );
-
-  app.use(
-    '/api/v1/admin/payments',
-    createAdminPaymentRouter(
-      services.adminPayments ?? adminPaymentService,
-      admin,
-      services.adminPaymentStatistics ?? adminPaymentStatisticsService,
-    ),
-  );
-
-  app.use(
-    '/api/v1/admin/users',
-    createAdminUserRouter(services.adminUsers ?? adminUserService, admin),
-  );
-
-  app.use(
-    '/api/v1/admin/admins',
-    createAdministratorRouter(
-      services.administrators ?? administratorService,
-      superAdmin,
-    ),
-  );
-
-  app.use(
-    '/api/v1/payments/paymob',
-    createPaymobWebhookRouter(services.paymobWebhook ?? paymobWebhookService),
-  );
-
-  app.use('/api/v1/assistant', createAssistantRouter());
-
-  // This runs only if none of the routes above handled the request.
+  // 9. Unmatched requests become 404 errors after every router has had a chance.
   app.use((_request, _response, next) => {
     next(new AppError(404, 'NOT_FOUND', 'Route not found'));
   });

@@ -1,82 +1,65 @@
 import {
-  clientRateLimitKey,
-  userRateLimitKey,
-} from '../../utils/clientIdentity.ts';
+  loginLimiter,
+  sessionRefreshLimiter,
+  profileUpdateLimiter,
+  logoutLimiter,
+  logoutAllLimiter,
+} from '../../middlewares/rateLimiters.ts';
+
 import { Router } from 'express';
 import cookieParser from 'cookie-parser';
-import { rateLimit } from 'express-rate-limit';
-import { createSessionController } from './sessionController.ts';
-import type { SessionService } from './sessionService.ts';
+
+import { sessionController } from './sessionController.ts';
 import { requireAuth } from '../../middlewares/requireAuth.ts';
 import { sessionCsrf } from '../../middlewares/sessionCsrf.ts';
-import { AppError } from '../../errors/AppError.ts';
-export function createSessionRouter(
-  service: SessionService,
-  allowedOrigins: string[],
-) {
-  const router = Router(),
-    controller = createSessionController(service);
-  const limit = (count: number) =>
-    rateLimit({
-      limit: count,
-      windowMs: 900000,
-      keyGenerator: clientRateLimitKey,
-      standardHeaders: 'draft-8',
-      legacyHeaders: false,
-      handler: (_req, _res, next) =>
-        next(
-          new AppError(
-            429,
-            'RATE_LIMITED',
-            'Too many requests; try again later',
-          ),
-        ),
-    });
+
+export function createSessionRouter(allowedOrigins: string[]) {
+  const router = Router();
+
   router.use((_request, response, next) => {
     response.set('Cache-Control', 'no-store');
     next();
   });
+
   router.use(cookieParser());
+
   router.post(
     '/login',
-    limit(20),
+    loginLimiter,
     sessionCsrf(allowedOrigins),
-    controller.login,
+    sessionController.login,
   );
+
   router.post(
     '/refresh',
-    limit(60),
+    sessionRefreshLimiter,
     sessionCsrf(allowedOrigins),
-    controller.refresh,
+    sessionController.refresh,
   );
-  router.get('/me', requireAuth(service), controller.me);
+
+  router.get('/me', requireAuth, sessionController.me);
+
   router.patch(
     '/me',
     sessionCsrf(allowedOrigins),
-    requireAuth(service),
-    rateLimit({
-      limit: 20,
-      windowMs: 60000,
-      keyGenerator: userRateLimitKey,
-      standardHeaders: 'draft-8',
-      legacyHeaders: false,
-      handler: (_req, _res, next) =>
-        next(new AppError(429, 'RATE_LIMITED', 'Too many profile updates')),
-    }),
-    controller.updateProfile,
+    requireAuth,
+    profileUpdateLimiter,
+    sessionController.updateProfile,
   );
+
   router.post(
     '/logout',
-    limit(60),
+    logoutLimiter,
     sessionCsrf(allowedOrigins),
-    controller.logout,
+    sessionController.logout,
   );
+
   router.post(
     '/logout-all',
-    limit(20),
+    logoutAllLimiter,
     sessionCsrf(allowedOrigins),
-    requireAuth(service),
-    controller.logoutAll,
+    requireAuth,
+    sessionController.logoutAll,
   );
   return router;
 }

@@ -28,7 +28,6 @@ export function useBookingPayment(
   );
   const initialState: PaymentState = {
     payment: initial.payment,
-    checkoutEnabled: initial.checkoutEnabled,
   };
   const query = useQuery({
     queryKey: key,
@@ -81,7 +80,6 @@ export function useBookingPayment(
             Date.parse(payment.serverTime)
             ? current.payment
             : payment,
-        checkoutEnabled: current?.checkoutEnabled ?? data.checkoutEnabled,
       }));
     },
     onError: () => {

@@ -1,7 +1,7 @@
 import { sendSuccess } from '../../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { AppError } from '../../errors/AppError.ts';
-import type { AmenityService } from './amenityService.ts';
+import { amenityService } from './amenityService.ts';
 import {
   createFleetMetadataSchema,
   updateFleetMetadataSchema,
@@ -39,58 +39,57 @@ function json(request: Request) {
 function missing() {
   return new AppError(404, 'AMENITY_NOT_FOUND', 'Amenity not found');
 }
-export function createAmenityController(service: AmenityService) {
-  return {
-    async list(request: Request, response: Response) {
-      const query = fleetMetadataListSchema.safeParse(request.query);
-      if (!query.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Use only valid limit and offset pagination',
-        );
-      sendSuccess(response, {
-        items: await service.list(query.data),
-        pagination: query.data,
-      });
-    },
-    async getById(request: Request, response: Response) {
-      const result = await service.findById(id(request));
-      if (!result) throw missing();
-      sendSuccess(response, result);
-    },
-    async create(request: Request, response: Response) {
-      json(request);
-      const input = createFleetMetadataSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide only code (1-32 uppercase letters/digits/underscores, starting with a letter), nameAr and nameEn (1-100 characters)',
-        );
-      const item = await service.create(input.data);
-      sendSuccess(
-        response.location('/api/v1/amenities/' + item.id).status(201),
-        item,
+
+export const amenityController = {
+  async list(request: Request, response: Response) {
+    const query = fleetMetadataListSchema.safeParse(request.query);
+    if (!query.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Use only valid limit and offset pagination',
       );
-    },
-    async update(request: Request, response: Response) {
-      const itemId = id(request);
-      json(request);
-      const input = updateFleetMetadataSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide at least one valid code, nameAr or nameEn; no other fields are allowed',
-        );
-      const result = await service.update(itemId, input.data);
-      if (!result) throw missing();
-      sendSuccess(response, result);
-    },
-    async remove(request: Request, response: Response) {
-      if (!(await service.remove(id(request)))) throw missing();
-      sendSuccess(response);
-    },
-  };
-}
+    sendSuccess(response, {
+      items: await amenityService.list(query.data),
+      pagination: query.data,
+    });
+  },
+  async getById(request: Request, response: Response) {
+    const result = await amenityService.findById(id(request));
+    if (!result) throw missing();
+    sendSuccess(response, result);
+  },
+  async create(request: Request, response: Response) {
+    json(request);
+    const input = createFleetMetadataSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide only code (1-32 uppercase letters/digits/underscores, starting with a letter), nameAr and nameEn (1-100 characters)',
+      );
+    const item = await amenityService.create(input.data);
+    sendSuccess(
+      response.location('/api/v1/amenities/' + item.id).status(201),
+      item,
+    );
+  },
+  async update(request: Request, response: Response) {
+    const itemId = id(request);
+    json(request);
+    const input = updateFleetMetadataSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide at least one valid code, nameAr or nameEn; no other fields are allowed',
+      );
+    const result = await amenityService.update(itemId, input.data);
+    if (!result) throw missing();
+    sendSuccess(response, result);
+  },
+  async remove(request: Request, response: Response) {
+    if (!(await amenityService.remove(id(request)))) throw missing();
+    sendSuccess(response);
+  },
+};

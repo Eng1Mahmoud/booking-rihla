@@ -6,10 +6,7 @@ import {
   emptySessionSchema,
   updateProfileSchema,
 } from './authSchema.ts';
-import type {
-  SessionService,
-  AuthContext,
-} from './sessionService.ts';
+import { sessionService, type AuthContext } from './sessionService.ts';
 export function refreshCookieName() {
   return process.env.NODE_ENV === 'production'
     ? '__Secure-bus_refresh'
@@ -52,71 +49,70 @@ function validateEmpty(request: Request) {
       'Request body must be an empty object',
     );
 }
-export function createSessionController(service: SessionService) {
-  return {
-    async login(request: Request, response: Response) {
-      validateJson(request);
-      const input = loginSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide only a valid email and password (12-128 characters)',
-        );
-      sendSuccess(response, await service.login(input.data));
-    },
-    async refresh(request: Request, response: Response) {
-      validateEmpty(request);
-      const token = refreshCookie(request);
-      if (!token) {
-        response.clearCookie(refreshCookieName(), cookieOptions());
-        throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
-      }
-      try {
-        sendSuccess(response, await service.refresh(token));
-      } catch (error) {
-        if (error instanceof AppError && error.statusCode === 401)
-          response.clearCookie(refreshCookieName(), cookieOptions());
-        throw error;
-      }
-    },
-    async me(request: Request, response: Response) {
-      if (Object.keys(request.query).length)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'No query parameters are supported',
-        );
-      const auth = response.locals['auth'] as AuthContext;
-      sendSuccess(response, auth.user);
-    },
-    async updateProfile(request: Request, response: Response) {
-      validateJson(request);
-      const input = updateProfileSchema.safeParse(request.body);
-      if (!input.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Provide only name and international phone',
-        );
-      const auth = response.locals['auth'] as AuthContext;
-      sendSuccess(
-        response,
-        await service.updateProfile(auth.user.id, input.data),
+
+export const sessionController = {
+  async login(request: Request, response: Response) {
+    validateJson(request);
+    const input = loginSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide only a valid email and password (12-128 characters)',
       );
-    },
-    async logout(request: Request, response: Response) {
-      validateEmpty(request);
-      await service.logout(refreshCookie(request));
+    sendSuccess(response, await sessionService.login(input.data));
+  },
+  async refresh(request: Request, response: Response) {
+    validateEmpty(request);
+    const token = refreshCookie(request);
+    if (!token) {
       response.clearCookie(refreshCookieName(), cookieOptions());
-      sendSuccess(response);
-    },
-    async logoutAll(request: Request, response: Response) {
-      validateEmpty(request);
-      const auth = response.locals['auth'] as AuthContext;
-      await service.logoutAll(auth.user.id);
-      response.clearCookie(refreshCookieName(), cookieOptions());
-      sendSuccess(response);
-    },
-  };
-}
+      throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
+    }
+    try {
+      sendSuccess(response, await sessionService.refresh(token));
+    } catch (error) {
+      if (error instanceof AppError && error.statusCode === 401)
+        response.clearCookie(refreshCookieName(), cookieOptions());
+      throw error;
+    }
+  },
+  async me(request: Request, response: Response) {
+    if (Object.keys(request.query).length)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'No query parameters are supported',
+      );
+    const auth = response.locals['auth'] as AuthContext;
+    sendSuccess(response, auth.user);
+  },
+  async updateProfile(request: Request, response: Response) {
+    validateJson(request);
+    const input = updateProfileSchema.safeParse(request.body);
+    if (!input.success)
+      throw new AppError(
+        400,
+        'VALIDATION_ERROR',
+        'Provide only name and international phone',
+      );
+    const auth = response.locals['auth'] as AuthContext;
+    sendSuccess(
+      response,
+      await sessionService.updateProfile(auth.user.id, input.data),
+    );
+  },
+  async logout(request: Request, response: Response) {
+    validateEmpty(request);
+    await sessionService.logout(refreshCookie(request));
+    response.clearCookie(refreshCookieName(), cookieOptions());
+    sendSuccess(response);
+  },
+  async logoutAll(request: Request, response: Response) {
+    validateEmpty(request);
+    const auth = response.locals['auth'] as AuthContext;
+    await sessionService.logoutAll(auth.user.id);
+    response.clearCookie(refreshCookieName(), cookieOptions());
+    sendSuccess(response);
+  },
+};

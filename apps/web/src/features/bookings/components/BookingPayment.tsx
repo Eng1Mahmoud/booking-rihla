@@ -32,7 +32,6 @@ export function BookingPayment({
 
   const booking = initial.booking;
   const payment = query.data?.payment;
-  const checkoutEnabled = query.data?.checkoutEnabled ?? false;
   const seconds = payment
     ? remainingHoldSeconds(payment, now, query.dataUpdatedAt)
     : 0;
@@ -76,7 +75,6 @@ export function BookingPayment({
 
   const canPay =
     !afterCheckout &&
-    checkoutEnabled &&
     booking.paymentRequired &&
     seconds > 0 &&
     ['NOT_STARTED', 'PREPARED', 'AWAITING_PAYMENT'].includes(
@@ -125,12 +123,6 @@ export function BookingPayment({
         locale={locale}
         holdExpiredMessage={
           outcome === 'waiting' && booking.paymentRequired && seconds === 0
-        }
-        checkoutUnavailable={
-          outcome === 'waiting' &&
-          booking.paymentRequired &&
-          !checkoutEnabled &&
-          seconds > 0
         }
         refreshing={query.isFetching}
         onPay={pay}

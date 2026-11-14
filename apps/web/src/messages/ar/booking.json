@@ -41,8 +41,6 @@
     "EXPIRED": "انتهت المهلة",
     "REVIEW": "قيد المراجعة"
   },
-  "checkingAvailability": "جارٍ التحقق من إتاحة الدفع…",
-  "checkoutUnavailable": "الدفع الإلكتروني غير متاح حاليًا. راجع حالة الدفع المسجلة أعلاه.",
   "historyFilterLabel": "تصفية الحجوزات",
   "historyFilters": {
     "all": "الكل",

@@ -1,20 +1,10 @@
-import type { RequestHandler } from 'express';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
-import { createStationController } from './stationController.ts';
-import type { StationService } from './stationService.ts';
+import { stationController } from './stationController.ts';
 
-export function createStationRouter(
-  service: StationService,
-  admin: RequestHandler[],
-) {
-  const router = Router();
-  const controller = createStationController(service);
-
-  router.get('/', controller.list);
-  router.get('/:id', controller.getById);
-  router.post('/', ...admin, controller.create);
-  router.patch('/:id', ...admin, controller.update);
-  router.delete('/:id', ...admin, controller.remove);
-
-  return router;
-}
+export const stationRouter = Router();
+stationRouter.get('/', stationController.list);
+stationRouter.get('/:id', stationController.getById);
+stationRouter.post('/', ...adminMiddleware, stationController.create);
+stationRouter.patch('/:id', ...adminMiddleware, stationController.update);
+stationRouter.delete('/:id', ...adminMiddleware, stationController.remove);

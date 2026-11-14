@@ -1,31 +1,16 @@
-import { AppError } from '../../errors/AppError.ts';
-import { rateLimit } from 'express-rate-limit';
-import { createAdminPaymentStatisticsController } from './adminPaymentStatisticsController.ts';
-import type { AdminPaymentStatisticsService } from './adminPaymentStatisticsService.ts';
-import { Router, type RequestHandler } from 'express';
-import { createAdminPaymentController } from './adminPaymentController.ts';
-import type { AdminPaymentService } from './adminPaymentService.ts';
-export function createAdminPaymentRouter(
-  service: AdminPaymentService,
-  admin: RequestHandler[],
-  statistics: AdminPaymentStatisticsService,
-) {
-  const router = Router();
-  router.use(...admin);
-  const controller = createAdminPaymentController(service);
-  router.get('/', controller.list);
-  router.get(
-    '/statistics',
-    rateLimit({
-      windowMs: 60_000,
-      limit: 60,
-      standardHeaders: 'draft-8',
-      legacyHeaders: false,
-      handler: (_request, _response, next) =>
-        next(new AppError(429, 'RATE_LIMITED', 'Too many requests')),
-    }),
-    createAdminPaymentStatisticsController(statistics).get,
-  );
-  router.get('/:id', controller.getById);
-  return router;
-}
+import { adminPaymentStatisticsLimiter } from '../../middlewares/rateLimiters.ts';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
+
+import { adminPaymentStatisticsController } from './adminPaymentStatisticsController.ts';
+import { Router } from 'express';
+import { adminPaymentController } from './adminPaymentController.ts';
+
+export const adminPaymentRouter = Router();
+adminPaymentRouter.use(...adminMiddleware);
+adminPaymentRouter.get('/', adminPaymentController.list);
+adminPaymentRouter.get(
+  '/statistics',
+  adminPaymentStatisticsLimiter,
+  adminPaymentStatisticsController.get,
+);
+adminPaymentRouter.get('/:id', adminPaymentController.getById);

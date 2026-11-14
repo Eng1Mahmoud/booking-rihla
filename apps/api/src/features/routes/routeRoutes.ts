@@ -1,21 +1,11 @@
-import type { RequestHandler } from 'express';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
-import { createRouteController } from './routeController.ts';
-import type { RouteService } from './routeService.ts';
+import { routeController } from './routeController.ts';
 
-export function createRouteRouter(
-  service: RouteService,
-  admin: RequestHandler[],
-) {
-  const router = Router();
-  router.use(...admin);
-  const controller = createRouteController(service);
-
-  router.get('/', controller.list);
-  router.get('/:id', controller.getById);
-  router.post('/', controller.create);
-  router.patch('/:id', controller.update);
-  router.delete('/:id', controller.remove);
-
-  return router;
-}
+export const routeRouter = Router();
+routeRouter.use(...adminMiddleware);
+routeRouter.get('/', routeController.list);
+routeRouter.get('/:id', routeController.getById);
+routeRouter.post('/', routeController.create);
+routeRouter.patch('/:id', routeController.update);
+routeRouter.delete('/:id', routeController.remove);

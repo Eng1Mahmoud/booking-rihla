@@ -1,16 +1,10 @@
-import { Router, type RequestHandler } from 'express';
-import { createAdministratorController } from './administratorController.ts';
-import type { AdministratorService } from './administratorService.ts';
-export function createAdministratorRouter(
-  service: AdministratorService,
-  superAdmin: RequestHandler[],
-) {
-  const router = Router();
-  router.use(...superAdmin);
-  const controller = createAdministratorController(service);
-  router.get('/', controller.list);
-  router.get('/:id', controller.getById);
-  router.patch('/:id/role', controller.updateRole);
-  router.patch('/:id/status', controller.updateStatus);
-  return router;
-}
+import { superAdminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
+import { Router } from 'express';
+import { administratorController } from './administratorController.ts';
+
+export const administratorRouter = Router();
+administratorRouter.use(...superAdminMiddleware);
+administratorRouter.get('/', administratorController.list);
+administratorRouter.get('/:id', administratorController.getById);
+administratorRouter.patch('/:id/role', administratorController.updateRole);
+administratorRouter.patch('/:id/status', administratorController.updateStatus);

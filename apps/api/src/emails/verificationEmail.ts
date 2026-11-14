@@ -8,8 +8,6 @@ import {
 } from './layout.ts';
 
 export function verificationEmail(code: string, language: string) {
-  if (!/^\d{6}$/.test(code))
-    throw new Error('Invalid verification code format');
   const arabic = language === 'ar';
   const subject = arabic
     ? 'تأكيد البريد الإلكتروني — رحلة'

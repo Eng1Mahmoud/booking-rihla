@@ -1,19 +1,12 @@
-import type { RequestHandler } from 'express';
+import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
-import { createBusController } from './busController.ts';
-import type { BusService } from './busService.ts';
+import { busController } from './busController.ts';
 
-export function createBusRouter(service: BusService, admin: RequestHandler[]) {
-  const router = Router();
-  router.use(...admin);
-  const controller = createBusController(service);
-
-  router.get('/', controller.list);
-  router.get('/:id', controller.getById);
-  router.get('/:id/seats', controller.listSeats);
-  router.post('/', controller.create);
-  router.patch('/:id', controller.update);
-  router.delete('/:id', controller.remove);
-
-  return router;
-}
+export const busRouter = Router();
+busRouter.use(...adminMiddleware);
+busRouter.get('/', busController.list);
+busRouter.get('/:id', busController.getById);
+busRouter.get('/:id/seats', busController.listSeats);
+busRouter.post('/', busController.create);
+busRouter.patch('/:id', busController.update);
+busRouter.delete('/:id', busController.remove);
