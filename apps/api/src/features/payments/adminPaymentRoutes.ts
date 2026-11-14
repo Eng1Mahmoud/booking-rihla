@@ -1,17 +1,14 @@
 import { AppError } from '../../errors/AppError.ts';
 import { rateLimit } from 'express-rate-limit';
 import { createAdminPaymentStatisticsController } from './adminPaymentStatisticsController.ts';
-import {
-  adminPaymentStatisticsService,
-  type AdminPaymentStatisticsService,
-} from './adminPaymentStatisticsService.ts';
+import type { AdminPaymentStatisticsService } from './adminPaymentStatisticsService.ts';
 import { Router, type RequestHandler } from 'express';
 import { createAdminPaymentController } from './adminPaymentController.ts';
 import type { AdminPaymentService } from './adminPaymentService.ts';
 export function createAdminPaymentRouter(
   service: AdminPaymentService,
   admin: RequestHandler[],
-  statistics: AdminPaymentStatisticsService = adminPaymentStatisticsService,
+  statistics: AdminPaymentStatisticsService,
 ) {
   const router = Router();
   router.use(...admin);

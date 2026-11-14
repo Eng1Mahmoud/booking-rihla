@@ -20,7 +20,6 @@ import {
   type AccountPaymentService,
 } from './features/accounts/accountPaymentService.ts';
 import { sendSuccess, sendFailure } from './utils/apiResponse.ts';
-import { configuredPaymentCheckout } from './features/payments/paymentCheckoutService.ts';
 import { createOperationRouter } from './features/operations/operationRoutes.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
 import {
@@ -28,20 +27,33 @@ import {
   type ReadinessService,
 } from './infrastructure/health/readinessService.ts';
 import { requestId } from './middlewares/requestId.ts';
-import type { AdminPaymentStatisticsService } from './features/payments/adminPaymentStatisticsService.ts';
+import {
+  adminPaymentStatisticsService,
+  type AdminPaymentStatisticsService,
+} from './features/payments/adminPaymentStatisticsService.ts';
 import {
   adminStatisticsService,
   type AdminStatisticsService,
 } from './features/reports/adminStatisticsService.ts';
 import { createAdminStatisticsRouter } from './features/reports/adminStatisticsRoutes.ts';
-import type { TicketService } from './features/tickets/ticketService.ts';
+import {
+  ticketService,
+  type TicketService,
+} from './features/tickets/ticketService.ts';
 import {
   adminPaymentService,
   type AdminPaymentService,
 } from './features/payments/adminPaymentService.ts';
 import { createAdminPaymentRouter } from './features/payments/adminPaymentRoutes.ts';
-import type { PaymentCheckoutService } from './features/payments/paymentCheckoutService.ts';
-import type { PaymentAttemptService } from './features/payments/paymentAttemptService.ts';
+import {
+  configuredPaymentCheckout,
+  paymentCheckoutService,
+  type PaymentCheckoutService,
+} from './features/payments/paymentCheckoutService.ts';
+import {
+  paymentAttemptService,
+  type PaymentAttemptService,
+} from './features/payments/paymentAttemptService.ts';
 import {
   paymobWebhookService,
   type PaymobWebhookService,
@@ -65,7 +77,14 @@ import {
 } from './features/bookings/adminBookingService.ts';
 import { createAdminBookingRouter } from './features/bookings/adminBookingRoutes.ts';
 import { createTicketScanRouter } from './features/tickets/ticketScanRoutes.ts';
-import type { TripBatchService } from './features/trips/tripBatchService.ts';
+import {
+  ticketScanService,
+  type TicketScanService,
+} from './features/tickets/ticketScanService.ts';
+import {
+  tripBatchService,
+  type TripBatchService,
+} from './features/trips/tripBatchService.ts';
 import {
   busTypeService,
   type BusTypeService,
@@ -101,15 +120,24 @@ import { createStationRouter } from './features/stations/stationRoutes.ts';
 import { busService, type BusService } from './features/buses/busService.ts';
 import { createBusRouter } from './features/buses/busRoutes.ts';
 
-import { routeService, type RouteService } from './features/routes/routeService.ts';
+import {
+  routeService,
+  type RouteService,
+} from './features/routes/routeService.ts';
 import { createRouteRouter } from './features/routes/routeRoutes.ts';
 
 import { tripService, type TripService } from './features/trips/tripService.ts';
 import { createTripRouter } from './features/trips/tripRoutes.ts';
 
-import type { TripSearchService } from './features/trips/tripSearchService.ts';
+import {
+  tripSearchService,
+  type TripSearchService,
+} from './features/trips/tripSearchService.ts';
 
-import type { TripDetailsService } from './features/trips/tripDetailsService.ts';
+import {
+  tripDetailsService,
+  type TripDetailsService,
+} from './features/trips/tripDetailsService.ts';
 
 import { authService, type AuthService } from './features/auth/authService.ts';
 import { createAuthRouter } from './features/auth/authRoutes.ts';
@@ -147,6 +175,7 @@ export function createApp(
     passwordReset?: PasswordResetService;
     bookings?: BookingService;
     tickets?: TicketService;
+    ticketScanning?: TicketScanService;
     adminBookings?: AdminBookingService;
     adminPayments?: AdminPaymentService;
     adminPaymentStatistics?: AdminPaymentStatisticsService;
@@ -162,18 +191,12 @@ export function createApp(
 ) {
   const app = express();
 
-  const admin = [
-    requireAuth(services.sessions ?? sessionService),
-    requireRole('ADMIN', 'SUPER_ADMIN'),
-  ];
-
-  const superAdmin = [
-    requireAuth(services.sessions ?? sessionService),
-    requireRole('SUPER_ADMIN'),
-  ];
-
+  const sessions = services.sessions ?? sessionService;
+  const authenticate = requireAuth(sessions);
+  const admin = [authenticate, requireRole('ADMIN', 'SUPER_ADMIN')];
+  const superAdmin = [authenticate, requireRole('SUPER_ADMIN')];
   const gateStaff = [
-    requireAuth(services.sessions ?? sessionService),
+    authenticate,
     requireRole('STAFF', 'ADMIN', 'SUPER_ADMIN'),
   ];
 
@@ -234,9 +257,9 @@ export function createApp(
     createTripRouter(
       services.trips ?? tripService,
       admin,
-      services.tripSearch,
-      services.tripDetails,
-      services.tripBatches,
+      services.tripSearch ?? tripSearchService,
+      services.tripDetails ?? tripDetailsService,
+      services.tripBatches ?? tripBatchService,
     ),
   );
 
@@ -279,14 +302,11 @@ export function createApp(
     '/api/v1/account',
     createAccountRouter(
       services.accountPayments ?? accountPaymentService,
-      services.sessions ?? sessionService,
+      sessions,
     ),
   );
   app.use('/api/v1/auth', createAuthRouter(services.auth ?? authService));
-  app.use(
-    '/api/v1/auth',
-    createSessionRouter(services.sessions ?? sessionService, corsOrigins),
-  );
+  app.use('/api/v1/auth', createSessionRouter(sessions, corsOrigins));
 
   app.use(
     '/api/v1/auth',
@@ -297,10 +317,10 @@ export function createApp(
     '/api/v1/bookings',
     createBookingRouter(
       services.bookings ?? bookingService,
-      services.sessions ?? sessionService,
-      services.paymentAttempts,
-      services.paymentCheckout,
-      services.tickets,
+      sessions,
+      services.paymentAttempts ?? paymentAttemptService,
+      services.paymentCheckout ?? paymentCheckoutService,
+      services.tickets ?? ticketService,
     ),
   );
 
@@ -312,7 +332,13 @@ export function createApp(
     ),
   );
 
-  app.use('/api/v1/admin/tickets', createTicketScanRouter(gateStaff));
+  app.use(
+    '/api/v1/admin/tickets',
+    createTicketScanRouter(
+      gateStaff,
+      services.ticketScanning ?? ticketScanService,
+    ),
+  );
 
   app.use(
     '/api/v1/admin/statistics',
@@ -327,7 +353,7 @@ export function createApp(
     createAdminPaymentRouter(
       services.adminPayments ?? adminPaymentService,
       admin,
-      services.adminPaymentStatistics,
+      services.adminPaymentStatistics ?? adminPaymentStatisticsService,
     ),
   );
 

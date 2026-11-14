@@ -1,19 +1,10 @@
 import { userRateLimitKey } from '../../utils/clientIdentity.ts';
 import { createTicketController } from '../tickets/ticketController.ts';
-import {
-  ticketService,
-  type TicketService,
-} from '../tickets/ticketService.ts';
+import type { TicketService } from '../tickets/ticketService.ts';
 import { createPaymentCheckoutController } from '../payments/paymentCheckoutController.ts';
-import {
-  paymentCheckoutService,
-  type PaymentCheckoutService,
-} from '../payments/paymentCheckoutService.ts';
+import type { PaymentCheckoutService } from '../payments/paymentCheckoutService.ts';
 import { createPaymentAttemptController } from '../payments/paymentAttemptController.ts';
-import {
-  paymentAttemptService,
-  type PaymentAttemptService,
-} from '../payments/paymentAttemptService.ts';
+import type { PaymentAttemptService } from '../payments/paymentAttemptService.ts';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { requireAuth } from '../../middlewares/requireAuth.ts';
@@ -24,9 +15,9 @@ import type { SessionService } from '../auth/sessionService.ts';
 export function createBookingRouter(
   service: BookingService,
   sessions: SessionService,
-  payments: PaymentAttemptService = paymentAttemptService,
-  checkout: PaymentCheckoutService = paymentCheckoutService,
-  tickets: TicketService = ticketService,
+  payments: PaymentAttemptService,
+  checkout: PaymentCheckoutService,
+  tickets: TicketService,
 ) {
   const router = Router();
   const controller = createBookingController(service);

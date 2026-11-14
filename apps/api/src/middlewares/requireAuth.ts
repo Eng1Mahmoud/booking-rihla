@@ -1,12 +1,8 @@
 import type { RequestHandler } from 'express';
 import { AppError } from '../errors/AppError.ts';
-import {
-  sessionService,
-  type SessionService,
-} from '../features/auth/sessionService.ts';
-export function requireAuth(
-  service: SessionService = sessionService,
-): RequestHandler {
+import type { SessionService } from '../features/auth/sessionService.ts';
+
+export function requireAuth(service: SessionService): RequestHandler {
   return async (request, response, next) => {
     response.set('Cache-Control', 'no-store');
     const header = request.headers.authorization;

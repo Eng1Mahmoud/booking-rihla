@@ -2,14 +2,11 @@ import { Router, type RequestHandler } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { AppError } from '../../errors/AppError.ts';
 import { createTicketScanController } from './ticketScanController.ts';
-import {
-  ticketScanService,
-  type TicketScanService,
-} from './ticketScanService.ts';
+import type { TicketScanService } from './ticketScanService.ts';
 
 export function createTicketScanRouter(
   staff: RequestHandler[],
-  service: TicketScanService = ticketScanService,
+  service: TicketScanService,
 ) {
   const router = Router();
   const controller = createTicketScanController(service);

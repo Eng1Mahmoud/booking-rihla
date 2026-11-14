@@ -1,31 +1,22 @@
 import { createTripBatchController } from './tripBatchController.ts';
-import {
-  tripBatchService,
-  type TripBatchService,
-} from './tripBatchService.ts';
+import type { TripBatchService } from './tripBatchService.ts';
 import type { RequestHandler } from 'express';
 import { Router } from 'express';
 import { createTripController } from './tripController.ts';
 import type { TripService } from './tripService.ts';
 
 import { createTripSearchController } from './tripSearchController.ts';
-import {
-  tripSearchService,
-  type TripSearchService,
-} from './tripSearchService.ts';
+import type { TripSearchService } from './tripSearchService.ts';
 
 import { createTripDetailsController } from './tripDetailsController.ts';
-import {
-  tripDetailsService,
-  type TripDetailsService,
-} from './tripDetailsService.ts';
+import type { TripDetailsService } from './tripDetailsService.ts';
 
 export function createTripRouter(
   service: TripService,
   admin: RequestHandler[],
-  searchService: TripSearchService = tripSearchService,
-  detailsService: TripDetailsService = tripDetailsService,
-  batches: TripBatchService = tripBatchService,
+  searchService: TripSearchService,
+  detailsService: TripDetailsService,
+  batches: TripBatchService,
 ) {
   const router = Router();
   const controller = createTripController(service);
