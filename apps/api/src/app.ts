@@ -12,41 +12,41 @@ import { errorHandler } from './middlewares/errorHandler.ts';
 import { AppError } from './errors/AppError.ts';
 
 // Internal scheduled jobs
-import { scheduledJobRouter } from './features/operations/scheduledJobRoutes.ts';
+import { scheduledJobRouter } from './features/operations/routes/scheduledJobRoutes.ts';
 
 // Catalog, fleet, and trip routers
-import { cityRouter } from './features/cities/cityRoutes.ts';
-import { stationRouter } from './features/stations/stationRoutes.ts';
-import { busRouter } from './features/buses/busRoutes.ts';
-import { routeRouter } from './features/routes/routeRoutes.ts';
-import { tripRouter } from './features/trips/tripRoutes.ts';
-import { busTypeRouter } from './features/fleet/busTypeRoutes.ts';
-import { amenityRouter } from './features/amenities/amenityRoutes.ts';
+import { cityRouter } from './features/cities/routes/cityRoutes.ts';
+import { stationRouter } from './features/stations/routes/stationRoutes.ts';
+import { busRouter } from './features/buses/routes/busRoutes.ts';
+import { routeRouter } from './features/routes/routes/routeRoutes.ts';
+import { tripRouter } from './features/trips/routes/tripRoutes.ts';
+import { busTypeRouter } from './features/fleet/routes/busTypeRoutes.ts';
+import { amenityRouter } from './features/amenities/routes/amenityRoutes.ts';
 
 // Administrative catalog and operation routers
-import { adminBusRouter } from './features/fleet/adminBusRoutes.ts';
-import { adminFleetRouter } from './features/fleet/adminFleetRoutes.ts';
-import { adminCatalogRouter } from './features/catalog/adminCatalogRoutes.ts';
-import { operationRouter } from './features/operations/operationRoutes.ts';
+import { adminBusRouter } from './features/fleet/routes/adminBusRoutes.ts';
+import { adminFleetRouter } from './features/fleet/routes/adminFleetRoutes.ts';
+import { adminCatalogRouter } from './features/catalog/routes/adminCatalogRoutes.ts';
+import { operationRouter } from './features/operations/routes/operationRoutes.ts';
 
 // Account, authentication, and booking routers
-import { accountRouter } from './features/accounts/accountRoutes.ts';
-import { authRouter } from './features/auth/authRoutes.ts';
-import { createSessionRouter } from './features/auth/sessionRoutes.ts';
-import { passwordResetRouter } from './features/auth/passwordResetRoutes.ts';
-import { bookingRouter } from './features/bookings/bookingRoutes.ts';
+import { accountRouter } from './features/accounts/routes/accountRoutes.ts';
+import { authRouter } from './features/auth/routes/authRoutes.ts';
+import { createSessionRouter } from './features/auth/routes/sessionRoutes.ts';
+import { passwordResetRouter } from './features/auth/routes/passwordResetRoutes.ts';
+import { bookingRouter } from './features/bookings/routes/bookingRoutes.ts';
 
 // Administration and reporting routers
-import { adminBookingRouter } from './features/bookings/adminBookingRoutes.ts';
-import { ticketScanRouter } from './features/tickets/ticketScanRoutes.ts';
-import { adminStatisticsRouter } from './features/reports/adminStatisticsRoutes.ts';
-import { adminPaymentRouter } from './features/payments/adminPaymentRoutes.ts';
-import { adminUserRouter } from './features/users/adminUserRoutes.ts';
-import { administratorRouter } from './features/administrators/administratorRoutes.ts';
+import { adminBookingRouter } from './features/bookings/routes/adminBookingRoutes.ts';
+import { ticketScanRouter } from './features/tickets/routes/ticketScanRoutes.ts';
+import { adminStatisticsRouter } from './features/reports/routes/adminStatisticsRoutes.ts';
+import { adminPaymentRouter } from './features/payments/routes/adminPaymentRoutes.ts';
+import { adminUserRouter } from './features/users/routes/adminUserRoutes.ts';
+import { administratorRouter } from './features/administrators/routes/administratorRoutes.ts';
 
 // Payment callback and assistant routers
-import { paymobWebhookRouter } from './features/payments/paymobWebhookRoutes.ts';
-import { assistantRouter } from './features/assistant/assistantRoutes.ts';
+import { paymobWebhookRouter } from './features/payments/routes/paymobWebhookRoutes.ts';
+import { assistantRouter } from './features/assistant/routes/assistantRoutes.ts';
 
 export function createApp() {
   // 1. Read the frontend origins used by CORS and session CSRF protection.

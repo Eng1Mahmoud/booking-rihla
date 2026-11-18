@@ -1,6 +1,6 @@
-import { processBookingNotices } from '../features/bookings/bookingNoticeService.ts';
-import { processDepartureReminders } from '../features/tickets/departureReminderService.ts';
-import { processTicketOutbox } from '../features/tickets/ticketOutboxService.ts';
+import { processBookingNotices } from '../features/bookings/services/bookingNoticeService.ts';
+import { processDepartureReminders } from '../features/tickets/services/departureReminderService.ts';
+import { processTicketOutbox } from '../features/tickets/services/ticketOutboxService.ts';
 import 'dotenv/config';
 import { setTimeout } from 'node:timers/promises';
 import { processEmailOutbox } from '../infrastructure/email/emailOutboxService.ts';

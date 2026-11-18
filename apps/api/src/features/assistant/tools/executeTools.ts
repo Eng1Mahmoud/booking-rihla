@@ -1,10 +1,10 @@
 import { Temporal } from 'temporal-polyfill';
 import { cairoTimeZone } from '../../../utils/cairoTime.ts';
-import { tripSearchQuerySchema } from '../../trips/tripSearchSchema.ts';
-import { cityService } from '../../cities/cityService.ts';
-import { stationService } from '../../stations/stationService.ts';
-import { tripSearchService } from '../../trips/tripSearchService.ts';
-import { tripDetailsService } from '../../trips/tripDetailsService.ts';
+import { tripSearchQuerySchema } from '../../trips/schemas/tripSearchSchema.ts';
+import { cityService } from '../../cities/services/cityService.ts';
+import { stationService } from '../../stations/services/stationService.ts';
+import { tripSearchService } from '../../trips/services/tripSearchService.ts';
+import { tripDetailsService } from '../../trips/services/tripDetailsService.ts';
 import {
   getCitiesInputSchema,
   getStationsInputSchema,

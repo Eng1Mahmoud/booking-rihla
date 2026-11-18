@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
-import type { UserRole } from '../features/auth/authSchema.ts';
-import type { AuthContext } from '../features/auth/sessionService.ts';
+import type { UserRole } from '../features/auth/schemas/authSchema.ts';
+import type { AuthContext } from '../features/auth/services/sessionService.ts';
 import { AppError } from '../errors/AppError.ts';
 
 export function requireRole(...allowed: UserRole[]): RequestHandler {

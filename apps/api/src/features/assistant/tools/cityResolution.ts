@@ -3,8 +3,8 @@
  * using the live catalog. Never invent IDs.
  */
 
-import type { CityService } from '../../cities/cityService.ts';
-import type { StationService } from '../../stations/stationService.ts';
+import type { CityService } from '../../cities/services/cityService.ts';
+import type { StationService } from '../../stations/services/stationService.ts';
 import { toPublicCity } from './publicDtos.ts';
 
 const CITY_ALIASES: Record<string, string[]> = {

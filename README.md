@@ -29,6 +29,12 @@ stays with its owning code. There is no Redis/BullMQ dependency or Audit Log
 feature. HTTP request logs go to stdout, with request IDs; they are not a database
 audit table.
 
+Under `apps/api/src/features`, group each feature's files by role: `routes/`
+registers endpoints, `controllers/` handles requests and responses, `services/`
+contains business logic, and `schemas/` defines validation. Use `lib/` for
+feature-specific helpers. Create only the folders the feature needs, and keep
+specialized modules such as payment `providers/` and assistant `tools/` together.
+
 Frontend feature structure and data-flow conventions are documented in
 [CODE_CONVENTIONS.md](CODE_CONVENTIONS.md).
 

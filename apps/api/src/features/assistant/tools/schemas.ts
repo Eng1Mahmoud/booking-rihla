@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tripSearchQuerySchema } from '../../trips/tripSearchSchema.ts';
+import { tripSearchQuerySchema } from '../../trips/schemas/tripSearchSchema.ts';
 
 /** Public tool input schemas — never trust model-invented IDs without validation. */
 

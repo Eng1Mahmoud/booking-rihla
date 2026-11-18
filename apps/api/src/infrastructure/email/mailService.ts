@@ -3,7 +3,7 @@ import Mailjet, { type SendEmailV3_1 } from 'node-mailjet';
 import type {
   TicketData,
   TicketDetails,
-} from '../../features/tickets/ticketService.ts';
+} from '../../features/tickets/services/ticketService.ts';
 
 // Email templates.
 import { bookingNoticeEmail } from '../../emails/bookingNoticeEmail.ts';

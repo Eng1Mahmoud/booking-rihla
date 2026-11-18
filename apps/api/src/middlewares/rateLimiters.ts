@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { AppError } from '../errors/AppError.ts';
-import { assistantRateLimit } from '../features/assistant/assistantService.ts';
+import { assistantRateLimit } from '../features/assistant/services/assistantService.ts';
 import {
   clientRateLimitKey,
   userRateLimitKey,

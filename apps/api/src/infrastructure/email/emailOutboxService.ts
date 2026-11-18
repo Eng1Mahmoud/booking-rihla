@@ -2,7 +2,7 @@ import { processMailBatch } from './mailDeliveryService.ts';
 import {
   decryptAccountCode,
   matchesAccountCode,
-} from '../../features/auth/accountCodes.ts';
+} from '../../features/auth/lib/accountCodes.ts';
 import { sendAccountMail, type SendAccountMail } from './mailService.ts';
 
 export async function processEmailOutbox(

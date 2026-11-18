@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import type { Request, Response } from 'express';
 import { ipKeyGenerator } from 'express-rate-limit';
-import type { AuthContext } from '../features/auth/sessionService.ts';
+import type { AuthContext } from '../features/auth/services/sessionService.ts';
 
 // Forwarded client addresses affect throttling only, never authentication or permissions.
 function signedClientIP(request: Request) {

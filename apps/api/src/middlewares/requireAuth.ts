@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { AppError } from '../errors/AppError.ts';
-import { sessionService } from '../features/auth/sessionService.ts';
+import { sessionService } from '../features/auth/services/sessionService.ts';
 
 export const requireAuth: RequestHandler = async (request, response, next) => {
   response.set('Cache-Control', 'no-store');

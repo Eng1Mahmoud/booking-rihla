@@ -1,4 +1,4 @@
-import { bookingState } from '../../bookings/bookingHoldService.ts';
+import { bookingState } from '../../bookings/services/bookingHoldService.ts';
 // Minimal shared input: neither operator reads nor status serialization need a
 // checkout secret, raw event, customer credentials or provider network request.
 type PaymentStatusInput = {
