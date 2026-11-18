@@ -11,6 +11,7 @@ import {
 } from './paymentAttemptSchema.ts';
 import { paymentAttemptService } from './paymentAttemptService.ts';
 import type { AuthContext } from '../auth/sessionService.ts';
+import { requireJson } from '../../shared/requestValidation.ts';
 function bookingId(request: Request) {
   const id = bookingIdSchema.safeParse(request.params.id);
   if (
@@ -27,12 +28,7 @@ function bookingId(request: Request) {
 
 export const paymentAttemptController = {
   async prepare(request: Request, response: Response) {
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
+    requireJson(request);
     const id = bookingId(request);
     const key = paymentAttemptKeySchema.safeParse(
       request.get('Idempotency-Key'),

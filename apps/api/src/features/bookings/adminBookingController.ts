@@ -4,21 +4,20 @@ import { AppError } from '../../errors/AppError.ts';
 import { adminBookingListQuerySchema } from './adminBookingSchema.ts';
 import { bookingIdSchema, bookingDetailsQuerySchema } from './bookingSchema.ts';
 import { adminBookingService } from './adminBookingService.ts';
+import { parseInput } from '../../shared/requestValidation.ts';
 
 export const adminBookingController = {
   async list(request: Request, response: Response) {
-    const parsed = adminBookingListQuerySchema.safeParse(request.query);
-    if (!parsed.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Use limit 1-100, offset 0-100000 and optional booking reference, tripId/userId UUIDs, customer email and travelDate (YYYY-MM-DD Cairo, years 2000-9998); no other query fields',
-      );
-    const { items, total } = await adminBookingService.list(parsed.data);
+    const parsed = parseInput(
+      adminBookingListQuerySchema,
+      request.query,
+      'Use limit 1-100, offset 0-100000 and optional booking reference, tripId/userId UUIDs, customer email and travelDate (YYYY-MM-DD Cairo, years 2000-9998); no other query fields',
+    );
+    const { items, total } = await adminBookingService.list(parsed);
     sendSuccess(response, {
       items,
       total,
-      pagination: { limit: parsed.data.limit, offset: parsed.data.offset },
+      pagination: { limit: parsed.limit, offset: parsed.offset },
     });
   },
   async getById(request: Request, response: Response) {

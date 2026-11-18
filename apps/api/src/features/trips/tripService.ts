@@ -3,7 +3,7 @@ import { AppError } from '../../errors/AppError.ts';
 import {
   isCheckViolation,
   isForeignKeyViolation,
-  isRestrictViolation,
+  isReferenceConstraintViolation,
 } from '../../utils/databaseErrors.ts';
 import type {
   CreateTripInput,
@@ -176,7 +176,7 @@ export const tripService = {
         return trip ? serializeTrip(trip) : null;
       });
     } catch (error) {
-      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+      if (isReferenceConstraintViolation(error))
         throw new AppError(
           409,
           'TRIP_IN_USE',

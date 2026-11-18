@@ -8,101 +8,72 @@ import {
   createRouteSchema,
   updateRouteSchema,
 } from './routeSchema.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 
 export const routeController = {
   async list(request: Request, response: Response) {
-    const query = routeListQuerySchema.safeParse(request.query);
-    if (!query.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Use limit 1-100, offset 0-100000, optional originStationId/destinationStationId UUIDs and isActive true/false; no other query fields are supported',
-      );
-    }
-    const { items, total } = await routeService.list(query.data);
+    const query = parseInput(
+      routeListQuerySchema,
+      request.query,
+      'Use limit 1-100, offset 0-100000, optional originStationId/destinationStationId UUIDs and isActive true/false; no other query fields are supported',
+    );
+    const { items, total } = await routeService.list(query);
     sendSuccess(response, {
       items,
       total,
-      pagination: { limit: query.data.limit, offset: query.data.offset },
+      pagination: { limit: query.limit, offset: query.offset },
     });
   },
   async getById(request: Request, response: Response) {
-    const id = routeIdSchema.safeParse(request.params.id);
-    if (!id.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Route id must be a valid UUID',
-      );
-    }
-    const route = await routeService.findById(id.data);
+    const id = parseInput(
+      routeIdSchema,
+      request.params.id,
+      'Route id must be a valid UUID',
+    );
+    const route = await routeService.findById(id);
     if (!route) {
       throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
     }
     sendSuccess(response, route);
   },
   async create(request: Request, response: Response) {
-    if (!request.is('application/json')) {
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    }
-    const input = createRouteSchema.safeParse(request.body);
-    if (!input.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide distinct originStationId/destinationStationId UUIDs, estimatedDurationMinutes (integer 1-10080), and optional isActive (boolean)',
-      );
-    }
-    const route = await routeService.create(input.data);
+    requireJson(request);
+    const input = parseInput(
+      createRouteSchema,
+      request.body,
+      'Provide distinct originStationId/destinationStationId UUIDs, estimatedDurationMinutes (integer 1-10080), and optional isActive (boolean)',
+    );
+    const route = await routeService.create(input);
     sendSuccess(
       response.location('/api/v1/routes/' + route.id).status(201),
       route,
     );
   },
   async update(request: Request, response: Response) {
-    const id = routeIdSchema.safeParse(request.params.id);
-    if (!id.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Route id must be a valid UUID',
-      );
-    }
-    if (!request.is('application/json')) {
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    }
-    const input = updateRouteSchema.safeParse(request.body);
-    if (!input.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide at least one valid route field: originStationId/destinationStationId (distinct UUIDs), estimatedDurationMinutes (integer 1-10080), or isActive (boolean)',
-      );
-    }
-    const route = await routeService.update(id.data, input.data);
+    const id = parseInput(
+      routeIdSchema,
+      request.params.id,
+      'Route id must be a valid UUID',
+    );
+    requireJson(request);
+    const input = parseInput(
+      updateRouteSchema,
+      request.body,
+      'Provide at least one valid route field: originStationId/destinationStationId (distinct UUIDs), estimatedDurationMinutes (integer 1-10080), or isActive (boolean)',
+    );
+    const route = await routeService.update(id, input);
     if (!route) {
       throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
     }
     sendSuccess(response, route);
   },
   async remove(request: Request, response: Response) {
-    const id = routeIdSchema.safeParse(request.params.id);
-    if (!id.success) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Route id must be a valid UUID',
-      );
-    }
-    const route = await routeService.remove(id.data);
+    const id = parseInput(
+      routeIdSchema,
+      request.params.id,
+      'Route id must be a valid UUID',
+    );
+    const route = await routeService.remove(id);
     if (!route) {
       throw new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found');
     }

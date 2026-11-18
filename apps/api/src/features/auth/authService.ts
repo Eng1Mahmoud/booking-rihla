@@ -8,11 +8,11 @@ import type {
 } from './authSchema.ts';
 import { AppError } from '../../errors/AppError.ts';
 import {
-  newVerificationCode,
-  hashVerificationCode,
-  matchesVerificationCode,
-  encryptVerificationCode,
-} from '../../utils/authCrypto.ts';
+  encryptAccountCode,
+  generateAccountCode,
+  hashAccountCode,
+  matchesAccountCode,
+} from './accountCodes.ts';
 type Transaction = Parameters<Parameters<typeof database.transaction>[0]>[0];
 async function queueVerification(
   tx: Transaction,
@@ -25,17 +25,17 @@ async function queueVerification(
   } | null,
 ) {
   const now = Date.now();
-  let code = newVerificationCode();
+  let code = generateAccountCode();
   while (
     previous?.codeHash &&
-    hashVerificationCode(userId, code) === previous.codeHash
+    hashAccountCode('VERIFY_EMAIL', userId, code) === previous.codeHash
   )
-    code = newVerificationCode();
+    code = generateAccountCode();
   const sameWindow =
     previous && now - Date.parse(previous.windowStartedAt) < 3600000;
   const challenge = {
     userId,
-    codeHash: hashVerificationCode(userId, code),
+    codeHash: hashAccountCode('VERIFY_EMAIL', userId, code),
     expiresAt: new Date(now + 600000).toISOString(),
     attempts: 0,
     resendAfter: new Date(now + 60000).toISOString(),
@@ -57,7 +57,7 @@ async function queueVerification(
   if (!verification) throw new Error('Verification record missing');
   await tx.orm.public.EmailOutbox.create({
     userId,
-    encryptedCode: encryptVerificationCode(userId, code),
+    encryptedCode: encryptAccountCode('VERIFY_EMAIL', userId, code),
     expiresAt: challenge.expiresAt,
   });
   return verification.id;
@@ -134,7 +134,9 @@ export const authService = {
         Date.parse(challenge.expiresAt) <= Date.now()
       )
         return false;
-      if (!matchesVerificationCode(user.id, code, challenge.codeHash)) {
+      if (
+        !matchesAccountCode('VERIFY_EMAIL', user.id, code, challenge.codeHash)
+      ) {
         await tx.orm.public.EmailVerification.where({
           id: challenge.id,
         }).update({ attempts: challenge.attempts + 1 });

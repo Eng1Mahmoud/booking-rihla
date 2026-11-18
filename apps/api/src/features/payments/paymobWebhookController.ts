@@ -1,8 +1,8 @@
 import { sendSuccess } from '../../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { AppError } from '../../errors/AppError.ts';
 import { paymobWebhookService } from './paymobWebhookService.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 const querySchema = z.strictObject({
   hmac: z.string().regex(/^[a-fA-F0-9]{128}$/),
 });
@@ -12,20 +12,13 @@ export const paymobWebhookController = async (
   response: Response,
 ) => {
   response.set('Cache-Control', 'no-store');
-  if (!request.is('application/json'))
-    throw new AppError(
-      415,
-      'UNSUPPORTED_MEDIA_TYPE',
-      'Content-Type must be application/json',
-    );
-  const query = querySchema.safeParse(request.query);
-  if (!query.success)
-    throw new AppError(
-      400,
-      'VALIDATION_ERROR',
-      'Provide one valid hmac query parameter',
-    );
-  await paymobWebhookService.receive(request.body, query.data.hmac);
+  requireJson(request);
+  const query = parseInput(
+    querySchema,
+    request.query,
+    'Provide one valid hmac query parameter',
+  );
+  await paymobWebhookService.receive(request.body, query.hmac);
   // Acknowledge durable receipt only; this is never a booking/payment result.
   sendSuccess(response.status(200), { received: true });
 };

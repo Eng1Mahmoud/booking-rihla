@@ -1,12 +1,15 @@
-import { lockAccountEmail, revokeAccountSessions } from '../accounts/accountSecurity.ts';
+import {
+  lockAccountEmail,
+  revokeAccountSessions,
+} from '../accounts/accountSecurity.ts';
 import { hash, argon2id } from 'argon2';
 import { AppError } from '../../errors/AppError.ts';
 import {
-  newVerificationCode,
-  hashPasswordResetCode,
-  matchesPasswordResetCode,
-  encryptPasswordResetCode,
-} from '../../utils/authCrypto.ts';
+  encryptAccountCode,
+  generateAccountCode,
+  hashAccountCode,
+  matchesAccountCode,
+} from './accountCodes.ts';
 import type { ResetPasswordInput } from './passwordResetSchema.ts';
 export const passwordResetService = {
   async requestReset(email: string): Promise<void> {
@@ -27,15 +30,15 @@ export const passwordResetService = {
           (sameWindow && previous.sendCount >= 5))
       )
         return;
-      let code = newVerificationCode();
+      let code = generateAccountCode();
       while (
         previous?.codeHash &&
-        hashPasswordResetCode(user.id, code) === previous.codeHash
+        hashAccountCode('PASSWORD_RESET', user.id, code) === previous.codeHash
       )
-        code = newVerificationCode();
+        code = generateAccountCode();
       const challenge = {
         userId: user.id,
-        codeHash: hashPasswordResetCode(user.id, code),
+        codeHash: hashAccountCode('PASSWORD_RESET', user.id, code),
         expiresAt: new Date(now + 600000).toISOString(),
         consumedAt: null,
         attempts: 0,
@@ -57,7 +60,7 @@ export const passwordResetService = {
       await tx.orm.public.EmailOutbox.create({
         userId: user.id,
         purpose: 'PASSWORD_RESET',
-        encryptedCode: encryptPasswordResetCode(user.id, code),
+        encryptedCode: encryptAccountCode('PASSWORD_RESET', user.id, code),
         expiresAt: challenge.expiresAt,
       });
     });
@@ -89,7 +92,9 @@ export const passwordResetService = {
         Date.parse(challenge.expiresAt) <= Date.now()
       )
         return false;
-      if (!matchesPasswordResetCode(user.id, code, challenge.codeHash)) {
+      if (
+        !matchesAccountCode('PASSWORD_RESET', user.id, code, challenge.codeHash)
+      ) {
         await tx.orm.public.PasswordReset.where({ id: challenge.id }).update({
           attempts: challenge.attempts + 1,
         });

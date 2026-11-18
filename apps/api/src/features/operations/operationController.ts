@@ -9,11 +9,10 @@ import {
   configuredRefundService,
   refundReadService,
 } from '../refunds/refundService.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 function id(value: unknown) {
-  const parsed = refundIdSchema.safeParse(value);
-  if (!parsed.success)
-    throw new AppError(400, 'VALIDATION_ERROR', 'A valid UUID is required');
-  return parsed.data;
+  const parsed = parseInput(refundIdSchema, value, 'A valid UUID is required');
+  return parsed;
 }
 export const operationController = {
   async refundStatistics(_request: Request, response: Response) {
@@ -21,46 +20,37 @@ export const operationController = {
     sendSuccess(response, await refundStatisticsService.get());
   },
   async cancel(request: Request, response: Response) {
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    const input = cancellationSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide a cancellation reason of 5-500 characters',
-      );
+    requireJson(request);
+    const input = parseInput(
+      cancellationSchema,
+      request.body,
+      'Provide a cancellation reason of 5-500 characters',
+    );
     response.setHeader('Cache-Control', 'no-store');
     sendSuccess(
       response,
       await tripCancellationService.cancel(
         response.locals.auth,
         id(request.params.id),
-        input.data.reason,
+        input.reason,
       ),
     );
   },
   async listRefunds(request: Request, response: Response) {
-    const parsed = paginationQuerySchema.safeParse(request.query);
-    if (!parsed.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Use supported pagination fields',
-      );
+    const parsed = parseInput(
+      paginationQuerySchema,
+      request.query,
+      'Use supported pagination fields',
+    );
     response.setHeader('Cache-Control', 'no-store');
     const { items, total } = await refundReadService.list(
-      parsed.data.limit,
-      parsed.data.offset,
+      parsed.limit,
+      parsed.offset,
     );
     sendSuccess(response, {
       items,
       total,
-      pagination: parsed.data,
+      pagination: parsed,
     });
   },
   async getRefund(request: Request, response: Response) {

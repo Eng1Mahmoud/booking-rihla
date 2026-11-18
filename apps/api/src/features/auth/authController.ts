@@ -1,38 +1,27 @@
 import { sendSuccess } from '../../utils/apiResponse.ts';
 import type { Request, Response } from 'express';
-import { AppError } from '../../errors/AppError.ts';
 import {
   registerSchema,
   verifyEmailSchema,
   resendVerificationSchema,
 } from './authSchema.ts';
 import { authService } from './authService.ts';
-function requireJson(request: Request) {
-  if (!request.is('application/json'))
-    throw new AppError(
-      415,
-      'UNSUPPORTED_MEDIA_TYPE',
-      'Content-Type must be application/json',
-    );
-  if (Object.keys(request.query).length)
-    throw new AppError(
-      400,
-      'VALIDATION_ERROR',
-      'No query parameters are supported',
-    );
-}
+import {
+  parseInput,
+  requireJson,
+  requireNoQuery,
+} from '../../shared/requestValidation.ts';
 
 export const authController = {
   async register(request: Request, response: Response) {
     requireJson(request);
-    const input = registerSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only name (1-100 characters), email, international phone, password (12-128 characters, at most 512 bytes), and optional language ar/en',
-      );
-    const verificationId = await authService.register(input.data);
+    requireNoQuery(request);
+    const input = parseInput(
+      registerSchema,
+      request.body,
+      'Provide only name (1-100 characters), email, international phone, password (12-128 characters, at most 512 bytes), and optional language ar/en',
+    );
+    const verificationId = await authService.register(input);
     sendSuccess(
       response.status(202),
       { verificationId },
@@ -41,26 +30,24 @@ export const authController = {
   },
   async verifyEmail(request: Request, response: Response) {
     requireJson(request);
-    const input = verifyEmailSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only email, verificationId (UUID) and a six-digit code string',
-      );
-    await authService.verifyEmail(input.data);
+    requireNoQuery(request);
+    const input = parseInput(
+      verifyEmailSchema,
+      request.body,
+      'Provide only email, verificationId (UUID) and a six-digit code string',
+    );
+    await authService.verifyEmail(input);
     sendSuccess(response, undefined, 'EMAIL_VERIFIED');
   },
   async resendVerification(request: Request, response: Response) {
     requireJson(request);
-    const input = resendVerificationSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only email and verificationId (UUID)',
-      );
-    await authService.resendVerification(input.data);
+    requireNoQuery(request);
+    const input = parseInput(
+      resendVerificationSchema,
+      request.body,
+      'Provide only email and verificationId (UUID)',
+    );
+    await authService.resendVerification(input);
     sendSuccess(response.status(202), undefined, 'VERIFICATION_SENT');
   },
 };

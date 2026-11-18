@@ -1,10 +1,8 @@
 import { processMailBatch } from './mailDeliveryService.ts';
 import {
-  decryptVerificationCode,
-  matchesVerificationCode,
-  decryptPasswordResetCode,
-  matchesPasswordResetCode,
-} from '../../utils/authCrypto.ts';
+  decryptAccountCode,
+  matchesAccountCode,
+} from '../../features/auth/accountCodes.ts';
 import { sendAccountMail, type SendAccountMail } from './mailService.ts';
 
 export async function processEmailOutbox(
@@ -40,6 +38,7 @@ export async function processEmailOutbox(
         if (message.purpose !== 'PASSWORD_CHANGED') {
           if (!user.isActive || !message.encryptedCode)
             return 'discarded' as const;
+          let currentCodeHash: string;
           if (message.purpose === 'VERIFY_EMAIL') {
             const verification = await tx.orm.public.EmailVerification.where({
               userId: user.id,
@@ -52,9 +51,7 @@ export async function processEmailOutbox(
               Date.parse(verification.expiresAt) <= Date.now()
             )
               return 'discarded' as const;
-            code = decryptVerificationCode(user.id, message.encryptedCode);
-            if (!matchesVerificationCode(user.id, code, verification.codeHash))
-              return 'discarded' as const;
+            currentCodeHash = verification.codeHash;
           } else {
             const reset = await tx.orm.public.PasswordReset.where({
               userId: user.id,
@@ -67,10 +64,17 @@ export async function processEmailOutbox(
               Date.parse(reset.expiresAt) <= Date.now()
             )
               return 'discarded' as const;
-            code = decryptPasswordResetCode(user.id, message.encryptedCode);
-            if (!matchesPasswordResetCode(user.id, code, reset.codeHash))
-              return 'discarded' as const;
+            currentCodeHash = reset.codeHash;
           }
+          code = decryptAccountCode(
+            message.purpose,
+            user.id,
+            message.encryptedCode,
+          );
+          if (
+            !matchesAccountCode(message.purpose, user.id, code, currentCodeHash)
+          )
+            return 'discarded' as const;
         }
         // Mailjet failures are retried by processMailBatch.
         await send({

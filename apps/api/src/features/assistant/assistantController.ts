@@ -12,6 +12,7 @@ import {
   isAssistantEnabled,
   streamAssistantReply,
 } from './assistantService.ts';
+import { parseInput } from '../../shared/requestValidation.ts';
 
 const incomingRequestSchema = z.object({
   messages: z.array(z.unknown()).min(1).max(100),
@@ -113,20 +114,19 @@ export function createAssistantController() {
         return;
       }
       const ownerId = await conversationOwner(request);
-      const incoming = incomingRequestSchema.safeParse(request.body);
-      if (!incoming.success)
-        throw new AppError(
-          400,
-          'VALIDATION_ERROR',
-          'Invalid assistant request',
-        );
+      const incoming = parseInput(
+        incomingRequestSchema,
+        request.body,
+        'Invalid assistant request',
+      );
 
       const messages: { role: 'user' | 'assistant'; content: string }[] = [];
-      for (const raw of incoming.data.messages.slice(-20)) {
-        const parsed = incomingMessageSchema.safeParse(raw);
-        if (!parsed.success)
-          throw new AppError(400, 'VALIDATION_ERROR', 'Invalid message');
-        const message = parsed.data;
+      for (const raw of incoming.messages.slice(-20)) {
+        const message = parseInput(
+          incomingMessageSchema,
+          raw,
+          'Invalid message',
+        );
         const content =
           message.content ??
           (message.parts ?? [])
@@ -138,20 +138,18 @@ export function createAssistantController() {
                 part.type !== 'text'
               )
                 return '';
-              const text = textPartSchema.safeParse(part);
-              if (!text.success)
-                throw new AppError(
-                  400,
-                  'VALIDATION_ERROR',
-                  'Invalid text part',
-                );
-              return text.data.text;
+              const text = parseInput(
+                textPartSchema,
+                part,
+                'Invalid text part',
+              );
+              return text.text;
             })
             .join('');
         if (content.trim()) messages.push({ role: message.role, content });
       }
       const parsed = assistantRequestSchema.safeParse({
-        ...incoming.data,
+        ...incoming,
         messages,
       });
       if (!parsed.success || parsed.data.messages.at(-1)?.role !== 'user') {

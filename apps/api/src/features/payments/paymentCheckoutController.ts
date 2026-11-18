@@ -8,6 +8,7 @@ import {
 import { paymentAttemptBodySchema } from './paymentAttemptSchema.ts';
 import { paymentCheckoutService } from './paymentCheckoutService.ts';
 import type { AuthContext } from '../auth/sessionService.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 function id(request: Request) {
   const parsed = bookingIdSchema.safeParse(request.params.id);
   if (
@@ -25,18 +26,12 @@ function id(request: Request) {
 export const paymentCheckoutController = {
   async refresh(request: Request, response: Response) {
     const bookingId = id(request);
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    if (!paymentAttemptBodySchema.safeParse(request.body).success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide an empty JSON object',
-      );
+    requireJson(request);
+    parseInput(
+      paymentAttemptBodySchema,
+      request.body,
+      'Provide an empty JSON object',
+    );
     const auth = response.locals['auth'] as AuthContext;
     sendSuccess(
       response.set('Cache-Control', 'no-store'),
@@ -44,19 +39,13 @@ export const paymentCheckoutController = {
     );
   },
   async start(request: Request, response: Response) {
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
+    requireJson(request);
     const bookingId = id(request);
-    if (!paymentAttemptBodySchema.safeParse(request.body).success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide an empty JSON object',
-      );
+    parseInput(
+      paymentAttemptBodySchema,
+      request.body,
+      'Provide an empty JSON object',
+    );
     const data = await paymentCheckoutService.start(
       response.locals['auth'] as AuthContext,
       bookingId,

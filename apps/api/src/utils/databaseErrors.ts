@@ -11,8 +11,8 @@ export function isForeignKeyViolation(error: unknown): boolean {
   return hasSqlState(error, '23503');
 }
 
-export function isRestrictViolation(error: unknown): boolean {
-  return hasSqlState(error, '23001');
+export function isReferenceConstraintViolation(error: unknown): boolean {
+  return isForeignKeyViolation(error) || hasSqlState(error, '23001');
 }
 
 export function isUniqueViolation(error: unknown, constraint: string): boolean {

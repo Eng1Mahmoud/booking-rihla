@@ -1,8 +1,14 @@
 import { adminMiddleware } from '../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
-import { amenityController } from './amenityController.ts';
+import { createFleetMetadataController } from '../fleet/fleetMetadataController.ts';
+import { amenityService } from './amenityService.ts';
 
 export const amenityRouter = Router();
+const amenityController = createFleetMetadataController(amenityService, {
+  basePath: '/api/v1/amenities',
+  missingCode: 'AMENITY_NOT_FOUND',
+  missingMessage: 'Amenity not found',
+});
 amenityRouter.use(...adminMiddleware);
 amenityRouter.get('/', amenityController.list);
 amenityRouter.get('/:id', amenityController.getById);

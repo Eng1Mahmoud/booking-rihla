@@ -1,8 +1,5 @@
 import { AppError } from '../../errors/AppError.ts';
-import {
-  isForeignKeyViolation,
-  isRestrictViolation,
-} from '../../utils/databaseErrors.ts';
+import { isReferenceConstraintViolation } from '../../utils/databaseErrors.ts';
 import type {
   CreateCityInput,
   CityListQuery,
@@ -57,7 +54,7 @@ export const cityService = {
         return removed;
       });
     } catch (error) {
-      if (isForeignKeyViolation(error) || isRestrictViolation(error)) {
+      if (isReferenceConstraintViolation(error)) {
         throw new AppError(
           409,
           'CITY_HAS_STATIONS',

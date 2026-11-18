@@ -9,15 +9,11 @@ import {
   bookingListQuerySchema,
   bookingDetailsQuerySchema,
 } from './bookingSchema.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 const owner = (response: Response) => response.locals['auth'] as AuthContext;
 export const bookingController = {
   async create(request: Request, response: Response) {
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
+    requireJson(request);
     const input = createBookingSchema.safeParse(request.body);
     if (
       !input.success ||
@@ -35,14 +31,12 @@ export const bookingController = {
     );
   },
   async list(request: Request, response: Response) {
-    const query = bookingListQuerySchema.safeParse(request.query);
-    if (!query.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only a supported booking filter and valid limit/offset pagination',
-      );
-    const data = await bookingService.list(owner(response).user.id, query.data);
+    const query = parseInput(
+      bookingListQuerySchema,
+      request.query,
+      'Provide only a supported booking filter and valid limit/offset pagination',
+    );
+    const data = await bookingService.list(owner(response).user.id, query);
     sendSuccess(response, data);
   },
   async getById(request: Request, response: Response) {

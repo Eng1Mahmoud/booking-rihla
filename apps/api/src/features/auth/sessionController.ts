@@ -7,6 +7,11 @@ import {
   updateProfileSchema,
 } from './authSchema.ts';
 import { sessionService, type AuthContext } from './sessionService.ts';
+import {
+  parseInput,
+  requireJson,
+  requireNoQuery,
+} from '../../shared/requestValidation.ts';
 export function refreshCookieName() {
   return process.env.NODE_ENV === 'production'
     ? '__Secure-bus_refresh'
@@ -26,41 +31,26 @@ function refreshCookie(request: Request) {
     ? token
     : undefined;
 }
-function validateJson(request: Request) {
-  if (!request.is('application/json'))
-    throw new AppError(
-      415,
-      'UNSUPPORTED_MEDIA_TYPE',
-      'Content-Type must be application/json',
-    );
-  if (Object.keys(request.query).length)
-    throw new AppError(
-      400,
-      'VALIDATION_ERROR',
-      'No query parameters are supported',
-    );
-}
 function validateEmpty(request: Request) {
-  validateJson(request);
-  if (!emptySessionSchema.safeParse(request.body).success)
-    throw new AppError(
-      400,
-      'VALIDATION_ERROR',
-      'Request body must be an empty object',
-    );
+  requireJson(request);
+  requireNoQuery(request);
+  parseInput(
+    emptySessionSchema,
+    request.body,
+    'Request body must be an empty object',
+  );
 }
 
 export const sessionController = {
   async login(request: Request, response: Response) {
-    validateJson(request);
-    const input = loginSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only a valid email and password (12-128 characters)',
-      );
-    sendSuccess(response, await sessionService.login(input.data));
+    requireJson(request);
+    requireNoQuery(request);
+    const input = parseInput(
+      loginSchema,
+      request.body,
+      'Provide only a valid email and password (12-128 characters)',
+    );
+    sendSuccess(response, await sessionService.login(input));
   },
   async refresh(request: Request, response: Response) {
     validateEmpty(request);
@@ -78,28 +68,22 @@ export const sessionController = {
     }
   },
   async me(request: Request, response: Response) {
-    if (Object.keys(request.query).length)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'No query parameters are supported',
-      );
+    requireNoQuery(request);
     const auth = response.locals['auth'] as AuthContext;
     sendSuccess(response, auth.user);
   },
   async updateProfile(request: Request, response: Response) {
-    validateJson(request);
-    const input = updateProfileSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only name and international phone',
-      );
+    requireJson(request);
+    requireNoQuery(request);
+    const input = parseInput(
+      updateProfileSchema,
+      request.body,
+      'Provide only name and international phone',
+    );
     const auth = response.locals['auth'] as AuthContext;
     sendSuccess(
       response,
-      await sessionService.updateProfile(auth.user.id, input.data),
+      await sessionService.updateProfile(auth.user.id, input),
     );
   },
   async logout(request: Request, response: Response) {

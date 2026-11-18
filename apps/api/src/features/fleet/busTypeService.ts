@@ -1,8 +1,7 @@
 import { AppError } from '../../errors/AppError.ts';
 import {
   isUniqueViolation,
-  isForeignKeyViolation,
-  isRestrictViolation,
+  isReferenceConstraintViolation,
 } from '../../utils/databaseErrors.ts';
 import type {
   FleetMetadata,
@@ -17,7 +16,7 @@ function writeError(error: unknown): never {
       'BUS_TYPE_CODE_EXISTS',
       'Bus type code already exists',
     );
-  if (isForeignKeyViolation(error) || isRestrictViolation(error))
+  if (isReferenceConstraintViolation(error))
     throw new AppError(409, 'BUS_TYPE_IN_USE', 'Bus type is assigned to a bus');
   throw error;
 }

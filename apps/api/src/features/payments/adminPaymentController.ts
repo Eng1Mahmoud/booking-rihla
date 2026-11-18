@@ -7,21 +7,20 @@ import {
 } from './adminPaymentSchema.ts';
 import { bookingDetailsQuerySchema } from '../bookings/bookingSchema.ts';
 import { adminPaymentService } from './adminPaymentService.ts';
+import { parseInput } from '../../shared/requestValidation.ts';
 
 export const adminPaymentController = {
   async list(request: Request, response: Response) {
-    const query = adminPaymentListQuerySchema.safeParse(request.query);
-    if (!query.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide bounded pagination and supported exact payment filters only',
-      );
-    const { items, total } = await adminPaymentService.list(query.data);
+    const query = parseInput(
+      adminPaymentListQuerySchema,
+      request.query,
+      'Provide bounded pagination and supported exact payment filters only',
+    );
+    const { items, total } = await adminPaymentService.list(query);
     sendSuccess(response, {
       items,
       total,
-      pagination: { limit: query.data.limit, offset: query.data.offset },
+      pagination: { limit: query.limit, offset: query.offset },
     });
   },
   async getById(request: Request, response: Response) {

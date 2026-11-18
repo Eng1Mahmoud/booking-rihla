@@ -2,7 +2,7 @@ import { AppError } from '../../errors/AppError.ts';
 import {
   isUniqueViolation,
   isForeignKeyViolation,
-  isRestrictViolation,
+  isReferenceConstraintViolation,
   isCheckViolation,
 } from '../../utils/databaseErrors.ts';
 import type {
@@ -122,7 +122,7 @@ export const routeService = {
         return removed;
       });
     } catch (error) {
-      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+      if (isReferenceConstraintViolation(error))
         throw new AppError(
           409,
           'ROUTE_IN_USE',

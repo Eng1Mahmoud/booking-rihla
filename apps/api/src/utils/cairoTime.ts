@@ -15,9 +15,3 @@ export function cairoDayBounds(date: string) {
 export function cairoToday() {
   return Temporal.Now.plainDateISO(cairoTimeZone).toString();
 }
-export function cairoDeparture(date: string, time: string) {
-  return Temporal.PlainDate.from(date)
-    .toZonedDateTime({ timeZone: cairoTimeZone, plainTime: time })
-    .toInstant()
-    .toString();
-}

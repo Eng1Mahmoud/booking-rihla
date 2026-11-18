@@ -1,7 +1,7 @@
 import { AppError } from '../../errors/AppError.ts';
 import {
   isForeignKeyViolation,
-  isRestrictViolation,
+  isReferenceConstraintViolation,
 } from '../../utils/databaseErrors.ts';
 import type {
   CreateStationInput,
@@ -72,7 +72,7 @@ export const stationService = {
         return removed;
       });
     } catch (error) {
-      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+      if (isReferenceConstraintViolation(error))
         throw new AppError(
           409,
           'STATION_HAS_ROUTES',

@@ -10,6 +10,7 @@ import {
   updateAdministratorRoleSchema,
   updateAdministratorStatusSchema,
 } from './administratorSchema.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 function id(request: Request) {
   const parsed = administratorIdSchema.safeParse(request.params.id);
   if (
@@ -25,18 +26,16 @@ function id(request: Request) {
 }
 export const administratorController = {
   async list(request: Request, response: Response) {
-    const query = administratorListQuerySchema.safeParse(request.query);
-    if (!query.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Use bounded limit/offset and optional email, role ADMIN/SUPER_ADMIN and isActive true/false',
-      );
-    const { items, total } = await administratorService.list(query.data);
+    const query = parseInput(
+      administratorListQuerySchema,
+      request.query,
+      'Use bounded limit/offset and optional email, role ADMIN/SUPER_ADMIN and isActive true/false',
+    );
+    const { items, total } = await administratorService.list(query);
     sendSuccess(response, {
       items,
       total,
-      pagination: { limit: query.data.limit, offset: query.data.offset },
+      pagination: { limit: query.limit, offset: query.offset },
     });
   },
   async getById(request: Request, response: Response) {
@@ -51,46 +50,32 @@ export const administratorController = {
   },
   async updateRole(request: Request, response: Response) {
     const target = id(request);
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    const input = updateAdministratorRoleSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only role USER, ADMIN or SUPER_ADMIN',
-      );
+    requireJson(request);
+    const input = parseInput(
+      updateAdministratorRoleSchema,
+      request.body,
+      'Provide only role USER, ADMIN or SUPER_ADMIN',
+    );
     const user = await administratorService.updateRole(
       response.locals['auth'] as AuthContext,
       target,
-      input.data,
+      input,
     );
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'Account not found');
     sendSuccess(response, user);
   },
   async updateStatus(request: Request, response: Response) {
     const target = id(request);
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    const input = updateAdministratorStatusSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only isActive as a boolean',
-      );
+    requireJson(request);
+    const input = parseInput(
+      updateAdministratorStatusSchema,
+      request.body,
+      'Provide only isActive as a boolean',
+    );
     const user = await administratorService.updateStatus(
       response.locals['auth'] as AuthContext,
       target,
-      input.data,
+      input,
     );
     if (!user)
       throw new AppError(

@@ -4,8 +4,7 @@ import type { db as database } from '../../prisma/db.ts';
 import { AppError } from '../../errors/AppError.ts';
 import {
   isUniqueViolation,
-  isForeignKeyViolation,
-  isRestrictViolation,
+  isReferenceConstraintViolation,
 } from '../../utils/databaseErrors.ts';
 import type {
   CreateBusInput,
@@ -216,7 +215,7 @@ export const busService = {
           'PLATE_NUMBER_EXISTS',
           'A bus with this plate number already exists',
         );
-      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+      if (isReferenceConstraintViolation(error))
         throw new AppError(
           409,
           'BUS_IN_USE',
@@ -239,7 +238,7 @@ export const busService = {
         return removed;
       });
     } catch (error) {
-      if (isForeignKeyViolation(error) || isRestrictViolation(error))
+      if (isReferenceConstraintViolation(error))
         throw new AppError(
           409,
           'BUS_IN_USE',

@@ -8,6 +8,7 @@ import {
   updateUserStatusSchema,
 } from './adminUserSchema.ts';
 import { adminUserService } from './adminUserService.ts';
+import { parseInput, requireJson } from '../../shared/requestValidation.ts';
 
 function id(request: Request) {
   const parsed = adminUserIdSchema.safeParse(request.params.id);
@@ -24,18 +25,16 @@ function id(request: Request) {
 }
 export const adminUserController = {
   async list(request: Request, response: Response) {
-    const query = adminUserListQuerySchema.safeParse(request.query);
-    if (!query.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
-      );
-    const { items, total } = await adminUserService.list(query.data);
+    const query = parseInput(
+      adminUserListQuerySchema,
+      request.query,
+      'Use limit 1-100, offset 0-100000, optional email, international phone and isActive true/false; no other query fields',
+    );
+    const { items, total } = await adminUserService.list(query);
     sendSuccess(response, {
       items,
       total,
-      pagination: { limit: query.data.limit, offset: query.data.offset },
+      pagination: { limit: query.limit, offset: query.offset },
     });
   },
   async getById(request: Request, response: Response) {
@@ -46,20 +45,13 @@ export const adminUserController = {
   },
   async updateStatus(request: Request, response: Response) {
     const userId = id(request);
-    if (!request.is('application/json'))
-      throw new AppError(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Content-Type must be application/json',
-      );
-    const input = updateUserStatusSchema.safeParse(request.body);
-    if (!input.success)
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Provide only isActive as a boolean',
-      );
-    const user = await adminUserService.updateStatus(userId, input.data);
+    requireJson(request);
+    const input = parseInput(
+      updateUserStatusSchema,
+      request.body,
+      'Provide only isActive as a boolean',
+    );
+    const user = await adminUserService.updateStatus(userId, input);
     if (!user)
       throw new AppError(404, 'USER_NOT_FOUND', 'Passenger account not found');
     sendSuccess(response, user);

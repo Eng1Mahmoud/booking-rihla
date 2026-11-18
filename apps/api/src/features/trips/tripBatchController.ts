@@ -3,14 +3,10 @@ import type { Request, Response } from 'express';
 import { AppError } from '../../errors/AppError.ts';
 import { tripBatchSchema, tripBatchQuerySchema } from './tripBatchSchema.ts';
 import { tripBatchService } from './tripBatchService.ts';
+import { requireJson } from '../../shared/requestValidation.ts';
 
 function input(request: Request) {
-  if (!request.is('application/json'))
-    throw new AppError(
-      415,
-      'UNSUPPORTED_MEDIA_TYPE',
-      'Content-Type must be application/json',
-    );
+  requireJson(request);
   const parsed = tripBatchSchema.safeParse(request.body);
   if (!parsed.success || !tripBatchQuerySchema.safeParse(request.query).success)
     throw new AppError(
