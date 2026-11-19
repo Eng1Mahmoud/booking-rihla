@@ -1,5 +1,5 @@
 import { bookingState } from '../../bookings/services/bookingHoldService.ts';
-import { busMetadata } from '../../../utils/busMetadata.ts';
+import { serializeBusSummary } from '../../buses/services/busService.ts';
 import type { db as database } from '../../../prisma/db.ts';
 
 // Search, details and seats share the same passenger eligibility rules.
@@ -28,12 +28,7 @@ export const tripDetailsService = {
     if (!trip || !trip.bus) return null;
     return {
       ...trip,
-      bus: {
-        id: trip.bus.id,
-        seatCount: trip.bus.seatCount,
-        seatLayout: trip.bus.seatLayout,
-        ...busMetadata(trip.bus),
-      },
+      bus: serializeBusSummary(trip.bus),
       departureAt: new Date(trip.departureAt).toISOString(),
       arrivalAt: new Date(trip.arrivalAt).toISOString(),
     };

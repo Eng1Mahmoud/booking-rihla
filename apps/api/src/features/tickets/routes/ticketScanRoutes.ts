@@ -1,4 +1,3 @@
-import { ticketScanLimiter } from '../../../middlewares/rateLimiters.ts';
 import { gateStaffMiddleware } from '../../../middlewares/authorizationMiddleware.ts';
 import { Router } from 'express';
 
@@ -10,6 +9,5 @@ export const ticketScanRouter = Router();
 ticketScanRouter.post(
   '/scan',
   ...gateStaffMiddleware,
-  ticketScanLimiter,
   ticketScanController.scan,
 );

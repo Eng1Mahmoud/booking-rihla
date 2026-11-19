@@ -29,11 +29,6 @@ function boundedSetting(name: string, fallback: number, maximum: number) {
 
 export const assistantModel =
   process.env.GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
-export const assistantRateLimit = boundedSetting(
-  'AI_RATE_LIMIT_PER_MINUTE',
-  20,
-  1000,
-);
 export const assistantTimeoutMs = boundedSetting(
   'AI_REQUEST_TIMEOUT_MS',
   30000,

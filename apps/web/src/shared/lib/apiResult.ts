@@ -1,6 +1,6 @@
 import { unstable_rethrow } from 'next/navigation';
 
-// HTTP status supports action error handling; Route Handlers omit status/retryAfter from JSON.
+// HTTP status supports action error handling; Route Handlers set it on the response.
 export type ApiResult<T = unknown> = {
   success: boolean;
   code: string;
@@ -8,7 +8,6 @@ export type ApiResult<T = unknown> = {
   data?: T;
   requestId?: string;
   status: number;
-  retryAfter?: string;
 };
 
 // One error shape for HTTP failures in both server and browser code.

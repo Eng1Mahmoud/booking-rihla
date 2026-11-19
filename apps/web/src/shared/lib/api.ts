@@ -5,7 +5,6 @@ import { getSessionCookies } from './session';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { apiFailure, type ApiResult } from './apiResult';
-import { backendClientContext } from './clientIdentity';
 
 // Shared options for all backend requests.
 export type ApiOptions = {
@@ -14,7 +13,6 @@ export type ApiOptions = {
   headers?: HeadersInit;
   signal?: AbortSignal;
   locale?: string;
-  requestHeaders?: Headers; // Incoming browser request headers, used to read its IP.
   accessToken?: string | null; // null explicitly sends no access token.
   refreshToken?: string;
 };
@@ -50,15 +48,7 @@ export async function apiFetch<T = unknown>(
 
     // 2. Set shared headers. Credentials are supplied by the server-side caller.
     const outgoingHeaders = new Headers(options.headers);
-    for (const name of [
-      'Authorization',
-      'Cookie',
-      'Host',
-      'Origin',
-      'X-Web-Client-IP',
-      'X-Web-Client-Time',
-      'X-Web-Client-Signature',
-    ]) {
+    for (const name of ['Authorization', 'Cookie', 'Host', 'Origin']) {
       outgoingHeaders.delete(name);
     }
     outgoingHeaders.set('Content-Type', 'application/json');
@@ -77,23 +67,13 @@ export async function apiFetch<T = unknown>(
       );
     }
 
-    // 3. Add signed client IP headers when that feature is enabled.
-    const clientHeaders = await backendClientContext(
-      method,
-      url,
-      options.requestHeaders,
-    );
-    for (const [name, value] of Object.entries(clientHeaders)) {
-      outgoingHeaders.set(name, value);
-    }
-
-    // 4. Keep a supplied string body, or serialize other defined values as JSON.
+    // 3. Keep a supplied string body, or serialize other defined values as JSON.
     const requestBody =
       typeof options.body === 'string' || options.body === undefined
         ? options.body
         : JSON.stringify(options.body);
 
-    // 5. Send without caching or redirects; stop after 20 seconds or caller abort.
+    // 4. Send without caching or redirects; stop after 20 seconds or caller abort.
     const timeoutSignal = AbortSignal.timeout(20000);
     const response = await fetch(url, {
       method,
@@ -106,14 +86,14 @@ export async function apiFetch<T = unknown>(
         : timeoutSignal,
     });
 
-    // 6. Require valid JSON matching our response envelope and HTTP status.
+    // 5. Require valid JSON matching our response envelope and HTTP status.
     const responseBody = await response.json().catch(() => null);
     const parsed = apiResponseSchema.safeParse(responseBody);
     if (!parsed.success || parsed.data.success !== response.ok) {
       return apiFailure(502, 'UPSTREAM_ERROR', locale);
     }
 
-    // 7. Return the result with HTTP status and retry metadata.
+    // 6. Return the result with its HTTP status.
     const { requestId, ...backendResult } = parsed.data;
     const result: ApiResult<T> = {
       ...backendResult,
@@ -136,10 +116,6 @@ export async function apiFetch<T = unknown>(
 
     if (requestId && response.status >= 500) {
       result.requestId = requestId;
-    }
-    const retryAfter = response.headers.get('retry-after');
-    if (retryAfter) {
-      result.retryAfter = retryAfter;
     }
     return result;
   } catch (error) {

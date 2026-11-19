@@ -1,5 +1,5 @@
 import { AppError } from '../../../errors/AppError.ts';
-import { parseAndVerifyTicketQr } from '../../../utils/ticketQr.ts';
+import { parseAndVerifyTicketQr } from '../lib/ticketQr.ts';
 import { ticketRecords, serializeTicketDetails } from './ticketService.ts';
 import { lockBookingTrip } from '../../bookings/services/bookingHoldService.ts';
 

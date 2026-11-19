@@ -212,10 +212,6 @@ export const apiMessages: Record<string, { ar: string; en: string }> = {
     ar: 'رقم لوحة الحافلة مستخدم بالفعل.',
     en: 'A bus with this plate number already exists',
   },
-  RATE_LIMITED: {
-    ar: 'محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.',
-    en: 'Too many requests; try again later',
-  },
   REFUND_NOT_FOUND: {
     ar: 'عملية الاسترداد غير موجودة.',
     en: 'Refund not found',

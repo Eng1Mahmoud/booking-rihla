@@ -27,7 +27,6 @@ export async function authMiddleware(
   if (!protectedRoute && !isServerAction && !isIndex) return response;
 
   const session = getSessionCookies(request.cookies);
-  const options = { locale, requestHeaders: request.headers };
 
   if (!session.access && !session.refresh) {
     return protectedRoute ? handleAuthFailure(401) : response;
@@ -35,7 +34,7 @@ export async function authMiddleware(
 
   // 1. Check the current session.
   let userResult = await apiFetch<AuthUser>('auth/me', {
-    ...options,
+    locale,
     accessToken: session.access ?? null,
   });
 
@@ -47,7 +46,7 @@ export async function authMiddleware(
     /^[a-f0-9]{64}$/.test(session.refresh)
   ) {
     const refreshResult = await apiFetch<AuthTokens>('auth/refresh', {
-      ...options,
+      locale,
       method: 'POST',
       body: {},
       accessToken: null,
@@ -63,7 +62,7 @@ export async function authMiddleware(
       setSessionCookies(response.cookies, tokens.data);
       response.headers.set('Cache-Control', 'private, no-store');
       userResult = await apiFetch<AuthUser>('auth/me', {
-        ...options,
+        locale,
         accessToken: tokens.data.accessToken,
       });
     } else {

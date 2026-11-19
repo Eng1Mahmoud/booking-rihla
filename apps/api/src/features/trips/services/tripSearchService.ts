@@ -1,4 +1,4 @@
-import { busMetadata } from '../../../utils/busMetadata.ts';
+import { serializeBusSummary } from '../../buses/services/busService.ts';
 import type { TripSearchQuery } from '../schemas/tripSearchSchema.ts';
 import { cairoDayBounds } from '../../../utils/cairoTime.ts';
 
@@ -80,14 +80,7 @@ export const tripSearchService = {
       .all();
     return trips.map((trip) => ({
       ...trip,
-      bus: trip.bus
-        ? {
-            id: trip.bus.id,
-            seatCount: trip.bus.seatCount,
-            seatLayout: trip.bus.seatLayout,
-            ...busMetadata(trip.bus),
-          }
-        : null,
+      bus: trip.bus ? serializeBusSummary(trip.bus) : null,
       departureAt: new Date(trip.departureAt).toISOString(),
       arrivalAt: new Date(trip.arrivalAt).toISOString(),
     }));

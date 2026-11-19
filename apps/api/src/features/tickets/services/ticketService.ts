@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { createTicketQrPayload } from '../../../utils/ticketQr.ts';
+import { createTicketQrPayload } from '../lib/ticketQr.ts';
 import { bookingRecords } from '../../bookings/services/bookingService.ts';
 import { serializeBookingPayment } from '../../payments/providers/paymentStatus.ts';
 import type { db as database } from '../../../prisma/db.ts';

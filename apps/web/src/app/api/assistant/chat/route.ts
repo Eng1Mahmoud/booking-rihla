@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSessionCookies } from '@/shared/lib/session';
-import { backendClientContext } from '@/shared/lib/clientIdentity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -82,7 +81,6 @@ export async function POST(request: Request) {
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
       'X-Assistant-Session': sessionId,
-      ...(await backendClientContext('POST', url, request.headers)),
     };
     const access = getSessionCookies(cookieStore).access;
     if (access) headers.Authorization = 'Bearer ' + access;

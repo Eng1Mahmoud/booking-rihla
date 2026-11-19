@@ -1,9 +1,3 @@
-import {
-  registrationLimiter,
-  emailVerificationLimiter,
-  resendVerificationLimiter,
-} from '../../../middlewares/rateLimiters.ts';
-
 import { Router } from 'express';
 
 import { authController } from '../controllers/authController.ts';
@@ -13,14 +7,6 @@ authRouter.use((_request, response, next) => {
   response.set('Cache-Control', 'no-store');
   next();
 });
-authRouter.post('/register', registrationLimiter, authController.register);
-authRouter.post(
-  '/verify-email',
-  emailVerificationLimiter,
-  authController.verifyEmail,
-);
-authRouter.post(
-  '/resend-verification',
-  resendVerificationLimiter,
-  authController.resendVerification,
-);
+authRouter.post('/register', authController.register);
+authRouter.post('/verify-email', authController.verifyEmail);
+authRouter.post('/resend-verification', authController.resendVerification);

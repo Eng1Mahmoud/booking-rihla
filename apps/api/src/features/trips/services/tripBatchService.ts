@@ -1,8 +1,10 @@
 import { AppError } from '../../../errors/AppError.ts';
 import type { Trip } from './tripService.ts';
-import type { BatchDeparture } from '../../../utils/tripBatchDates.ts';
 import type { TripBatchInput } from '../schemas/tripBatchSchema.ts';
-import { buildBatchDepartures } from '../../../utils/tripBatchDates.ts';
+import {
+  buildBatchDepartures,
+  type BatchDeparture,
+} from '../lib/tripBatchDates.ts';
 import { cairoTimeZone } from '../../../utils/cairoTime.ts';
 import {
   intervalsOverlap,

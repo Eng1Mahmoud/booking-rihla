@@ -1,4 +1,3 @@
-import { busMetadata } from '../../../utils/busMetadata.ts';
 import type { FleetMetadata } from '../../fleet/schemas/fleetMetadataSchema.ts';
 import type { db as database } from '../../../prisma/db.ts';
 import { AppError } from '../../../errors/AppError.ts';
@@ -32,15 +31,35 @@ function buses(client: Pick<typeof database, 'orm'>) {
 type BusRecord = NonNullable<
   Awaited<ReturnType<ReturnType<typeof buses>['first']>>
 >;
-function serializeBus(bus: BusRecord): Bus {
+
+export function serializeBusSummary(
+  bus: Pick<Bus, 'id' | 'seatCount' | 'seatLayout' | 'busType'> & {
+    amenityLinks: { amenity: FleetMetadata }[];
+  },
+) {
   return {
     id: bus.id,
-    plateNumber: bus.plateNumber,
     seatCount: bus.seatCount,
     seatLayout: bus.seatLayout,
+    busType: bus.busType,
+    amenities: bus.amenityLinks
+      .map((link) => link.amenity)
+      .sort((a, b) => a.code.localeCompare(b.code) || a.id.localeCompare(b.id)),
+  };
+}
+
+function serializeBus(bus: BusRecord): Bus {
+  const { id, seatCount, seatLayout, busType, amenities } =
+    serializeBusSummary(bus);
+  return {
+    id,
+    plateNumber: bus.plateNumber,
+    seatCount,
+    seatLayout,
     isActive: bus.isActive,
     busTypeId: bus.busTypeId,
-    ...busMetadata(bus),
+    busType,
+    amenities,
   };
 }
 async function lockMetadata(
