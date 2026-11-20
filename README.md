@@ -243,8 +243,12 @@ all departure times. Voice output is intentionally excluded.
 
 On Render set `NODE_ENV=production`, `HOST=0.0.0.0`, the intended `PORT`, the
 appropriate trusted-proxy setting, HTTPS `CORS_ORIGINS`, and the existing database,
-authentication, Mailjet and verified Paymob settings. The API does not expose a
-dedicated HTTP health-check endpoint.
+authentication, Mailjet and verified Paymob settings. Set the service's
+**Health Check Path** in Render Settings to `/health`. This public endpoint runs
+`SELECT 1` through the existing database client with a three-second timeout. It
+returns HTTP 200 with `{ "status": "ok", "database": "ok" }` on success, or HTTP 503
+with `{ "status": "error", "database": "unavailable" }` on failure. It does not
+check external providers. The root path `/` still returns 404.
 Configure each Vercel frontend with the Render API's `/api/v1` URL.
 Render Free can sleep or restart; the database outboxes and retry state preserve
 pending work. A successful deployment alone does not certify provider delivery.

@@ -19,7 +19,9 @@ export const requestLogger: RequestHandler = (request, response, next) => {
       }),
     );
   };
+  // Log the request when it finishes 
   response.once('finish', () => write(false));
+  // Log the request when it is aborted (e.g. client disconnects)
   response.once('close', () => write(!response.writableFinished));
   next();
 };

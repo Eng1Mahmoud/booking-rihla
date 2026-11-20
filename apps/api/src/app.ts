@@ -1,4 +1,5 @@
 // HTTP framework and security libraries
+import { setTimeout as delay } from 'node:timers/promises';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -75,6 +76,31 @@ export function createApp() {
     }),
   );
   app.use(express.json({ limit: '100kb' }));
+
+  // Render's HTTP health check verifies that the API can reach the database.
+  app.get('/health', async (_request, response) => {
+    response.setHeader('Cache-Control', 'no-store');
+    const controller = new AbortController();
+    const { signal } = controller;
+    try {
+      await Promise.race([
+        import('./prisma/db.ts').then(({ db }) =>
+          db.runtime().execute(db.raw.sql`SELECT 1`.affectedCount().build(), {
+            signal,
+          }),
+        ),
+        // Bound the HTTP response even if the driver stalls acquiring a connection.
+        delay(3000, undefined, { signal }).then(() => {
+          throw new Error('Database health check timed out');
+        }),
+      ]);
+      response.json({ status: 'ok', database: 'ok' });
+    } catch {
+      response.status(503).json({ status: 'error', database: 'unavailable' });
+    } finally {
+      controller.abort();
+    }
+  });
 
   // 3. Internal scheduled jobs.
   app.use('/api/v1/internal/jobs', scheduledJobRouter);
